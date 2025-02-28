@@ -1,4 +1,4 @@
-# CDP Node.js Backend Template
+# farming-grants-agreements-api
 
 Core delivery platform Node.js Backend Template.
 
@@ -35,7 +35,7 @@ easier to use the Node Version Manager [nvm](https://github.com/creationix/nvm)
 To use the correct version of Node.js for this application, via nvm:
 
 ```bash
-cd cdp-node-backend-template
+cd farming-grants-agreements-api
 nvm use
 ```
 
@@ -183,13 +183,13 @@ return await fetch(url, {
 Build:
 
 ```bash
-docker build --target development --no-cache --tag cdp-node-backend-template:development .
+docker build --target development --no-cache --tag farming-grants-agreements-api:development .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 cdp-node-backend-template:development
+docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api:development
 ```
 
 ### Production image
@@ -197,13 +197,13 @@ docker run -e PORT=3001 -p 3001:3001 cdp-node-backend-template:development
 Build:
 
 ```bash
-docker build --no-cache --tag cdp-node-backend-template .
+docker build --no-cache --tag farming-grants-agreements-api .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 cdp-node-backend-template
+docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api
 ```
 
 ### Docker Compose
