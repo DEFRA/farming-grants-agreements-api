@@ -1,18 +1,13 @@
+import agreementData from './agreement-data.json'
+
 /**
  * Get agreement data for rendering templates
- * @param {string} agreementId - The ID of the agreement to get data for
+ * We're currently only using one agreement from a JSON file, so we're not filtering by agreement ID
  * @returns {object} The agreement data
  */
-function getAgreementData(agreementId) {
-  return {
-    AGREEMENTNUMBER: agreementId || 'SFI123456789',
-    AGREEMENTNAME: 'Sample Agreement',
-    SBI: '123456789',
-    COMPANY: 'Sample Farm Ltd',
-    ADDRESS: '123 Farm Lane, Farmville',
-    POSTCODE: 'FA12 3RM',
-    USERNAME: 'John Doe'
-  }
+function getAgreementData() {
+  // TODO - Get agreement ID from request
+  return agreementData
 }
 
 export { getAgreementData }
