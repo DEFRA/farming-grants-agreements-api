@@ -11,18 +11,52 @@ describe('getAgreementDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
-  // Mock data for tests
+  // Mock data for tests - matching the structure in agreement-data.json
   const mockAgreementData = {
-    AGREEMENTNUMBER: 'TEST123456',
-    AGREEMENTNAME: 'Test Agreement',
-    SBI: '987654321',
-    COMPANY: 'Test Farm Ltd',
-    ADDRESS: '456 Test Lane, Testville',
-    POSTCODE: 'TE1 2ST',
-    USERNAME: 'Test User'
+    agreementNumber: 'SFI123456789',
+    agreementName: 'Sample Agreement',
+    sbi: '123456789',
+    company: 'Sample Farm Ltd',
+    address: '123 Farm Lane, Farmville',
+    postcode: 'FA12 3RM',
+    username: 'John Doe',
+    agreementStartDate: '1/11/2024',
+    agreementEndDate: '31/10/2027',
+    signatureDate: '1/11/2024',
+    actions: [
+      {
+        code: 'CSAM1A',
+        title:
+          'Assess soil, test soil organic matter and produce a soil management plan',
+        startDate: '01/11/2024',
+        endDate: '31/10/2027',
+        duration: '3 years'
+      }
+    ],
+    parcels: [
+      {
+        parcelNumber: 'SX63599044',
+        parcelName: '',
+        totalArea: 0.7306,
+        activities: []
+      }
+    ],
+    payments: {
+      activities: [],
+      totalAnnualPayment: 3886.69,
+      yearlyBreakdown: {
+        details: [],
+        annualTotals: {
+          year1: 4365.45,
+          year2: 4126.07,
+          year3: 4126.07
+        },
+        totalAgreementPayment: 12617.59
+      }
+    }
   }
 
-  const mockRenderedHtml = `<!DOCTYPE html><html><body>Test HTML with ${mockAgreementData.AGREEMENTNUMBER}</body></html>`
+  const mockRenderedHtml = `<!DOCTYPE html><html><body>Test HTML with ${mockAgreementData.agreementNumber}</body></html>`
 
   beforeAll(async () => {
     server = await createServer()
@@ -48,7 +82,7 @@ describe('getAgreementDocumentController', () => {
 
   test('Should return HTML when valid agreement ID is provided', async () => {
     // Arrange
-    const agreementId = 'TEST123456'
+    const agreementId = 'SFI123456789'
 
     // Act
     const { statusCode, headers, payload } = await server.inject({
@@ -99,7 +133,7 @@ describe('getAgreementDocumentController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: '/api/agreement/TEST123456'
+      url: '/api/agreement/SFI123456789'
     })
 
     // Assert
@@ -122,7 +156,7 @@ describe('getAgreementDocumentController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: '/api/agreement/TEST123456'
+      url: '/api/agreement/SFI123456789'
     })
 
     // Assert
@@ -137,18 +171,24 @@ describe('getAgreementDocumentController', () => {
     // Act
     await server.inject({
       method: 'GET',
-      url: '/api/agreement/TEST123456'
+      url: '/api/agreement/SFI123456789'
     })
 
     // Assert that all expected fields were passed to the template renderer
     const templateData = nunjucksRenderer.renderTemplate.mock.calls[0][1]
-    expect(templateData).toHaveProperty('AGREEMENTNUMBER')
-    expect(templateData).toHaveProperty('AGREEMENTNAME')
-    expect(templateData).toHaveProperty('SBI')
-    expect(templateData).toHaveProperty('COMPANY')
-    expect(templateData).toHaveProperty('ADDRESS')
-    expect(templateData).toHaveProperty('POSTCODE')
-    expect(templateData).toHaveProperty('USERNAME')
+    expect(templateData).toHaveProperty('agreementNumber')
+    expect(templateData).toHaveProperty('agreementName')
+    expect(templateData).toHaveProperty('sbi')
+    expect(templateData).toHaveProperty('company')
+    expect(templateData).toHaveProperty('address')
+    expect(templateData).toHaveProperty('postcode')
+    expect(templateData).toHaveProperty('username')
+    expect(templateData).toHaveProperty('agreementStartDate')
+    expect(templateData).toHaveProperty('agreementEndDate')
+    expect(templateData).toHaveProperty('actions')
+    expect(templateData).toHaveProperty('parcels')
+    expect(templateData).toHaveProperty('payments')
+    expect(templateData.payments).toHaveProperty('yearlyBreakdown')
   })
 })
 
