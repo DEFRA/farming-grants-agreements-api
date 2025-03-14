@@ -14,6 +14,17 @@ const nunjucksEnv = nunjucks.configure(viewsPath, {
   noCache: process.env.NODE_ENV !== 'production'
 })
 
+// Add a custom currency formatter filter
+nunjucksEnv.addFilter('formatCurrency', function (number) {
+  if (typeof number !== 'number') {
+    number = parseFloat(number) || 0
+  }
+  return number.toLocaleString('en-GB', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+})
+
 /**
  * Renders a template with the given data
  * @param {string} templatePath - The path to the template file
