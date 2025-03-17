@@ -1,6 +1,6 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { renderTemplate } from '~/src/api/agreementDocument/helpers/nunjucks-renderer.js'
-import { getAgreementData } from '~/src/api/agreementDocument/helpers/get-agreement-data.js'
+import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 /**
  * Controller to serve HTML agreement document
