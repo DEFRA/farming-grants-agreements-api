@@ -57,6 +57,12 @@ To run the application in `development` mode run:
 npm run dev
 ```
 
+If you'd like to seed the database with a mock agreement (which you can view by using the agreementId `sample`) you can run:
+
+```bash
+npm run seed
+```
+
 ### Testing
 
 To test the application run:
@@ -105,56 +111,10 @@ git config --global core.autocrlf false
 
 ## API endpoints
 
-| Endpoint             | Description                    |
-| :------------------- | :----------------------------- |
-| `GET: /health`       | Health                         |
-| `GET: /example    `  | Example API (remove as needed) |
-| `GET: /example/<id>` | Example API (remove as needed) |
-
-## Development helpers
-
-### MongoDB Locks
-
-If you require a write lock for Mongo you can acquire it via `server.locker` or `request.locker`:
-
-```javascript
-async function doStuff(server) {
-  const lock = await server.locker.lock('unique-resource-name')
-
-  if (!lock) {
-    // Lock unavailable
-    return
-  }
-
-  try {
-    // do stuff
-  } finally {
-    await lock.free()
-  }
-}
-```
-
-Keep it small and atomic.
-
-You may use **using** for the lock resource management.
-Note test coverage reports do not like that syntax.
-
-```javascript
-async function doStuff(server) {
-  await using lock = await server.locker.lock('unique-resource-name')
-
-  if (!lock) {
-    // Lock unavailable
-    return
-  }
-
-  // do stuff
-
-  // lock automatically released
-}
-```
-
-Helper methods are also available in `/src/helpers/mongo-lock.js`.
+| Endpoint                            | Description                     |
+| :---------------------------------- | :------------------------------ |
+| `GET: /health`                      | Health                          |
+| `GET: /api/agreement/{agreementId}` | Get an agreement in HTML format |
 
 ### Proxy
 
