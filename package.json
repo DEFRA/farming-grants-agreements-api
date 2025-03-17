@@ -24,6 +24,7 @@
     "postversion": "git add package.json package-lock.json && git commit -m $npm_package_version",
     "test": "jest --coverage --verbose --runInBand",
     "test:watch": "jest --watch",
+    "seed": "tsx ./src/helpers/seed-db/index.js",
     "server:watch": "nodemon --exec tsx --enable-source-maps ./src",
     "server:debug": "nodemon --exec tsx --enable-source-maps --inspect ./src",
     "prestart": "npm run build",

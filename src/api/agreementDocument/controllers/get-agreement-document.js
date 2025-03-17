@@ -8,12 +8,12 @@ import { getAgreementData } from '~/src/api/agreementDocument/helpers/get-agreem
  * @satisfies {Partial<ServerRoute>}
  */
 const getAgreementDocumentController = {
-  handler: (request, h) => {
+  handler: async (request, h) => {
     try {
       const { agreementId } = request.params
 
       // Get the agreement data
-      const agreementData = getAgreementData(agreementId)
+      const agreementData = await getAgreementData(agreementId, request)
 
       // Render the Nunjucks template with the data
       const templatePath = 'sfi-agreement.njk'

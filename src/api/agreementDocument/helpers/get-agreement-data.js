@@ -1,13 +1,22 @@
-import agreementData from './agreement-data.json'
-
 /**
  * Get agreement data for rendering templates
- * We're currently only using one agreement from a JSON file, so we're not filtering by agreement ID
- * @returns {object} The agreement data
+ * @param {string} agreementId - The agreement ID to fetch
+ * @param {object} options - Options object containing db and logger
+ * @param {object} options.db - MongoDB database instance
+ * @param {object} options.logger - Logger instance
+ * @returns {Promise<object>} The agreement data
  */
-function getAgreementData() {
-  // TODO - Get agreement ID from request
-  return agreementData
+async function getAgreementData(agreementId, { db, logger }) {
+  try {
+    const agreement = await db.collection('agreements').findOne({
+      // TODO - Use agreement ID from request
+      agreementNumber: 'SFI123456789'
+    })
+    return agreement
+  } catch (error) {
+    logger.error(`Error getting agreement data: ${error}`)
+    throw error
+  }
 }
 
 export { getAgreementData }

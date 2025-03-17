@@ -11,7 +11,7 @@ describe('getAgreementDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
-  // Mock data for tests - matching the structure in agreement-data.json
+  // Mock data for tests
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
     agreementName: 'Sample Agreement',
@@ -97,7 +97,8 @@ describe('getAgreementDocumentController', () => {
 
     // Verify mocks were called correctly
     expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith(
-      agreementId
+      agreementId,
+      expect.any(Object)
     )
     expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
       'sfi-agreement.njk',
@@ -119,7 +120,8 @@ describe('getAgreementDocumentController', () => {
 
     // Verify the function defaulted to a reasonable value when ID was missing
     expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith(
-      'undefined'
+      'undefined',
+      expect.any(Object)
     )
   })
 
