@@ -13,7 +13,7 @@ const getAgreementDocumentController = {
       const { agreementId } = request.params
 
       // Get the agreement data
-      const agreementData = await getAgreementData(agreementId, request)
+      const agreementData = await getAgreementData(agreementId, request.logger)
 
       // Render the Nunjucks template with the data
       const templatePath = 'sfi-agreement.njk'

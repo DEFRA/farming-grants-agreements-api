@@ -11,7 +11,7 @@ describe('getAgreementDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
-  // Mock data for tests
+  // Mock data for tests - matching the structure in agreement-data.json
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
     agreementName: 'Sample Agreement',
