@@ -12,6 +12,7 @@ ENV PORT=${PORT}
 EXPOSE ${PORT} ${PORT_DEBUG}
 
 COPY --chown=node:node package*.json ./
+COPY --chown=node:node ./src/helpers/seed-db ./src/helpers/seed-db
 RUN npm install
 COPY --chown=node:node . .
 RUN npm run build
