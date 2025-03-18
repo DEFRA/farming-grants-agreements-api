@@ -1,4 +1,7 @@
-import { getAgreementDocumentController } from '~/src/api/agreement/controllers/index.js'
+import {
+  getAgreementDocumentController,
+  acceptAgreementDocumentController
+} from '~/src/api/agreement/controllers/index.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
@@ -12,6 +15,11 @@ const agreementDocument = {
           method: 'GET',
           path: '/api/agreement/{agreementId}',
           ...getAgreementDocumentController
+        },
+        {
+          method: 'GET',
+          path: '/api/agreement/{agreementId}/accept',
+          ...acceptAgreementDocumentController
         }
       ])
     }

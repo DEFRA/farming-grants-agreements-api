@@ -52,7 +52,8 @@ const schema = new mongoose.Schema(
     username: { type: String, required: true },
     agreementStartDate: { type: String, required: true },
     agreementEndDate: { type: String, required: true },
-    signatureDate: { type: String, required: true },
+    status: { type: String, required: true, default: 'draft' },
+    signatureDate: { type: String },
     actions: { type: [actionSchema], required: true },
     parcels: { type: [parcelSchema], required: true },
     payments: { type: paymentsSchema, required: true }
