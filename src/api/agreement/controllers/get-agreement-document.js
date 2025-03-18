@@ -1,6 +1,6 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { renderTemplate } from '~/src/api/agreementDocument/helpers/nunjucks-renderer.js'
-import { getAgreementData } from '~/src/api/agreementDocument/helpers/get-agreement-data.js'
+import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -8,12 +8,12 @@ import { getAgreementData } from '~/src/api/agreementDocument/helpers/get-agreem
  * @satisfies {Partial<ServerRoute>}
  */
 const getAgreementDocumentController = {
-  handler: (request, h) => {
+  handler: async (request, h) => {
     try {
       const { agreementId } = request.params
 
       // Get the agreement data
-      const agreementData = getAgreementData(agreementId)
+      const agreementData = await getAgreementData(agreementId, request.logger)
 
       // Render the Nunjucks template with the data
       const templatePath = 'sfi-agreement.njk'

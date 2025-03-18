@@ -1,4 +1,4 @@
-import { getAgreementDocumentController } from '~/src/api/agreementDocument/controllers/index.js'
+import { getAgreementDocumentController } from '~/src/api/agreement/controllers/index.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
