@@ -9,7 +9,6 @@ export default [
     username: 'John Doe',
     agreementStartDate: '1/11/2024',
     agreementEndDate: '31/10/2027',
-    signatureDate: '1/11/2024',
     actions: [
       {
         code: 'CSAM1A',

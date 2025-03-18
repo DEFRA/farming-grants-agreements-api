@@ -17,7 +17,10 @@ async function getAgreementData(agreementId, logger) {
 
     const agreement = await agreementsModel
       .findOne({
-        agreementNumber: agreementId === 'sample' ? 'SFI123456789' : agreementId
+        agreementNumber:
+          agreementId === 'sample' && process.env.NODE_ENV !== 'production'
+            ? 'SFI123456789'
+            : agreementId
       })
       .lean()
 
