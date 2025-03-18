@@ -1,5 +1,5 @@
 import { health } from '~/src/api/health/index.js'
-import { agreementDocument } from '~/src/api/agreementDocument/index.js'
+import { agreementDocument } from '~/src/api/agreement/index.js'
 import { assets } from '~/src/api/assets/index.js'
 
 /**

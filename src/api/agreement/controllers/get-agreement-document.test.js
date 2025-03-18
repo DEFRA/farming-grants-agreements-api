@@ -1,11 +1,11 @@
 import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import * as nunjucksRenderer from '~/src/api/agreementDocument/helpers/nunjucks-renderer.js'
-import * as agreementDataHelper from '~/src/api/agreementDocument/helpers/get-agreement-data.js'
+import * as nunjucksRenderer from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 // Mock the modules
-jest.mock('~/src/api/agreementDocument/helpers/nunjucks-renderer.js')
-jest.mock('~/src/api/agreementDocument/helpers/get-agreement-data.js')
+jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
 
 describe('getAgreementDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -97,7 +97,8 @@ describe('getAgreementDocumentController', () => {
 
     // Verify mocks were called correctly
     expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith(
-      agreementId
+      agreementId,
+      expect.any(Object)
     )
     expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
       'sfi-agreement.njk',
@@ -119,7 +120,8 @@ describe('getAgreementDocumentController', () => {
 
     // Verify the function defaulted to a reasonable value when ID was missing
     expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith(
-      'undefined'
+      'undefined',
+      expect.any(Object)
     )
   })
 
