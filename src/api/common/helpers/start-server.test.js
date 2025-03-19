@@ -62,14 +62,18 @@ describe('#startServer', () => {
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         2,
-        'Setting up mongoose'
+        'Setting up MongoDb'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         3,
-        'Server started successfully'
+        'MongoDb connected to farming-grants-agreements-api'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         4,
+        'Server started successfully'
+      )
+      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
+        5,
         'Access your backend on http://localhost:3098'
       )
     })

@@ -1,5 +1,4 @@
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
 
 /**
  * Get agreement data for rendering templates
@@ -7,7 +6,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
  * @param {string} agreementId - The agreement ID to fetch
  * @param {object} logger - Logger instance
  */
-async function acceptAgreement(agreementId, logger) {
+async function acceptAgreement(agreementId, { db, logger }) {
   if (!agreementId) {
     throw Boom.badRequest('Agreement ID is required')
   }
@@ -15,7 +14,7 @@ async function acceptAgreement(agreementId, logger) {
   try {
     logger.info(`Fetching agreement data for agreement ${agreementId}`)
 
-    const agreement = await agreementsModel.updateOne(
+    const agreement = await db.updateOne(
       {
         agreementNumber:
           agreementId === 'sample' && process.env.NODE_ENV !== 'production'

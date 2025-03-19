@@ -3,7 +3,6 @@ import {
   acceptAgreementDocumentController
 } from '~/src/api/agreement/controllers/index.js'
 
-
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
  */

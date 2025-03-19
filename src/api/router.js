@@ -13,7 +13,7 @@ const router = {
       await server.register([health])
 
       // Application specific routes, add your own routes here.
-      await server.register([agreement, assets])
+      await server.register([agreementDocument, assets])
     }
   }
 }

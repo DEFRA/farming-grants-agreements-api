@@ -10,7 +10,10 @@ async function getAgreementData(agreementId, { db, logger }) {
   try {
     const agreement = await db.collection('agreements').findOne({
       // TODO - Use agreement ID from request
-      agreementNumber: 'SFI123456789'
+      agreementNumber:
+        'sample' && process.env.NODE_ENV !== 'production'
+          ? 'SFI123456789'
+          : agreementId
     })
     return agreement
   } catch (error) {
