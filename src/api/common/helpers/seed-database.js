@@ -6,6 +6,12 @@ export async function seedDatabase(db, logger) {
     return
   }
 
+  const collections = await db.listCollections().toArray()
+  if (collections.length > 0) {
+    logger.info('Database already seeded, skipping')
+    return
+  }
+
   for (const [name, model] of Object.entries(models)) {
     try {
       await model.db.dropCollection(name)
