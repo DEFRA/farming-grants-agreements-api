@@ -24,13 +24,19 @@ export const mongooseDb = {
 
       server.decorate('server', 'mongooseDb', mongoose.connection)
 
-      // seed the database if necessary
-      await seedDatabase(mongoose.connection.db, server.logger)
+      // Seed the database if not in production or invoked through testing
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        process.env.JEST_WORKER_ID === undefined
+      ) {
+        await seedDatabase(mongoose.connection.db, server.logger)
+      }
 
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      server.events.on('stop', async () => {
+      server.events.on('stop', () => {
         server.logger.info('Closing Mongoose client')
-        await mongoose.disconnect()
+        mongoose.disconnect().catch((error) => {
+          server.logger.error('Error disconnecting from MongoDB', error)
+        })
       })
     }
   },
