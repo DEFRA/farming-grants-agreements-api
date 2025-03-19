@@ -24,8 +24,13 @@ export const mongooseDb = {
 
       server.decorate('server', 'mongooseDb', mongoose.connection)
 
-      // seed the database if necessary
-      await seedDatabase(mongoose.connection.db, server.logger)
+      // seed the database if we're not in production or invoked through testing
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        !process.env.JEST_WORKER_ID
+      ) {
+        await seedDatabase(mongoose.connection.db, server.logger)
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       server.events.on('stop', async () => {
