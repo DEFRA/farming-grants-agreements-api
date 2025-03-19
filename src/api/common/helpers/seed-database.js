@@ -2,12 +2,6 @@ import models from '~/src/api/common/models/index.js'
 import data from '~/src/api/common/helpers/sample-data/index.js'
 
 export async function seedDatabase(db, logger) {
-  const collections = await db.listCollections().toArray()
-  if (collections.length > 0) {
-    logger.info('Database already seeded, skipping')
-    return
-  }
-
   for (const [name, model] of Object.entries(models)) {
     try {
       await model.db.dropCollection(name)
