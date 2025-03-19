@@ -1,13 +1,7 @@
 import nunjucks from 'nunjucks'
 import { join } from 'path'
 
-const viewsPath = join(
-  process.cwd(),
-  'src',
-  'api',
-  'agreementDocument',
-  'views'
-)
+const viewsPath = join(process.cwd(), 'src', 'api', 'agreement', 'views')
 
 const nunjucksEnv = nunjucks.configure(viewsPath, {
   autoescape: true,
