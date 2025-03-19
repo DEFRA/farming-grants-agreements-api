@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-
+import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import { config } from '~/src/config/index.js'
 
 /**
@@ -23,6 +23,9 @@ export const mongooseDb = {
       })
 
       server.decorate('server', 'mongooseDb', mongoose.connection)
+
+      // seed the database if necessary
+      await seedDatabase(mongoose.connection.db, server.logger)
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       server.events.on('stop', async () => {
