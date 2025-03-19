@@ -1,13 +1,13 @@
 import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import * as nunjucksRenderer from '~/src/api/agreementDocument/helpers/nunjucks-renderer.js'
-import * as agreementDataHelper from '~/src/api/agreementDocument/helpers/get-agreement-data.js'
+import * as nunjucksRenderer from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 // Mock the modules
-jest.mock('~/src/api/agreementDocument/helpers/nunjucks-renderer.js')
-jest.mock('~/src/api/agreementDocument/helpers/get-agreement-data.js')
+jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
 
-describe('getAgreementDocumentController', () => {
+describe('getAgreementController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 

@@ -1,5 +1,5 @@
 import { health } from '~/src/api/health/index.js'
-import { agreementDocument } from '~/src/api/agreementDocument/index.js'
+import { agreement } from '~/src/api/agreement/index.js'
 import { assets } from '~/src/api/assets/index.js'
 
 /**
@@ -13,7 +13,7 @@ const router = {
       await server.register([health])
 
       // Application specific routes, add your own routes here.
-      await server.register([agreementDocument, assets])
+      await server.register([agreement, assets])
     }
   }
 }

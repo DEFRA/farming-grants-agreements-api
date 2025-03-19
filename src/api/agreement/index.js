@@ -1,24 +1,24 @@
-import { getAgreementDocumentController } from '~/src/api/agreementDocument/controllers/index.js'
+import { getAgreementController } from '~/src/api/agreement/controllers/index.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
  */
-const agreementDocument = {
+const agreement = {
   plugin: {
-    name: 'agreementDocument',
+    name: 'agreement',
     register: (server) => {
       server.route([
         {
           method: 'GET',
           path: '/api/agreement/{agreementId}',
-          ...getAgreementDocumentController
+          ...getAgreementController
         }
       ])
     }
   }
 }
 
-export { agreementDocument }
+export { agreement }
 
 /**
  * @import { ServerRegisterPluginObject } from '@hapi/hapi'

@@ -1,13 +1,13 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { renderTemplate } from '~/src/api/agreementDocument/helpers/nunjucks-renderer.js'
-import { getAgreementData } from '~/src/api/agreementDocument/helpers/get-agreement-data.js'
+import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 /**
  * Controller to serve HTML agreement document
  * Renders a Nunjucks template with agreement data
  * @satisfies {Partial<ServerRoute>}
  */
-const getAgreementDocumentController = {
+const getAgreementController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
@@ -35,7 +35,7 @@ const getAgreementDocumentController = {
   }
 }
 
-export { getAgreementDocumentController }
+export { getAgreementController }
 
 /**
  * @import { ServerRoute } from '@hapi/hapi'

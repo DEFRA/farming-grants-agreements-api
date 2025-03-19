@@ -7,6 +7,16 @@ import data from './data/index.js'
 const logger = pino(loggerOptions, pino.destination())
 
 async function seedDatabase() {
+  if (
+    process.env.NODE_ENV !== 'development' &&
+    process.env.NODE_ENV !== 'test'
+  ) {
+    logger.error(
+      'Database seeding is only allowed in development or test environments'
+    )
+    return
+  }
+
   const client = new MongoClient(
     `${config.get('mongoUri')}${config.get('mongoDatabase')}`
   )
