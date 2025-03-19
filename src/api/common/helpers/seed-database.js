@@ -2,7 +2,15 @@ import models from '~/src/api/common/models/index.js'
 import data from '~/src/api/common/helpers/sample-data/index.js'
 
 export async function seedDatabase(db, logger) {
-  logger.info(`Seeding database in ${process.env.NODE_ENV} environment`)
+  if (process.env.NODE_ENV === 'production' || process.env.JEST_WORKER_ID) {
+    return
+  }
+
+  const collections = await db.listCollections().toArray()
+  if (collections.length > 0) {
+    logger.info('Database already seeded, skipping')
+    return
+  }
 
   for (const [name, model] of Object.entries(models)) {
     try {
