@@ -30,7 +30,7 @@ export const mongooseDb = {
         process.env.NODE_ENV !== 'production' &&
         !process.env.JEST_WORKER_ID
       ) {
-        await seedDatabase()
+        await seedDatabase(server.logger)
       }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
