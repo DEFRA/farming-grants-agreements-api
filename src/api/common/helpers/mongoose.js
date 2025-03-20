@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 import { config } from '~/src/config/index.js'
+import { seedDatabase } from './seed-database.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -23,6 +24,14 @@ export const mongooseDb = {
       })
 
       server.decorate('server', 'mongooseDb', mongoose.connection)
+
+      // Seed the database if we're not in production and we're not invoked by Jest
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        !process.env.JEST_WORKER_ID
+      ) {
+        await seedDatabase()
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       server.events.on('stop', async () => {
