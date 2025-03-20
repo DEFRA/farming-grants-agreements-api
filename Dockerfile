@@ -16,9 +16,9 @@ RUN npm install
 COPY --chown=node:node . .
 RUN npm run build
 
-RUN node .server/helpers/seed-db
-
 CMD [ "npm", "run", "docker:dev" ]
+
+RUN node .server/helpers/seed-db
 
 FROM defradigital/node:${PARENT_VERSION} AS production
 ARG PARENT_VERSION
