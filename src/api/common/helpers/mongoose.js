@@ -25,11 +25,8 @@ export const mongooseDb = {
 
       server.decorate('server', 'mongooseDb', mongoose.connection)
 
-      // Seed the database if we're not in production and we're not invoked by Jest
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        !process.env.JEST_WORKER_ID
-      ) {
+      // Seed the database if required
+      if (process.env.SEED_DB === 'true') {
         await seedDatabase(server.logger)
       }
 
