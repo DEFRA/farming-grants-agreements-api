@@ -4,8 +4,10 @@ import data from '~/src/api/common/helpers/sample-data/index.js'
 export async function seedDatabase(logger) {
   for (const [name, model] of Object.entries(models)) {
     try {
-      await model.db.dropCollection(name)
-      logger.info(`Dropped collection '${name}'`)
+      if (await model.db.collection(name).exists()) {
+        await model.db.dropCollection(name)
+        logger.info(`Dropped collection '${name}'`)
+      }
 
       await model.insertMany(data[name])
       logger.info(
