@@ -51,7 +51,7 @@ describe('#startServer', () => {
       await server.stop({ timeout: 0 })
     })
 
-    test.skip('Should start up server as expected', async () => {
+    test('Should start up server as expected', async () => {
       server = await startServerImport.startServer()
 
       expect(createServerSpy).toHaveBeenCalled()
