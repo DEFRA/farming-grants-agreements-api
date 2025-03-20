@@ -10,9 +10,10 @@ const acceptAgreementDocumentController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
+      const { username } = request.payload
 
       // Get the agreement data
-      await acceptAgreement(agreementId, request.logger)
+      await acceptAgreement(agreementId, request.logger, username)
 
       // Return the HTML response
       return h.response({ message: 'Agreement accepted' }).code(statusCodes.ok)

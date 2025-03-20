@@ -6,10 +6,15 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
  * @returns {object} The agreement data
  * @param {string} agreementId - The agreement ID to fetch
  * @param {object} logger - Logger instance
+ * @param {string} username - The username of the person accepting the agreement
  */
-async function acceptAgreement(agreementId, logger) {
+async function acceptAgreement(agreementId, logger, username) {
   if (!agreementId) {
     throw Boom.badRequest('Agreement ID is required')
+  }
+
+  if (!username) {
+    throw Boom.badRequest('Username is required')
   }
 
   try {
@@ -25,7 +30,8 @@ async function acceptAgreement(agreementId, logger) {
       {
         $set: {
           status: 'agreed',
-          signatureDate: new Date().toISOString()
+          signatureDate: new Date().toISOString(),
+          username
         }
       }
     )

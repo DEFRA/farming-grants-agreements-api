@@ -20,6 +20,9 @@ describe('acceptAgreementDocumentController', () => {
       params: {
         agreementId: 'SFI123456789'
       },
+      payload: {
+        username: 'John Doe'
+      },
       logger: {
         info: jest.fn(),
         warn: jest.fn(),
@@ -51,7 +54,8 @@ describe('acceptAgreementDocumentController', () => {
     // Assert
     expect(acceptAgreement).toHaveBeenCalledWith(
       'SFI123456789',
-      mockRequest.logger
+      mockRequest.logger,
+      'John Doe'
     )
     expect(mockH.response).toHaveBeenCalledWith({
       message: 'Agreement accepted'
@@ -64,6 +68,32 @@ describe('acceptAgreementDocumentController', () => {
     // Arrange
     mockRequest.params = {}
     const error = new Error('Agreement ID is required')
+    acceptAgreement.mockRejectedValue(error)
+
+    // Act
+    const result = await acceptAgreementDocumentController.handler(
+      mockRequest,
+      mockH
+    )
+
+    // Assert
+    expect(mockRequest.logger.error).toHaveBeenCalledWith(
+      `Error accepting agreement document: ${error.message}`
+    )
+    expect(mockH.response).toHaveBeenCalledWith({
+      message: 'Failed to accept agreement document',
+      error: error.message
+    })
+    expect(mockResponse.code).toHaveBeenCalledWith(
+      statusCodes.internalServerError
+    )
+    expect(result).toBe(mockResponse)
+  })
+
+  test('should handle missing username parameter', async () => {
+    // Arrange
+    mockRequest.payload = {}
+    const error = new Error('Username is required')
     acceptAgreement.mockRejectedValue(error)
 
     // Act
