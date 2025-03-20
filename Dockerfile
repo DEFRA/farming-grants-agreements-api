@@ -18,8 +18,6 @@ RUN npm run build
 
 CMD [ "npm", "run", "docker:dev" ]
 
-RUN node .server/helpers/seed-db
-
 FROM defradigital/node:${PARENT_VERSION} AS production
 ARG PARENT_VERSION
 LABEL uk.gov.defra.ffc.parent-image=defradigital/node:${PARENT_VERSION}

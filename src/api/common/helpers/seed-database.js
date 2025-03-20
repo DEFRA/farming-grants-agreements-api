@@ -1,7 +1,7 @@
 import models from '~/src/api/common/models/index.js'
 import data from '~/src/api/common/helpers/sample-data/index.js'
 
-export async function seedDatabase(db, logger) {
+export async function seedDatabase(logger) {
   for (const [name, model] of Object.entries(models)) {
     try {
       await model.db.dropCollection(name)
