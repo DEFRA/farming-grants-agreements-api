@@ -3,14 +3,17 @@ import { config } from '~/src/config/index.js'
 import { pino } from 'pino'
 import { loggerOptions } from '~/src/api/common/helpers/logging/logger-options.js'
 import data from './data/index.js'
-
 import models from '~/src/api/common/models/index.js'
 
 const logger = pino(loggerOptions, pino.destination())
 
-await mongoose.connect(
-  `${config.get('mongoUri')}${config.get('mongoDatabase')}`
-)
+const mongoUri = config.get('mongoUri')
+const mongoDatabase = config.get('mongoDatabase')
+
+await mongoose.connect(mongoUri, {
+  dbName: mongoDatabase,
+  authSource: 'admin'
+})
 logger.info(`Mongoose connected`)
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

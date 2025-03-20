@@ -493,5 +493,73 @@ export default [
         totalAgreementPayment: 12617.59
       }
     }
+  },
+  {
+    agreementNumber: 'SFI987654321',
+    agreementName: 'New Farm Agreement',
+    sbi: '987654321',
+    company: 'New Farm Holdings Ltd',
+    address: '456 Farm Road, Farmington',
+    postcode: 'FA34 5RM',
+    username: 'Jane Smith',
+    agreementStartDate: '1/12/2024',
+    agreementEndDate: '30/11/2027',
+    actions: [
+      {
+        code: 'CSAM1A',
+        title:
+          'Assess soil, test soil organic matter and produce a soil management plan',
+        startDate: '01/12/2024',
+        endDate: '30/11/2027',
+        duration: '3 years'
+      }
+    ],
+    parcels: [
+      {
+        parcelNumber: 'SX63599999',
+        parcelName: 'North Field',
+        totalArea: 2.5,
+        activities: [
+          {
+            code: 'CSAM1',
+            description:
+              'Assess soil, produce a soil management plan and test soil organic matter',
+            area: 2.5,
+            startDate: '1/12/2024',
+            endDate: '30/11/2027'
+          }
+        ]
+      }
+    ],
+    payments: {
+      activities: [
+        {
+          code: 'CSAM1',
+          description:
+            'Assess soil, produce a soil management plan and test soil organic matter',
+          measurement: '2.5000',
+          paymentRate: '£58 per hectare',
+          annualPayment: 145.0
+        }
+      ],
+      totalAnnualPayment: 145.0,
+      yearlyBreakdown: {
+        details: [
+          {
+            code: 'CSAM1',
+            year1: 145.0,
+            year2: 145.0,
+            year3: 145.0,
+            totalPayment: 435.0
+          }
+        ],
+        annualTotals: {
+          year1: 145.0,
+          year2: 145.0,
+          year3: 145.0
+        },
+        totalAgreementPayment: 435.0
+      }
+    }
   }
 ]

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="username" content="{{ username }}">
     <title>SFI Agreement Document</title>
     <style>
         body {
@@ -56,6 +57,77 @@
 
         section {
             margin-bottom: 60px;
+        }
+
+        /* GOV.UK Button Styles */
+        .govuk-button {
+            font-family: "GDS Transport", arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-weight: 400;
+            font-size: 16px;
+            font-size: 1rem;
+            line-height: 1.1875;
+            box-sizing: border-box;
+            display: inline-block;
+            position: relative;
+            width: auto;
+            margin-top: 0;
+            margin-bottom: 22px;
+            padding: 8px 10px 7px;
+            border: 2px solid transparent;
+            border-radius: 0;
+            color: #ffffff;
+            background-color: #00703c;
+            box-shadow: 0 2px 0 #002d18;
+            text-align: center;
+            vertical-align: top;
+            cursor: pointer;
+            -webkit-appearance: none;
+            text-decoration: none;
+        }
+
+        .govuk-button:hover {
+            background-color: #005a30;
+        }
+
+        .govuk-button:active {
+            top: 2px;
+        }
+
+        .govuk-button:focus {
+            border-color: #fd0;
+            outline: 3px solid transparent;
+            box-shadow: inset 0 0 0 1px #fd0;
+        }
+
+        .govuk-button:disabled {
+            opacity: 0.5;
+            background-color: #00703c;
+            cursor: not-allowed;
+        }
+
+        .govuk-button--warning {
+            background-color: #d4351c;
+            box-shadow: 0 2px 0 #55150b;
+        }
+
+        .govuk-button--warning:hover {
+            background-color: #aa2a16;
+        }
+
+        .button-section {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        .acceptance-message {
+            text-align: center;
+            color: #00703c;
+            font-weight: bold;
+            margin: 20px 0;
+            display: none;
         }
     </style>
 </head>
@@ -327,7 +399,11 @@
 
             <section>
                 <h2>9. Electronic signature</h2>
+                {% if signatureDate %}
                 <p>The Agreement comprising this Agreement Document, the Terms and Conditions and the Actions has been accepted by {{ username }} - {{ company }} on {{ signatureDate }}</p>
+                {% else %}
+                <p>This Agreement will be electronically signed when you click the "Accept Agreement" button below.</p>
+                {% endif %}
             </section>
 
             <section>
@@ -336,8 +412,18 @@
                 to RPA. For information on how we handle personal data go to www.gov.uk and search 'Rural Payments Agency
                 personal information charter'.</p>
             </section>
+
+            <div class="button-section">
+                <input type="hidden" id="agreement-id" value="{{ agreementNumber }}">
+                <div id="acceptance-message" class="acceptance-message">Agreement has been accepted</div>
+                <button id="accept-agreement-button" class="govuk-button" type="button">
+                    Accept Agreement
+                </button>
+            </div>
         </div>
     </div>
+
+    <script src="/api/agreement/helpers/agreement.js"></script>
 </body>
 </html>
     
