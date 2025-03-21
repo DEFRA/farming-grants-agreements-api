@@ -4,13 +4,16 @@ import data from '~/src/api/common/helpers/sample-data/index.js'
 
 export async function seedDatabase(logger) {
   while (mongoose.connection.readyState !== mongoose.STATES.connected) {
-    logger.info('Waiting for mongoose to connect')
+    logger.info('Waiting for mongoose to connect...')
     await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   for (const [name, model] of Object.entries(models)) {
     try {
-      await model.db.dropCollection(name)
+      await model.db
+        .dropCollection(name)
+        .catch(() => logger.warn(`Collection '${name}' does not exist`))
+
       logger.info(`Dropped collection '${name}'`)
 
       await model.insertMany(data[name])
