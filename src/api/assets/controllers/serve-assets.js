@@ -3,7 +3,7 @@ import { join } from 'path'
 import fs from 'fs'
 
 // Get the directory path of the assets
-const assetsPath = join(process.cwd(), 'src', 'api', 'assets', 'public')
+const assetsPath = join(process.cwd(), 'public', 'assets')
 
 /**
  * Controller to serve static assets like images, CSS, etc.

@@ -1,9 +1,9 @@
 import nunjucks from 'nunjucks'
 import { join } from 'path'
 
-const viewsPath = join(process.cwd(), 'src', 'api', 'agreement', 'views')
+const path = join(process.cwd(), 'public', 'views')
 
-const nunjucksEnv = nunjucks.configure(viewsPath, {
+const nunjucksEnv = nunjucks.configure(path, {
   autoescape: true,
   noCache: process.env.NODE_ENV !== 'production'
 })
