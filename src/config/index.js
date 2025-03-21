@@ -91,6 +91,12 @@ const config = convict({
     default: 'farming-grants-agreements-api',
     env: 'MONGO_DATABASE'
   },
+  seedDb: {
+    doc: 'Seed the database',
+    format: Boolean,
+    default: false,
+    env: 'SEED_DB'
+  },
   httpProxy: {
     doc: 'HTTP Proxy',
     format: String,
