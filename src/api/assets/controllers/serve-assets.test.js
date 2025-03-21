@@ -110,7 +110,7 @@ describe('serveAssetsController', () => {
   // Test serving a file from a nested directory
   test('Should serve file from nested directory correctly', async () => {
     // Arrange
-    const filepath = 'images/logos/defra-logo.png'
+    const filepath = 'images/defra-logo.png'
 
     fs.existsSync.mockReturnValue(true)
     fs.statSync.mockReturnValue(mockFileStats)
@@ -161,7 +161,7 @@ describe('serveAssetsController', () => {
   // Test for forbidding access to directories
   test('Should forbid access to directories', async () => {
     // Arrange
-    const dirPath = 'images/logos'
+    const dirPath = 'images'
 
     fs.existsSync.mockReturnValue(true)
     fs.statSync.mockReturnValue(mockDirStats)
@@ -180,7 +180,7 @@ describe('serveAssetsController', () => {
   // Test for deep paths
   test('Should handle files with multiple directory levels', async () => {
     // Arrange
-    const deepFilePath = 'images/logos/subfolder/another/file.png'
+    const deepFilePath = 'images/subfolder/another/file.png'
 
     fs.existsSync.mockReturnValue(true)
     fs.statSync.mockReturnValue(mockFileStats)
@@ -195,7 +195,7 @@ describe('serveAssetsController', () => {
     // Assert
     expect(statusCode).toBe(statusCodes.ok)
     expect(fs.existsSync).toHaveBeenCalledWith(
-      expect.stringContaining('images/logos/subfolder/another/file.png')
+      expect.stringContaining('images/subfolder/another/file.png')
     )
   })
 })
