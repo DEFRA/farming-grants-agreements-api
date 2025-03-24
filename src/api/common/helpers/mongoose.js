@@ -46,5 +46,5 @@ export const mongooseDb = {
 
 /**
  * To be mixed in with Request|Server to provide the db decorator
- * @typedef {{db: import('mongodb').Db, locker: import('mongo-locks').LockManager }} MongoDBPlugin
+ * @typedef {{connection: import('mongoose').connection }} MongoosePlugin
  */

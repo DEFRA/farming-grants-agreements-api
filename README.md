@@ -57,10 +57,10 @@ To run the application in `development` mode run:
 npm run dev
 ```
 
-If you'd like to seed the database with a mock agreement (which you can view by using the agreementId `sample`) you can run:
+If you'd like to seed the database with a mock agreement (which you can view by using the agreementId `SFI123456789`) you must set the environment variable `SEED_DB` to `true`
 
 ```bash
-npm run seed
+SEED_DB=true npm run dev
 ```
 
 ### Testing
