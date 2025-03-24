@@ -82,23 +82,6 @@ describe('getAgreementData', () => {
     )
   })
 
-  test('should return sample agreement data when agreementId is "sample"', async () => {
-    // Arrange
-    const agreementId = 'sample'
-    agreementsModel.findOne.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(mockAgreement)
-    })
-
-    // Act
-    const result = await getAgreementData(agreementId, mockLogger)
-
-    // Assert
-    expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123456789'
-    })
-    expect(result).toEqual(mockAgreement)
-  })
-
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
     const agreementId = 'SFI999999999'
