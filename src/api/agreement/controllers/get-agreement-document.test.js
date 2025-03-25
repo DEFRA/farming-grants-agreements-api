@@ -23,6 +23,7 @@ describe('getAgreementDocumentController', () => {
     agreementStartDate: '1/11/2024',
     agreementEndDate: '31/10/2027',
     signatureDate: '1/11/2024',
+    status: 'draft',
     actions: [
       {
         code: 'CSAM1A',
@@ -102,7 +103,10 @@ describe('getAgreementDocumentController', () => {
     )
     expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
       'sfi-agreement.njk',
-      mockAgreementData
+      {
+        ...mockAgreementData,
+        isAccepted: false
+      }
     )
   })
 
@@ -191,6 +195,48 @@ describe('getAgreementDocumentController', () => {
     expect(templateData).toHaveProperty('parcels')
     expect(templateData).toHaveProperty('payments')
     expect(templateData.payments).toHaveProperty('yearlyBreakdown')
+  })
+
+  test('Should set isAccepted to true when agreement status is agreed', async () => {
+    // Arrange
+    const agreedAgreementData = {
+      ...mockAgreementData,
+      status: 'agreed'
+    }
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementData')
+      .mockImplementation(() => agreedAgreementData)
+
+    // Act
+    await server.inject({
+      method: 'GET',
+      url: '/api/agreement/SFI123456789'
+    })
+
+    // Assert that isAccepted was set correctly in template data
+    const templateData = nunjucksRenderer.renderTemplate.mock.calls[0][1]
+    expect(templateData.isAccepted).toBe(true)
+  })
+
+  test('Should set isAccepted to false when agreement status is draft', async () => {
+    // Arrange
+    const draftAgreementData = {
+      ...mockAgreementData,
+      status: 'draft'
+    }
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementData')
+      .mockImplementation(() => draftAgreementData)
+
+    // Act
+    await server.inject({
+      method: 'GET',
+      url: '/api/agreement/SFI123456789'
+    })
+
+    // Assert that isAccepted was set correctly in template data
+    const templateData = nunjucksRenderer.renderTemplate.mock.calls[0][1]
+    expect(templateData.isAccepted).toBe(false)
   })
 })
 

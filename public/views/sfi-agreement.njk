@@ -57,6 +57,34 @@
         section {
             margin-bottom: 60px;
         }
+
+        /* Button styles */
+        .accept-button {
+            background-color: #00703c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .accept-button:hover {
+            background-color: #005a30;
+        }
+
+        .accept-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .accept-agreement-section {
+            margin: 20px 0;
+        }
+
+        .signature-section {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -325,9 +353,27 @@
                 <p>Agreement End Date: {{ agreementEndDate }}</p>
             </section>
 
-            <section>
+            <section class="signature-section">
                 <h2>9. Electronic signature</h2>
                 <p>The Agreement comprising this Agreement Document, the Terms and Conditions and the Actions has been accepted by {{ username }} - {{ company }} on {{ signatureDate }}</p>
+            
+                {% if not isAccepted %}
+                <div class="accept-agreement-section">
+                    <form method="get" action="/api/agreement/{{agreementNumber}}/accept" id="acceptForm">
+                        <button type="submit" id="acceptButton" class="accept-button">
+                            Accept Agreement
+                        </button>
+                    </form>
+                </div>
+
+                <script>
+                    document.getElementById('acceptForm').addEventListener('submit', function(e) {
+                        const button = document.getElementById('acceptButton');
+                        button.disabled = true;
+                        button.textContent = 'Processing...';
+                    });
+                </script>
+                {% endif %}
             </section>
 
             <section>
