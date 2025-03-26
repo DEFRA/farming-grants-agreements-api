@@ -15,9 +15,15 @@ const getAgreementDocumentController = {
       // Get the agreement data
       const agreementData = await getAgreementData(agreementId, request.logger)
 
+      // Add isAccepted flag based on agreement status
+      const templateData = {
+        ...agreementData,
+        isAccepted: agreementData.status === 'agreed'
+      }
+
       // Render the Nunjucks template with the data
       const templatePath = 'sfi-agreement.njk'
-      const renderedHtml = renderTemplate(templatePath, agreementData)
+      const renderedHtml = renderTemplate(templatePath, templateData)
 
       // Return the HTML response
       return h.response(renderedHtml).type('text/html').code(statusCodes.ok)
