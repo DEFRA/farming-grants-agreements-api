@@ -1,343 +1,215 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAMPLE - SFI Agreement Document</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            margin: 0 auto;
-        }
-        .container {
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .info {
-            background-color: #f5f5f5;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        .page-break {
-            page-break-after: always;
-            border-top: 1px dashed #ccc;
-            margin: 30px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        .table-details {
-            max-width: 800px;
-        }
-        .table-bordered, .table-bordered th, .table-bordered td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
+{% from "govuk/components/table/macro.njk" import govukTable %}
 
-        th {
-            background-color: #f5f5f5;
-        }
-        
-        .header-logo {
-            max-width: 250px;
-            margin-bottom: 20px;
-        }
+  {% block head %}
+    <link rel="stylesheet" href="/assets/css/govuk-frontend.min.css">
+    <link rel="stylesheet" href="/assets/css/sfi-agreement.css">
+  {% endblock %}
 
-        section {
-            margin-bottom: 60px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">        
-        <div class="content">
-            <img src="/assets/images/defra-logo.png" alt="Defra Logo" class="header-logo">
-            <h1>Sustainable Farming Incentive</h1>
-            <section>
-                <table class="table-details">
-                    <tr>
-                        <td>Agreement Document Type:</td>
-                        <td>SFI</td>
-                    </tr>
-                    <tr>
-                        <td>Agreement Number:</td>
-                        <td>{{ agreementNumber }}</td>
-                    </tr>
-                    <tr>
-                        <td>Agreement Name:</td>
-                        <td>{{ agreementName }}</td>
-                    </tr>
-                    <tr>
-                        <td>Agreement Start Date:</td>
-                        <td>{{ agreementStartDate }}</td>
-                    </tr>
-                    <tr>
-                        <td>Agreement End Date:</td>
-                        <td>{{ agreementEndDate }}</td>
-                    </tr>
-                    <tr>
-                        <td>SBI:</td>
-                        <td>{{ sbi }}</td>
-                    </tr>
-                    <tr>
-                        <td>Agreement Holder:</td>
-                        <td>{{ company }}</td>
-                    </tr>
-                    <tr>
-                        <td>Address:</td>
-                        <td>{{ address }}</td>
-                    </tr>
-                    <tr>
-                        <td>Postcode:</td>
-                        <td>{{ postcode }}</td>
-                    </tr>
-                </table>
-            </section>
+    {% block content %}
+      <div class="govuk-width-container">
+        <img src="/assets/images/defra-logo.png" alt="Defra Logo" class="defra-logo">
+        <h1 class="govuk-heading-l">Sustainable Farming Incentive</h1>
+        <section>
+            <table class="table-details govuk-body">
+                <tr>
+                    <td>Agreement Document Type:</td>
+                    <td>SFI</td>
+                </tr>
+                <tr>
+                    <td>Agreement Number:</td>
+                    <td>{{ agreementNumber }}</td>
+                </tr>
+                <tr>
+                    <td>Agreement Name:</td>
+                    <td>{{ agreementName }}</td>
+                </tr>
+                <tr>
+                    <td>Agreement Start Date:</td>
+                    <td>{{ agreementStartDate | formatDate }}</td>
+                </tr>
+                <tr>
+                    <td>Agreement End Date:</td>
+                    <td>{{ agreementEndDate | formatDate }}</td>
+                </tr>
+                <tr>
+                    <td>SBI:</td>
+                    <td>{{ sbi }}</td>
+                </tr>
+                <tr>
+                    <td>Agreement Holder:</td>
+                    <td>{{ company }}</td>
+                </tr>
+                <tr>
+                    <td>Address:</td>
+                    <td>{{ address }}</td>
+                </tr>
+                <tr>
+                    <td>Postcode:</td>
+                    <td>{{ postcode }}</td>
+                </tr>
+            </table>
+        </section>
 
-            <section>
-                <h2>Table of Contents</h2>
-                <ol>
-                    <li>Introduction and Overview</li>
-                    <li>Parties to the Agreement</li>
-                    <li>Agreement Land</li>
-                    <li>Summary of parcel based SFI Actions</li>
-                    <li>Summary of agreement level actions</li>
-                    <li>Summary of payments</li>
-                    <li>Annual Payment Schedule</li>
-                    <li>Agreement Period</li>
-                    <li>Electronic signature</li>
-                </ol>
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">Table of Contents</h2>
+            <ol class="govuk-list govuk-list--number">
+                <li>Introduction and Overview</li>
+                <li>Parties to the Agreement</li>
+                <li>Agreement Land</li>
+                <li>Summary of parcel based SFI Actions</li>
+                <li>Summary of agreement level actions</li>
+                <li>Summary of payments</li>
+                <li>Annual Payment Schedule</li>
+                <li>Agreement Period</li>
+                <li>Electronic signature</li>
+            </ol>
+        </section>
 
-            <section>
-                <h2>1. Introduction and Overview</h2>
-                <p>This is the Sustainable Farming Incentive (SFI) "Agreement Document", which describes the sum to be paid (the "Grant") to the agreement holder ("you") for delivering the SFI action(s) (the
-                "Actions") you have chosen and for entering into and managing your Agreement (the "SFI
-                Management Payment").</p>
+        <section>
+            <h2 class="govuk-heading-m">1. Introduction and Overview</h2>
+            <p class="govuk-body">This is the Sustainable Farming Incentive (SFI) "Agreement Document", which describes the sum to be paid (the "Grant") to the agreement holder ("you") for delivering the SFI action(s) (the "Actions") you have chosen and for entering into and managing your Agreement (the "SFI Management Payment").</p>
 
-                <h3>The SFI "Agreement" comprises:</h3>
-                <ul>
-                    <li>This Agreement Document;</li>
-                    <li>The Sustainable Farming Incentive Agreement "Terms and Conditions", which are applicable to the payment of the Grant;</li>
-                    <li>The Actions you have chosen.</li>
-                </ul>
-                <p>When you enter the Agreement, you are agreeing to the terms applicable to the payment of the Grant. You should review the mandatory requirements of your Agreement to make sure you understand the full extent of your obligations under the Agreement.</p>
-            </section>
+            <h3 class="govuk-heading-s">The SFI "Agreement" comprises:</h3>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>This Agreement Document;</li>
+                <li>The Sustainable Farming Incentive Agreement "Terms and Conditions", which are applicable to the payment of the Grant;</li>
+                <li>The Actions you have chosen.</li>
+            </ul>
+            <p class="govuk-body">When you enter the Agreement, you are agreeing to the terms applicable to the payment of the Grant. You should review the mandatory requirements of your Agreement to make sure you understand the full extent of your obligations under the Agreement.</p>
+        </section>
 
-            <section>
-                <h2>2. Parties to the Agreement</h2>
-                <p>This Agreement is between:</p>
-                <ul>
-                    <li>You, the agreement holder;</li>
-                    <li>{{ company }}, of {{ address }}, {{ postcode }};</li>
-                    <li>The Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").</li>
-                </ul>
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">2. Parties to the Agreement</h2>
+            <p class="govuk-body">This Agreement is between:</p>
+            <ul class="govuk-list">
+                <li>You, the agreement holder;</li>
+                <li>{{ company }}, of {{ address }}, {{ postcode }};</li>
+                <li>The Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").</li>
+            </ul>
+        </section>
 
-            <section>
-                <h2>3. Agreement Land</h2>
-                <p>The "Agreement Land" comprises the following land parcels:</p>
-                <table class="table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Parcel</th>
-                            <th>Parcel name</th>
-                            <th>Total parcel area (hectares)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for parcel in parcels %}
-                        <tr>
-                            <td>{{ parcel.parcelNumber }}</td>
-                            <td>{{ parcel.parcelName }}</td>
-                            <td>{{ parcel.totalArea }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <p>Please note that the Terms and Conditions contain separate obligations in relation to the Agreement Land.</p>
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">3. Agreement Land</h2>
+            <p class="govuk-body">The "Agreement Land" comprises the following land parcels:</p>
+            {{ govukTable({
+                captionClasses: "govuk-table__caption--m",
+                classes: "govuk-table--small-text-until-tablet",
+                head: agreementLand.headings,
+                rows: agreementLand.data
+                })
+            }}
+            <p class="govuk-body">Please note that the Terms and Conditions contain separate obligations in relation to the Agreement Land.</p>
+        </section>
 
-            <section>
-                <h2>4. Summary of parcel based SFI Actions</h2>
-                <p>The following table sets out a summary of the Parcel based SFI Actions you have chosen and agree to complete under the Agreement. The Terms and Conditions and the Actions set out the accompanying obligations for the chosen Actions.</p>
-                <table class="table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Parcel number</th>
-                            <th>Code</th>
-                            <th>Description</th>
-                            <th>Total parcel area (hectares)</th>
-                            <th>Area (hectares) / Length (metres) / Unit</th>
-                            <th>Start date</th>
-                            <th>End date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for parcel in parcels %}
-                            {% for activity in parcel.activities %}
-                            <tr>
-                                <td>{{ parcel.parcelNumber }}</td>
-                                <td>{{ activity.code }}</td>
-                                <td>{{ activity.description }}</td>
-                                <td>{{ parcel.totalArea }}</td>
-                                <td>{{ activity.area }}</td>
-                                <td>{{ activity.startDate }}</td>
-                                <td>{{ activity.endDate }}</td>
-                            </tr>
-                            {% endfor %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">4. Summary of parcel based SFI Actions</h2>
+            <p class="govuk-body">The following table sets out a summary of the Parcel based SFI Actions you have chosen and agree to complete under the Agreement. The Terms and Conditions and the Actions set out the accompanying obligations for the chosen Actions.</p>
+            <table class="table-bordered">
+                {{ govukTable({
+                    captionClasses: "govuk-table__caption--m",
+                    classes: "govuk-table--small-text-until-tablet",
+                    head: summaryOfActions.headings,
+                    rows: summaryOfActions.data
+                    })
+                }}
+            </table>
+        </section>
 
-            <section>
-                <h2>5. Summary of agreement level actions</h2>
-                <p>The table below sets out a summary of agreement level Actions you have chosen and agree to
-                complete  under  the  Agreement.  The  Terms  and  Conditions  and  the  Actions  set  out  the
-                accompanying  obligations  for  the  chosen  Actions  included  in  this  Agreement.</p>
-                
-                <table class="table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Action code</th>
-                            <th>Action title</th>
-                            <th>Action End date</th>
-                            <th>Action Start date</th>
-                            <th>Action duration</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for action in actions %}
-                        <tr>
-                            <td>{{ action.code }}</td>
-                            <td>{{ action.title }}</td>
-                            <td>{{ action.endDate }}</td>
-                            <td>{{ action.startDate }}</td>
-                            <td>{{ action.duration }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">5. Summary of agreement level actions</h2>
+            <p class="govuk-body">The table below sets out a summary of agreement level Actions you have chosen and agree to
+            complete  under  the  Agreement.  The  Terms  and  Conditions  and  the  Actions  set  out  the
+            accompanying  obligations  for  the  chosen  Actions  included  in  this  Agreement.</p>
+            
+            <table class="table-bordered">
+                {{ govukTable({
+                    captionClasses: "govuk-table__caption--m",
+                    classes: "govuk-table--small-text-until-tablet",
+                    head: summaryOfActions.headings,
+                    rows: summaryOfActions.data
+                    })
+                }}
+            </table>
+        </section>
 
-            <section>
-                <h2>6. Summary of payments</h2>
-                <p>Subject to you complying with your Agreement, the table below sets out a summary of:</p>
-                <ul>
-                    <li>the total payments for the Actions you have chosen and agree to complete under the Agreement.</li>
-                    <li>the relevant additional payments</li>
-                    <li>the indicative SFI management payment - if you have submitted 2 or more SFI applications, the SFI management payment may be removed from this agreement offer as it will only be paid for the area, up to 50 hectares, entered into SFI actions in the 'live' SFI agreement which starts first</li>
-                </ul>
+        <section>
+            <h2 class="govuk-heading-m">6. Summary of payments</h2>
+            <p class="govuk-body">Subject to you complying with your Agreement, the table below sets out a summary of:</p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>the total payments for the Actions you have chosen and agree to complete under the Agreement.</li>
+                <li>the relevant additional payments</li>
+                <li>the indicative SFI management payment - if you have submitted 2 or more SFI applications, the SFI management payment may be removed from this agreement offer as it will only be paid for the area, up to 50 hectares, entered into SFI actions in the 'live' SFI agreement which starts first</li>
+            </ul>
 
-                <p>These payments will be made each year of your Agreement.</p>
-                <p>Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the Terms and Conditions.</p>
+            <p class="govuk-body">These payments will be made each year of your Agreement.</p>
+            <p class="govuk-body">Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the Terms and Conditions.</p>
 
-                <table class="table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Description</th>
-                            <th>Total area (hectares) / length (metres) / Unit</th>
-                            <th>Payment rate</th>
-                            <th>Total annual agreement grant payment</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for activity in payments.activities %}
-                        <tr>
-                            <td>{{ activity.code }}</td>
-                            <td>{{ activity.description }}</td>
-                            <td>{{ activity.measurement }}</td>
-                            <td>{{ activity.paymentRate }}</td>
-                            <td>£{{ activity.annualPayment | formatCurrency }}</td>
-                        </tr>
-                        {% endfor %}
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>Total: £{{ payments.totalAnnualPayment | formatCurrency }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <p>If you are eligible for the Management Payment (MPAY1) the payment details will be shown within section 7 below.</p>
-            </section>
+            <table class="table-bordered">
+                {{ govukTable({
+                    captionClasses: "govuk-table__caption--m",
+                    classes: "govuk-table--small-text-until-tablet",
+                    head: summaryOfPayments.headings,
+                    rows: summaryOfPayments.data
+                    })
+                }}
+            </table>
+            
+            <p class="govuk-body">If you are eligible for the Management Payment (MPAY1) the payment details will be shown within section 7 below.</p>
+        </section>
 
-            <section>
-                <h2>7. Annual Payment Schedule</h2>
-                <p>Subject to you complying with your Agreement, the table below sets out a summary of the total payments for:</p>
-                <ul>
-                    <li>each year of the Agreement</li>
-                    <li>the total for the duration of the Agreement</li>
-                    <li>Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the Terms and Conditions.</li>
-                </ul>
-                
-                <table class="table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Year 1</th>
-                            <th>Year 2</th>
-                            <th>Year 3</th>
-                            <th>Total agreement grant payment</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for detail in payments.yearlyBreakdown.details %}
-                        <tr>
-                            <td>{{ detail.code }}</td>
-                            <td>£{{ detail.year1 | formatCurrency }}</td>
-                            <td>£{{ detail.year2 | formatCurrency }}</td>
-                            <td>£{{ detail.year3 | formatCurrency }}</td>
-                            <td>£{{ detail.totalPayment | formatCurrency }}</td>
-                        </tr>
-                        {% endfor %}
-                        <tr>
-                            <td>Total</td>
-                            <td>£{{ payments.yearlyBreakdown.annualTotals.year1 | formatCurrency }}</td>
-                            <td>£{{ payments.yearlyBreakdown.annualTotals.year2 | formatCurrency }}</td>
-                            <td>£{{ payments.yearlyBreakdown.annualTotals.year3 | formatCurrency }}</td>
-                            <td>£{{ payments.yearlyBreakdown.totalAgreementPayment | formatCurrency }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">7. Annual Payment Schedule</h2>
+            <p class="govuk-body">Subject to you complying with your Agreement, the table below sets out a summary of the total payments for:</p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>each year of the Agreement</li>
+                <li>the total for the duration of the Agreement</li>
+            </ul>
+            
+            <p class="govuk-body">Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the Terms and Conditions.</p>
+            
+            <table class="table-bordered">
+                {{ govukTable({
+                    captionClasses: "govuk-table__caption--m",
+                    classes: "govuk-table--small-text-until-tablet",
+                    head: annualPaymentSchedule.headings,
+                    rows: annualPaymentSchedule.data
+                    })
+                }}
+            </table>
+            
+        </section>
 
-            <section>
-                <h2>8. Agreement Period</h2>
-                <p>The Agreement will start on the "Agreement Start Date" and end on the "Agreement End Date",
-                subject to the provisions for early termination set out in the Terms and Conditions.</p>
-                <p>Agreement Start Date: {{ agreementStartDate }}</p>
-                <p>Agreement End Date: {{ agreementEndDate }}</p>
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">8. Agreement Period</h2>
+            <p class="govuk-body">The Agreement will start on the "Agreement Start Date" and end on the "Agreement End Date", subject to the provisions for early termination set out in the Terms and Conditions.</p>
+            <p class="govuk-body">Agreement Start Date: {{ agreementStartDate | formatDate }}</p>
+            <p class="govuk-body">Agreement End Date: {{ agreementEndDate | formatDate }}</p>
+        </section>
 
-            <section>
-                <h2>9. Electronic signature</h2>
-                <p>The Agreement comprising this Agreement Document, the Terms and Conditions and the Actions has been accepted by {{ username }} - {{ company }} on {{ signatureDate }}</p>
-            </section>
+        <section>
+            <h2 class="govuk-heading-m">9. Electronic signature</h2>
+            {% if status === 'offered' %}
+            <p class="govuk-body">This Agreement has not been signed by anyone representing {{ company }}.</p>
+            {% elif status === 'accepted' %}
+            <p class="govuk-body">The Agreement comprising this Agreement Document, the Terms and Conditions and the Actions was accepted by {{ username }} - {{ company }} on {{ signatureDate | formatDate }}</p>
+            {% endif %}
+        </section>
 
-            <section>
-                <h2>Data Protection</h2>
-                <p>The Department for Environment, Food and Rural Affairs (Defra) is the data controller for personal data you give
-                to RPA. For information on how we handle personal data go to www.gov.uk and search 'Rural Payments Agency
-                personal information charter'.</p>
-            </section>
-        </div>
-    </div>
-</body>
-</html>
+        <section>
+            <h2 class="govuk-heading-m">Data Protection</h2>
+            <p class="govuk-body">The Department for Environment, Food and Rural Affairs (Defra) is the data controller for personal data you give
+            to RPA. For information on how we handle personal data go to www.gov.uk and search 'Rural Payments Agency
+            personal information charter'.</p>
+        </section>
+      </div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {# Run JavaScript at end of the <body>, to avoid blocking the initial render. #}
+  <script type="module" src="/assets/js/govuk-frontend.min.js"></script>
+  <script type="module">
+    import { initAll } from '/assets/js//govuk-frontend.min.js'
+    initAll()
+  </script>
+{% endblock %}
     
