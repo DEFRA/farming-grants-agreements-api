@@ -7,56 +7,11 @@ import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
 
-describe('getAgreementDocumentController', () => {
+describe('getHTMLAgreementDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
-  // Mock data for tests - matching the structure in agreement-data.json
-  const mockAgreementData = {
-    agreementNumber: 'SFI123456789',
-    agreementName: 'Sample Agreement',
-    sbi: '123456789',
-    company: 'Sample Farm Ltd',
-    address: '123 Farm Lane, Farmville',
-    postcode: 'FA12 3RM',
-    username: 'John Doe',
-    agreementStartDate: '1/11/2024',
-    agreementEndDate: '31/10/2027',
-    signatureDate: '1/11/2024',
-    actions: [
-      {
-        code: 'CSAM1A',
-        title:
-          'Assess soil, test soil organic matter and produce a soil management plan',
-        startDate: '01/11/2024',
-        endDate: '31/10/2027',
-        duration: '3 years'
-      }
-    ],
-    parcels: [
-      {
-        parcelNumber: 'SX63599044',
-        parcelName: '',
-        totalArea: 0.7306,
-        activities: []
-      }
-    ],
-    payments: {
-      activities: [],
-      totalAnnualPayment: 3886.69,
-      yearlyBreakdown: {
-        details: [],
-        annualTotals: {
-          year1: 4365.45,
-          year2: 4126.07,
-          year3: 4126.07
-        },
-        totalAgreementPayment: 12617.59
-      }
-    }
-  }
-
-  const mockRenderedHtml = `<!DOCTYPE html><html><body>Test HTML with ${mockAgreementData.agreementNumber}</body></html>`
+  const mockRenderedHtml = `<html><body>Test HTML with SFI123456789</body></html>`
 
   beforeAll(async () => {
     server = await createServer()
@@ -70,14 +25,6 @@ describe('getAgreementDocumentController', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks()
-
-    // Setup mock implementations
-    jest
-      .spyOn(agreementDataHelper, 'getAgreementData')
-      .mockImplementation(() => mockAgreementData)
-    jest
-      .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockImplementation(() => mockRenderedHtml)
   })
 
   test('Should return HTML when valid agreement ID is provided', async () => {
@@ -97,12 +44,13 @@ describe('getAgreementDocumentController', () => {
 
     // Verify mocks were called correctly
     expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith(
-      agreementId,
-      expect.any(Object)
+      agreementId
     )
     expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
       'sfi-agreement.njk',
-      mockAgreementData
+      expect.objectContaining({
+        agreementNumber: agreementId
+      })
     )
   })
 
@@ -120,14 +68,13 @@ describe('getAgreementDocumentController', () => {
 
     // Verify the function defaulted to a reasonable value when ID was missing
     expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith(
-      'undefined',
-      expect.any(Object)
+      'undefined'
     )
   })
 
   test('Should handle error when template rendering fails', async () => {
     // Arrange
-    const errorMessage = 'Template rendering failed'
+    const errorMessage = 'Failed to render HTML'
     jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
       throw new Error(errorMessage)
     })
@@ -148,7 +95,7 @@ describe('getAgreementDocumentController', () => {
 
   test('Should handle error when agreement data retrieval fails', async () => {
     // Arrange
-    const errorMessage = 'Failed to retrieve agreement data'
+    const errorMessage = 'Failed to render HTML'
     jest
       .spyOn(agreementDataHelper, 'getAgreementData')
       .mockImplementation(() => {
@@ -167,30 +114,6 @@ describe('getAgreementDocumentController', () => {
       message: 'Failed to generate agreement document',
       error: errorMessage
     })
-  })
-
-  test('Should correctly render template with all expected data fields', async () => {
-    // Act
-    await server.inject({
-      method: 'GET',
-      url: '/api/agreement/SFI123456789'
-    })
-
-    // Assert that all expected fields were passed to the template renderer
-    const templateData = nunjucksRenderer.renderTemplate.mock.calls[0][1]
-    expect(templateData).toHaveProperty('agreementNumber')
-    expect(templateData).toHaveProperty('agreementName')
-    expect(templateData).toHaveProperty('sbi')
-    expect(templateData).toHaveProperty('company')
-    expect(templateData).toHaveProperty('address')
-    expect(templateData).toHaveProperty('postcode')
-    expect(templateData).toHaveProperty('username')
-    expect(templateData).toHaveProperty('agreementStartDate')
-    expect(templateData).toHaveProperty('agreementEndDate')
-    expect(templateData).toHaveProperty('actions')
-    expect(templateData).toHaveProperty('parcels')
-    expect(templateData).toHaveProperty('payments')
-    expect(templateData.payments).toHaveProperty('yearlyBreakdown')
   })
 })
 

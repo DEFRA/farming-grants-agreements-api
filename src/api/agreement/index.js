@@ -1,6 +1,7 @@
 import {
-  getAgreementDocumentController,
-  acceptAgreementDocumentController
+  getHTMLAgreementDocumentController,
+  acceptAgreementDocumentController,
+  viewAgreementDocumentController
 } from '~/src/api/agreement/controllers/index.js'
 
 /**
@@ -13,11 +14,16 @@ const agreementDocument = {
       server.route([
         {
           method: 'GET',
-          path: '/api/agreement/{agreementId}',
-          ...getAgreementDocumentController
+          path: '/agreement/{agreementId}',
+          ...viewAgreementDocumentController
         },
         {
           method: 'GET',
+          path: '/api/agreement/{agreementId}',
+          ...getHTMLAgreementDocumentController
+        },
+        {
+          method: 'POST',
           path: '/api/agreement/{agreementId}/accept',
           ...acceptAgreementDocumentController
         }

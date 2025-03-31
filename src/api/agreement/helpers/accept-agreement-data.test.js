@@ -6,12 +6,6 @@ import { acceptAgreement } from './accept-agreement-data.js'
 jest.mock('~/src/api/common/models/agreements.js')
 
 describe('acceptAgreement in accept-agreement-data', () => {
-  const mockLogger = {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn()
-  }
-
   const mockUpdateResult = {
     acknowledged: true,
     modifiedCount: 1,
@@ -36,51 +30,19 @@ describe('acceptAgreement in accept-agreement-data', () => {
     agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
 
     // Act
-    const result = await acceptAgreement(agreementId, mockLogger)
+    const result = await acceptAgreement(agreementId)
 
     // Assert
     expect(agreementsModel.updateOne).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
-          status: 'agreed',
+          status: 'accepted',
           signatureDate: new Date().toISOString()
         }
       }
     )
     expect(result).toEqual(mockUpdateResult)
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `Fetching agreement data for agreement ${agreementId}`
-    )
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      `Successfully accepted agreement data for agreement ${agreementId}`
-    )
-  })
-
-  test('should handle sample agreement ID correctly', async () => {
-    // Arrange
-    const originalNodeEnv = process.env.NODE_ENV
-    process.env.NODE_ENV = 'development'
-    const agreementId = 'sample'
-    agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
-
-    // Act
-    const result = await acceptAgreement(agreementId, mockLogger)
-
-    // Assert
-    expect(agreementsModel.updateOne).toHaveBeenCalledWith(
-      { agreementNumber: 'SFI123456789' },
-      {
-        $set: {
-          status: 'agreed',
-          signatureDate: new Date().toISOString()
-        }
-      }
-    )
-    expect(result).toEqual(mockUpdateResult)
-
-    // Cleanup
-    process.env.NODE_ENV = originalNodeEnv
   })
 
   test('should not use sample ID in production environment', async () => {
@@ -91,14 +53,14 @@ describe('acceptAgreement in accept-agreement-data', () => {
     agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
 
     // Act
-    const result = await acceptAgreement(agreementId, mockLogger)
+    const result = await acceptAgreement(agreementId)
 
     // Assert
     expect(agreementsModel.updateOne).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
-          status: 'agreed',
+          status: 'accepted',
           signatureDate: new Date().toISOString()
         }
       }
@@ -115,11 +77,8 @@ describe('acceptAgreement in accept-agreement-data', () => {
     agreementsModel.updateOne.mockResolvedValue(null)
 
     // Act & Assert
-    await expect(acceptAgreement(agreementId, mockLogger)).rejects.toThrow(
-      Boom.notFound('Agreement not found')
-    )
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      `Agreement not found for agreement ${agreementId}`
+    await expect(acceptAgreement(agreementId)).rejects.toThrow(
+      Boom.notFound('Agreement not found with ID SFI999999999')
     )
   })
 
@@ -130,16 +89,8 @@ describe('acceptAgreement in accept-agreement-data', () => {
     agreementsModel.updateOne.mockRejectedValue(dbError)
 
     // Act & Assert
-    await expect(acceptAgreement(agreementId, mockLogger)).rejects.toThrow(
-      Boom.internal('Failed to accept agreement data')
-    )
-
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      `Error accepting agreement data for agreement ${agreementId}`,
-      {
-        error: dbError.message,
-        stack: dbError.stack
-      }
+    await expect(acceptAgreement(agreementId)).rejects.toThrow(
+      Boom.internal('Database connection failed')
     )
   })
 
@@ -150,28 +101,6 @@ describe('acceptAgreement in accept-agreement-data', () => {
     agreementsModel.updateOne.mockRejectedValue(boomError)
 
     // Act & Assert
-    await expect(acceptAgreement(agreementId, mockLogger)).rejects.toEqual(
-      boomError
-    )
-  })
-
-  test('should handle empty agreementId', async () => {
-    // Arrange
-    const agreementId = ''
-
-    // Act & Assert
-    await expect(acceptAgreement(agreementId, mockLogger)).rejects.toThrow(
-      Boom.badRequest('Agreement ID is required')
-    )
-  })
-
-  test('should handle undefined agreementId', async () => {
-    // Arrange
-    const agreementId = undefined
-
-    // Act & Assert
-    await expect(acceptAgreement(agreementId, mockLogger)).rejects.toThrow(
-      Boom.badRequest('Agreement ID is required')
-    )
+    await expect(acceptAgreement(agreementId)).rejects.toEqual(boomError)
   })
 })

@@ -43,6 +43,7 @@
     "babel-plugin-module-resolver": "^5.0.2",
     "convict": "^6.2.4",
     "global-agent": "^3.0.0",
+    "govuk-frontend": "^5.9.0",
     "hapi-pino": "^12.1.0",
     "hapi-pulse": "^3.0.1",
     "html-entities": "^2.5.2",
