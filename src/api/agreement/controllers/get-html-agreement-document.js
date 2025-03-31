@@ -1,23 +1,18 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 
 /**
  * Controller to serve HTML agreement document
  * Renders a Nunjucks template with agreement data
  * @satisfies {Partial<ServerRoute>}
  */
-const getAgreementDocumentController = {
+const getHTMLAgreementDocumentController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
 
-      // Get the agreement data
-      const agreementData = await getAgreementData(agreementId, request.logger)
-
-      // Render the Nunjucks template with the data
-      const templatePath = 'sfi-agreement.njk'
-      const renderedHtml = renderTemplate(templatePath, agreementData)
+      // get HTML agreement
+      const renderedHtml = await getHTMLAgreementDocument(agreementId)
 
       // Return the HTML response
       return h.response(renderedHtml).type('text/html').code(statusCodes.ok)
@@ -25,6 +20,7 @@ const getAgreementDocumentController = {
       request.logger.error(
         `Error rendering agreement document: ${error.message}`
       )
+      request.logger.error(error.stack)
       return h
         .response({
           message: 'Failed to generate agreement document',
@@ -35,7 +31,7 @@ const getAgreementDocumentController = {
   }
 }
 
-export { getAgreementDocumentController }
+export { getHTMLAgreementDocumentController }
 
 /**
  * @import { ServerRoute } from '@hapi/hapi'

@@ -5,8 +5,8 @@ const collection = 'agreements'
 const actionSchema = new mongoose.Schema({
   code: { type: String, required: true },
   title: { type: String, required: true },
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
   duration: { type: String, required: true }
 })
 
@@ -14,8 +14,8 @@ const activitySchema = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
   area: { type: Number, required: true },
-  startDate: { type: String, required: true },
-  endDate: { type: String, required: true }
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true }
 })
 
 const parcelSchema = new mongoose.Schema({
@@ -50,10 +50,16 @@ const schema = new mongoose.Schema(
     address: { type: String, required: true },
     postcode: { type: String, required: true },
     username: { type: String, required: true },
-    agreementStartDate: { type: String, required: true },
-    agreementEndDate: { type: String, required: true },
-    status: { type: String, required: true, default: 'draft' },
-    signatureDate: { type: String },
+    agreementStartDate: { type: Date, required: true },
+    agreementEndDate: { type: Date, required: true },
+    status: {
+      type: String,
+      required: true,
+      default: 'offered',
+      enum: ['offered', 'accepted']
+    },
+    signatureDate: { type: Date },
+    terminationDate: { type: Date },
     actions: { type: [actionSchema], required: true },
     parcels: { type: [parcelSchema], required: true },
     payments: { type: paymentsSchema, required: true }
