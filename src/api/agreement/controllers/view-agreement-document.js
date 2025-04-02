@@ -1,5 +1,6 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 
 /**
@@ -16,10 +17,10 @@ const viewAgreementDocumentController = {
       const agreementData = await getAgreementData(agreementId)
 
       // Render the HTML agreement document
-      const renderedAgreementDocument = renderTemplate('sfi-agreement.njk', {
-        ...agreementData,
-        embedded: true
-      })
+      const renderedAgreementDocument = await getHTMLAgreementDocument(
+        agreementId,
+        agreementData
+      )
 
       // Render the Accept Agreement page
       const renderedHTML = renderTemplate('accept-agreement.njk', {
