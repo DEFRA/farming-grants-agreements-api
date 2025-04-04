@@ -7,18 +7,22 @@ import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data
  * @param {PaymentHubPayload} payload
  * @returns
  */
-const sendPayloadToPaymentHub = async (payload) =>
+const sendPayloadToPaymentHub = async (payload, logger) =>
   await fetch(`${config.get('paymentHubUri')}/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload)
+    body: payload
   })
     .then((response) => {
       if (!response.ok) {
         throw Boom.internal(`Failed to send payload: ${response.statusText}`)
       }
+      // TODO - take this out before production
+      logger.info(
+        `Payload sent to payment hub: ${JSON.stringify(payload, null, 2)}`
+      )
       return response.json()
     })
     .catch((error) => {
@@ -80,10 +84,9 @@ async function updatePaymentHub(agreementId, logger) {
       ]
     }
 
-    if (config.get('env') === 'local') {
+    if (config.get('env') === 'development') {
       logger.info(
-        'Payload to be sent to payment hub:',
-        JSON.stringify(payload, null, 2)
+        `Payload to be sent to payment hub: ${JSON.stringify(payload, null, 2)}`
       )
 
       return {
@@ -92,7 +95,7 @@ async function updatePaymentHub(agreementId, logger) {
       }
     }
 
-    await sendPayloadToPaymentHub(payload)
+    await sendPayloadToPaymentHub(payload, logger)
 
     return {
       status: 'success',
