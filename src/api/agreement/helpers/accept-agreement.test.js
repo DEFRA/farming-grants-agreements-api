@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
-import { acceptAgreement } from './accept-agreement-data.js'
+import { acceptAgreement } from './accept-agreement.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
 
@@ -85,7 +85,7 @@ describe('acceptAgreement in accept-agreement-data', () => {
   test('should handle database errors and log them', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
-    const dbError = new Error('Database connection failed')
+    const dbError = Boom.internal('Database connection failed')
     agreementsModel.updateOne.mockRejectedValue(dbError)
 
     // Act & Assert
