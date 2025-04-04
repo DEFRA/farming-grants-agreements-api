@@ -1,5 +1,7 @@
+import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { acceptAgreement } from '~/src/api/agreement/helpers/accept-agreement-data.js'
+import { acceptAgreement } from '~/src/api/agreement/helpers/accept-agreement.js'
+import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -11,15 +13,24 @@ const acceptAgreementDocumentController = {
     try {
       const { agreementId } = request.params
 
-      // Get the agreement data
+      if (!agreementId || agreementId === '') {
+        throw Boom.internalServerError('Agreement ID is required')
+      }
+
+      // Accept the agreement
       await acceptAgreement(agreementId, request.logger)
+
+      // Update the payment hub
+      await updatePaymentHub(agreementId, request.logger)
 
       // Return the HTML response
       return h.response({ message: 'Agreement accepted' }).code(statusCodes.ok)
     } catch (error) {
-      request.logger.error(
-        `Error accepting agreement document: ${error.message}`
-      )
+      if (error.isBoom) {
+        return error
+      }
+
+      request.logger.error(`Error accepting agreement document: ${error}`)
       return h
         .response({
           message: 'Failed to accept agreement document',
