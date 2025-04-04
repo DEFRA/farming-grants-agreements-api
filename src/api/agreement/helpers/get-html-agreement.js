@@ -176,12 +176,12 @@ const getAnnualPaymentSchedule = (agreementData) => {
  * Renders a Nunjucks template with agreement data
  * @param {string} agreementId - The agreement ID to fetch
  */
-const getHTMLAgreementDocument = async (agreementId) => {
+const getHTMLAgreementDocument = async (agreementId, data) => {
   if (agreementId === undefined || agreementId === null) {
     throw Boom.badRequest('Agreement ID is required')
   }
 
-  const agreementData = await getAgreementData(agreementId)
+  const agreementData = data || (await getAgreementData(agreementId))
 
   if (!agreementData) {
     throw Boom.notFound(`Agreement not found ${agreementId}`)
