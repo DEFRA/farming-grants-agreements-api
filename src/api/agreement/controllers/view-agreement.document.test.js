@@ -6,6 +6,7 @@ import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-
 // Mock the modules
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
+jest.mock('~/src/api/agreement/helpers/get-html-agreement.js')
 
 describe('viewAgreementDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -31,7 +32,6 @@ describe('viewAgreementDocumentController', () => {
     jest.spyOn(agreementDataHelper, 'getAgreementData')
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockImplementationOnce(() => mockRenderedDocumentHtml)
       .mockImplementationOnce(() => mockRenderedHtml)
   })
 
