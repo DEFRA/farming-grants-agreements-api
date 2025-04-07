@@ -8,12 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 
-      if (checkBox && !checkBox.checked) {
-        errorMessageElement.innerHTML =
-          'You must accept the agreement to continue'
-        return
-      }
-
       if (submitButton) {
         submitButton.disabled = true
         submitButton.textContent = 'Processing...'

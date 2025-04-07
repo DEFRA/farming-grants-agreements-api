@@ -123,6 +123,13 @@ const config = convict({
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
     }
+  },
+  paymentHubUri: {
+    doc: 'URI for payment hub',
+    format: String,
+    default:
+      'https://devffcinfsb1001.servicebus.windows.net/ffc-pay-request-dev',
+    env: 'PAYMENT_HUB_URI'
   }
 })
 
