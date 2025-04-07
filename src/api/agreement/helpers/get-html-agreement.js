@@ -175,6 +175,7 @@ const getAnnualPaymentSchedule = (agreementData) => {
 /**
  * Renders a Nunjucks template with agreement data
  * @param {string} agreementId - The agreement ID to fetch
+ * @param {object} [data] - The agreement data object (optional)
  */
 const getHTMLAgreementDocument = async (agreementId, data) => {
   if (agreementId === undefined || agreementId === null) {
@@ -192,10 +193,6 @@ const getHTMLAgreementDocument = async (agreementId, data) => {
   agreementData.agreementLevelActions = getAgreementLevelActions(agreementData)
   agreementData.summaryOfPayments = getSummaryOfPayments(agreementData)
   agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
-
-  if (!agreementData) {
-    throw Boom.error('Failed to retrieve agreement data')
-  }
 
   return renderTemplate('sfi-agreement.njk', agreementData)
 }
