@@ -2,9 +2,6 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
-import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
-
-// trying to get round a cache issue on github
 
 /**
  * Controller to serve HTML agreement document
