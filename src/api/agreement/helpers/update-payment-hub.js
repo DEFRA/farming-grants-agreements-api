@@ -112,4 +112,4 @@ async function updatePaymentHub(agreementId, logger) {
 
 export { updatePaymentHub }
 
-/** @import { PaymentHubPayload } from './update-payment-hub.d.js' */
+/** @import { PaymentHubPayload } from '~/src/api/common/types/payment-hub.d.js' */
