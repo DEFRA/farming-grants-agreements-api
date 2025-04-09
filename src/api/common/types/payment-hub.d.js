@@ -15,10 +15,10 @@
  * @property {string} dueDate - The due date in DD/MM/YYYY format.
  * @property {number} value - The payment value.
  * @property {string} debtType - The type of debt (e.g., 'irr').
- * @property {string} recoveryDate - The recovery date in DD/MM/YYYY format.
+ * @property {string} [recoveryDate] - The recovery date in DD/MM/YYYY format.
  * @property {string} pillar - The pillar type (e.g., 'DA').
  * @property {string} originalInvoiceNumber - The original invoice number.
- * @property {string} originalSettlementDate - The original settlement date in DD/MM/YYYY format.
+ * @property {string} [originalSettlementDate] - The original settlement date in DD/MM/YYYY format.
  * @property {string} invoiceCorrectionReference - The invoice correction reference.
  * @property {string} trader - The trader identifier.
  * @property {string} vendor - The vendor identifier.
