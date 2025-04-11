@@ -1,14 +1,20 @@
 import { jest } from '@jest/globals'
 
 import nunjucks from 'nunjucks'
-import { renderTemplate } from './nunjucks-renderer.js'
+import {
+  formatCurrency,
+  formatDate,
+  renderTemplate
+} from './nunjucks-renderer.js'
 
 jest.mock('nunjucks', () => {
   const mockRender = jest.fn()
   const mockAddFilter = jest.fn()
+  const mockDateFilter = jest.fn()
   const mockConfigure = jest.fn().mockReturnValue({
     render: mockRender,
-    addFilter: mockAddFilter
+    addFilter: mockAddFilter,
+    dateFilter: mockDateFilter
   })
 
   return {
@@ -16,13 +22,18 @@ jest.mock('nunjucks', () => {
     __mocks: {
       render: mockRender,
       addFilter: mockAddFilter,
+      dateFilter: mockDateFilter,
       configure: mockConfigure
     }
   }
 })
 
 describe('nunjucks-renderer', () => {
-  const { render: mockRender, addFilter: mockAddFilter } = nunjucks.__mocks
+  const {
+    render: mockRender,
+    addFilter: mockAddFilter,
+    dateFilter: mockDateFilter
+  } = nunjucks.__mocks
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -46,14 +57,6 @@ describe('nunjucks-renderer', () => {
   })
 
   describe('formatCurrency filter', () => {
-    const formatCurrency = (value) => {
-      const num = parseFloat(value) || 0
-      return num.toLocaleString('en-GB', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      })
-    }
-
     beforeAll(() => {
       mockAddFilter.mockImplementation((name, fn) => {
         if (name === 'formatCurrency') {
@@ -83,6 +86,23 @@ describe('nunjucks-renderer', () => {
       expect(filter('invalid')).toBe('0.00')
       expect(filter(null)).toBe('0.00')
       expect(filter(undefined)).toBe('0.00')
+    })
+  })
+
+  describe('formatDate filter', () => {
+    beforeAll(() => {
+      mockDateFilter.mockImplementation((name, fn) => {
+        if (name === 'formatDate') {
+          mockDateFilter.formatDate = fn
+        }
+      })
+
+      mockDateFilter('formatDate', formatDate)
+    })
+
+    test('should format date correctly en-GB standard format', () => {
+      const filter = mockDateFilter.formatDate
+      expect(filter(1744360860000)).toBe('11/04/2025')
     })
   })
 })

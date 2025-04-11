@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
-import { config } from '~/src/config/index.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * Send the payload to the payment hub
@@ -8,7 +8,7 @@ import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data
  * @returns
  */
 const sendPayloadToPaymentHub = async (payload, logger) =>
-  await fetch(`${config.get('paymentHubUri')}/messages`, {
+  fetch(`${config.get('paymentHubUri')}/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
