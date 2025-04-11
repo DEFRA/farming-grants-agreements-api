@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 
 const dateOptions = {
   year: 'numeric',
@@ -178,7 +178,7 @@ const getAnnualPaymentSchedule = (agreementData) => {
  * @param {object} [data] - The agreement data object (optional)
  */
 const getHTMLAgreementDocument = async (agreementId, data) => {
-  if (agreementId === undefined || agreementId === null) {
+  if (agreementId == null) {
     throw Boom.badRequest('Agreement ID is required')
   }
 

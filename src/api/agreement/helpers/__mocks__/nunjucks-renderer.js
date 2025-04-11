@@ -1,5 +1,5 @@
 const renderTemplate = jest.fn(
-  (templatePath, data) =>
+  (_templatePath, data) =>
     `<html><body>Test HTML with ${data.agreementNumber}</body></html>`
 )
 

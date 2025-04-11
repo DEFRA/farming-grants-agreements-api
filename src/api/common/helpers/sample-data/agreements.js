@@ -1,3 +1,14 @@
+const startDate = '2024-11-01'
+const endDate = '2027-10-31'
+const assessHedgerowDescription = 'Assess and record hedgerow condition'
+const assessSoilDescription =
+  'Assess soil, produce a soil management plan and test soil organic matter'
+const manageGrasslandDescription =
+  'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs'
+const earthBanksDescription = 'Maintain earth banks or stone-faced hedgebanks'
+const manageHedgerowDescription = 'Manage hedgerows'
+const manageHedgerowTreesDescription = 'Maintain or establish hedgerow trees'
+
 export default [
   {
     agreementNumber: 'SFI123456789',
@@ -7,22 +18,22 @@ export default [
     address: '123 Farm Lane, Farmville',
     postcode: 'FA12 3RM',
     username: 'John Doe',
-    agreementStartDate: '2024-11-01',
-    agreementEndDate: '2027-10-31',
+    agreementStartDate: startDate,
+    agreementEndDate: endDate,
     actions: [
       {
         code: 'CSAM1A',
         title:
           'Assess soil, test soil organic matter and produce a soil management plan',
-        startDate: '2024-11-01',
-        endDate: '2027-10-31',
+        startDate,
+        endDate,
         duration: '3 years'
       },
       {
         code: 'MPAY1',
         title: 'SFI Management Payment',
-        startDate: '2024-11-01',
-        endDate: '2027-10-31',
+        startDate,
+        endDate,
         duration: '3 years'
       }
     ],
@@ -36,53 +47,50 @@ export default [
             code: 'BND1',
             description: 'Maintain dry stone walls',
             area: 95.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW1',
-            description: 'Assess and record hedgerow condition',
+            description: assessHedgerowDescription,
             area: 207.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 0.7287,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CLIG3',
-            description:
-              'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs',
+            description: manageGrasslandDescription,
             area: 0.7287,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'BND2',
-            description: 'Maintain earth banks or stone-faced hedgebanks',
+            description: earthBanksDescription,
             area: 234.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW2',
-            description: 'Manage hedgerows',
+            description: manageHedgerowDescription,
             area: 207.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 0.7287,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           }
         ]
       },
@@ -93,32 +101,31 @@ export default [
         activities: [
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 0.7287,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW2',
-            description: 'Manage hedgerows',
+            description: manageHedgerowDescription,
             area: 265.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW1',
-            description: 'Assess and record hedgerow condition',
+            description: assessHedgerowDescription,
             area: 265.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'BND2',
-            description: 'Maintain earth banks or stone-faced hedgebanks',
+            description: earthBanksDescription,
             area: 265.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           }
         ]
       },
@@ -129,47 +136,45 @@ export default [
         activities: [
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 1.6108,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CLIG3',
-            description:
-              'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs',
+            description: manageGrasslandDescription,
             area: 1.6108,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW3',
-            description: 'Maintain or establish hedgerow trees',
+            description: manageHedgerowTreesDescription,
             area: 337.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW2',
-            description: 'Manage hedgerows',
+            description: manageHedgerowDescription,
             area: 337.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW1',
-            description: 'Assess and record hedgerow condition',
+            description: assessHedgerowDescription,
             area: 337.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'BND2',
-            description: 'Maintain earth banks or stone-faced hedgebanks',
+            description: earthBanksDescription,
             area: 374.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           }
         ]
       },
@@ -180,47 +185,45 @@ export default [
         activities: [
           {
             code: 'CHRW2',
-            description: 'Manage hedgerows',
+            description: manageHedgerowDescription,
             area: 640.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 3.1213,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CLIG3',
-            description:
-              'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs',
+            description: manageGrasslandDescription,
             area: 3.1213,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'BND2',
-            description: 'Maintain earth banks or stone-faced hedgebanks',
+            description: earthBanksDescription,
             area: 430.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW3',
-            description: 'Maintain or establish hedgerow trees',
+            description: manageHedgerowTreesDescription,
             area: 230.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW1',
-            description: 'Assess and record hedgerow condition',
+            description: assessHedgerowDescription,
             area: 640.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           }
         ]
       },
@@ -231,32 +234,31 @@ export default [
         activities: [
           {
             code: 'CHRW2',
-            description: 'Manage hedgerows',
+            description: manageHedgerowDescription,
             area: 50.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 0.8291,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW1',
-            description: 'Assess and record hedgerow condition',
+            description: assessHedgerowDescription,
             area: 150.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'BND2',
-            description: 'Maintain earth banks or stone-faced hedgebanks',
+            description: earthBanksDescription,
             area: 210.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           }
         ]
       },
@@ -267,26 +269,24 @@ export default [
         activities: [
           {
             code: 'BND2',
-            description: 'Maintain earth banks or stone-faced hedgebanks',
+            description: earthBanksDescription,
             area: 165.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 0.4016,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CLIG3',
-            description:
-              'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs',
+            description: manageGrasslandDescription,
             area: 0.4016,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           }
         ]
       },
@@ -297,47 +297,45 @@ export default [
         activities: [
           {
             code: 'CHRW3',
-            description: 'Maintain or establish hedgerow trees',
+            description: manageHedgerowTreesDescription,
             area: 150.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW1',
-            description: 'Assess and record hedgerow condition',
+            description: assessHedgerowDescription,
             area: 300.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CHRW2',
-            description: 'Manage hedgerows',
+            description: manageHedgerowDescription,
             area: 300.0,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CSAM1',
-            description:
-              'Assess soil, produce a soil management plan and test soil organic matter',
+            description: assessSoilDescription,
             area: 2.7771,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'CLIG3',
-            description:
-              'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs',
+            description: manageGrasslandDescription,
             area: 2.7771,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           },
           {
             code: 'GRH8',
             description: 'Supplement: Haymaking (late cut)',
             area: 9.7091,
-            startDate: '2024-11-01',
-            endDate: '2027-10-31'
+            startDate,
+            endDate
           }
         ]
       }
@@ -353,36 +351,35 @@ export default [
         },
         {
           code: 'BND2',
-          description: 'Maintain earth banks or stone-faced hedgebanks',
+          description: earthBanksDescription,
           measurement: '1678.00 Metres',
           paymentRate: '11.00/100m',
           annualPayment: 184.58
         },
         {
           code: 'CHRW1',
-          description: 'Assess and record hedgerow condition',
+          description: assessHedgerowDescription,
           measurement: '1799.00 Metres',
           paymentRate: '5.00/100m',
           annualPayment: 89.95
         },
         {
           code: 'CHRW2',
-          description: 'Manage hedgerows',
+          description: manageHedgerowDescription,
           measurement: '1799.00 Metres',
           paymentRate: '13.00/100m',
           annualPayment: 233.87
         },
         {
           code: 'CHRW3',
-          description: 'Maintain or establish hedgerow trees',
+          description: manageHedgerowTreesDescription,
           measurement: '717.00 Metres',
           paymentRate: '10.00/100m',
           annualPayment: 71.7
         },
         {
           code: 'CLIG3',
-          description:
-            'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs',
+          description: manageGrasslandDescription,
           measurement: '8.64 HA',
           paymentRate: '151.00/ha',
           annualPayment: 1304.56
@@ -397,8 +394,7 @@ export default [
         },
         {
           code: 'CSAM1A',
-          description:
-            'Assess soil, produce a soil management plan and test soil organic matter',
+          description: assessSoilDescription,
           measurement: '1.00 Units',
           paymentRate: '97.00/units',
           annualPayment: 97.0

@@ -11,8 +11,7 @@ const nunjucksEnv = nunjucks.configure(path, {
   noCache: process.env.NODE_ENV !== 'production'
 })
 
-// Add a custom currency formatter filter
-nunjucksEnv.addFilter('formatCurrency', function (number) {
+export const formatCurrency = (number) => {
   if (typeof number !== 'number') {
     number = parseFloat(number) || 0
   }
@@ -20,16 +19,21 @@ nunjucksEnv.addFilter('formatCurrency', function (number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })
-})
+}
 
-// Add a date formatter filter
-nunjucksEnv.addFilter('formatDate', function (date) {
+// Add a custom currency formatter filter
+nunjucksEnv.addFilter('formatCurrency', formatCurrency)
+
+export const formatDate = (date) => {
   return new Date(date).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric'
   })
-})
+}
+
+// Add a date formatter filter
+nunjucksEnv.addFilter('formatDate', formatDate)
 
 /**
  * Renders a template with the given data
