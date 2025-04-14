@@ -124,12 +124,33 @@ const config = convict({
       env: 'TRACING_HEADER'
     }
   },
-  paymentHubUri: {
-    doc: 'URI for payment hub',
-    format: String,
-    default:
-      'https://devffcinfsb1001.servicebus.windows.net/ffc-pay-request-dev',
-    env: 'PAYMENT_HUB_URI'
+  paymentHub: {
+    uri: {
+      doc: 'URI for payment hub service bus',
+      format: String,
+      default:
+        'https://devffcinfsb1001.servicebus.windows.net/ffc-pay-request-dev/messages',
+      env: 'PAYMENT_HUB_URI'
+    },
+    ttl: {
+      doc: 'Time to live for payment hub access token',
+      format: 'nat',
+      default: 86400,
+      env: 'PAYMENT_HUB_TTL'
+    },
+    keyName: {
+      doc: 'Key name for payment hub service bus',
+      format: String,
+      default: 'MyManagedAccessKey',
+      env: 'PAYMENT_HUB_KEY_NAME'
+    },
+    key: {
+      doc: 'Key for payment hub service bus',
+      format: String,
+      default: 'my_key',
+      sensitive: true,
+      env: 'PAYMENT_HUB_KEY'
+    }
   }
 })
 
