@@ -67,7 +67,7 @@ describe('Payment Hub Helper', () => {
     })
 
     // Setup cache mock
-    cachedToken = { access_token: 'test-access-token' }
+    cachedToken = 'test-access-token'
     mockCache = {
       get: jest.fn().mockResolvedValue(cachedToken)
     }
@@ -109,7 +109,7 @@ describe('Payment Hub Helper', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            Authorization: cachedToken.access_token,
+            Authorization: cachedToken,
             'Content-Type': 'application/json',
             BrokerProperties: expect.any(String)
           }),
@@ -117,7 +117,10 @@ describe('Payment Hub Helper', () => {
         })
       )
 
-      expect(result).toEqual({ success: true })
+      expect(result).toEqual({
+        message: 'Payload sent to payment hub successfully',
+        status: 'success'
+      })
     })
 
     it('should throw an error when fetch response is not ok', async () => {

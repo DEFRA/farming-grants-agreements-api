@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import convict from 'convict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -128,8 +129,7 @@ const config = convict({
     uri: {
       doc: 'URI for payment hub service bus',
       format: String,
-      default:
-        'https://devffcinfsb1001.servicebus.windows.net/ffc-pay-request-dev/messages',
+      default: 'https://paymenthub/',
       env: 'PAYMENT_HUB_URI'
     },
     ttl: {
@@ -142,14 +142,14 @@ const config = convict({
       doc: 'Key name for payment hub service bus',
       format: String,
       default: 'MyManagedAccessKey',
-      env: 'PAYMENT_HUB_KEY_NAME'
+      env: 'PAYMENT_HUB_SA_KEY_NAME'
     },
     key: {
       doc: 'Key for payment hub service bus',
       format: String,
       default: 'my_key',
       sensitive: true,
-      env: 'PAYMENT_HUB_KEY'
+      env: 'PAYMENT_HUB_SA_KEY'
     }
   }
 })

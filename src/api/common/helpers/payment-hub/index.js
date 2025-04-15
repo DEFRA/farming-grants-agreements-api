@@ -1,3 +1,4 @@
+import crypto from 'crypto-js'
 import { config } from '~/src/config/index.js'
 import { initCache } from '~/src/api/common/helpers/cache.js'
 
@@ -35,7 +36,7 @@ const createPaymentHub = () => {
    */
   const getCachedToken = (server) => {
     if (!cache) {
-      cache = initCache(server, 'payment_hub_token', getPaymentHubToken, {
+      cache = initCache(server, 'token', getPaymentHubToken, {
         expiresIn: config.get('paymentHub.ttl')
       })
     }
@@ -70,9 +71,9 @@ const createPaymentHub = () => {
       SessionId: '123'
     }
 
-    const url = new URL(config.get('paymentHub.uri'))
+    const url = new URL(`${config.get('paymentHub.uri')}/messages`)
     const headers = {
-      Authorization: accessToken.access_token,
+      Authorization: accessToken,
       'Content-Type': 'application/json',
       BrokerProperties: JSON.stringify(brokerProperties)
     }
@@ -86,8 +87,10 @@ const createPaymentHub = () => {
       throw new Error(`Payment hub request failed: ${response.statusText}`)
     }
 
-    const responseBody = await response.json()
-    return responseBody
+    return {
+      status: 'success',
+      message: 'Payload sent to payment hub successfully'
+    }
   }
 
   return {
