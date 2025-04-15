@@ -16,16 +16,7 @@ const getPaymentHubToken = () => {
   const hash = crypto
     .HmacSHA256(signature, config.get('paymentHub.key'))
     .toString(crypto.enc.Base64)
-  return (
-    'SharedAccessSignature sr=' +
-    encoded +
-    '&sig=' +
-    encodeURIComponent(hash) +
-    '&se=' +
-    ttl +
-    '&skn=' +
-    config.get('paymentHub.keyName')
-  )
+  return `SharedAccessSignature sr=${encoded}&sig=${encodeURIComponent(hash)}&se=${ttl}&skn=${config.get('paymentHub.keyName')}`
 }
 
 /**
