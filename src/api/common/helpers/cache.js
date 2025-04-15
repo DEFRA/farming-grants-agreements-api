@@ -1,7 +1,3 @@
-import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
-
-const logger = createLogger()
-
 /**
  *
  * @param { import('@hapi/hapi').Server } server
@@ -11,7 +7,6 @@ const logger = createLogger()
  * @returns { import('@hapi/catbox').Policy<any, any> }
  */
 export function initCache(server, segment, generateFunc, options = {}) {
-  logger.info(`Initialising ${segment} cache`)
   return server.cache({
     cache: 'agreement-service',
     segment,

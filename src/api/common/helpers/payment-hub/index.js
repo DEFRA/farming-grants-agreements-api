@@ -100,9 +100,7 @@ const createPaymentHub = () => {
   }
 }
 
-const paymentHub = createPaymentHub()
-
 export const { getPaymentHubToken, getCachedToken, sendPaymentHubRequest } =
-  paymentHub
+  createPaymentHub()
 
 /** @import { PaymentHubPayload } from '~/src/api/common/types/payment-hub.d.js' */
