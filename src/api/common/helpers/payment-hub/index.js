@@ -12,7 +12,7 @@ const getPaymentHubToken = () => {
   const encoded = encodeURIComponent(config.get('paymentHub.uri'))
   const ttl =
     Math.round(new Date().getTime() / 1000) + config.get('paymentHub.ttl')
-  const signature = encoded + '\n' + ttl
+  const signature = `${encoded}\n${ttl}`
   const hash = crypto
     .HmacSHA256(signature, config.get('paymentHub.key'))
     .toString(crypto.enc.Base64)
