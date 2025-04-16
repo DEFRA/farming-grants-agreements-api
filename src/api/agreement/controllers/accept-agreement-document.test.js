@@ -31,10 +31,7 @@ describe('acceptAgreementDocumentController', () => {
     })
 
     // Assert
-    expect(acceptAgreement).toHaveBeenCalledWith(
-      'SFI123456789',
-      expect.any(Object)
-    )
+    expect(acceptAgreement).toHaveBeenCalledWith('SFI123456789')
     expect(statusCode).toBe(statusCodes.ok)
     expect(result).toEqual({
       message: 'Agreement accepted'

@@ -1,14 +1,12 @@
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
 import Boom from '@hapi/boom'
 
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
-
-const globalFetch = global.fetch
+jest.mock('~/src/api/common/helpers/payment-hub/index.js')
 
 describe('updatePaymentHub', () => {
-  const mockResponse = { status: 'success' }
-  const mockFetch = jest.fn()
   const logger = { info: jest.fn(), error: jest.fn() }
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
@@ -18,14 +16,7 @@ describe('updatePaymentHub', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     getAgreementData.mockResolvedValue(mockAgreementData)
-    global.fetch = mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockResponse)
-    })
-  })
-
-  afterEach(() => {
-    global.fetch = globalFetch
+    sendPaymentHubRequest.mockResolvedValue({ status: 'success' })
   })
 
   test('should send payload to payment hub', async () => {
@@ -35,7 +26,7 @@ describe('updatePaymentHub', () => {
     const result = await updatePaymentHub(agreementId, logger)
 
     // Assert
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1)
     expect(result).toEqual({
       status: 'success',
       message: 'Payload sent to payment hub successfully'
@@ -45,15 +36,13 @@ describe('updatePaymentHub', () => {
   test('should handle response not ok', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
-    const errorResponse = { status: 500, statusText: 'Internal Server Error' }
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      ...errorResponse
-    })
+    sendPaymentHubRequest.mockRejectedValueOnce(
+      new Error('Internal Server Error')
+    )
 
     // Act & Assert
     await expect(updatePaymentHub(agreementId, logger)).rejects.toThrow(
-      `Failed to send payload: ${errorResponse.statusText}`
+      'Internal Server Error'
     )
   })
 
@@ -71,7 +60,7 @@ describe('updatePaymentHub', () => {
   test('should throw an error if fetch fails', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
-    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+    sendPaymentHubRequest.mockRejectedValueOnce(new Error('Network error'))
 
     // Act & Assert
     await expect(updatePaymentHub(agreementId, logger)).rejects.toThrow(
