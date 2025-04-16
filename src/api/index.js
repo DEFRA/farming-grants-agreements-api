@@ -1,5 +1,6 @@
 import path from 'path'
 import hapi from '@hapi/hapi'
+import CatboxMemory from '@hapi/catbox-memory'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/api/router.js'
@@ -38,7 +39,15 @@ async function createServer() {
     },
     router: {
       stripTrailingSlash: true
-    }
+    },
+    cache: [
+      {
+        name: 'agreement-service',
+        provider: {
+          constructor: CatboxMemory.Engine
+        }
+      }
+    ]
   })
 
   // Hapi Plugins:

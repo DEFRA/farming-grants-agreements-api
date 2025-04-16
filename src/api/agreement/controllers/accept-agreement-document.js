@@ -18,10 +18,10 @@ const acceptAgreementDocumentController = {
       }
 
       // Accept the agreement
-      await acceptAgreement(agreementId, request.logger)
+      await acceptAgreement(agreementId)
 
       // Update the payment hub
-      await updatePaymentHub(agreementId, request.logger)
+      await updatePaymentHub(request, agreementId)
 
       // Return the HTML response
       return h.response({ message: 'Agreement accepted' }).code(statusCodes.ok)

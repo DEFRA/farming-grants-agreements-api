@@ -1,42 +1,15 @@
 import Boom from '@hapi/boom'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { config } from '~/src/config/index.js'
-
-/**
- * Send the payload to the payment hub
- * @param {PaymentHubPayload} payload
- * @returns
- */
-const sendPayloadToPaymentHub = async (payload, logger) =>
-  fetch(`${config.get('paymentHubUri')}/messages`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: payload
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw Boom.internal(`Failed to send payload: ${response.statusText}`)
-      }
-      // TODO - take this out before production
-      logger.info(
-        `Payload sent to payment hub: ${JSON.stringify(payload, null, 2)}`
-      )
-      return response.json()
-    })
-    .catch((error) => {
-      throw Boom.internal(`Error sending payload: ${error.message}`)
-    })
+import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
 
 /**
  * Sends a payload to the payments hub
+ * @param {import('@hapi/hapi').Request<ReqRefDefaults>} request
  * @param {string} agreementId
- * @param {*} logger
  * @returns {*}
  * @throws {Error} If the agreement data is not found or if there is an error
  */
-async function updatePaymentHub(agreementId, logger) {
+async function updatePaymentHub({ server, logger }, agreementId) {
   try {
     const agreementData = await getAgreementData(agreementId)
 
@@ -84,18 +57,7 @@ async function updatePaymentHub(agreementId, logger) {
       ]
     }
 
-    if (config.get('env') === 'development') {
-      logger.info(
-        `Payload to be sent to payment hub: ${JSON.stringify(payload, null, 2)}`
-      )
-
-      return {
-        status: 'success',
-        message: 'Payload sent to payment hub successfully'
-      }
-    }
-
-    await sendPayloadToPaymentHub(payload, logger)
+    await sendPaymentHubRequest(server, logger, payload)
 
     return {
       status: 'success',
