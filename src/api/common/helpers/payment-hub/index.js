@@ -1,4 +1,5 @@
 import crypto from 'crypto-js'
+import { ProxyAgent } from 'undici'
 import { config } from '~/src/config/index.js'
 import { initCache } from '~/src/api/common/helpers/cache.js'
 
@@ -34,6 +35,32 @@ const getCachedToken = (server) => {
 }
 
 /**
+ * Make fetch requests with proxy support
+ * @param {string} url - The URL to fetch
+ * @param {object} options - The fetch options
+ * @param {string} options.method - The HTTP method (GET, POST, etc.)
+ * @param {object} options.headers - The request headers
+ * @param {object} options.body - The request body
+ * @returns {Promise<Response>} The fetch response
+ */
+const proxyFetch = (url, options) => {
+  const proxyUrlConfig = config.get('httpProxy') // bound to HTTP_PROXY
+
+  if (!proxyUrlConfig) {
+    return fetch(url, options)
+  }
+
+  return fetch(url, {
+    ...options,
+    dispatcher: new ProxyAgent({
+      uri: proxyUrlConfig,
+      keepAliveTimeout: 10,
+      keepAliveMaxTimeout: 10
+    })
+  })
+}
+
+/**
  * Send a request to the payment hub
  * @param { import('@hapi/hapi').Server } server
  * @param { import('@hapi/hapi').ServerLogger } logger
@@ -62,14 +89,13 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
   }
 
   const url = new URL(`${config.get('paymentHub.uri')}/messages`)
-  const headers = {
-    Authorization: accessToken,
-    'Content-Type': 'application/json',
-    BrokerProperties: JSON.stringify(brokerProperties)
-  }
-  const response = await fetch(url, {
+  const response = await proxyFetch(url, {
     method: 'POST',
-    headers,
+    headers: {
+      Authorization: accessToken,
+      'Content-Type': 'application/json',
+      BrokerProperties: JSON.stringify(brokerProperties)
+    },
     body: JSON.stringify(body)
   })
 
