@@ -1,6 +1,7 @@
 import {
   getHTMLAgreementDocumentController,
   acceptAgreementDocumentController,
+  unacceptAgreementDocumentController,
   viewAgreementDocumentController
 } from '~/src/api/agreement/controllers/index.js'
 
@@ -26,6 +27,11 @@ const agreementDocument = {
           method: 'POST',
           path: '/api/agreement/{agreementId}/accept',
           ...acceptAgreementDocumentController
+        },
+        {
+          method: 'POST',
+          path: '/api/agreement/{agreementId}/unaccept',
+          ...unacceptAgreementDocumentController
         }
       ])
     }

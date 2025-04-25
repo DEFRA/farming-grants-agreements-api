@@ -20,18 +20,18 @@ async function updatePaymentHub({ server, logger }, agreementId) {
     // Construct the payload based on the agreement data
     /** @type {PaymentHubPayload} */
     const payload = {
-      sourceSystem: 'AHWR',
+      sourceSystem: 'FRPS',
       frn: 1234567890,
       sbi: 123456789,
-      marketingYear: 2022,
+      marketingYear: 2025,
       paymentRequestNumber: 1,
       paymentType: 1,
       correlationId: '123e4567-e89b-12d3-a456-426655440000',
       invoiceNumber: 'S1234567S1234567V001',
-      agreementNumber: 'AHWR12345678',
+      agreementNumber: 'SFI12345678',
       contractNumber: 'S1234567',
       currency: 'GBP',
-      schedule: 'Q4',
+      schedule: 'T4',
       dueDate: '09/11/2022',
       value: 500,
       debtType: 'irr',
@@ -45,9 +45,9 @@ async function updatePaymentHub({ server, logger }, agreementId) {
       invoiceLines: [
         {
           value: 500,
-          description: 'G00 - Gross value of claim',
+          description: 'G00 - Gross value of agreement',
           schemeCode: 'A1234',
-          standardCode: 'ahwr-cows',
+          standardCode: 'frps-cows',
           accountCode: 'SOS123',
           deliveryBody: 'RP00',
           marketingYear: 2022,
