@@ -11,6 +11,64 @@ const manageHedgerowTreesDescription = 'Maintain or establish hedgerow trees'
 
 export default [
   {
+    agreementNumber: 'SFI987654321',
+    agreementName: 'Sample Agreement',
+    sbi: '117235001',
+    company: 'Sample Farm Ltd',
+    address: '123 Farm Lane, Farmville',
+    postcode: 'FA12 3RM',
+    username: 'Diana Peart',
+    agreementStartDate: startDate,
+    agreementEndDate: endDate,
+    actions: [],
+    parcels: [
+      {
+        parcelNumber: 'SX06799238',
+        parcelName: '',
+        totalArea: 10.73,
+        activities: [
+          {
+            code: 'CSAM1',
+            description: assessSoilDescription,
+            area: 10.73,
+            startDate,
+            endDate
+          }
+        ]
+      }
+    ],
+    payments: {
+      activities: [
+        {
+          code: 'CSAM1',
+          description:
+            'Assess soil, test soil organic matter and produce a soil management plan',
+          measurement: '10.63 HA',
+          paymentRate: '6.00/ha',
+          annualPayment: 63.78
+        }
+      ],
+      totalAnnualPayment: 63.78,
+      yearlyBreakdown: {
+        details: [
+          {
+            code: 'CSAM1',
+            year1: 63.78,
+            year2: 63.78,
+            year3: 63.78,
+            totalPayment: 191.31
+          }
+        ],
+        annualTotals: {
+          year1: 63.78,
+          year2: 63.78,
+          year3: 63.78
+        },
+        totalAgreementPayment: 191.31
+      }
+    }
+  },
+  {
     agreementNumber: 'SFI123456789',
     agreementName: 'Sample Agreement',
     sbi: '123456789',
