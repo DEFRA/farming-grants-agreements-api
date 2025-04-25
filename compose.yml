@@ -66,6 +66,22 @@ services:
   #   networks:
   #     - cdp-tenant
 
+  cdp-defra-id-stub:
+    build: https://github.com/DEFRA/cdp-defra-id-stub.git
+    ports: 
+      - 3200:3200
+    links:
+      - 'redis:redis'
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      PORT: 3200
+      NODE_ENV: development
+      REDIS_HOST: redis
+    networks:
+      - cdp-tenant
+
   your-backend:
     build: ./
     ports:
