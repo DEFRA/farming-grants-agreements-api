@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom'
+import { v4 as uuidv4 } from 'uuid'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
 
@@ -17,18 +18,20 @@ async function updatePaymentHub({ server, logger }, agreementId) {
       throw Boom.notFound(`Agreement not found: ${agreementId}`)
     }
 
+    const marketingYear = new Date().getFullYear()
+
     // Construct the payload based on the agreement data
     /** @type {PaymentHubPayload} */
     const payload = {
       sourceSystem: 'FRPS',
-      frn: 1234567890,
-      sbi: 123456789,
-      marketingYear: 2025,
+      frn: agreementData.frn,
+      sbi: agreementData.sbi,
+      marketingYear,
       paymentRequestNumber: 1,
       paymentType: 1,
-      correlationId: '123e4567-e89b-12d3-a456-426655440000',
+      correlationId: uuidv4(),
       invoiceNumber: 'S1234567S1234567V001',
-      agreementNumber: 'SFI12345678',
+      agreementNumber: agreementData.agreementNumber,
       contractNumber: 'S1234567',
       currency: 'GBP',
       schedule: 'T4',
@@ -37,9 +40,6 @@ async function updatePaymentHub({ server, logger }, agreementId) {
       debtType: 'irr',
       recoveryDate: '09/11/2021',
       pillar: 'DA',
-      originalInvoiceNumber: 'S1234567S1234567V001',
-      originalSettlementDate: '09/11/2021',
-      invoiceCorrectionReference: 'S1234567S1234567V001',
       trader: '123456A',
       vendor: '123456A',
       invoiceLines: [
@@ -50,7 +50,7 @@ async function updatePaymentHub({ server, logger }, agreementId) {
           standardCode: 'frps-cows',
           accountCode: 'SOS123',
           deliveryBody: 'RP00',
-          marketingYear: 2022,
+          marketingYear,
           convergence: false,
           stateAid: false
         }
