@@ -16,13 +16,15 @@ export async function seedDatabase(logger) {
 
       logger.info(`Dropped collection '${name}'`)
 
-      await model.insertMany(data[name]).catch((e) => {
-        logger.error(e)
-      })
+      if (data[name]) {
+        await model.insertMany(data[name]).catch((e) => {
+          logger.error(e)
+        })
 
-      logger.info(
-        `Successfully inserted ${data[name].length} documents into the '${name}' collection`
-      )
+        logger.info(
+          `Successfully inserted ${data[name].length} documents into the '${name}' collection`
+        )
+      }
     } catch (e) {
       logger.error(e)
     }
