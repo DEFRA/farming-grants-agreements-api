@@ -13,6 +13,7 @@ export default [
   {
     agreementNumber: 'SFI987654321',
     agreementName: 'Sample Agreement',
+    frn: '9876543210',
     sbi: '117235001',
     company: 'Sample Farm Ltd',
     address: '123 Farm Lane, Farmville',
@@ -71,6 +72,7 @@ export default [
   {
     agreementNumber: 'SFI123456789',
     agreementName: 'Sample Agreement',
+    frn: '1234567890',
     sbi: '123456789',
     company: 'Sample Farm Ltd',
     address: '123 Farm Lane, Farmville',
