@@ -1,7 +1,7 @@
 /**
  * @typedef {object} PaymentHubPayload
  * @property {string} sourceSystem - The source system identifier.
- * @property {number} frn - The farmer reference number.
+ * @property {number} frn - The firm reference number.
  * @property {number} sbi - The single business identifier.
  * @property {number} marketingYear - The marketing year.
  * @property {number} paymentRequestNumber - The payment request number.
