@@ -33,7 +33,7 @@ async function updatePaymentHub({ server, logger }, agreementId) {
       marketingYear,
       paymentRequestNumber: 1,
       paymentType: 1,
-      correlationId: agreementData.correlationId, // TODO - use the agreement correlation ID
+      correlationId: agreementData.correlationId,
       invoiceNumber: invoice.invoiceNumber,
       agreementNumber: agreementData.agreementNumber,
       contractNumber: 'S1234567',
