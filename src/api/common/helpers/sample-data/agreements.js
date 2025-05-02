@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 const startDate = '2024-11-01'
 const endDate = '2027-10-31'
 const assessHedgerowDescription = 'Assess and record hedgerow condition'
@@ -13,6 +15,7 @@ export default [
   {
     agreementNumber: 'SFI987654321',
     agreementName: 'Sample Agreement',
+    correlationId: uuidv4(),
     frn: '9876543210',
     sbi: '117235001',
     company: 'Sample Farm Ltd',
@@ -72,6 +75,7 @@ export default [
   {
     agreementNumber: 'SFI123456789',
     agreementName: 'Sample Agreement',
+    correlationId: uuidv4(),
     frn: '1234567890',
     sbi: '123456789',
     company: 'Sample Farm Ltd',
