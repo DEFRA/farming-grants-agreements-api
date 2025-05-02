@@ -15,6 +15,7 @@ describe('updatePaymentHub', () => {
   }
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
+    correlationId: '123e4567-e89b-12d3-a456-426614174000',
     sbi: 123456789,
     frn: 123456789,
     payments: {
@@ -37,13 +38,17 @@ describe('updatePaymentHub', () => {
   })
 
   test('should send payload to payment hub', async () => {
-    const agreementId = 'SFI123456789'
-
     // Act
-    const result = await updatePaymentHub(request, agreementId)
+    const result = await updatePaymentHub(
+      request,
+      mockAgreementData.agreementNumber
+    )
 
     // Assert
-    expect(createInvoice).toHaveBeenCalledWith(agreementId)
+    expect(createInvoice).toHaveBeenCalledWith(
+      mockAgreementData.agreementNumber,
+      mockAgreementData.correlationId
+    )
     expect(sendPaymentHubRequest).toHaveBeenCalledTimes(1)
     expect(sendPaymentHubRequest).toHaveBeenCalledWith(
       request.server,
