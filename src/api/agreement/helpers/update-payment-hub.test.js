@@ -59,6 +59,15 @@ describe('updatePaymentHub', () => {
         correlationId: mockInvoice.correlationId
       })
     )
+    expect(sendPaymentHubRequest).toHaveBeenCalledWith(
+      request.server,
+      request.logger,
+      expect.objectContaining({
+        agreementNumber: mockAgreementData.agreementNumber,
+        invoiceNumber: mockInvoice.invoiceNumber,
+        correlationId: mockInvoice.correlationId
+      })
+    )
     expect(result).toEqual({
       status: 'success',
       message: 'Payload sent to payment hub successfully'
