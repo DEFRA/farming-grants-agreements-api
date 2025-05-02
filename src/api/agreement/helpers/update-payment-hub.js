@@ -13,7 +13,10 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
 async function updatePaymentHub({ server, logger }, agreementId) {
   try {
     const agreementData = await getAgreementData(agreementId)
-    const invoice = await createInvoice(agreementId)
+    const invoice = await createInvoice(
+      agreementId,
+      agreementData.correlationId
+    )
 
     if (!agreementData) {
       throw Boom.notFound(`Agreement not found: ${agreementId}`)
@@ -30,7 +33,7 @@ async function updatePaymentHub({ server, logger }, agreementId) {
       marketingYear,
       paymentRequestNumber: 1,
       paymentType: 1,
-      correlationId: invoice.correlationId,
+      correlationId: agreementData.correlationId, // TODO - use the agreement correlation ID
       invoiceNumber: invoice.invoiceNumber,
       agreementNumber: agreementData.agreementNumber,
       contractNumber: 'S1234567',
