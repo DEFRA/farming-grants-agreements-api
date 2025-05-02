@@ -1,11 +1,13 @@
 import { jest } from '@jest/globals'
 import { createInvoice } from './create-invoice.js'
 import invoicesModel from '~/src/api/common/models/invoices.js'
+import countersModel from '~/src/api/common/models/counters.js'
 import Boom from '@hapi/boom'
 import { v4 as uuidv4 } from 'uuid'
 
 // Mock dependencies
 jest.mock('~/src/api/common/models/invoices.js')
+jest.mock('~/src/api/common/models/counters.js')
 jest.mock('uuid')
 
 describe('createInvoice', () => {
@@ -24,19 +26,24 @@ describe('createInvoice', () => {
 
   it('should create a new invoice with correct data', async () => {
     // Arrange
+    const mockCounter = {
+      seq: 3
+    }
+
     const mockInvoice = {
       agreementNumber: mockAgreementId,
       invoiceNumber: 'FRPS3',
       correlationId: mockUuid
     }
 
+    countersModel.findOneAndUpdate.mockResolvedValue(mockCounter)
     invoicesModel.create.mockResolvedValue(mockInvoice)
 
     // Act
-    const result = await createInvoice(mockAgreementId)
+    const result = await createInvoice(mockAgreementId, mockUuid)
 
     // Assert
-    expect(invoicesModel.find).toHaveBeenCalledWith({})
+    expect(countersModel.findOneAndUpdate).toHaveBeenCalled()
     expect(invoicesModel.create).toHaveBeenCalledWith({
       agreementNumber: mockAgreementId,
       invoiceNumber: 'FRPS4', // Index is 3 because we mocked 3 existing invoices
@@ -45,20 +52,23 @@ describe('createInvoice', () => {
     expect(result).toEqual(mockInvoice)
   })
 
-  it('should generate invoice numbers sequentially based on existing invoices', async () => {
-    // Arrange - mock different existing invoice counts
-    invoicesModel.find.mockResolvedValue([]) // 0 existing invoices
+  it('should generate invoice numbers sequentially', async () => {
+    // Arrange
+    const mockCounter = {
+      seq: 0
+    }
 
     const mockInvoice = {
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'FRPS0',
+      invoiceNumber: 'FRPS1',
       correlationId: mockUuid
     }
 
     invoicesModel.create.mockResolvedValue(mockInvoice)
+    countersModel.findOneAndUpdate.mockResolvedValue(mockCounter)
 
     // Act
-    const result = await createInvoice(mockAgreementId)
+    const result = await createInvoice(mockAgreementId, mockUuid)
 
     // Assert
     expect(invoicesModel.create).toHaveBeenCalledWith({
@@ -75,7 +85,7 @@ describe('createInvoice', () => {
     invoicesModel.create.mockRejectedValue(mockError)
 
     // Act & Assert
-    await expect(createInvoice(mockAgreementId)).rejects.toThrow(
+    await expect(createInvoice(mockAgreementId, mockUuid)).rejects.toThrow(
       Boom.internal(mockError).message
     )
   })
@@ -85,35 +95,9 @@ describe('createInvoice', () => {
     invoicesModel.create.mockResolvedValue(null)
 
     // Act & Assert
-    await expect(createInvoice(mockAgreementId)).rejects.toThrow(
+    await expect(createInvoice(mockAgreementId, mockUuid)).rejects.toThrow(
       Boom.notFound(`Invoice not created for Agreement ID ${mockAgreementId}`)
         .message
     )
-  })
-
-  it('should handle large number of existing invoices', async () => {
-    // Arrange - mock a large number of existing invoices
-    const largeNumber = 9999
-    const mockInvoices = Array(largeNumber).fill({})
-    invoicesModel.find.mockResolvedValue(mockInvoices)
-
-    const mockInvoice = {
-      agreementNumber: mockAgreementId,
-      invoiceNumber: `FRPS${largeNumber}`,
-      correlationId: mockUuid
-    }
-
-    invoicesModel.create.mockResolvedValue(mockInvoice)
-
-    // Act
-    const result = await createInvoice(mockAgreementId)
-
-    // Assert
-    expect(invoicesModel.create).toHaveBeenCalledWith({
-      agreementNumber: mockAgreementId,
-      invoiceNumber: `FRPS10000`,
-      correlationId: mockUuid
-    })
-    expect(result).toEqual(mockInvoice)
   })
 })

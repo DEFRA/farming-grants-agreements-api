@@ -17,6 +17,6 @@ const schema = new mongoose.Schema(
 // Indexes for common queries
 schema.index({ agreementNumber: 1 })
 schema.index({ invoiceNumber: 1 }, { unique: true })
-schema.index({ correlationId: 1 }, { unique: true })
+schema.index({ correlationId: 1 })
 
 export default mongoose.model(collection, schema)
