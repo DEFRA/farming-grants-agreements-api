@@ -66,7 +66,9 @@ export async function pollQueue() {
           try {
             const snsEnvelope = JSON.parse(msg.Body)
             const eventPayload = JSON.parse(snsEnvelope.Message)
-            logger.info(`Received event: ${JSON.stringify(eventPayload, null, 2)}`);
+            logger.info(
+              `Received event: ${JSON.stringify(eventPayload, null, 2)}`
+            )
 
             await handleApplicationApproved(eventPayload)
 
@@ -85,7 +87,9 @@ export async function pollQueue() {
         logger.info('No messages.')
       }
     } catch (err) {
-      logger.error('SQS Polling error (e.g., queue missing?):', { error: err.message })
+      logger.error('SQS Polling error (e.g., queue missing?):', {
+        error: err.message
+      })
     }
   }, 10000)
 }
