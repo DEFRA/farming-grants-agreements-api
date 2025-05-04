@@ -7,6 +7,7 @@ services:
       - '4510-4559:4510-4559' # external services port range
     env_file:
       - 'compose/aws.env'
+      - 'compose/aws.env'
     environment:
       DEBUG: ${DEBUG:-1}
       LS_LOG: WARN # Localstack DEBUG Level
