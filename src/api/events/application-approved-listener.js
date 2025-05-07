@@ -49,7 +49,7 @@ export async function pollQueue() {
 
   await verifyQueue()
 
-  setInterval(async () => {
+  const intervalId = setInterval(async () => {
     logger.info('Polling queue for messages...')
     try {
       const data = await sqs.send(
@@ -70,7 +70,7 @@ export async function pollQueue() {
               `Received event: ${JSON.stringify(eventPayload, null, 2)}`
             )
 
-            await handleApplicationApproved(eventPayload)
+            handleApplicationApproved(eventPayload)
 
             await sqs.send(
               new DeleteMessageCommand({
@@ -92,4 +92,6 @@ export async function pollQueue() {
       })
     }
   }, 10000)
+
+  return intervalId
 }

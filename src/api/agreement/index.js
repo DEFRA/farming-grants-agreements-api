@@ -8,9 +8,11 @@ import { pollQueue } from '~/src/api/events/application-approved-listener.js'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 
 const logger = createLogger()
-pollQueue().catch((err) => {
-  logger.error('❌ Failed to start ApplicationApproved listener:', err)
-})
+if (process.env.NODE_ENV !== 'test') {
+  pollQueue().catch((err) => {
+    logger.error('❌ Failed to start ApplicationApproved listener:', err)
+  })
+}
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}

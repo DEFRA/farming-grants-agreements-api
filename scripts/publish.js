@@ -1,4 +1,8 @@
-const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns')
+/* eslint-disable n/no-unpublished-import */
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
+import { createLogger } from '../src/api/common/helpers/logging/logger.js'
+
+const logger = createLogger()
 
 const sns = new SNSClient({
   region: 'eu-west-2',
@@ -24,7 +28,7 @@ async function publishTestEvent() {
     })
   )
 
-  console.log('🚀 Published test ApplicationApproved event!')
+  logger.info('Published test ApplicationApproved event!')
 }
 
-publishTestEvent().catch(console.error)
+publishTestEvent().catch((err) => logger.error(err))

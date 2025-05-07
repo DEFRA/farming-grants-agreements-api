@@ -5,7 +5,6 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
  * Get agreement data for rendering templates
  * @returns {object} The agreement data
  * @param {string} agreementId - The agreement ID to fetch
- * @param {object} logger - Logger instance
  */
 async function acceptAgreement(agreementId) {
   const agreement = await agreementsModel
