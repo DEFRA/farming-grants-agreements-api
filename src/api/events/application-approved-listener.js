@@ -49,7 +49,13 @@ export async function pollQueue() {
 
   await verifyQueue()
 
-  const intervalId = setInterval(async () => {
+  const intervalId = setInterval(() => {
+    pollMessages().catch((err) => {
+      logger.error('Unhandled polling error:', { error: err.message })
+    })
+  }, 10000)
+
+  async function pollMessages() {
     logger.info('Polling queue for messages...')
     try {
       const data = await sqs.send(
@@ -91,7 +97,7 @@ export async function pollQueue() {
         error: err.message
       })
     }
-  }, 10000)
+  }
 
   return intervalId
 }
