@@ -7,10 +7,10 @@ import {
 } from '@aws-sdk/client-sqs'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 
-const REGION = process.env.AWS_REGION || 'us-east-1'
-const ENDPOINT = process.env.AWS_ENDPOINT || 'http://localstack:4566'
+const REGION = process.env.AWS_REGION ?? 'us-east-1'
+const ENDPOINT = process.env.AWS_ENDPOINT ?? 'http://localstack:4566'
 const QUEUE_URL =
-  process.env.QUEUE_URL ||
+  process.env.QUEUE_URL ??
   'http://localstack:4566/000000000000/application-approved-queue'
 
 const sqs = new SQSClient({
