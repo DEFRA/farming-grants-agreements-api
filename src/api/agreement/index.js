@@ -6,9 +6,10 @@ import {
 } from '~/src/api/agreement/controllers/index.js'
 import { pollQueue } from '~/src/api/events/application-approved-listener.js'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
+import { config } from '~/src/config/index.js'
 
 const logger = createLogger()
-if (process.env.NODE_ENV !== 'test') {
+if (!config.get('isTest')) {
   pollQueue().catch((err) => {
     logger.error('❌ Failed to start ApplicationApproved listener:', err)
   })

@@ -6,16 +6,15 @@ import {
   GetQueueAttributesCommand
 } from '@aws-sdk/client-sqs'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
+import { config } from '~/src/config/index.js'
 
-const REGION = process.env.AWS_REGION ?? 'us-east-1'
-const ENDPOINT = process.env.AWS_ENDPOINT ?? 'http://localstack:4566'
-const QUEUE_URL =
-  process.env.QUEUE_URL ??
-  'http://localstack:4566/000000000000/application-approved-queue'
+const region = config.get('awsRegion')
+const endpoint = config.get('awsEndpoint')
+const queueUrl = config.get('queueUrl')
 
 const sqs = new SQSClient({
-  region: REGION,
-  endpoint: ENDPOINT,
+  region,
+  endpoint,
   credentials: {
     accessKeyId: 'test',
     secretAccessKey: 'test'
@@ -34,7 +33,7 @@ async function verifyQueue() {
   try {
     await sqs.send(
       new GetQueueAttributesCommand({
-        QueueUrl: QUEUE_URL,
+        QueueUrl: queueUrl,
         AttributeNames: ['All']
       })
     )
@@ -60,7 +59,7 @@ export async function pollQueue() {
     try {
       const data = await sqs.send(
         new ReceiveMessageCommand({
-          QueueUrl: QUEUE_URL,
+          QueueUrl: queueUrl,
           MaxNumberOfMessages: 1,
           WaitTimeSeconds: 5,
           VisibilityTimeout: 10
@@ -80,7 +79,7 @@ export async function pollQueue() {
 
             await sqs.send(
               new DeleteMessageCommand({
-                QueueUrl: QUEUE_URL,
+                QueueUrl: queueUrl,
                 ReceiptHandle: msg.ReceiptHandle
               })
             )
