@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { createInvoice } from '~/src/api/agreement/helpers/create-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
 
 /**
@@ -12,45 +13,46 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
 async function updatePaymentHub({ server, logger }, agreementId) {
   try {
     const agreementData = await getAgreementData(agreementId)
+    const invoice = await createInvoice(
+      agreementId,
+      agreementData.correlationId
+    )
 
     if (!agreementData) {
       throw Boom.notFound(`Agreement not found: ${agreementId}`)
     }
 
+    const marketingYear = new Date().getFullYear()
+
     // Construct the payload based on the agreement data
     /** @type {PaymentHubPayload} */
     const payload = {
       sourceSystem: 'FRPS',
-      frn: 1234567890,
-      sbi: 123456789,
-      marketingYear: 2025,
+      frn: agreementData.frn,
+      sbi: agreementData.sbi,
+      marketingYear,
       paymentRequestNumber: 1,
       paymentType: 1,
-      correlationId: '123e4567-e89b-12d3-a456-426655440000',
-      invoiceNumber: 'S1234567S1234567V001',
-      agreementNumber: 'SFI12345678',
+      correlationId: agreementData.correlationId,
+      invoiceNumber: invoice.invoiceNumber,
+      agreementNumber: agreementData.agreementNumber,
       contractNumber: 'S1234567',
       currency: 'GBP',
       schedule: 'T4',
-      dueDate: '09/11/2022',
-      value: 500,
+      value: agreementData.payments.totalAnnualPayment.totalAnnualPayment,
       debtType: 'irr',
-      recoveryDate: '09/11/2021',
       pillar: 'DA',
-      originalInvoiceNumber: 'S1234567S1234567V001',
-      originalSettlementDate: '09/11/2021',
-      invoiceCorrectionReference: 'S1234567S1234567V001',
       trader: '123456A',
       vendor: '123456A',
       invoiceLines: [
         {
-          value: 500,
+          value: agreementData.payments.totalAnnualPayment.totalAnnualPayment,
           description: 'G00 - Gross value of agreement',
           schemeCode: 'A1234',
           standardCode: 'frps-cows',
           accountCode: 'SOS123',
           deliveryBody: 'RP00',
-          marketingYear: 2022,
+          marketingYear,
           convergence: false,
           stateAid: false
         }

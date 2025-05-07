@@ -5,6 +5,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
  * Get agreement data for rendering templates
  * @returns {object} The agreement data
  * @param {string} agreementId - The agreement ID to fetch
+ * @returns {Promise<Agreement>} The agreement data
  */
 async function acceptAgreement(agreementId) {
   const agreement = await agreementsModel
@@ -31,3 +32,5 @@ async function acceptAgreement(agreementId) {
 }
 
 export { acceptAgreement }
+
+/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
