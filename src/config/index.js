@@ -95,7 +95,7 @@ const config = convict({
   queueUrl: {
     doc: 'Queue URL',
     format: String,
-    default: 'http://localstack:4566/000000000000/application-approved-queue',
+    default: 'http://localstack:4566/000000000000/create_agreement',
     env: 'QUEUE_URL'
   },
   mongoUri: {

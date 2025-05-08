@@ -9,8 +9,8 @@ export AWS_SECRET_ACCESS_KEY=test
 
 echo "🚀 Initializing SNS + SQS in LocalStack..."
 
-TOPIC_NAME="application-approved-topic"
-QUEUE_NAME="application-approved-queue"
+TOPIC_NAME="grant_application_approved"
+QUEUE_NAME="create_agreement"
 
 # Create SNS topic and capture ARN
 TOPIC_ARN=$(awslocal sns create-topic --name "$TOPIC_NAME" --query 'TopicArn' --output text)

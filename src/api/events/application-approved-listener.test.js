@@ -14,10 +14,11 @@ jest.mock('~/src/api/common/helpers/logging/logger.js', () => ({
 
 describe('pollQueue', () => {
   let sendMock
-  let originalSetInterval
   let pollQueue
 
   beforeAll(async () => {
+    jest.useFakeTimers()
+
     // Mock SQSClient.send to return different results based on the command
     sendMock = jest.fn((command) => {
       if (command instanceof sqsModule.GetQueueAttributesCommand) {
@@ -30,20 +31,13 @@ describe('pollQueue', () => {
     })
     sqsModule.SQSClient.prototype.send = sendMock
 
-    // Mock setInterval to call immediately and only once
-    originalSetInterval = global.setInterval
-    global.setInterval = (fn) => {
-      fn()
-      return 1
-    }
-
     // Reset modules and import pollQueue after mocks are set up
     jest.resetModules()
     pollQueue = (await import('./application-approved-listener.js')).pollQueue
   })
 
   afterAll(() => {
-    global.setInterval = originalSetInterval
+    jest.useRealTimers()
   })
 
   beforeEach(() => {
@@ -55,7 +49,8 @@ describe('pollQueue', () => {
 
   it('runs without throwing', async () => {
     const intervalId = await pollQueue()
+    jest.runOnlyPendingTimers()
     clearInterval(intervalId)
-    expect(typeof intervalId).toBe('number')
+    expect(intervalId).toBeDefined()
   })
 })

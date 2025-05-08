@@ -43,7 +43,6 @@
     "@hapi/hapi": "^21.3.12",
     "aws-embedded-metrics": "^4.2.0",
     "aws4": "^1.13.2",
-    "axios": "^1.9.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "convict": "^6.2.4",
     "crypto-js": "^4.2.0",

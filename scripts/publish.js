@@ -9,10 +9,10 @@ const sns = new SNSClient({
 
 async function publishTestEvent() {
   const topicArn =
-    'arn:aws:sns:eu-west-2:000000000000:application-approved-topic'
+    'arn:aws:sns:eu-west-2:000000000000:grant_application_approved'
 
   const message = {
-    eventType: 'ApplicationApproved',
+    eventType: 'grant_application_approved',
     applicationId: 'APP-123456',
     sbi: '123456789',
     grantAmount: 30000
@@ -25,7 +25,7 @@ async function publishTestEvent() {
     })
   )
 
-  console.log('🚀 Published test ApplicationApproved event!')
+  console.log('🚀 Published test grant_application_approved event!')
 }
 
 publishTestEvent().catch(console.error)

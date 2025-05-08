@@ -11,7 +11,7 @@ import { config } from '~/src/config/index.js'
 const logger = createLogger()
 if (!config.get('isTest')) {
   pollQueue().catch((err) => {
-    logger.error('❌ Failed to start ApplicationApproved listener:', err)
+    logger.error('Failed to start ApplicationApproved listener:', err)
   })
 }
 
