@@ -27,7 +27,7 @@ async function updatePaymentHub({ server, logger }, agreementId) {
     // Construct the payload based on the agreement data
     /** @type {PaymentHubPayload} */
     const payload = {
-      sourceSystem: 'FRPS',
+      sourceSystem: 'AHWR',
       frn: agreementData.frn,
       sbi: agreementData.sbi,
       marketingYear,
