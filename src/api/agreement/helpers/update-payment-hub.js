@@ -24,39 +24,31 @@ async function updatePaymentHub({ server, logger }, agreementId) {
 
     const marketingYear = new Date().getFullYear()
 
+    const { activities, yearlyBreakdown } = agreementData.payments
+
+    const invoiceLines = activities.map((activity) => ({
+      value: yearlyBreakdown.details.find(
+        (detail) => detail.code === activity.code
+      ).totalPayment,
+      description: activity.description,
+      schemeCode: activity.code
+    }))
+
     // Construct the payload based on the agreement data
     /** @type {PaymentHubPayload} */
     const payload = {
-      sourceSystem: 'FRPS',
+      sourceSystem: 'AHWR',
       frn: agreementData.frn,
       sbi: agreementData.sbi,
       marketingYear,
       paymentRequestNumber: 1,
-      paymentType: 1,
       correlationId: agreementData.correlationId,
       invoiceNumber: invoice.invoiceNumber,
       agreementNumber: agreementData.agreementNumber,
-      contractNumber: 'S1234567',
-      currency: 'GBP',
       schedule: 'T4',
-      value: agreementData.payments.totalAnnualPayment.totalAnnualPayment,
-      debtType: 'irr',
-      pillar: 'DA',
-      trader: '123456A',
-      vendor: '123456A',
-      invoiceLines: [
-        {
-          value: agreementData.payments.totalAnnualPayment.totalAnnualPayment,
-          description: 'G00 - Gross value of agreement',
-          schemeCode: 'A1234',
-          standardCode: 'frps-cows',
-          accountCode: 'SOS123',
-          deliveryBody: 'RP00',
-          marketingYear,
-          convergence: false,
-          stateAid: false
-        }
-      ]
+      dueDate: '2022-11-09',
+      value: yearlyBreakdown.totalAgreementPayment,
+      invoiceLines
     }
 
     await sendPaymentHubRequest(server, logger, payload)
