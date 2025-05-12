@@ -8,17 +8,17 @@ import {
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 import { config } from '~/src/config/index.js'
 
-const region = config.get('awsRegion')
-const endpoint = config.get('awsEndpoint')
 const queueUrl = config.get('queueUrl')
 
 const sqs = new SQSClient({
-  region,
-  endpoint,
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  }
+  region: config.get('awsRegion'),
+  endpoint: config.get('awsEndpoint'),
+  ...(config.get('isDevelopment') && {
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    }
+  })
 })
 
 const logger = createLogger()
