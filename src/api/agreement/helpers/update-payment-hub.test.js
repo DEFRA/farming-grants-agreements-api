@@ -19,8 +19,28 @@ describe('updatePaymentHub', () => {
     sbi: 123456789,
     frn: 123456789,
     payments: {
-      totalAnnualPayment: {
-        totalAnnualPayment: 500
+      activities: [
+        {
+          code: 'A1',
+          description: 'Activity 1'
+        },
+        {
+          code: 'A2',
+          description: 'Activity 2'
+        }
+      ],
+      yearlyBreakdown: {
+        details: [
+          {
+            code: 'A1',
+            totalPayment: 100
+          },
+          {
+            code: 'A2',
+            totalPayment: 200
+          }
+        ],
+        totalAgreementPayment: 300
       }
     }
   }
@@ -56,16 +76,19 @@ describe('updatePaymentHub', () => {
       expect.objectContaining({
         agreementNumber: mockAgreementData.agreementNumber,
         invoiceNumber: mockInvoice.invoiceNumber,
-        correlationId: mockInvoice.correlationId
-      })
-    )
-    expect(sendPaymentHubRequest).toHaveBeenCalledWith(
-      request.server,
-      request.logger,
-      expect.objectContaining({
-        agreementNumber: mockAgreementData.agreementNumber,
-        invoiceNumber: mockInvoice.invoiceNumber,
-        correlationId: mockInvoice.correlationId
+        correlationId: mockInvoice.correlationId,
+        dueDate: '2022-11-09',
+        frn: mockAgreementData.frn,
+        sbi: mockAgreementData.sbi,
+        marketingYear: 2025,
+        paymentRequestNumber: 1,
+        schedule: 'T4',
+        sourceSystem: 'AHWR',
+        value: 300,
+        invoiceLines: [
+          { description: 'Activity 1', schemeCode: 'A1', value: 100 },
+          { description: 'Activity 2', schemeCode: 'A2', value: 200 }
+        ]
       })
     )
     expect(result).toEqual({
