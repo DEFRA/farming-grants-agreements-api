@@ -4,11 +4,13 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
 
 const generateAgreementNumber = () => {
+  const minRandomNumber = 100000000
+  const maxRandomNumber = 999999999
   const date = new Date()
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  const randomNum = Math.floor(crypto.randomInt(100000, 999999))
+  const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
   return `SFI${year}${month}${day}${randomNum}`
 }
 
