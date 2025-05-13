@@ -1,8 +1,9 @@
 import {
-  getHTMLAgreementDocumentController,
+  createAgreementDocumentController,
+  viewAgreementDocumentController,
   acceptAgreementDocumentController,
   unacceptAgreementDocumentController,
-  viewAgreementDocumentController
+  getHTMLAgreementDocumentController
 } from '~/src/api/agreement/controllers/index.js'
 import { pollQueue } from '~/src/api/events/application-approved-listener.js'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
@@ -32,6 +33,11 @@ const agreementDocument = {
           method: 'GET',
           path: '/api/agreement/{agreementId}',
           ...getHTMLAgreementDocumentController
+        },
+        {
+          method: 'POST',
+          path: '/api/agreement',
+          ...createAgreementDocumentController
         },
         {
           method: 'POST',
