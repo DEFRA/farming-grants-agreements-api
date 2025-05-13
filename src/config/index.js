@@ -80,24 +80,6 @@ const config = convict({
         : ['req', 'res', 'responseTime']
     }
   },
-  awsRegion: {
-    doc: 'AWS region',
-    format: String,
-    default: 'us-east-1',
-    env: 'AWS_REGION'
-  },
-  awsEndpoint: {
-    doc: 'AWS endpoint',
-    format: String,
-    default: 'http://localstack:4566',
-    env: 'AWS_ENDPOINT'
-  },
-  queueUrl: {
-    doc: 'Queue URL',
-    format: String,
-    default: 'http://localstack:4566/000000000000/create_agreement',
-    env: 'QUEUE_URL'
-  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,
