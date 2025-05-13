@@ -98,6 +98,18 @@ const config = convict({
     default: 'http://localstack:4566/000000000000/create_agreement',
     env: 'QUEUE_URL'
   },
+  queueArn: {
+    doc: 'Queue ARN',
+    format: String,
+    default: 'http://localstack:4566/000000000000/create_agreement',
+    env: 'QUEUE_ARN'
+  },
+  queueName: {
+    doc: 'Queue NAME',
+    format: String,
+    default: 'http://localstack:4566/000000000000/create_agreement',
+    env: 'QUEUE_NAME'
+  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,
