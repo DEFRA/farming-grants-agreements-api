@@ -1,7 +1,6 @@
 import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { acceptAgreement } from '~/src/api/agreement/helpers/accept-agreement.js'
-import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
+import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -11,29 +10,30 @@ import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub
 const createAgreementDocumentController = {
   handler: async (request, h) => {
     try {
-      const { agreementId } = request.params
+      const agreementData = request.payload
 
-      if (!agreementId || agreementId === '') {
-        throw Boom.internalServerError('Agreement ID is required')
+      request.logger.info(
+        `Creating agreement document with data: ${JSON.stringify(agreementData)}`
+      )
+
+      if (!agreementData) {
+        throw Boom.internal('Agreement data is required')
       }
 
       // Accept the agreement
-      await acceptAgreement(agreementId)
-
-      // Update the payment hub
-      await updatePaymentHub(request, agreementId)
+      await createAgreement(agreementData)
 
       // Return the HTML response
-      return h.response({ message: 'Agreement accepted' }).code(statusCodes.ok)
+      return h.response({ message: 'Agreement created' }).code(statusCodes.ok)
     } catch (error) {
       if (error.isBoom) {
         return error
       }
 
-      request.logger.error(`Error accepting agreement document: ${error}`)
+      request.logger.error(`Error creating agreement document: ${error}`)
       return h
         .response({
-          message: 'Failed to accept agreement document',
+          message: 'Failed to create agreement document',
           error: error.message
         })
         .code(statusCodes.internalServerError)

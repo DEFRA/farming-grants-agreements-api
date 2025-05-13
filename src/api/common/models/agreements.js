@@ -12,7 +12,7 @@ const actionSchema = new mongoose.Schema({
 
 const activitySchema = new mongoose.Schema({
   code: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String, default: '' },
   area: { type: Number, required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true }
