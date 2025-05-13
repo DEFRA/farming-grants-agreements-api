@@ -71,6 +71,18 @@ To test the application run:
 npm run test
 ```
 
+To manually test the listener, run:
+
+```bash
+ docker-compose -f compose.yml up
+```
+
+and then
+
+```bash
+node publish.js # from the scripts directory
+```
+
 ### Production
 
 To mimic the application running in `production` mode locally run:
