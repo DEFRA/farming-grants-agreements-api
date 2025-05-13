@@ -3,16 +3,14 @@ import {
   SQSClient,
   ReceiveMessageCommand,
   DeleteMessageCommand,
-  GetQueueAttributesCommand
+  GetQueueUrlCommand
 } from '@aws-sdk/client-sqs'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 import { config } from '~/src/config/index.js'
 
-const queueUrl = config.get('queueUrl')
-
 const sqs = new SQSClient({
   region: config.get('awsRegion'),
-  endpoint: config.get('awsEndpoint'),
+  endpoint: 'sqs.eu-west-2.amazonaws.com',
   ...(config.get('isDevelopment') && {
     credentials: {
       accessKeyId: 'test',
@@ -20,6 +18,17 @@ const sqs = new SQSClient({
     }
   })
 })
+
+async function getQueueUrl() {
+  const input = {
+    QueueName: config.get('queueName'),
+    QueueOwnerAWSAccountId: '332499610595'
+  }
+  const command = new GetQueueUrlCommand(input)
+  const response = await sqs.send(command)
+  const queueUrl = response.QueueUrl
+  return queueUrl
+}
 
 const logger = createLogger()
 
@@ -29,25 +38,8 @@ function handleApplicationApproved(payload) {
   // Example (pseudo): await agreementService.createFromEvent(payload);
 }
 
-async function verifyQueue() {
-  try {
-    await sqs.send(
-      new GetQueueAttributesCommand({
-        QueueUrl: queueUrl,
-        AttributeNames: ['All']
-      })
-    )
-    logger.info('Queue verified and reachable.')
-  } catch (err) {
-    logger.warn('Queue not found or not ready:', { error: err.message })
-  }
-}
-
-export async function pollQueue() {
+export function pollQueue() {
   logger.info('Starting ApplicationApproved listener (polling every 10s)...')
-
-  await verifyQueue()
-
   const intervalId = setInterval(() => {
     pollMessages().catch((err) => {
       logger.error('Unhandled polling error:', { error: err.message })
@@ -57,6 +49,7 @@ export async function pollQueue() {
   async function pollMessages() {
     logger.info('Polling queue for messages...')
     try {
+      const queueUrl = await getQueueUrl()
       const data = await sqs.send(
         new ReceiveMessageCommand({
           QueueUrl: queueUrl,

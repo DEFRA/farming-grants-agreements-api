@@ -83,7 +83,7 @@ const config = convict({
   awsRegion: {
     doc: 'AWS region',
     format: String,
-    default: 'us-east-1',
+    default: 'eu-west-2',
     env: 'AWS_REGION'
   },
   awsEndpoint: {
@@ -97,6 +97,18 @@ const config = convict({
     format: String,
     default: 'http://localstack:4566/000000000000/create_agreement',
     env: 'QUEUE_URL'
+  },
+  queueArn: {
+    doc: 'Queue ARN',
+    format: String,
+    default: 'http://localstack:4566/000000000000/create_agreement',
+    env: 'QUEUE_ARN'
+  },
+  queueName: {
+    doc: 'Queue NAME',
+    format: String,
+    default: 'http://localstack:4566/000000000000/create_agreement',
+    env: 'QUEUE_NAME'
   },
   mongoUri: {
     doc: 'URI for mongodb',
