@@ -53,15 +53,17 @@ const groupActivitiesByParcelId = (actionApplications, parcelNumber) => {
 
   // Iterate over filtered actionApplications
   filteredActionApplications.forEach((parcel) => {
-    const parcelNumber = `${parcel.sheetId}${parcel.parcelId}`
+    const startDate = parcel.startDate || '2025-05-13'
+    const endDate = parcel.endDate || '2028-05-13'
+
     if (groupedActivities.has(parcelNumber)) {
       const existing = groupedActivities.get(parcelNumber)
       existing.push({
         code: parcel.code,
         description: parcel.description || '',
         area: parcel.appliedFor.quantity,
-        startDate: parcel.startDate || '2025-05-13',
-        endDate: parcel.endDate || '2028-05-13'
+        startDate,
+        endDate
       })
     } else {
       groupedActivities.set(parcelNumber, [
@@ -69,8 +71,8 @@ const groupActivitiesByParcelId = (actionApplications, parcelNumber) => {
           code: parcel.code,
           description: parcel.description || '',
           area: parcel.appliedFor.quantity,
-          startDate: parcel.startDate || '2025-05-13',
-          endDate: parcel.endDate || '2028-05-13'
+          startDate,
+          endDate
         }
       ])
     }
@@ -117,6 +119,7 @@ const createPaymentActivities = (actionApplications) => {
  * @returns {object} Object containing yearly totals and details
  */
 const calculateYearlyPayments = (activities) => {
+  const numberOfYears = 3
   const yearlyTotals = {
     year1: 0,
     year2: 0,
@@ -125,7 +128,7 @@ const calculateYearlyPayments = (activities) => {
 
   const details = activities.map((activity) => {
     const annualAmount = activity.annualPayment
-    const totalPayment = annualAmount * 3
+    const totalPayment = annualAmount * numberOfYears
     yearlyTotals.year1 += annualAmount
     yearlyTotals.year2 += annualAmount
     yearlyTotals.year3 += annualAmount
@@ -142,7 +145,8 @@ const calculateYearlyPayments = (activities) => {
   return {
     details,
     annualTotals: yearlyTotals,
-    totalAgreementPayment: yearlyTotals.year1 * 3
+    totalAgreementPayment:
+      yearlyTotals.year1 + yearlyTotals.year2 + yearlyTotals.year3
   }
 }
 
@@ -151,7 +155,7 @@ const calculateYearlyPayments = (activities) => {
  * @param {Agreement} agreementData - The agreement data
  * @returns {Promise<Agreement>} The agreement data
  */
-const createAgreement = async (agreementData) => {
+const createAgreement = (agreementData) => {
   if (!agreementData) {
     throw Boom.badRequest('Agreement data is required')
   }
@@ -186,7 +190,7 @@ const createAgreement = async (agreementData) => {
   }
 
   // Create the new agreement
-  return await agreementsModel.create(data).catch((error) => {
+  return agreementsModel.create(data).catch((error) => {
     throw Boom.internal('Failed to create agreement', error)
   })
 }
