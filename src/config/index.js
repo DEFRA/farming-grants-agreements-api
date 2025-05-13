@@ -83,7 +83,7 @@ const config = convict({
   awsRegion: {
     doc: 'AWS region',
     format: String,
-    default: 'us-east-1',
+    default: 'eu-west-2',
     env: 'AWS_REGION'
   },
   awsEndpoint: {

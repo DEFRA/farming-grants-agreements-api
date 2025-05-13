@@ -9,8 +9,8 @@ import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 import { config } from '~/src/config/index.js'
 
 const sqs = new SQSClient({
-  // region: config.get('awsRegion'),
-  // endpoint: config.get('awsEndpoint'),
+  region: config.get('awsRegion'),
+  endpoint: 'sqs.eu-west-2.amazonaws.com',
   ...(config.get('isDevelopment') && {
     credentials: {
       accessKeyId: 'test',
