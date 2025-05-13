@@ -19,13 +19,16 @@ const sqs = new SQSClient({
   })
 })
 
-const input = {
-  QueueName: config.get('queueName'),
-  QueueOwnerAWSAccountId: '332499610595'
+async function getQueueUrl() {
+  const input = {
+    QueueName: config.get('queueName'),
+    QueueOwnerAWSAccountId: '332499610595'
+  }
+  const command = new GetQueueUrlCommand(input)
+  const response = await sqs.send(command)
+  const queueUrl = response.QueueUrl
+  return queueUrl
 }
-const command = new GetQueueUrlCommand(input)
-const response = await sqs.send(command)
-const queueUrl = response.QueueUrl
 
 const logger = createLogger()
 
@@ -46,6 +49,7 @@ export function pollQueue() {
   async function pollMessages() {
     logger.info('Polling queue for messages...')
     try {
+      const queueUrl = await getQueueUrl()
       const data = await sqs.send(
         new ReceiveMessageCommand({
           QueueUrl: queueUrl,
