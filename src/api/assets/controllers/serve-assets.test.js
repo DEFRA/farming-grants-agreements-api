@@ -2,10 +2,6 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import fs from 'fs'
 
-jest.mock('~/src/api/events/application-approved-listener.js', () => ({
-  pollQueue: jest.fn().mockResolvedValue(undefined)
-}))
-
 jest.mock('fs')
 
 describe('serveAssetsController', () => {
