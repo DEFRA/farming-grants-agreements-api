@@ -90,13 +90,19 @@ const config = convict({
     doc: 'AWS endpoint',
     format: String,
     default: 'http://localstack:4566',
-    env: 'AWS_ENDPOINT'
+    env: 'SQS_ENDPOINT'
   },
   queueUrl: {
     doc: 'Queue URL',
     format: String,
     default: 'http://localstack:4566/000000000000/create_agreement',
     env: 'QUEUE_URL'
+  },
+  queueName: {
+    doc: 'Queue Name',
+    format: String,
+    default: 'create_agreement',
+    env: 'QUEUE_NAME'
   },
   mongoUri: {
     doc: 'URI for mongodb',

@@ -3,22 +3,14 @@ import {
   SQSClient,
   ReceiveMessageCommand,
   DeleteMessageCommand,
-  GetQueueAttributesCommand
+  GetQueueUrlCommand
 } from '@aws-sdk/client-sqs'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 import { config } from '~/src/config/index.js'
 
-const queueUrl = config.get('queueUrl')
-
-const sqs = new SQSClient({
+const sqsClient = new SQSClient({
   region: config.get('awsRegion'),
-  endpoint: config.get('awsEndpoint'),
-  ...(config.get('isDevelopment') && {
-    credentials: {
-      accessKeyId: 'test',
-      secretAccessKey: 'test'
-    }
-  })
+  endpoint: config.get('awsEndpoint')
 })
 
 const logger = createLogger()
@@ -29,25 +21,12 @@ function handleApplicationApproved(payload) {
   // Example (pseudo): await agreementService.createFromEvent(payload);
 }
 
-async function verifyQueue() {
-  try {
-    await sqs.send(
-      new GetQueueAttributesCommand({
-        QueueUrl: queueUrl,
-        AttributeNames: ['All']
-      })
-    )
-    logger.info('Queue verified and reachable.')
-  } catch (err) {
-    logger.warn('Queue not found or not ready:', { error: err.message })
-  }
-}
-
 export async function pollQueue() {
   logger.info('Starting ApplicationApproved listener (polling every 10s)...')
 
-  await verifyQueue()
-
+  const command = new GetQueueUrlCommand(config.get('queueName'))
+  const queueUrl = await sqsClient.send(command)
+  logger.info('Queue URL: ', queueUrl)
   const intervalId = setInterval(() => {
     pollMessages().catch((err) => {
       logger.error('Unhandled polling error:', { error: err.message })
@@ -57,7 +36,7 @@ export async function pollQueue() {
   async function pollMessages() {
     logger.info('Polling queue for messages...')
     try {
-      const data = await sqs.send(
+      const data = await sqsClient.send(
         new ReceiveMessageCommand({
           QueueUrl: queueUrl,
           MaxNumberOfMessages: 1,
@@ -77,7 +56,7 @@ export async function pollQueue() {
 
             handleApplicationApproved(eventPayload)
 
-            await sqs.send(
+            await sqsClient.send(
               new DeleteMessageCommand({
                 QueueUrl: queueUrl,
                 ReceiptHandle: msg.ReceiptHandle
