@@ -98,6 +98,12 @@ const config = convict({
     default: 'http://localstack:4566/000000000000/create_agreement',
     env: 'QUEUE_URL'
   },
+  sqsTimeout: {
+    doc: 'SQS Timeout',
+    format: Number,
+    default: 10000,
+    env: 'SQS_TIMEOUT'
+  },
   queueName: {
     doc: 'Queue Name',
     format: String,

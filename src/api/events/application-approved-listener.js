@@ -7,6 +7,7 @@ import {
 } from '@aws-sdk/client-sqs'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 import { config } from '~/src/config/index.js'
+import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
 
 const sqsClient = new SQSClient({
   region: config.get('awsRegion'),
@@ -15,10 +16,16 @@ const sqsClient = new SQSClient({
 
 const logger = createLogger()
 
-function handleApplicationApproved(payload) {
+async function handleApplicationApproved(payload) {
   logger.info('Creating agreement from event:', { payload })
-  // TODO: Call your real agreement creation here
-  // Example (pseudo): await agreementService.createFromEvent(payload);
+  try {
+    await createAgreement(payload)
+    logger.info('Agreement created successfully.')
+  } catch (error) {
+    logger.error('Failed to create agreement from event:', {
+      error: error.message
+    })
+  }
 }
 
 export async function pollQueue() {
@@ -31,7 +38,7 @@ export async function pollQueue() {
     pollMessages().catch((err) => {
       logger.error('Unhandled polling error:', { error: err.message })
     })
-  }, 10000)
+  }, config.get('sqsTimeout'))
 
   async function pollMessages() {
     logger.info('Polling queue for messages...')
@@ -54,7 +61,7 @@ export async function pollQueue() {
               `Received event: ${JSON.stringify(eventPayload, null, 2)}`
             )
 
-            handleApplicationApproved(eventPayload)
+            await handleApplicationApproved(eventPayload)
 
             await sqsClient.send(
               new DeleteMessageCommand({
