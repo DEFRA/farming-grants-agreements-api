@@ -38,7 +38,7 @@ export async function pollQueue() {
     pollMessages().catch((err) => {
       logger.error('Unhandled polling error:', { error: err.message })
     })
-  }, config.get('sqsTimeout'))
+  }, config.get('sqsInterval'))
 
   async function pollMessages() {
     logger.info('Polling queue for messages...')
