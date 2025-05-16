@@ -2,6 +2,7 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { unacceptAgreement } from '~/src/api/agreement/helpers/unaccept-agreement.js'
 
+jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/unaccept-agreement.js')
 jest.mock('~/src/api/agreement/helpers/update-payment-hub.js')
 
@@ -10,7 +11,7 @@ describe('unacceptAgreementDocumentController', () => {
   let server
 
   beforeAll(async () => {
-    server = await createServer()
+    server = await createServer({ disableSQS: true })
     await server.initialize()
   })
 

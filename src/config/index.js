@@ -80,6 +80,36 @@ const config = convict({
         : ['req', 'res', 'responseTime']
     }
   },
+  awsRegion: {
+    doc: 'AWS region',
+    format: String,
+    default: 'eu-west-2',
+    env: 'AWS_REGION'
+  },
+  sqsEndpoint: {
+    doc: 'AWS SQS endpoint',
+    format: String,
+    default: 'http://localhost:4566',
+    env: 'SQS_ENDPOINT'
+  },
+  queueUrl: {
+    doc: 'Queue URL',
+    format: String,
+    default: 'http://localhost:4566/000000000000/create_agreement',
+    env: 'QUEUE_URL'
+  },
+  sqsInterval: {
+    doc: 'SQS Interval',
+    format: Number,
+    default: 10000,
+    env: 'SQS_INTERVAL'
+  },
+  queueName: {
+    doc: 'Queue Name',
+    format: String,
+    default: 'create_agreement',
+    env: 'QUEUE_NAME'
+  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,

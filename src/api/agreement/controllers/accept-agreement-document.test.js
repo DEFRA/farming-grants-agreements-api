@@ -10,7 +10,7 @@ describe('acceptAgreementDocumentController', () => {
   let server
 
   beforeAll(async () => {
-    server = await createServer()
+    server = await createServer({ disableSQS: true })
     await server.initialize()
   })
 

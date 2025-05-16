@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 import { config } from '~/src/config/index.js'
-import { seedDatabase } from './seed-database.js'
+import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
