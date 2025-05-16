@@ -83,19 +83,19 @@ const config = convict({
   awsRegion: {
     doc: 'AWS region',
     format: String,
-    default: 'us-east-1',
+    default: 'eu-west-2',
     env: 'AWS_REGION'
   },
-  awsEndpoint: {
-    doc: 'AWS endpoint',
+  sqsEndpoint: {
+    doc: 'AWS SQS endpoint',
     format: String,
-    default: 'http://localstack:4566',
+    default: 'http://localhost:4566',
     env: 'SQS_ENDPOINT'
   },
   queueUrl: {
     doc: 'Queue URL',
     format: String,
-    default: 'http://localstack:4566/000000000000/create_agreement',
+    default: 'http://localhost:4566/000000000000/create_agreement',
     env: 'QUEUE_URL'
   },
   sqsInterval: {

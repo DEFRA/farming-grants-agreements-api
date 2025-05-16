@@ -2,11 +2,17 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import fs from 'fs'
 
-jest.mock('~/src/api/events/application-approved-listener.js', () => ({
-  pollQueue: jest.fn().mockResolvedValue(undefined)
+// Mock fs module with promises API
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn(),
+  statSync: jest.fn(),
+  promises: {
+    exists: jest.fn(),
+    readFile: jest.fn(),
+    stat: jest.fn()
+  }
 }))
-
-jest.mock('fs')
 
 describe('serveAssetsController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -33,7 +39,7 @@ describe('serveAssetsController', () => {
   }
 
   beforeAll(async () => {
-    server = await createServer()
+    server = await createServer({ disableSQS: true })
     // Add mock logger to the request object for tests
     server.ext('onRequest', (request, h) => {
       request.logger = mockLogger

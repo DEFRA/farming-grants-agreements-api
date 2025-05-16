@@ -1,26 +1,21 @@
 import Boom from '@hapi/boom'
-import { createAgreementDocumentController } from './create-agreement-document.js'
+import { createServer } from '~/src/api/index.js'
 import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 
 jest.mock('~/src/api/agreement/helpers/create-agreement.js')
 
 describe('createAgreementDocumentController', () => {
-  const mockRequest = {
-    payload: {
-      agreementId: '123',
-      data: 'test data'
-    },
-    logger: {
-      info: jest.fn(),
-      error: jest.fn()
-    }
-  }
+  let server
 
-  const mockH = {
-    response: jest.fn().mockReturnThis(),
-    code: jest.fn().mockReturnThis()
-  }
+  beforeAll(async () => {
+    server = await createServer({ disableSQS: true })
+    await server.initialize()
+  })
+
+  afterAll(async () => {
+    await server.stop({ timeout: 0 })
+  })
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -29,56 +24,78 @@ describe('createAgreementDocumentController', () => {
   test('successfully creates agreement document', async () => {
     createAgreement.mockResolvedValue(true)
 
-    await createAgreementDocumentController.handler(mockRequest, mockH)
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: '/api/agreement',
+      payload: {
+        agreementId: '123',
+        data: 'test data'
+      }
+    })
 
-    expect(createAgreement).toHaveBeenCalledWith(mockRequest.payload)
-    expect(mockRequest.logger.info).toHaveBeenCalledWith(
-      `Creating agreement document with data: ${JSON.stringify(mockRequest.payload)}`
-    )
-    expect(mockH.response).toHaveBeenCalledWith({
+    expect(createAgreement).toHaveBeenCalledWith({
+      agreementId: '123',
+      data: 'test data'
+    })
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(result).toEqual({
       message: 'Agreement created'
     })
-    expect(mockH.code).toHaveBeenCalledWith(statusCodes.ok)
   })
 
   test('throws error when no agreement data provided', async () => {
-    const requestWithNoPayload = { ...mockRequest, payload: null }
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: '/api/agreement',
+      payload: null
+    })
 
-    const response = await createAgreementDocumentController.handler(
-      requestWithNoPayload,
-      mockH
-    )
-
-    expect(response.isBoom).toBe(true)
-    expect(response.output.statusCode).toBe(500)
-    expect(response.message).toBe('Agreement data is required')
+    expect(statusCode).toBe(statusCodes.internalServerError)
+    expect(result).toEqual({
+      message: 'An internal server error occurred',
+      error: 'Internal Server Error',
+      statusCode: statusCodes.internalServerError
+    })
   })
 
   test('handles createAgreement failure', async () => {
     const testError = new Error('Test error')
     createAgreement.mockRejectedValue(testError)
 
-    await createAgreementDocumentController.handler(mockRequest, mockH)
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: '/api/agreement',
+      payload: {
+        agreementId: '123',
+        data: 'test data'
+      }
+    })
 
-    expect(mockRequest.logger.error).toHaveBeenCalledWith(
-      `Error creating agreement document: Error: Test error`
-    )
-    expect(mockH.response).toHaveBeenCalledWith({
+    expect(statusCode).toBe(statusCodes.internalServerError)
+    expect(result).toEqual({
       message: 'Failed to create agreement document',
       error: 'Test error'
     })
-    expect(mockH.code).toHaveBeenCalledWith(statusCodes.internalServerError)
   })
 
   test('passes through Boom errors', async () => {
     const boomError = Boom.badRequest('Test Boom error')
     createAgreement.mockRejectedValue(boomError)
 
-    const response = await createAgreementDocumentController.handler(
-      mockRequest,
-      mockH
-    )
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: '/api/agreement',
+      payload: {
+        agreementId: '123',
+        data: 'test data'
+      }
+    })
 
-    expect(response).toBe(boomError)
+    expect(statusCode).toBe(statusCodes.badRequest)
+    expect(result).toEqual({
+      message: 'Test Boom error',
+      error: 'Bad Request',
+      statusCode: statusCodes.badRequest
+    })
   })
 })
