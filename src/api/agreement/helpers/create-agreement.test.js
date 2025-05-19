@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import {
   createAgreement,
   calculateYearlyPayments,
@@ -108,6 +109,54 @@ const targetDataStructure = {
   }
 }
 
+const agreementData = {
+  clientRef: 'ref-1234',
+  code: 'frps-private-beta',
+  createdAt: '2023-10-01T12:00:00Z',
+  submittedAt: '2023-10-01T11:00:00Z',
+  identifiers: {
+    sbi: '1234567890',
+    frn: '1234567890',
+    crn: '1234567890',
+    defraId: '1234567890'
+  },
+  answers: {
+    scheme: 'SFI',
+    year: 2025,
+    agreementName: 'Sample Agreement',
+    hasCheckedLandIsUpToDate: true,
+    actionApplications: [
+      {
+        parcelId: '9238',
+        sheetId: 'SX0679',
+        code: 'CSAM1',
+        appliedFor: {
+          unit: 'ha',
+          quantity: 20.23
+        }
+      },
+      {
+        parcelId: '9238',
+        sheetId: 'SX0679',
+        code: 'CSAM3',
+        appliedFor: {
+          unit: 'ha',
+          quantity: 42.23
+        }
+      },
+      {
+        parcelId: '9240',
+        sheetId: 'SX0679',
+        code: 'CSAM1',
+        appliedFor: {
+          unit: 'ha',
+          quantity: 10.73
+        }
+      }
+    ]
+  }
+}
+
 describe('createAgreement', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -115,54 +164,6 @@ describe('createAgreement', () => {
   })
 
   it('should create an agreement with valid data', async () => {
-    const agreementData = {
-      clientRef: 'ref-1234',
-      code: 'frps-private-beta',
-      createdAt: '2023-10-01T12:00:00Z',
-      submittedAt: '2023-10-01T11:00:00Z',
-      identifiers: {
-        sbi: '1234567890',
-        frn: '1234567890',
-        crn: '1234567890',
-        defraId: '1234567890'
-      },
-      answers: {
-        scheme: 'SFI',
-        year: 2025,
-        agreementName: 'Sample Agreement',
-        hasCheckedLandIsUpToDate: true,
-        actionApplications: [
-          {
-            parcelId: '9238',
-            sheetId: 'SX0679',
-            code: 'CSAM1',
-            appliedFor: {
-              unit: 'ha',
-              quantity: 20.23
-            }
-          },
-          {
-            parcelId: '9238',
-            sheetId: 'SX0679',
-            code: 'CSAM3',
-            appliedFor: {
-              unit: 'ha',
-              quantity: 42.23
-            }
-          },
-          {
-            parcelId: '9240',
-            sheetId: 'SX0679',
-            code: 'CSAM1',
-            appliedFor: {
-              unit: 'ha',
-              quantity: 10.73
-            }
-          }
-        ]
-      }
-    }
-
     const result = await createAgreement(agreementData)
 
     // Check if the result matches the target data structure
@@ -392,6 +393,31 @@ describe('createAgreement', () => {
         },
         totalAgreementPayment: 1317.42
       })
+    })
+  })
+
+  describe('Error Handling', () => {
+    it('should handle generic errors when creating an agreement', async () => {
+      agreementsModel.create.mockImplementation(() =>
+        Promise.reject(new Error('Generic error'))
+      )
+
+      await expect(createAgreement(agreementData)).rejects.toThrow(
+        'Generic error'
+      )
+    })
+
+    it('should handle mongoose validation errors', async () => {
+      const validationError = new mongoose.Error.ValidationError(
+        new mongoose.MongooseError('Validation failed')
+      )
+      agreementsModel.create.mockImplementation(() =>
+        Promise.reject(validationError)
+      )
+
+      await expect(createAgreement(agreementData)).rejects.toThrow(
+        'Validation failed'
+      )
     })
   })
 })
