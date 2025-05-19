@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
 
-const generateAgreementNumber = () => {
+export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
   const maxRandomNumber = 999999999
   const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
@@ -16,7 +16,7 @@ const generateAgreementNumber = () => {
  * @param {Array<object>} actionApplications - Array of actionApplications
  * @returns {Array<object>} Array of grouped parcels
  */
-const groupParcelsById = (actionApplications) => {
+export const groupParcelsById = (actionApplications) => {
   const groupedParcels = new Map()
 
   actionApplications.forEach((parcel) => {
@@ -43,7 +43,7 @@ const groupParcelsById = (actionApplications) => {
  * @param {string} parcelNumber - The parcel Number to group by
  * @returns {Array<object>} Array of grouped activities
  */
-const groupActivitiesByParcelId = (actionApplications, parcelNumber) => {
+export const groupActivitiesByParcelId = (actionApplications, parcelNumber) => {
   const groupedActivities = new Map()
 
   // Filter actionApplications by parcelNumber
@@ -87,7 +87,7 @@ const groupActivitiesByParcelId = (actionApplications, parcelNumber) => {
  * @param {Array<object>} actionApplications - Array of action applications
  * @returns {Array<object>} Array of payment activities
  */
-const createPaymentActivities = (actionApplications) => {
+export const createPaymentActivities = (actionApplications) => {
   const groupedActivities = new Map()
   actionApplications.forEach((actionApplication) => {
     const actionCode = `${actionApplication.code}`
@@ -118,7 +118,7 @@ const createPaymentActivities = (actionApplications) => {
  * @param {Array<object>} activities - Array of activities
  * @returns {object} Object containing yearly totals and details
  */
-const calculateYearlyPayments = (activities) => {
+export const calculateYearlyPayments = (activities) => {
   const numberOfYears = 3
   const yearlyTotals = {
     year1: 0,
