@@ -10,7 +10,7 @@ const actionSchema = new mongoose.Schema({
   duration: { type: String, required: true }
 })
 
-const activitySchema = new mongoose.Schema({
+const parcelActivitySchema = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, default: '' },
   area: { type: Number, required: true },
@@ -18,11 +18,21 @@ const activitySchema = new mongoose.Schema({
   endDate: { type: Date, required: true }
 })
 
+const paymentsActivitySchema = new mongoose.Schema({
+  code: { type: String, required: true },
+  description: { type: String, default: '' },
+  quantity: { type: Number, required: true },
+  rate: { type: Number, required: true },
+  measurement: { type: String, required: true },
+  paymentRate: { type: String, required: true },
+  annualPayment: { type: Number, required: true }
+})
+
 const parcelSchema = new mongoose.Schema({
   parcelNumber: { type: String, required: true },
   parcelName: { type: String, default: '' },
   totalArea: { type: Number, required: true },
-  activities: { type: [activitySchema], default: [] }
+  activities: { type: [parcelActivitySchema], default: [] }
 })
 
 const yearlyBreakdownSchema = new mongoose.Schema({
@@ -36,7 +46,7 @@ const yearlyBreakdownSchema = new mongoose.Schema({
 })
 
 const paymentsSchema = new mongoose.Schema({
-  activities: { type: [Object], default: [] },
+  activities: { type: [paymentsActivitySchema], default: [] },
   totalAnnualPayment: { type: Number, required: true },
   yearlyBreakdown: { type: yearlyBreakdownSchema, required: true }
 })

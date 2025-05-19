@@ -42,7 +42,7 @@ describe('SQS Client', () => {
   describe('handleEvent', () => {
     it('should create agreement for application-approved events', async () => {
       const mockPayload = {
-        type: 'application-approved',
+        type: 'application.approved',
         data: { id: '123', status: 'approved' }
       }
 
@@ -69,7 +69,7 @@ describe('SQS Client', () => {
   describe('processMessage', () => {
     it('should process valid SNS message', async () => {
       const mockPayload = {
-        type: 'application-approved',
+        type: 'application.approved',
         data: { id: '123' }
       }
       const message = {
@@ -110,7 +110,7 @@ describe('SQS Client', () => {
   describe('pollMessages', () => {
     it('should poll and process messages', async () => {
       const mockPayload = {
-        type: 'application-approved',
+        type: 'application.approved',
         data: { id: '123' }
       }
       const mockMessage = {

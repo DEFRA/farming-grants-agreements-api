@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom'
+import mongoose from 'mongoose'
 import crypto from 'crypto'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
@@ -155,43 +156,53 @@ const calculateYearlyPayments = (activities) => {
  * @returns {Promise<Agreement>} The agreement data
  */
 const createAgreement = (agreementData) => {
-  if (!agreementData) {
-    throw Boom.badRequest('Agreement data is required')
-  }
-
-  const { identifiers, answers } = agreementData
-
-  const parcels = groupParcelsById(answers.actionApplications)
-  const paymentActivities = createPaymentActivities(answers.actionApplications)
-
-  const data = {
-    agreementNumber: generateAgreementNumber(),
-    agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
-    correlationId: uuidv4(),
-    frn: identifiers.frn,
-    sbi: identifiers.sbi,
-    company: 'Sample Farm Ltd',
-    address: '123 Farm Lane, Farmville',
-    postcode: 'FA12 3RM',
-    username: 'Diana Peart',
-    agreementStartDate: '2025-05-13',
-    agreementEndDate: '2028-05-13',
-    actions: [],
-    parcels,
-    payments: {
-      activities: paymentActivities,
-      totalAnnualPayment: paymentActivities.reduce(
-        (sum, activity) => sum + activity.annualPayment,
-        0
-      ),
-      yearlyBreakdown: calculateYearlyPayments(paymentActivities)
+  try {
+    if (!agreementData) {
+      throw Boom.badRequest('Agreement data is required')
     }
-  }
 
-  // Create the new agreement
-  return agreementsModel.create(data).catch((error) => {
-    throw Boom.internal('Failed to create agreement', error)
-  })
+    const { identifiers, answers } = agreementData
+
+    const parcels = groupParcelsById(answers.actionApplications)
+    const paymentActivities = createPaymentActivities(
+      answers.actionApplications
+    )
+
+    const data = {
+      agreementNumber: generateAgreementNumber(),
+      agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
+      correlationId: uuidv4(),
+      frn: identifiers.frn,
+      sbi: identifiers.sbi,
+      company: 'Sample Farm Ltd',
+      address: '123 Farm Lane, Farmville',
+      postcode: 'FA12 3RM',
+      username: 'Diana Peart',
+      agreementStartDate: '2025-05-13',
+      agreementEndDate: '2028-05-13',
+      actions: [],
+      parcels,
+      payments: {
+        activities: paymentActivities,
+        totalAnnualPayment: paymentActivities.reduce(
+          (sum, activity) => sum + activity.annualPayment,
+          0
+        ),
+        yearlyBreakdown: calculateYearlyPayments(paymentActivities)
+      }
+    }
+
+    // Create the new agreement
+    return agreementsModel.create(data)
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError) {
+      const allErrors = Object.values(error.errors)
+        .map((err) => err.message)
+        .join('. ')
+      throw new Error(allErrors)
+    }
+    throw error
+  }
 }
 
 export { createAgreement }

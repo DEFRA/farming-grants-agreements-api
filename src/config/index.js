@@ -80,35 +80,55 @@ const config = convict({
         : ['req', 'res', 'responseTime']
     }
   },
-  awsRegion: {
-    doc: 'AWS region',
-    format: String,
-    default: 'eu-west-2',
-    env: 'AWS_REGION'
-  },
-  sqsEndpoint: {
-    doc: 'AWS SQS endpoint',
-    format: String,
-    default: 'http://localhost:4566',
-    env: 'SQS_ENDPOINT'
-  },
-  queueUrl: {
-    doc: 'Queue URL',
-    format: String,
-    default: 'http://localhost:4566/000000000000/create_agreement',
-    env: 'QUEUE_URL'
-  },
-  sqsInterval: {
-    doc: 'SQS Interval',
-    format: Number,
-    default: 10000,
-    env: 'SQS_INTERVAL'
-  },
-  queueName: {
-    doc: 'Queue Name',
-    format: String,
-    default: 'create_agreement',
-    env: 'QUEUE_NAME'
+  sqs: {
+    awsRegion: {
+      doc: 'AWS region',
+      format: String,
+      default: 'eu-west-2',
+      env: 'AWS_REGION'
+    },
+    endpoint: {
+      doc: 'AWS SQS endpoint',
+      format: String,
+      default: 'http://localhost:4566',
+      env: 'SQS_ENDPOINT'
+    },
+    queueUrl: {
+      doc: 'Queue URL',
+      format: String,
+      default: 'http://localhost:4566/000000000000/create_agreement',
+      env: 'QUEUE_URL'
+    },
+    interval: {
+      doc: 'SQS Interval',
+      format: Number,
+      default: 10000,
+      env: 'SQS_INTERVAL'
+    },
+    queueName: {
+      doc: 'Queue Name',
+      format: String,
+      default: 'create_agreement',
+      env: 'QUEUE_NAME'
+    },
+    maxMessages: {
+      doc: 'Max number of messages to receive from SQS',
+      format: Number,
+      default: 1,
+      env: 'MAX_NUMBER_OF_MESSAGES'
+    },
+    visibilityTimeout: {
+      doc: 'Visibility timeout for SQS messages',
+      format: Number,
+      default: 10,
+      env: 'VISIBILITY_TIMEOUT'
+    },
+    waitTime: {
+      doc: 'Wait time for SQS messages',
+      format: Number,
+      default: 5,
+      env: 'WAIT_TIME_SECONDS'
+    }
   },
   mongoUri: {
     doc: 'URI for mongodb',
