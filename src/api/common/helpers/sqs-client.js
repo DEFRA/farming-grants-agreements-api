@@ -12,14 +12,14 @@ import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js
  * @param {string} queueUrl - URL of the queue to check
  * @returns {Promise<ReceiveMessageCommandOutput>}
  */
-export const checkMessages = async (sqsClient, queueUrl) => {
+export const checkMessages = (sqsClient, queueUrl) => {
   const command = new ReceiveMessageCommand({
     QueueUrl: queueUrl,
     MaxNumberOfMessages: config.get('sqs.maxMessages'),
     WaitTimeSeconds: config.get('sqs.waitTime'),
     VisibilityTimeout: config.get('sqs.visibilityTimeout')
   })
-  return await sqsClient.send(command)
+  return sqsClient.send(command)
 }
 
 /**
