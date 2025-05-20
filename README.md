@@ -84,7 +84,7 @@ It might be helpful to use localstack's dashboard to view the SQS queue and any 
 You can send a test `grant_application_approved` event by running:
 
 ```bash
-npm run publish:approve
+npm run publish:accept
 ```
 
 The Agreement should be automatically created and viewable on the front-end, and the event should be consumed and deleted from the queue.
