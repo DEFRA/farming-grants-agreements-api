@@ -11,8 +11,9 @@ import { pulse } from '~/src/api/common/helpers/pulse.js'
 import { requestTracing } from '~/src/api/common/helpers/request-tracing.js'
 import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
+import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
 
-async function createServer() {
+async function createServer(serverOptions = {}) {
   setupProxy()
   const server = hapi.server({
     port: config.get('port'),
@@ -50,21 +51,30 @@ async function createServer() {
     ]
   })
 
+  const options = {
+    disableSQS: false,
+    ...serverOptions
+  }
+
   // Hapi Plugins:
-  // requestLogger  - automatically logs incoming requests
-  // requestTracing - trace header logging and propagation
-  // secureContext  - loads CA certificates from environment config
-  // pulse          - provides shutdown handlers
-  // mongooseDb     - sets up mongoose connection pool and attaches to `server` and `request` objects
-  // router         - routes used in the app
-  await server.register([
-    requestLogger,
-    requestTracing,
-    secureContext,
-    pulse,
-    mongooseDb,
-    router
-  ])
+  // requestLogger    - automatically logs incoming requests
+  // requestTracing   - trace header logging and propagation
+  // secureContext    - loads CA certificates from environment config
+  // pulse            - provides shutdown handlers
+  // mongooseDb       - sets up mongoose connection pool and attaches to `server` and `request` objects
+  // sqsClientPlugin  - AWS SQS client
+  // router           - routes used in the app
+  await server.register(
+    [
+      requestLogger,
+      requestTracing,
+      secureContext,
+      pulse,
+      mongooseDb,
+      options.disableSQS ? null : sqsClientPlugin,
+      router
+    ].filter(Boolean)
+  )
 
   return server
 }

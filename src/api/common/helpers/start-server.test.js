@@ -66,10 +66,14 @@ describe('#startServer', () => {
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         3,
-        'Server started successfully'
+        'Setting up SQS client'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         4,
+        'Server started successfully'
+      )
+      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
+        5,
         'Access your backend on http://localhost:3098'
       )
     })
