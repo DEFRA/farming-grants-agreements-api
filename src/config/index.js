@@ -105,12 +105,6 @@ const config = convict({
       default: 10000,
       env: 'SQS_INTERVAL'
     },
-    queueName: {
-      doc: 'Queue Name',
-      format: String,
-      default: 'create_agreement',
-      env: 'QUEUE_NAME'
-    },
     maxMessages: {
       doc: 'Max number of messages to receive from SQS',
       format: Number,
