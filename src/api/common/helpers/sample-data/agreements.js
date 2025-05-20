@@ -47,6 +47,8 @@ export default [
           code: 'CSAM1',
           description:
             'Assess soil, test soil organic matter and produce a soil management plan',
+          quantity: 10.63,
+          rate: 6.0,
           measurement: '10.63 HA',
           paymentRate: '6.00/ha',
           annualPayment: 63.78
@@ -409,6 +411,8 @@ export default [
         {
           code: 'BND1',
           description: 'Maintain dry stone walls',
+          quantity: 95.0,
+          rate: 25.65,
           measurement: '95.00 Metres',
           paymentRate: '£25.65/100m',
           annualPayment: 25.65
@@ -416,6 +420,8 @@ export default [
         {
           code: 'BND2',
           description: earthBanksDescription,
+          quantity: 1678.0,
+          rate: 11.0,
           measurement: '1678.00 Metres',
           paymentRate: '11.00/100m',
           annualPayment: 184.58
@@ -423,6 +429,8 @@ export default [
         {
           code: 'CHRW1',
           description: assessHedgerowDescription,
+          quantity: 1799.0,
+          rate: 5.0,
           measurement: '1799.00 Metres',
           paymentRate: '5.00/100m',
           annualPayment: 89.95
@@ -430,6 +438,8 @@ export default [
         {
           code: 'CHRW2',
           description: manageHedgerowDescription,
+          quantity: 1799.0,
+          rate: 13.0,
           measurement: '1799.00 Metres',
           paymentRate: '13.00/100m',
           annualPayment: 233.87
@@ -437,6 +447,8 @@ export default [
         {
           code: 'CHRW3',
           description: manageHedgerowTreesDescription,
+          quantity: 717.0,
+          rate: 10.0,
           measurement: '717.00 Metres',
           paymentRate: '10.00/100m',
           annualPayment: 71.7
@@ -444,6 +456,8 @@ export default [
         {
           code: 'CLIG3',
           description: manageGrasslandDescription,
+          quantity: 8.64,
+          rate: 151.0,
           measurement: '8.64 HA',
           paymentRate: '151.00/ha',
           annualPayment: 1304.56
@@ -452,6 +466,8 @@ export default [
           code: 'CSAM1',
           description:
             'Assess soil, test soil organic matter and produce a soil management plan',
+          quantity: 10.63,
+          rate: 6.0,
           measurement: '10.63 HA',
           paymentRate: '6.00/ha',
           annualPayment: 63.78
@@ -459,6 +475,8 @@ export default [
         {
           code: 'CSAM1A',
           description: assessSoilDescription,
+          quantity: 1.0,
+          rate: 97.0,
           measurement: '1.00 Units',
           paymentRate: '97.00/units',
           annualPayment: 97.0
@@ -466,6 +484,8 @@ export default [
         {
           code: 'GRH8',
           description: 'Supplement: Haymaking (late cut)',
+          quantity: 9.71,
+          rate: 187.0,
           measurement: '9.71 HA',
           paymentRate: '187.00/ha',
           annualPayment: 1815.61

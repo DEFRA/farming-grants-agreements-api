@@ -4,6 +4,7 @@ import * as nunjucksRenderer from '~/src/api/agreement/helpers/nunjucks-renderer
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 // Mock the modules
+jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
 
@@ -14,7 +15,7 @@ describe('getHTMLAgreementDocumentController', () => {
   const mockRenderedHtml = `<html><body>Test HTML with SFI123456789</body></html>`
 
   beforeAll(async () => {
-    server = await createServer()
+    server = await createServer({ disableSQS: true })
     await server.initialize()
   })
 
