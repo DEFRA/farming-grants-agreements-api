@@ -3,6 +3,7 @@ import {
   ReceiveMessageCommand,
   DeleteMessageCommand
 } from '@aws-sdk/client-sqs'
+import Boom from '@hapi/boom'
 import { config } from '~/src/config/index.js'
 import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
 
@@ -115,6 +116,12 @@ export const sqsClientPlugin = {
           server.logger.error('Unhandled SQS Client error:', {
             error: err.message
           })
+
+          throw Boom.internal(
+            'Error processing SQS message',
+            err.message,
+            err.stack
+          )
         })
       }, config.get('sqs.interval'))
 
