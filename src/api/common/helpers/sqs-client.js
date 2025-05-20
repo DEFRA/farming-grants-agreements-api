@@ -89,7 +89,6 @@ export const pollMessages = async ({ logger }, sqsClient, queueUrl) => {
  * @type {import('@hapi/hapi').Plugin<{
  *   awsRegion: string,
  *   sqsEndpoint: string,
- *   queueName: string,
  *   queueUrl: string
  * }>}
  */
@@ -100,7 +99,7 @@ export const sqsClientPlugin = {
     /**
      *
      * @param { import('@hapi/hapi').Server } server
-     * @param { { awsRegion: string, sqsEndpoint: string, queueName: string,queueUrl: string } } options
+     * @param { { awsRegion: string, sqsEndpoint: string, queueUrl: string } } options
      * @returns {void}
      */
     register: function (server, options) {
@@ -117,11 +116,10 @@ export const sqsClientPlugin = {
             error: err.message
           })
 
-          throw Boom.internal(
-            'Error processing SQS message',
-            err.message,
-            err.stack
-          )
+          throw Boom.internal('Error processing SQS message', {
+            message: err.message,
+            stack: err.stack
+          })
         })
       }, config.get('sqs.interval'))
 
