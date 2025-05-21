@@ -1,27 +1,8 @@
-import {
-  SQSClient,
-  ReceiveMessageCommand,
-  DeleteMessageCommand
-} from '@aws-sdk/client-sqs'
 import Boom from '@hapi/boom'
+import { SQSClient } from '@aws-sdk/client-sqs'
+import { Consumer } from 'sqs-consumer'
 import { config } from '~/src/config/index.js'
 import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
-
-/**
- * Checks for messages in the SQS queue
- * @param {SQSClient} sqsClient - AWS SQS client instance
- * @param {string} queueUrl - URL of the queue to check
- * @returns {Promise<ReceiveMessageCommandOutput>}
- */
-export const checkMessages = (sqsClient, queueUrl) => {
-  const command = new ReceiveMessageCommand({
-    QueueUrl: queueUrl,
-    MaxNumberOfMessages: config.get('sqs.maxMessages'),
-    WaitTimeSeconds: config.get('sqs.waitTime'),
-    VisibilityTimeout: config.get('sqs.visibilityTimeout')
-  })
-  return sqsClient.send(command)
-}
 
 /**
  * Handle an event from the SQS queue
@@ -34,8 +15,10 @@ export const handleEvent = async (payload, logger) => {
     logger.info(
       `Creating agreement from event: ${JSON.stringify(payload.data)}`
     )
-    await createAgreement(payload.data)
+    return await createAgreement(payload.data)
   }
+
+  return Promise.reject(new Error('Unrecognized event type'))
 }
 
 /**
@@ -75,76 +58,6 @@ export const processMessage = async (message, logger) => {
 }
 
 /**
- * Delete a message from the SQS queue
- * @param {SQSClient} sqsClient - AWS SQS client instance
- * @param {string} queueUrl - URL of the queue to delete from
- * @param {string} receiptHandle - Receipt handle of the message to delete
- * @returns {Promise<DeleteMessageCommandOutput>}
- */
-export const deleteMessage = (sqsClient, queueUrl, receiptHandle) =>
-  sqsClient.send(
-    new DeleteMessageCommand({
-      QueueUrl: queueUrl,
-      ReceiptHandle: receiptHandle
-    })
-  )
-
-/**
- * Process a single message from the queue
- * @param {Message} msg - The message to process
- * @param {import('@hapi/hapi').Server} logger - The logger instance
- * @param {SQSClient} sqsClient - AWS SQS client instance
- * @param {string} queueUrl - URL of the queue
- * @returns {Promise<void>}
- */
-const processQueueMessage = async (msg, logger, sqsClient, queueUrl) => {
-  try {
-    await processMessage(msg, logger)
-    await deleteMessage(sqsClient, queueUrl, msg.ReceiptHandle)
-    logger.info(`Succesfully processed and deleted message: ${msg.MessageId}`)
-  } catch (error) {
-    logger.error('Failed to process message:', {
-      messageId: msg.MessageId,
-      error: error.message,
-      stack: error.stack,
-      data: error.data
-    })
-  }
-}
-
-/**
- * Poll the SQS queue for messages
- * @param { import('@hapi/hapi').Server } logger - The logger instance
- * @param {SQSClient} sqsClient - AWS SQS client instance
- * @param {string} queueUrl - URL of the queue to poll
- * @returns {Promise<void>}
- */
-export const pollMessages = async ({ logger }, sqsClient, queueUrl) => {
-  try {
-    const data = await checkMessages(sqsClient, queueUrl)
-    if (!data.Messages) {
-      return
-    }
-
-    await Promise.all(
-      data.Messages.map((msg) =>
-        processQueueMessage(msg, logger, sqsClient, queueUrl)
-      )
-    )
-  } catch (error) {
-    logger.error('SQS Polling error:', {
-      error: error.message,
-      stack: error.stack
-    })
-
-    throw Boom.serverUnavailable('SQS queue unavailable', {
-      error: error.message,
-      queueUrl
-    })
-  }
-}
-
-/**
  * Hapi plugin for SQS message processing
  * @type {import('@hapi/hapi').Plugin<{
  *   awsRegion: string,
@@ -170,26 +83,52 @@ export const sqsClientPlugin = {
         endpoint: options.sqsEndpoint
       })
 
-      const intervalId = setInterval(() => {
-        pollMessages(server, sqsClient, options.queueUrl).catch((error) => {
-          if (!error.isBoom) {
-            server.logger.error('Unexpected SQS Client error:', {
+      const app = Consumer.create({
+        queueUrl: options.queueUrl,
+        handleMessage: async (message) => {
+          try {
+            await processMessage(message, server.logger)
+            server.logger.info(
+              `Successfully processed message: ${message.MessageId}`
+            )
+          } catch (error) {
+            server.logger.error('Failed to process message:', {
+              messageId: message.MessageId,
               error: error.message,
-              stack: error.stack
+              stack: error.stack,
+              data: error.data
             })
           }
-
-          throw error
-        })
-      }, config.get('sqs.interval'))
-
-      server.events.on('closing', () => {
-        server.logger.info('Stopping SQS client polling')
-        clearInterval(intervalId)
+        },
+        sqs: sqsClient,
+        batchSize: config.get('sqs.maxMessages'),
+        waitTimeSeconds: config.get('sqs.waitTime'),
+        visibilityTimeout: config.get('sqs.visibilityTimeout'),
+        handleMessageTimeout: 30000, // 30 seconds timeout for message processing
+        attributeNames: ['All'],
+        messageAttributeNames: ['All']
       })
 
+      app.on('error', (err) => {
+        server.logger.error('SQS Consumer error:', {
+          error: err.message,
+          stack: err.stack
+        })
+      })
+
+      app.on('processing_error', (err) => {
+        server.logger.error('SQS Message processing error:', {
+          error: err.message,
+          stack: err.stack
+        })
+      })
+
+      app.start()
+
       server.events.on('stop', () => {
-        server.logger.info(`Closing SQS client`)
+        server.logger.info('Stopping SQS consumer')
+        app.stop()
+        server.logger.info('Closing SQS client')
         sqsClient.destroy()
       })
     }
@@ -203,5 +142,5 @@ export const sqsClientPlugin = {
 
 /**
  * @import { Agreement } from '~/src/api/common/types/agreement.d.js'
- * @import { Message, DeleteMessageCommandOutput, ReceiveMessageCommandOutput } from '@aws-sdk/client-sqs'
+ * @import { Message } from '@aws-sdk/client-sqs'
  */

@@ -1,16 +1,17 @@
 import { jest } from '@jest/globals'
-import {
-  ReceiveMessageCommand,
-  DeleteMessageCommand
-} from '@aws-sdk/client-sqs'
-import {
-  handleEvent,
-  processMessage,
-  deleteMessage,
-  pollMessages,
-  sqsClientPlugin
-} from './sqs-client.js'
+import { SQSClient } from '@aws-sdk/client-sqs'
+import { Consumer } from 'sqs-consumer'
+import { handleEvent, processMessage, sqsClientPlugin } from './sqs-client.js'
 import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
+
+// Mock AWS SDK credential provider
+jest.mock('@aws-sdk/credential-provider-node', () => ({
+  defaultProvider: () => () =>
+    Promise.resolve({
+      accessKeyId: 'test',
+      secretAccessKey: 'test'
+    })
+}))
 
 jest.mock('~/src/api/agreement/helpers/create-agreement.js')
 jest.mock('@aws-sdk/client-sqs')
@@ -18,8 +19,6 @@ jest.mock('~/src/config/index.js', () => ({
   config: {
     get: jest.fn((key) => {
       switch (key) {
-        case 'sqs.interval':
-          return 1000
         case 'sqs.maxMessages':
           return 10
         case 'sqs.waitTime':
@@ -37,16 +36,10 @@ describe('SQS Client', () => {
   let server
   let mockSqsClient
   let mockLogger
-  let setIntervalSpy
-
-  beforeAll(() => {
-    // Mock timers
-    jest.useFakeTimers()
-  })
+  let mockConsumer
 
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.clearAllTimers()
 
     // Setup logger mock
     mockLogger = {
@@ -59,6 +52,7 @@ describe('SQS Client', () => {
       send: jest.fn(),
       destroy: jest.fn()
     }
+    SQSClient.mockImplementation(() => mockSqsClient)
 
     // Setup server mock
     server = {
@@ -69,38 +63,17 @@ describe('SQS Client', () => {
       }
     }
 
-    // Spy on setInterval for the tests
-    setIntervalSpy = jest.spyOn(global, 'setInterval')
-  })
-
-  afterAll(() => {
-    jest.useRealTimers()
-  })
-
-  it('should initialise properly when registered', () => {
-    const options = {
-      awsRegion: 'us-east-1',
-      sqsEndpoint: 'http://localhost:4566',
-      queueUrl: 'test-queue-url'
+    // Setup Consumer mock
+    mockConsumer = {
+      start: jest.fn(),
+      stop: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn()
     }
+    Consumer.create.mockReturnValue(mockConsumer)
+  })
 
-    // Initialize the plugin
-    sqsClientPlugin.plugin.register(server, options)
-
-    // Check that logger was called
-    expect(server.logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Setting up SQS client')
-    )
-
-    // Check that setInterval was called
-    expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 1000)
-
-    // Check that event handlers were set up
-    expect(server.events.on).toHaveBeenCalledWith(
-      'closing',
-      expect.any(Function)
-    )
-    expect(server.events.on).toHaveBeenCalledWith('stop', expect.any(Function))
+  afterEach(() => {
+    jest.resetModules()
   })
 
   describe('handleEvent', () => {
@@ -118,13 +91,15 @@ describe('SQS Client', () => {
       expect(createAgreement).toHaveBeenCalledWith(mockPayload.data)
     })
 
-    it('should ignore non-application-approved events', async () => {
+    it('should throw an error for non-application-approved events', async () => {
       const mockPayload = {
         type: 'some-other-event',
         data: { id: '123' }
       }
 
-      await handleEvent(mockPayload, mockLogger)
+      await expect(handleEvent(mockPayload, mockLogger)).rejects.toThrow(
+        'Unrecognized event type'
+      )
 
       expect(createAgreement).not.toHaveBeenCalled()
     })
@@ -147,7 +122,7 @@ describe('SQS Client', () => {
       expect(createAgreement).toHaveBeenCalledWith(mockPayload.data)
     })
 
-    it('should handle invalid JSON', async () => {
+    it('should handle invalid JSON in message body', async () => {
       const message = {
         Body: 'invalid json'
       }
@@ -164,10 +139,10 @@ describe('SQS Client', () => {
       )
     })
 
-    it('should handle non-SyntaxError processing errors', async () => {
+    it('should handle invalid JSON in SNS message', async () => {
       const message = {
         Body: JSON.stringify({
-          Message: 'invalid event format'
+          Message: 'invalid json'
         })
       }
 
@@ -182,84 +157,109 @@ describe('SQS Client', () => {
         })
       )
     })
-  })
 
-  describe('deleteMessage', () => {
-    it('should delete message from queue', async () => {
-      const queueUrl = 'test-queue-url'
-      const receiptHandle = 'test-receipt'
+    it('should handle non-SyntaxError with Boom.boomify', async () => {
+      const message = {
+        Body: JSON.stringify({
+          Message: JSON.stringify({ type: 'invalid.type' })
+        })
+      }
 
-      await deleteMessage(mockSqsClient, queueUrl, receiptHandle)
-
-      expect(mockSqsClient.send).toHaveBeenCalledWith(
-        expect.any(DeleteMessageCommand)
+      await expect(processMessage(message, mockLogger)).rejects.toThrow(
+        'Error processing SQS message'
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error processing message'),
+        expect.objectContaining({
+          message,
+          error: expect.any(String)
+        })
       )
     })
   })
 
-  describe('pollMessages', () => {
-    it('should process multiple messages concurrently', async () => {
-      const mockMessages = [
-        {
-          Body: JSON.stringify({
-            Message: JSON.stringify({
-              type: 'application.approved',
-              data: { id: '123' }
-            })
-          }),
-          ReceiptHandle: 'receipt-1',
-          MessageId: 'msg-1'
-        },
-        {
-          Body: JSON.stringify({
-            Message: JSON.stringify({
-              type: 'application.approved',
-              data: { id: '456' }
-            })
-          }),
-          ReceiptHandle: 'receipt-2',
-          MessageId: 'msg-2'
-        }
-      ]
+  describe('sqsClientPlugin', () => {
+    const options = {
+      awsRegion: 'us-east-1',
+      sqsEndpoint: 'http://localhost:4566',
+      queueUrl: 'test-queue-url'
+    }
 
-      mockSqsClient.send.mockImplementation((command) => {
-        if (command instanceof ReceiveMessageCommand) {
-          return Promise.resolve({ Messages: mockMessages })
-        }
-        return Promise.resolve({})
+    it('should initialize properly when registered', () => {
+      sqsClientPlugin.plugin.register(server, options)
+
+      // Check SQS client was created
+      expect(SQSClient).toHaveBeenCalledWith({
+        region: options.awsRegion,
+        endpoint: options.sqsEndpoint
       })
 
-      await pollMessages(server, mockSqsClient, 'test-queue-url')
+      // Check Consumer was created with correct options
+      expect(Consumer.create).toHaveBeenCalledWith({
+        queueUrl: options.queueUrl,
+        handleMessage: expect.any(Function),
+        sqs: mockSqsClient,
+        batchSize: 10,
+        waitTimeSeconds: 5,
+        visibilityTimeout: 30,
+        handleMessageTimeout: 30000,
+        attributeNames: ['All'],
+        messageAttributeNames: ['All']
+      })
 
-      expect(createAgreement).toHaveBeenCalledTimes(2)
-      expect(mockSqsClient.send).toHaveBeenCalledTimes(3) // 1 receive + 2 delete
-      expect(mockLogger.info).toHaveBeenCalledTimes(4)
+      // Check error handlers were set up
+      expect(mockConsumer.on).toHaveBeenCalledWith(
+        'error',
+        expect.any(Function)
+      )
+      expect(mockConsumer.on).toHaveBeenCalledWith(
+        'processing_error',
+        expect.any(Function)
+      )
+
+      // Check consumer was started
+      expect(mockConsumer.start).toHaveBeenCalled()
+
+      // Check stop handler was set up
+      expect(server.events.on).toHaveBeenCalledWith(
+        'stop',
+        expect.any(Function)
+      )
     })
 
-    it('should handle empty message response', async () => {
-      mockSqsClient.send.mockResolvedValueOnce({ Messages: undefined })
+    it('should handle plugin cleanup on server stop', async () => {
+      sqsClientPlugin.plugin.register(server, options)
 
-      await pollMessages(server, mockSqsClient, 'test-queue-url')
+      // Get and call the stop handler
+      const stopHandler = server.events.on.mock.calls.find(
+        (call) => call[0] === 'stop'
+      )[1]
+      await stopHandler()
 
-      expect(createAgreement).not.toHaveBeenCalled()
-      expect(mockSqsClient.send).toHaveBeenCalledTimes(1)
+      // Check cleanup was performed
+      expect(mockConsumer.stop).toHaveBeenCalled()
+      expect(mockSqsClient.destroy).toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Stopping SQS consumer')
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Closing SQS client')
+      )
     })
 
-    it('should handle message processing errors gracefully', async () => {
-      const mockMessage = {
+    it('should handle message processing errors', async () => {
+      sqsClientPlugin.plugin.register(server, options)
+
+      // Get the message handler
+      const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
+
+      // Call handler with invalid message
+      const invalidMessage = {
         Body: 'invalid json',
-        ReceiptHandle: 'receipt-1',
         MessageId: 'msg-1'
       }
 
-      mockSqsClient.send.mockImplementation((command) => {
-        if (command instanceof ReceiveMessageCommand) {
-          return Promise.resolve({ Messages: [mockMessage] })
-        }
-        return Promise.resolve({})
-      })
-
-      await pollMessages(server, mockSqsClient, 'test-queue-url')
+      await messageHandler(invalidMessage)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to process message:',
@@ -269,16 +269,40 @@ describe('SQS Client', () => {
       )
     })
 
-    it('should handle SQS client errors', async () => {
-      const error = new Error('SQS error')
-      mockSqsClient.send.mockRejectedValueOnce(error)
+    it('should handle consumer errors', () => {
+      sqsClientPlugin.plugin.register(server, options)
 
-      await expect(
-        pollMessages(server, mockSqsClient, 'test-queue-url')
-      ).rejects.toThrow('SQS queue unavailable')
+      // Get the error handler
+      const errorHandler = mockConsumer.on.mock.calls.find(
+        (call) => call[0] === 'error'
+      )[1]
+
+      // Call error handler
+      const error = new Error('Consumer error')
+      errorHandler(error)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'SQS Polling error:',
+        'SQS Consumer error:',
+        expect.objectContaining({
+          error: error.message
+        })
+      )
+    })
+
+    it('should handle processing errors', () => {
+      sqsClientPlugin.plugin.register(server, options)
+
+      // Get the processing error handler
+      const errorHandler = mockConsumer.on.mock.calls.find(
+        (call) => call[0] === 'processing_error'
+      )[1]
+
+      // Call error handler
+      const error = new Error('Processing error')
+      errorHandler(error)
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'SQS Message processing error:',
         expect.objectContaining({
           error: error.message
         })
