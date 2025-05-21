@@ -45,9 +45,17 @@ export const handleEvent = async (payload, logger) => {
  * @returns {Promise<void>}
  */
 export const processMessage = async (message, logger) => {
-  const snsEnvelope = JSON.parse(message.Body)
-  const eventPayload = JSON.parse(snsEnvelope.Message)
-  await handleEvent(eventPayload, logger)
+  try {
+    const snsEnvelope = JSON.parse(message.Body)
+    const eventPayload = JSON.parse(snsEnvelope.Message)
+    await handleEvent(eventPayload, logger)
+  } catch (err) {
+    logger.error(`Error processing message`, message)
+    throw Boom.internal('Error processing SQS message', {
+      message: err.message,
+      stack: err.stack
+    })
+  }
 }
 
 /**
