@@ -89,7 +89,11 @@ describe('SQS Client', () => {
       }
 
       await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Unexpected token'
+        'Error processing SQS message'
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error processing message'),
+        expect.objectContaining(message)
       )
     })
   })
