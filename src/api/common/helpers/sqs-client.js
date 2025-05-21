@@ -49,11 +49,27 @@ export const processMessage = async (message, logger) => {
     const snsEnvelope = JSON.parse(message.Body)
     const eventPayload = JSON.parse(snsEnvelope.Message)
     await handleEvent(eventPayload, logger)
-  } catch (err) {
-    logger.error(`Error processing message`, message)
-    throw Boom.internal('Error processing SQS message', {
-      message: err.message,
-      stack: err.stack
+  } catch (error) {
+    logger.error('Error processing message:', {
+      message,
+      error: error.message,
+      stack: error.stack
+    })
+
+    if (error.name === 'SyntaxError') {
+      throw Boom.badData('Invalid message format', {
+        message,
+        error: error.message
+      })
+    }
+
+    throw Boom.boomify(error, {
+      statusCode: 500,
+      message: 'Error processing SQS message',
+      data: {
+        message,
+        originalError: error.message
+      }
     })
   }
 }
@@ -81,14 +97,37 @@ export const deleteMessage = (sqsClient, queueUrl, receiptHandle) =>
  * @returns {Promise<void>}
  */
 export const pollMessages = async ({ logger }, sqsClient, queueUrl) => {
-  const data = await checkMessages(sqsClient, queueUrl)
+  try {
+    const data = await checkMessages(sqsClient, queueUrl)
 
-  if (data.Messages) {
-    for (const msg of data.Messages) {
-      await processMessage(msg, logger)
-      await deleteMessage(sqsClient, queueUrl, msg.ReceiptHandle)
-      logger.info(`Deleted message: ${msg.MessageId}`)
+    if (data.Messages) {
+      for (const msg of data.Messages) {
+        try {
+          await processMessage(msg, logger)
+          await deleteMessage(sqsClient, queueUrl, msg.ReceiptHandle)
+          logger.info(
+            `Succesfully processed and deleted message: ${msg.MessageId}`
+          )
+        } catch (error) {
+          logger.error('Failed to process message:', {
+            messageId: msg.MessageId,
+            error: error.message,
+            stack: error.stack,
+            data: error.data
+          })
+        }
+      }
     }
+  } catch (error) {
+    logger.error('SQS Polling error:', {
+      error: error.message,
+      stack: error.stack
+    })
+
+    throw Boom.serverUnavailable('SQS queue unavailable', {
+      error: error.message,
+      queueUrl
+    })
   }
 }
 
@@ -119,15 +158,15 @@ export const sqsClientPlugin = {
       })
 
       const intervalId = setInterval(() => {
-        pollMessages(server, sqsClient, options.queueUrl).catch((err) => {
-          server.logger.error('Unhandled SQS Client error:', {
-            error: err.message
-          })
+        pollMessages(server, sqsClient, options.queueUrl).catch((error) => {
+          if (!error.isBoom) {
+            server.logger.error('Unexpected SQS Client error:', {
+              error: error.message,
+              stack: error.stack
+            })
+          }
 
-          throw Boom.internal('Error processing SQS message', {
-            message: err.message,
-            stack: err.stack
-          })
+          throw error
         })
       }, config.get('sqs.interval'))
 

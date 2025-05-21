@@ -89,11 +89,18 @@ describe('SQS Client', () => {
       }
 
       await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Error processing SQS message'
+        'Invalid message format',
+        expect.objectContaining({
+          message: 'invalid json',
+          error: 'Unexpected token i in JSON at position 0'
+        })
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error processing message'),
-        expect.objectContaining(message)
+        expect.objectContaining({
+          message,
+          error: 'Unexpected token \'i\', "invalid json" is not valid JSON'
+        })
       )
     })
   })
@@ -163,7 +170,7 @@ describe('SQS Client', () => {
 
       await expect(
         pollMessages(server, mockSqsClient, 'test-queue-url')
-      ).rejects.toThrow('Polling error')
+      ).rejects.toThrow('SQS queue unavailable')
     })
   })
 })
