@@ -90,6 +90,29 @@ export const deleteMessage = (sqsClient, queueUrl, receiptHandle) =>
   )
 
 /**
+ * Process a single message from the queue
+ * @param {Message} msg - The message to process
+ * @param {import('@hapi/hapi').Server} logger - The logger instance
+ * @param {SQSClient} sqsClient - AWS SQS client instance
+ * @param {string} queueUrl - URL of the queue
+ * @returns {Promise<void>}
+ */
+const processQueueMessage = async (msg, logger, sqsClient, queueUrl) => {
+  try {
+    await processMessage(msg, logger)
+    await deleteMessage(sqsClient, queueUrl, msg.ReceiptHandle)
+    logger.info(`Succesfully processed and deleted message: ${msg.MessageId}`)
+  } catch (error) {
+    logger.error('Failed to process message:', {
+      messageId: msg.MessageId,
+      error: error.message,
+      stack: error.stack,
+      data: error.data
+    })
+  }
+}
+
+/**
  * Poll the SQS queue for messages
  * @param { import('@hapi/hapi').Server } logger - The logger instance
  * @param {SQSClient} sqsClient - AWS SQS client instance
@@ -99,25 +122,15 @@ export const deleteMessage = (sqsClient, queueUrl, receiptHandle) =>
 export const pollMessages = async ({ logger }, sqsClient, queueUrl) => {
   try {
     const data = await checkMessages(sqsClient, queueUrl)
-
-    if (data.Messages) {
-      for (const msg of data.Messages) {
-        try {
-          await processMessage(msg, logger)
-          await deleteMessage(sqsClient, queueUrl, msg.ReceiptHandle)
-          logger.info(
-            `Succesfully processed and deleted message: ${msg.MessageId}`
-          )
-        } catch (error) {
-          logger.error('Failed to process message:', {
-            messageId: msg.MessageId,
-            error: error.message,
-            stack: error.stack,
-            data: error.data
-          })
-        }
-      }
+    if (!data.Messages) {
+      return
     }
+
+    await Promise.all(
+      data.Messages.map((msg) =>
+        processQueueMessage(msg, logger, sqsClient, queueUrl)
+      )
+    )
   } catch (error) {
     logger.error('SQS Polling error:', {
       error: error.message,
