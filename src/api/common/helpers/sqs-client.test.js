@@ -112,7 +112,9 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
       const message = {
-        Body: JSON.stringify(mockPayload)
+        Body: JSON.stringify({
+          Message: JSON.stringify(mockPayload)
+        })
       }
 
       await processMessage(message, mockLogger)
@@ -139,7 +141,9 @@ describe('SQS Client', () => {
 
     it('should handle invalid JSON in SNS message', async () => {
       const message = {
-        Body: 'invalid json'
+        Body: JSON.stringify({
+          Message: 'invalid json'
+        })
       }
 
       await expect(processMessage(message, mockLogger)).rejects.toThrow(
