@@ -36,7 +36,8 @@ done
 awslocal sns subscribe \
   --topic-arn "$TOPIC_ARN" \
   --protocol sqs \
-  --notification-endpoint "$QUEUE_ARN"
+  --notification-endpoint "$QUEUE_ARN" \
+  --attributes '{ "RawMessageDelivery": "true"}'
 echo "🔗 Subscribed queue to topic."
 
 # Optional extras
