@@ -29,9 +29,8 @@ export const handleEvent = async (payload, logger) => {
  */
 export const processMessage = async (message, logger) => {
   try {
-    const snsEnvelope = JSON.parse(message.Body)
-    const eventPayload = JSON.parse(snsEnvelope.Message)
-    await handleEvent(eventPayload, logger)
+    const messageBody = JSON.parse(message.Body)
+    await handleEvent(messageBody, logger)
   } catch (error) {
     logger.error('Error processing message:', {
       message,
