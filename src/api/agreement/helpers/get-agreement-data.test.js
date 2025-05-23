@@ -61,7 +61,7 @@ describe('getAgreementData', () => {
     })
 
     // Act
-    const result = await getAgreementData(agreementId)
+    const result = await getAgreementData({ agreementNumber: agreementId })
 
     // Assert
     expect(agreementsModel.findOne).toHaveBeenCalledWith({
@@ -78,8 +78,14 @@ describe('getAgreementData', () => {
     })
 
     // Act & Assert
-    await expect(getAgreementData(agreementId)).rejects.toThrow(
-      Boom.notFound('Agreement not found SFI999999999')
+    await expect(
+      getAgreementData({ agreementNumber: agreementId })
+    ).rejects.toThrow(
+      Boom.notFound(
+        `Agreement not found using search terms: ${JSON.stringify({
+          agreementNumber: agreementId
+        })}`
+      )
     )
   })
 
@@ -91,7 +97,7 @@ describe('getAgreementData', () => {
     })
 
     // Act
-    const result = await getAgreementData(agreementId)
+    const result = await getAgreementData({ agreementNumber: agreementId })
 
     // Assert
     expect(result).toEqual(mockAgreement)

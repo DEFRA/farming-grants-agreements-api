@@ -1,12 +1,15 @@
 import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
+import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * Controller to post a test queue message
  * @satisfies {Partial<ServerRoute>}
  */
 const postTestQueueMessageController = {
-  handler: (request, h) => {
+  handler: async (request, h) => {
     try {
       const queueMessage = request.payload
 
@@ -19,9 +22,31 @@ const postTestQueueMessageController = {
       }
 
       // TODO: Implement the logic to post the test queue message
+      const snsClient = new SNSClient({
+        region: config.aws.region,
+        credentials: {
+          accessKeyId: config.aws.accessKeyId,
+          secretAccessKey: config.aws.secretAccessKey
+        }
+      })
+
+      const command = new PublishCommand({
+        TopicArn: config.aws.sns.topicArn,
+        Message: JSON.stringify(queueMessage)
+      })
+
+      await snsClient.send(command)
+
+      // Get the agreement from the database by SBI
+      const agreementData = await getAgreementData({
+        sbi: queueMessage.sbi
+      })
 
       return h
-        .response({ message: 'Test queue message posted' })
+        .response({
+          message: 'Test queue message posted',
+          agreementData
+        })
         .code(statusCodes.ok)
     } catch (error) {
       if (error.isBoom) {
