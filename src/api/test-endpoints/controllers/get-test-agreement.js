@@ -28,7 +28,7 @@ const getTestAgreementController = {
       const agreements = await Promise.all(
         idList.map(async (id) => {
           try {
-            return await getAgreementData(id)
+            return await getAgreementData({ agreementNumber: id })
           } catch (e) {
             return null
           }
