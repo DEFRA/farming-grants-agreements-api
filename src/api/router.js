@@ -1,6 +1,8 @@
 import { health } from '~/src/api/health/index.js'
 import { agreementDocument } from '~/src/api/agreement/index.js'
 import { assets } from '~/src/api/assets/index.js'
+import { testEndpoints } from '~/src/api/test-endpoints/index.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -14,6 +16,10 @@ const router = {
 
       // Application specific routes, add your own routes here.
       await server.register([agreementDocument, assets])
+
+      if (config.get('featureFlags.testEndpoints') === true) {
+        await server.register([testEndpoints])
+      }
     }
   }
 }

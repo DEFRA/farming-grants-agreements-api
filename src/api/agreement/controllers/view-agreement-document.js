@@ -14,7 +14,9 @@ const viewAgreementDocumentController = {
       const { agreementId } = request.params
 
       // Get the agreement data
-      const agreementData = await getAgreementData(agreementId)
+      const agreementData = await getAgreementData({
+        agreementNumber: agreementId
+      })
 
       // Render the HTML agreement document
       const renderedAgreementDocument = await getHTMLAgreementDocument(

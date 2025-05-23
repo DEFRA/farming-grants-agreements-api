@@ -80,13 +80,27 @@ const config = convict({
         : ['req', 'res', 'responseTime']
     }
   },
-  sqs: {
-    awsRegion: {
+  aws: {
+    region: {
       doc: 'AWS region',
       format: String,
       default: 'eu-west-2',
       env: 'AWS_REGION'
     },
+    accessKeyId: {
+      doc: 'AWS access key ID',
+      format: String,
+      default: 'test',
+      env: 'AWS_ACCESS_KEY_ID'
+    },
+    secretAccessKey: {
+      doc: 'AWS secret access key',
+      format: String,
+      default: 'test',
+      env: 'AWS_SECRET_ACCESS_KEY'
+    }
+  },
+  sqs: {
     endpoint: {
       doc: 'AWS SQS endpoint',
       format: String,
@@ -135,12 +149,6 @@ const config = convict({
     format: String,
     default: 'farming-grants-agreements-api',
     env: 'MONGO_DATABASE'
-  },
-  seedDb: {
-    doc: 'Seed the database',
-    format: Boolean,
-    default: false,
-    env: 'SEED_DB'
   },
   httpProxy: {
     doc: 'HTTP Proxy',
@@ -194,6 +202,20 @@ const config = convict({
       default: 'my_key',
       sensitive: true,
       env: 'PAYMENT_HUB_SA_KEY'
+    }
+  },
+  featureFlags: {
+    seedDb: {
+      doc: 'Seed the database',
+      format: Boolean,
+      default: false,
+      env: 'SEED_DB'
+    },
+    testEndpoints: {
+      doc: 'Enable test endpoints',
+      format: Boolean,
+      default: false,
+      env: 'ENABLE_TEST_ENDPOINTS'
     }
   }
 })

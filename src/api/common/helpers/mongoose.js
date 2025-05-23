@@ -26,7 +26,7 @@ export const mongooseDb = {
       server.decorate('server', 'mongooseDb', mongoose.connection)
 
       // Seed the database if required
-      if (config.get('seedDb') === true) {
+      if (config.get('featureFlags.seedDb') === true) {
         server.logger.info('Seeding database')
         await seedDatabase(server.logger)
       }

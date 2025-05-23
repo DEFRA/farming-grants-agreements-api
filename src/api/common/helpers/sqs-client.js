@@ -135,7 +135,7 @@ export const sqsClientPlugin = {
     }
   },
   options: {
-    awsRegion: config.get('sqs.awsRegion'),
+    awsRegion: config.get('aws.region'),
     sqsEndpoint: config.get('sqs.endpoint'),
     queueUrl: config.get('sqs.queueUrl')
   }
