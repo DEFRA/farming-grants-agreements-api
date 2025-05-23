@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 
 /**
  * GET /api/test/agreement?id={?}
@@ -37,7 +38,7 @@ const getTestAgreementController = {
       if (!found.length) {
         throw Boom.notFound('No agreements found for provided id(s)')
       }
-      return h.response(found).code(200)
+      return h.response(found).code(statusCodes.ok)
     } catch (error) {
       if (error.isBoom) {
         return error
@@ -48,7 +49,7 @@ const getTestAgreementController = {
           message: 'Failed to fetch agreement(s)',
           error: 'An unexpected error occurred'
         })
-        .code(500)
+        .code(statusCodes.internalServerError)
     }
   }
 }
