@@ -9,9 +9,9 @@ import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data
 const getTestAgreementController = {
   handler: async (request, h) => {
     try {
-      const ids = Array.isArray(request.query.id) 
-        ? request.query.id.join(',') 
-        : request.query.id;
+      const ids = Array.isArray(request.query.id)
+        ? request.query.id.join(',')
+        : request.query.id
       if (!ids) {
         throw Boom.badRequest('Missing id query parameter')
       }
