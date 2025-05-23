@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { config } from '~/src/config/index.js'
 
@@ -21,25 +21,25 @@ const postTestQueueMessageController = {
         throw Boom.internal('Queue message data is required')
       }
 
-      // TODO: Implement the logic to post the test queue message
-      const snsClient = new SNSClient({
-        region: config.aws.region,
+      const sqsClient = new SQSClient({
+        region: config.get('aws.region'),
         credentials: {
-          accessKeyId: config.aws.accessKeyId,
-          secretAccessKey: config.aws.secretAccessKey
+          accessKeyId: config.get('aws.accessKeyId'),
+          secretAccessKey: config.get('aws.secretAccessKey')
         }
       })
 
-      const command = new PublishCommand({
-        TopicArn: config.aws.sns.topicArn,
-        Message: JSON.stringify(queueMessage)
+      const command = new SendMessageCommand({
+        QueueUrl: config.get('sqs.queueUrl'),
+        MessageBody: JSON.stringify(queueMessage)
       })
 
-      await snsClient.send(command)
+      await sqsClient.send(command)
 
-      // Get the agreement from the database by SBI
+      // Get the agreement from the database by SBI and FRN
       const agreementData = await getAgreementData({
-        sbi: queueMessage.sbi
+        sbi: queueMessage.data.identifiers.sbi,
+        frn: queueMessage.data.identifiers.frn
       })
 
       return h
