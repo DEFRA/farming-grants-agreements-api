@@ -15,7 +15,9 @@ export const handleEvent = async (payload, logger) => {
     logger.info(
       `Creating agreement from event: ${JSON.stringify(payload.data)}`
     )
-    return await createAgreement(payload.data)
+    const agreement = await createAgreement(payload.data)
+    logger.info(`Agreement created: ${JSON.stringify(agreement)}`)
+    return agreement
   }
 
   return Promise.reject(new Error('Unrecognized event type'))
