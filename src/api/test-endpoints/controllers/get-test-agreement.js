@@ -46,7 +46,7 @@ const getTestAgreementController = {
       return h
         .response({
           message: 'Failed to fetch agreement(s)',
-          error: error.message
+          error: 'An unexpected error occurred'
         })
         .code(500)
     }
