@@ -10,16 +10,18 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
  * @returns {*}
  * @throws {Error} If the agreement data is not found or if there is an error
  */
-async function updatePaymentHub({ server, logger }, agreementId) {
+async function updatePaymentHub({ server, logger }, agreementNumber) {
   try {
-    const agreementData = await getAgreementData(agreementId)
+    const agreementData = await getAgreementData({
+      agreementNumber
+    })
     const invoice = await createInvoice(
-      agreementId,
+      agreementNumber,
       agreementData.correlationId
     )
 
     if (!agreementData) {
-      throw Boom.notFound(`Agreement not found: ${agreementId}`)
+      throw Boom.notFound(`Agreement not found: ${agreementNumber}`)
     }
 
     const marketingYear = new Date().getFullYear()
