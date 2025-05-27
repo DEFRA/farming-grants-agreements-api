@@ -23,10 +23,7 @@ const postTestQueueMessageController = {
 
       const sqsClient = new SQSClient({
         region: config.get('aws.region'),
-        credentials: {
-          accessKeyId: config.get('aws.accessKeyId'),
-          secretAccessKey: config.get('aws.secretAccessKey')
-        }
+        endpoint: config.get('sqs.endpoint')
       })
 
       const command = new SendMessageCommand({
