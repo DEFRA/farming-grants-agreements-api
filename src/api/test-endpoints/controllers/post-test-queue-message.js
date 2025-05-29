@@ -4,8 +4,10 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { config } from '~/src/config/index.js'
 
+const maxDelay = 8000
+
 const checkAgreementWithBackoff = async (sbi, frn, delay) => {
-  if (delay > 8000) {
+  if (delay > maxDelay) {
     throw Boom.internal(
       `Failed to retrieve agreement data after multiple attempts for SBI: ${sbi}, FRN: ${frn}`
     )
