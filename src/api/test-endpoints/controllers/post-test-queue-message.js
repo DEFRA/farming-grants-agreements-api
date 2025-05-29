@@ -53,7 +53,7 @@ const postTestQueueMessageController = {
       await sqsClient.send(command)
 
       // Get the agreement from the database by SBI and FRN
-      const agreementData = checkAgreementWithBackoff(
+      const agreementData = await checkAgreementWithBackoff(
         queueMessage.data.identifiers.sbi,
         queueMessage.data.identifiers.frn,
         1000
