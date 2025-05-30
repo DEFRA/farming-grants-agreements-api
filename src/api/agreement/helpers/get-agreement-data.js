@@ -8,8 +8,19 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
  */
 const getAgreementData = async (searchTerms) => {
   const agreement = await agreementsModel
-    .findOne(searchTerms)
-    .lean()
+    .aggregate([
+      {
+        $match: searchTerms
+      },
+      {
+        $lookup: {
+          from: 'invoices',
+          localField: 'agreementNumber',
+          foreignField: 'agreementNumber',
+          as: 'invoice'
+        }
+      }
+    ])
     .catch((error) => {
       throw Boom.internal(error)
     })
@@ -20,7 +31,7 @@ const getAgreementData = async (searchTerms) => {
     )
   }
 
-  return Promise.resolve(agreement)
+  return Promise.resolve(agreement[0])
 }
 
 export { getAgreementData }

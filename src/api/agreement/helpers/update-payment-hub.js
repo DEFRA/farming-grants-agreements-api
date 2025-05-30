@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { createInvoice } from '~/src/api/agreement/helpers/create-invoice.js'
+import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
+import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
 
 /**
@@ -36,9 +37,9 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       schemeCode: activity.code
     }))
 
-    // Construct the payload based on the agreement data
-    /** @type {PaymentHubPayload} */
-    const payload = {
+    // Construct the request payload based on the agreement data
+    /** @type {PaymentHubRequest} */
+    const paymentHubRequest = {
       sourceSystem: 'AHWR',
       frn: agreementData.frn,
       sbi: agreementData.sbi,
@@ -53,7 +54,13 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       invoiceLines
     }
 
-    await sendPaymentHubRequest(server, logger, payload)
+    // update the invoice with the payment hub request
+    await updateInvoice(invoice.invoiceNumber, {
+      paymentHubRequest
+    })
+
+    // send the payment hub request
+    await sendPaymentHubRequest(server, logger, paymentHubRequest)
 
     return {
       status: 'success',
@@ -70,4 +77,4 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
 
 export { updatePaymentHub }
 
-/** @import { PaymentHubPayload } from '~/src/api/common/types/payment-hub.d.js' */
+/** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
