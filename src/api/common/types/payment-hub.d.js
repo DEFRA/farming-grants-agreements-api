@@ -1,5 +1,5 @@
 /**
- * @typedef {object} PaymentHubPayload
+ * @typedef {object} PaymentHubRequest
  * @property {string} sourceSystem - The source system identifier.
  * @property {number} frn - The firm reference number.
  * @property {number} sbi - The single business identifier.
