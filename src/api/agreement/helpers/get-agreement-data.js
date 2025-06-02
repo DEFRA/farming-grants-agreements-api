@@ -25,7 +25,7 @@ const getAgreementData = async (searchTerms) => {
       throw Boom.internal(error)
     })
 
-  if (!agreement) {
+  if (!agreement[0]) {
     throw Boom.notFound(
       `Agreement not found using search terms: ${JSON.stringify(searchTerms)}`
     )
