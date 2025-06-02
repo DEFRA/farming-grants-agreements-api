@@ -81,7 +81,7 @@ describe('getAgreementData', () => {
     // Arrange
     const agreementId = 'SFI999999999'
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue(null)
+      catch: jest.fn().mockResolvedValue([])
     })
 
     // Act & Assert
