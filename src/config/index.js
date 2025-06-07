@@ -100,17 +100,31 @@ const config = convict({
       env: 'AWS_SECRET_ACCESS_KEY'
     }
   },
+  sns: {
+    endpoint: {
+      doc: 'AWS SNS endpoint',
+      format: String,
+      default: 'http://localstack:4566',
+      env: 'SNS_ENDPOINT'
+    },
+    topicArn: {
+      doc: 'SNS Topic ARN',
+      format: String,
+      default: 'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+      env: 'SNS_TOPIC_ARN'
+    }
+  },
   sqs: {
     endpoint: {
       doc: 'AWS SQS endpoint',
       format: String,
-      default: 'http://localhost:4566',
+      default: 'http://localstack:4566',
       env: 'SQS_ENDPOINT'
     },
     queueUrl: {
       doc: 'Queue URL',
       format: String,
-      default: 'http://localhost:4566/000000000000/create_agreement',
+      default: 'http://localstack:4566/000000000000/create_agreement',
       env: 'QUEUE_URL'
     },
     interval: {
