@@ -26,7 +26,7 @@ jest.mock('~/src/config/index.js', () => ({
     get: jest.fn((key) => {
       switch (key) {
         case 'sns.topicArn':
-          return 'arn:aws:sns:eu-west-2:000000000000:grant_application_approved'
+          return 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted'
         case 'aws.region':
           return 'eu-west-2'
         case 'sns.endpoint':
@@ -167,7 +167,7 @@ describe('SNS Publisher', () => {
     const options = {
       awsRegion: 'eu-west-2',
       snsEndpoint: 'http://localstack:4566',
-      topicArn: 'arn:aws:sns:eu-west-2:000000000000:grant_application_approved'
+      topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted'
     }
 
     it('should initialize properly when registered', () => {
@@ -211,8 +211,7 @@ describe('SNS Publisher', () => {
       expect(snsPublisherPlugin.options).toEqual({
         awsRegion: 'eu-west-2',
         snsEndpoint: 'http://localstack:4566',
-        topicArn:
-          'arn:aws:sns:eu-west-2:000000000000:grant_application_approved'
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted'
       })
     })
   })

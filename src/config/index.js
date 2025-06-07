@@ -124,7 +124,7 @@ const config = convict({
     queueUrl: {
       doc: 'Queue URL',
       format: String,
-      default: 'http://localstack:4566/000000000000/create_agreement',
+      default: 'http://localstack:4566/000000000000/agreement_accepted',
       env: 'QUEUE_URL'
     },
     interval: {
