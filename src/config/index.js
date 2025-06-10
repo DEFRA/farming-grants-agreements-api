@@ -108,10 +108,10 @@ const config = convict({
       env: 'SNS_ENDPOINT'
     },
     topicArn: {
-      doc: 'SNS Topic ARN',
+      doc: 'Agreement Accepted Topic ARN',
       format: String,
       default: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
-      env: 'SNS_TOPIC_ARN'
+      env: 'AGREEMENT_ACCEPTED_TOPIC_ARN'
     }
   },
   sqs: {
