@@ -24,33 +24,23 @@ const acceptAgreementDocumentController = {
       // Update the payment hub
       await updatePaymentHub(request, agreementId)
 
-      try {
-        // Prepare SNS message
-        const snsMessage = {
-          type: 'agreement_accepted',
-          agreementId,
-          timestamp: new Date().toISOString()
-        }
-        request.logger.info('Preparing to publish SNS message', {
-          agreementId,
-          message: snsMessage
-        })
-
-        // Publish message to SNS
-        await publishMessage(snsMessage, request.server)
-        request.logger.info('SNS message published successfully', {
-          agreementId,
-          message: snsMessage
-        })
-      } catch (error) {
-        request.logger.error('Failed to publish SNS message:', {
-          error: error.message,
-          stack: error.stack,
-          agreementId
-        })
-        throw error
+      // Prepare SNS message
+      const snsMessage = {
+        type: 'agreement_accepted',
+        agreementId,
+        timestamp: new Date().toISOString()
       }
+      request.logger.info('Preparing to publish SNS message', {
+        agreementId,
+        message: snsMessage
+      })
 
+      // Publish message to SNS
+      await publishMessage(snsMessage, request.server)
+      request.logger.info('SNS message published successfully', {
+        agreementId,
+        message: snsMessage
+      })
       // Return the HTML response
       return h.response({ message: 'Agreement accepted' }).code(statusCodes.ok)
     } catch (error) {
