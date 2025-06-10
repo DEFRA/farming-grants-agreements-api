@@ -41,15 +41,15 @@ awslocal sns subscribe \
 echo "🔗 Subscribed queue to topic."
 
 # Create extra SNS topic and SQS queue for agreement_accepted
-EXTRA_TOPIC_NAME="agreement_accepted"
-EXTRA_QUEUE_NAME="gas_agreement_accepted"
+AGREEMENT_ACCEPTED_TOPIC_NAME="agreement_accepted"
+AGREEMENT_ACCEPTED_QUEUE_NAME="gas_agreement_accepted"
 
 # Create SNS topic and capture ARN
-EXTRA_TOPIC_ARN=$(awslocal sns create-topic --name "$EXTRA_TOPIC_NAME" --query 'TopicArn' --output text)
+EXTRA_TOPIC_ARN=$(awslocal sns create-topic --name "$AGREEMENT_ACCEPTED_TOPIC_NAME" --query 'TopicArn' --output text)
 echo "✅ Created extra topic: $EXTRA_TOPIC_ARN"
 
 # Create SQS queue
-EXTRA_QUEUE_URL=$(awslocal sqs create-queue --queue-name "$EXTRA_QUEUE_NAME" --query 'QueueUrl' --output text)
+EXTRA_QUEUE_URL=$(awslocal sqs create-queue --queue-name "$AGREEMENT_ACCEPTED_QUEUE_NAME" --query 'QueueUrl' --output text)
 EXTRA_QUEUE_ARN=$(awslocal sqs get-queue-attributes --queue-url "$EXTRA_QUEUE_URL" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
 echo "✅ Created extra queue: $EXTRA_QUEUE_URL"
 
