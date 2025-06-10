@@ -18,26 +18,11 @@ const acceptAgreementDocumentController = {
         throw Boom.internalServerError('Agreement ID is required')
       }
 
-      request.logger.info('Starting agreement acceptance process', {
-        agreementId
-      })
-
       // Accept the agreement
       await acceptAgreement(agreementId)
-      request.logger.info('Agreement accepted in database', { agreementId })
 
-      try {
-        // Update the payment hub
-        await updatePaymentHub(request, agreementId)
-        request.logger.info('Payment hub updated', { agreementId })
-      } catch (error) {
-        request.logger.error('Failed to update payment hub:', {
-          error: error.message,
-          stack: error.stack,
-          agreementId
-        })
-        throw error
-      }
+      // Update the payment hub
+      await updatePaymentHub(request, agreementId)
 
       try {
         // Prepare SNS message
@@ -73,11 +58,7 @@ const acceptAgreementDocumentController = {
         return error
       }
 
-      request.logger.error('Error accepting agreement document:', {
-        error: error.message,
-        stack: error.stack,
-        agreementId: request.params.agreementId
-      })
+      request.logger.error(`Error accepting agreement document: ${error}`)
       return h
         .response({
           message: 'Failed to accept agreement document',
