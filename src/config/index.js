@@ -110,7 +110,7 @@ const config = convict({
     topicArn: {
       doc: 'SNS Topic ARN',
       format: String,
-      default: 'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+      default: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
       env: 'SNS_TOPIC_ARN'
     }
   },
