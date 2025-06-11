@@ -107,6 +107,8 @@ curl -X GET "http://localhost:3555/api/test/gas-agreement-accepted-message?agree
 curl -X GET "http://localhost:3555/api/test/gas-agreement-accepted-message?agreementId=SFI123456789"
 ```
 
+````bash
+
 The first GET request will drain all messages from the SQS queue into an in-memory store. Subsequent GET requests will fetch from the in-memory store, allowing you to retrieve events by agreementId multiple times during the same server session.
 
 ### Production
@@ -115,7 +117,7 @@ To mimic the application running in `production` mode locally run:
 
 ```bash
 npm start
-```
+````
 
 ### Npm scripts
 

@@ -39,7 +39,7 @@ async function drainQueue(queueUrl, sqsClient) {
 
 /**
  * GET /api/test/gas-agreement-accepted-message?agreementId=...
- * Drains the queue on first call, then fetches from in-memory store.
+ * Drains the queue if the requested agreementId is not found in memory.
  * @satisfies {Partial<ServerRoute>}
  */
 const getGasAgreementAcceptedMessageController = {
@@ -48,8 +48,9 @@ const getGasAgreementAcceptedMessageController = {
     if (!agreementId) {
       throw Boom.badRequest('Missing agreementId query parameter')
     }
-    // If the in-memory store is empty, drain the queue
-    if (events.length === 0) {
+    let found = events.find((e) => e.agreementId === agreementId)
+    if (!found) {
+      // Drain the queue if not found in memory
       const sqsClient = new SQSClient({
         region: config.get('aws.region'),
         endpoint: config.get('sqs.endpoint')
@@ -58,8 +59,8 @@ const getGasAgreementAcceptedMessageController = {
         'http://localstack:4566/000000000000/gas_agreement_accepted'
       const drained = await drainQueue(queueUrl, sqsClient)
       events.push(...drained)
+      found = events.find((e) => e.agreementId === agreementId)
     }
-    const found = events.find((e) => e.agreementId === agreementId)
     if (!found) {
       throw Boom.notFound('No message found for the specified agreementId.')
     }
