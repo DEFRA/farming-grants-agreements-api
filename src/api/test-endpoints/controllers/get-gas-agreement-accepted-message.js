@@ -7,57 +7,65 @@ import {
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { config } from '~/src/config/index.js'
 
+// In-memory event store for test purposes
+const events = []
+
+async function drainQueue(queueUrl, sqsClient) {
+  const drained = []
+  while (true) {
+    const command = new ReceiveMessageCommand({
+      QueueUrl: queueUrl,
+      MaxNumberOfMessages: 10,
+      WaitTimeSeconds: 1
+    })
+    const result = await sqsClient.send(command)
+    if (!result.Messages || result.Messages.length === 0) break
+    for (const msg of result.Messages) {
+      try {
+        const body = JSON.parse(msg.Body)
+        drained.push(body)
+      } catch (e) {}
+      // Always delete the message so the queue is truly drained
+      await sqsClient.send(
+        new DeleteMessageCommand({
+          QueueUrl: queueUrl,
+          ReceiptHandle: msg.ReceiptHandle
+        })
+      )
+    }
+  }
+  return drained
+}
+
 /**
- * GET /api/test/gas-agreement-accepted-message
- * Receives a message from the gas_agreement_accepted SQS queue
+ * GET /api/test/gas-agreement-accepted-message?agreementId=...
+ * Drains the queue on first call, then fetches from in-memory store.
  * @satisfies {Partial<ServerRoute>}
  */
 const getGasAgreementAcceptedMessageController = {
   handler: async (request, h) => {
-    try {
+    const agreementId = request.query.agreementId
+    if (!agreementId) {
+      throw Boom.badRequest('Missing agreementId query parameter')
+    }
+    // If the in-memory store is empty, drain the queue
+    if (events.length === 0) {
       const sqsClient = new SQSClient({
         region: config.get('aws.region'),
         endpoint: config.get('sqs.endpoint')
       })
       const queueUrl =
         'http://localstack:4566/000000000000/gas_agreement_accepted'
-      const command = new ReceiveMessageCommand({
-        QueueUrl: queueUrl,
-        MaxNumberOfMessages: 1,
-        WaitTimeSeconds: 2
-      })
-      const result = await sqsClient.send(command)
-      if (!result.Messages || result.Messages.length === 0) {
-        throw Boom.notFound(
-          'No messages found in gas_agreement_accepted queue.'
-        )
-      }
-      const message = result.Messages[0]
-      // Optionally delete the message after receiving
-      await sqsClient.send(
-        new DeleteMessageCommand({
-          QueueUrl: queueUrl,
-          ReceiptHandle: message.ReceiptHandle
-        })
-      )
-      return h
-        .response({ message: 'Message received', body: message.Body })
-        .code(statusCodes.ok)
-    } catch (error) {
-      if (error.isBoom) {
-        return error
-      }
-      request.logger?.error?.(
-        `Error receiving message from gas_agreement_accepted queue: ${error}`
-      )
-      return h
-        .response({
-          message:
-            'Failed to receive message from gas_agreement_accepted queue',
-          error: error.message
-        })
-        .code(statusCodes.internalServerError)
+      const drained = await drainQueue(queueUrl, sqsClient)
+      events.push(...drained)
     }
+    const found = events.find((e) => e.agreementId === agreementId)
+    if (!found) {
+      throw Boom.notFound('No message found for the specified agreementId.')
+    }
+    return h
+      .response({ message: 'Message received', event: found })
+      .code(statusCodes.ok)
   }
 }
 

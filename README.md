@@ -89,6 +89,26 @@ npm run publish:accept
 
 The Agreement should be automatically created and viewable on the front-end, and the event should be consumed and deleted from the queue.
 
+## Testing the gas agreement accepted event endpoint
+
+To test the new GET endpoint for gas agreement accepted messages:
+
+1. **Accept your agreements:**
+
+```bash
+curl -X POST "http://localhost:3555/api/agreement/SFI123456788/accept"   -H "Content-Type: application/json"
+curl -X POST "http://localhost:3555/api/agreement/SFI123456789/accept"   -H "Content-Type: application/json"
+```
+
+2. **Test the events were published:**
+
+```bash
+curl -X GET "http://localhost:3555/api/test/gas-agreement-accepted-message?agreementId=SFI123456788"
+curl -X GET "http://localhost:3555/api/test/gas-agreement-accepted-message?agreementId=SFI123456789"
+```
+
+The first GET request will drain all messages from the SQS queue into an in-memory store. Subsequent GET requests will fetch from the in-memory store, allowing you to retrieve events by agreementId multiple times during the same server session.
+
 ### Production
 
 To mimic the application running in `production` mode locally run:
