@@ -1,6 +1,7 @@
 import {
   postTestQueueMessageController,
-  getTestAgreementController
+  getTestAgreementController,
+  getGasAgreementAcceptedMessageController
 } from '~/src/api/test-endpoints/controllers/index.js'
 
 /**
@@ -20,6 +21,11 @@ const testEndpoints = {
           method: 'GET',
           path: '/api/test/agreement', // ?agreementNumber=1234567890,12345524566
           ...getTestAgreementController
+        },
+        {
+          method: 'GET',
+          path: '/api/test/gas-agreement-accepted-message',
+          ...getGasAgreementAcceptedMessageController
         }
       ])
     }
