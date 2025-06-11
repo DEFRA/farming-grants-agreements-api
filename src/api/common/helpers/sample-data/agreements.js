@@ -573,5 +573,97 @@ export default [
         totalAgreementPayment: 12617.59
       }
     }
+  },
+  {
+    agreementNumber: 'SFI123456788',
+    agreementName: 'Sample Agreement 788',
+    correlationId: uuidv4(),
+    frn: '1234567880',
+    sbi: '123456788',
+    company: 'Another Farm Ltd',
+    address: '456 New Lane, Farmville',
+    postcode: 'FA12 4XY',
+    username: 'Jane Smith',
+    agreementStartDate: startDate,
+    agreementEndDate: endDate,
+    actions: [
+      {
+        code: 'CSAM1A',
+        title:
+          'Assess soil, test soil organic matter and produce a soil management plan',
+        startDate,
+        endDate,
+        duration: '3 years'
+      },
+      {
+        code: 'MPAY1',
+        title: 'SFI Management Payment',
+        startDate,
+        endDate,
+        duration: '3 years'
+      }
+    ],
+    parcels: [
+      {
+        parcelNumber: 'SX63599045',
+        parcelName: 'New North Field',
+        totalArea: 0.8306,
+        activities: [
+          {
+            code: 'BND1',
+            description: 'Maintain dry stone walls',
+            area: 100.0,
+            startDate,
+            endDate
+          },
+          {
+            code: 'CHRW1',
+            description: assessHedgerowDescription,
+            area: 210.0,
+            startDate,
+            endDate
+          },
+          {
+            code: 'CSAM1',
+            description: assessSoilDescription,
+            area: 0.8287,
+            startDate,
+            endDate
+          }
+        ]
+      }
+    ],
+    payments: {
+      activities: [
+        {
+          code: 'CSAM1',
+          description:
+            'Assess soil, test soil organic matter and produce a soil management plan',
+          quantity: 10.0,
+          rate: 7.0,
+          measurement: '10.00 HA',
+          paymentRate: '7.00/ha',
+          annualPayment: 70.0
+        }
+      ],
+      totalAnnualPayment: 70.0,
+      yearlyBreakdown: {
+        details: [
+          {
+            code: 'CSAM1',
+            year1: 70.0,
+            year2: 70.0,
+            year3: 70.0,
+            totalPayment: 210.0
+          }
+        ],
+        annualTotals: {
+          year1: 70.0,
+          year2: 70.0,
+          year3: 70.0
+        },
+        totalAgreementPayment: 210.0
+      }
+    }
   }
 ]

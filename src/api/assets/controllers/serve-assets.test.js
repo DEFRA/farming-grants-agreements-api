@@ -2,6 +2,17 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import fs from 'fs'
 
+// Mock @smithy/shared-ini-file-loader to prevent AWS SDK credential loading errors during tests.
+// This is needed because the addition of the SNS publisher test affects AWS SDK credential loading behavior across the test suite.
+jest.mock('@smithy/shared-ini-file-loader', () => ({
+  loadSharedConfigFiles: () =>
+    Promise.resolve({
+      configFile: {},
+      credentialsFile: {}
+    }),
+  getProfileName: () => undefined
+}))
+
 // Mock fs module with promises API
 jest.mock('fs', () => ({
   existsSync: jest.fn(),

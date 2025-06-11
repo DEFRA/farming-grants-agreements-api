@@ -12,6 +12,7 @@ import { requestTracing } from '~/src/api/common/helpers/request-tracing.js'
 import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
 import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
+import { snsPublisherPlugin } from '~/src/api/common/helpers/sns-publisher.js'
 
 async function createServer(serverOptions = {}) {
   setupProxy()
@@ -53,6 +54,7 @@ async function createServer(serverOptions = {}) {
 
   const options = {
     disableSQS: false,
+    disableSNS: false,
     ...serverOptions
   }
 
@@ -63,6 +65,7 @@ async function createServer(serverOptions = {}) {
   // pulse            - provides shutdown handlers
   // mongooseDb       - sets up mongoose connection pool and attaches to `server` and `request` objects
   // sqsClientPlugin  - AWS SQS client
+  // snsPublisherPlugin - AWS SNS publisher
   // router           - routes used in the app
   await server.register(
     [
@@ -72,6 +75,7 @@ async function createServer(serverOptions = {}) {
       pulse,
       mongooseDb,
       options.disableSQS ? null : sqsClientPlugin,
+      options.disableSNS ? null : snsPublisherPlugin,
       router
     ].filter(Boolean)
   )
