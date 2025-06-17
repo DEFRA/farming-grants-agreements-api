@@ -22,6 +22,7 @@ describe('acceptAgreementDocumentController', () => {
   })
 
   beforeEach(() => {
+    process.env.NODE_ENV = 'development'
     jest.clearAllMocks()
     // Mock successful responses for updatePaymentHub and publishMessage
     updatePaymentHub.mockResolvedValue(undefined)

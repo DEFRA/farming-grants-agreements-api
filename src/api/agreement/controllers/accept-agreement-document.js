@@ -35,12 +35,23 @@ const acceptAgreementDocumentController = {
         message: snsMessage
       })
 
-      // Publish message to SNS
-      await publishMessage(snsMessage, request.server)
-      request.logger.info('SNS message published successfully', {
-        agreementId,
-        message: snsMessage
-      })
+      // Only publish to SNS in development/local environment
+      if (process.env.NODE_ENV === 'development') {
+        // Publish message to SNS
+        await publishMessage(snsMessage, request.server)
+        request.logger.info('SNS message published successfully', {
+          agreementId,
+          message: snsMessage
+        })
+      } else {
+        request.logger.info(
+          'SNS message NOT published (not in development mode)',
+          {
+            agreementId,
+            message: snsMessage
+          }
+        )
+      }
       // Return the HTML response
       return h.response({ message: 'Agreement accepted' }).code(statusCodes.ok)
     } catch (error) {
