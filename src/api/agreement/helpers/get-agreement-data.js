@@ -3,22 +3,35 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 
 /**
  * Get agreement data for rendering templates
- * @param {string} agreementId - The agreement ID to fetch
+ * @param {any} searchTerms - The search terms to use to find the agreement
  * @returns {Promise<Agreement>} The agreement data
  */
-const getAgreementData = async (agreementId) => {
+const getAgreementData = async (searchTerms) => {
   const agreement = await agreementsModel
-    .findOne({ agreementNumber: agreementId })
-    .lean()
+    .aggregate([
+      {
+        $match: searchTerms
+      },
+      {
+        $lookup: {
+          from: 'invoices',
+          localField: 'agreementNumber',
+          foreignField: 'agreementNumber',
+          as: 'invoice'
+        }
+      }
+    ])
     .catch((error) => {
       throw Boom.internal(error)
     })
 
-  if (!agreement) {
-    throw Boom.notFound(`Agreement not found ${agreementId}`)
+  if (!agreement[0]) {
+    throw Boom.notFound(
+      `Agreement not found using search terms: ${JSON.stringify(searchTerms)}`
+    )
   }
 
-  return Promise.resolve(agreement)
+  return Promise.resolve(agreement[0])
 }
 
 export { getAgreementData }

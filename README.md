@@ -71,6 +71,24 @@ To test the application run:
 npm run test
 ```
 
+## Testing the SQS queue
+
+To manually test the listener, run the following to build the required Docker containers:
+
+```bash
+ docker-compose -f compose.yml up
+```
+
+It might be helpful to use localstack's dashboard to view the SQS queue and any messages: [https://app.localstack.cloud/inst/default/resources/sqs](https://app.localstack.cloud/inst/default/resources/sqs)
+
+You can send a test `grant_application_approved` event by running:
+
+```bash
+npm run publish:accept
+```
+
+The Agreement should be automatically created and viewable on the front-end, and the event should be consumed and deleted from the queue.
+
 ### Production
 
 To mimic the application running in `production` mode locally run:

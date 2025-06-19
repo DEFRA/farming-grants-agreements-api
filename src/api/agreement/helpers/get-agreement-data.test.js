@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals'
-import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { getAgreementData } from './get-agreement-data.js'
 
@@ -56,42 +55,54 @@ describe('getAgreementData', () => {
   test('should return agreement data when found', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
-    agreementsModel.findOne.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(mockAgreement)
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([mockAgreement])
     })
 
     // Act
-    const result = await getAgreementData(agreementId)
+    const result = await getAgreementData({ agreementNumber: agreementId })
 
     // Assert
-    expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: agreementId
-    })
+    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
+      { $match: { agreementNumber: agreementId } },
+      {
+        $lookup: {
+          from: 'invoices',
+          localField: 'agreementNumber',
+          foreignField: 'agreementNumber',
+          as: 'invoice'
+        }
+      }
+    ])
     expect(result).toEqual(mockAgreement)
   })
 
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
     const agreementId = 'SFI999999999'
-    agreementsModel.findOne.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(null)
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([])
     })
 
     // Act & Assert
-    await expect(getAgreementData(agreementId)).rejects.toThrow(
-      Boom.notFound('Agreement not found SFI999999999')
+    await expect(
+      getAgreementData({ agreementNumber: agreementId })
+    ).rejects.toThrow(
+      `Agreement not found using search terms: ${JSON.stringify({
+        agreementNumber: agreementId
+      })}`
     )
   })
 
   test('should handle missing logger gracefully', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
-    agreementsModel.findOne.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(mockAgreement)
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([mockAgreement])
     })
 
     // Act
-    const result = await getAgreementData(agreementId)
+    const result = await getAgreementData({ agreementNumber: agreementId })
 
     // Assert
     expect(result).toEqual(mockAgreement)

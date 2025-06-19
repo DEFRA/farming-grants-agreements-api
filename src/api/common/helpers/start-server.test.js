@@ -52,7 +52,7 @@ describe('#startServer', () => {
     })
 
     test('Should start up server as expected', async () => {
-      server = await startServerImport.startServer()
+      server = await startServerImport.startServer({ disableSQS: true })
 
       expect(createServerSpy).toHaveBeenCalled()
       expect(hapiServerSpy).toHaveBeenCalled()
@@ -66,10 +66,14 @@ describe('#startServer', () => {
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         3,
-        'Server started successfully'
+        'Setting up SQS client'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         4,
+        'Server started successfully'
+      )
+      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
+        5,
         'Access your backend on http://localhost:3098'
       )
     })
@@ -81,7 +85,7 @@ describe('#startServer', () => {
     })
 
     test('Should log failed startup message', async () => {
-      await startServerImport.startServer()
+      await startServerImport.startServer({ disableSQS: true })
 
       expect(mockLoggerInfo).toHaveBeenCalledWith('Server failed to start :(')
       expect(mockLoggerError).toHaveBeenCalledWith(

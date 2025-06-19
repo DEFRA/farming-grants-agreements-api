@@ -14,13 +14,16 @@ describe('acceptAgreement in accept-agreement-data', () => {
     matchedCount: 1
   }
 
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.useFakeTimers()
     jest.setSystemTime(new Date('2024-01-01'))
   })
 
-  afterEach(() => {
+  afterAll(() => {
     jest.useRealTimers()
   })
 

@@ -80,6 +80,64 @@ const config = convict({
         : ['req', 'res', 'responseTime']
     }
   },
+  aws: {
+    region: {
+      doc: 'AWS region',
+      format: String,
+      default: 'eu-west-2',
+      env: 'AWS_REGION'
+    },
+    accessKeyId: {
+      doc: 'AWS access key ID',
+      format: String,
+      default: 'test',
+      env: 'AWS_ACCESS_KEY_ID'
+    },
+    secretAccessKey: {
+      doc: 'AWS secret access key',
+      format: String,
+      default: 'test',
+      env: 'AWS_SECRET_ACCESS_KEY'
+    }
+  },
+  sqs: {
+    endpoint: {
+      doc: 'AWS SQS endpoint',
+      format: String,
+      default: 'http://localhost:4566',
+      env: 'SQS_ENDPOINT'
+    },
+    queueUrl: {
+      doc: 'Queue URL',
+      format: String,
+      default: 'http://localhost:4566/000000000000/create_agreement',
+      env: 'QUEUE_URL'
+    },
+    interval: {
+      doc: 'SQS Interval',
+      format: Number,
+      default: 10000,
+      env: 'SQS_INTERVAL'
+    },
+    maxMessages: {
+      doc: 'Max number of messages to receive from SQS',
+      format: Number,
+      default: 1,
+      env: 'MAX_NUMBER_OF_MESSAGES'
+    },
+    visibilityTimeout: {
+      doc: 'Visibility timeout for SQS messages',
+      format: Number,
+      default: 10,
+      env: 'VISIBILITY_TIMEOUT'
+    },
+    waitTime: {
+      doc: 'Wait time for SQS messages',
+      format: Number,
+      default: 5,
+      env: 'WAIT_TIME_SECONDS'
+    }
+  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,
@@ -91,12 +149,6 @@ const config = convict({
     format: String,
     default: 'farming-grants-agreements-api',
     env: 'MONGO_DATABASE'
-  },
-  seedDb: {
-    doc: 'Seed the database',
-    format: Boolean,
-    default: false,
-    env: 'SEED_DB'
   },
   httpProxy: {
     doc: 'HTTP Proxy',
@@ -150,6 +202,20 @@ const config = convict({
       default: 'my_key',
       sensitive: true,
       env: 'PAYMENT_HUB_SA_KEY'
+    }
+  },
+  featureFlags: {
+    seedDb: {
+      doc: 'Seed the database',
+      format: Boolean,
+      default: false,
+      env: 'SEED_DB'
+    },
+    testEndpoints: {
+      doc: 'Enable test endpoints',
+      format: Boolean,
+      default: false,
+      env: 'ENABLE_TEST_ENDPOINTS'
     }
   }
 })

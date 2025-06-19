@@ -1,5 +1,7 @@
 import Boom from '@hapi/boom'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
+import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
 
 /**
@@ -9,55 +11,56 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
  * @returns {*}
  * @throws {Error} If the agreement data is not found or if there is an error
  */
-async function updatePaymentHub({ server, logger }, agreementId) {
+async function updatePaymentHub({ server, logger }, agreementNumber) {
   try {
-    const agreementData = await getAgreementData(agreementId)
+    const agreementData = await getAgreementData({
+      agreementNumber
+    })
+    const invoice = await createInvoice(
+      agreementNumber,
+      agreementData.correlationId
+    )
 
     if (!agreementData) {
-      throw Boom.notFound(`Agreement not found: ${agreementId}`)
+      throw Boom.notFound(`Agreement not found: ${agreementNumber}`)
     }
 
-    // Construct the payload based on the agreement data
-    /** @type {PaymentHubPayload} */
-    const payload = {
+    const marketingYear = new Date().getFullYear()
+
+    const { activities, yearlyBreakdown } = agreementData.payments
+
+    const invoiceLines = activities.map((activity) => ({
+      value: yearlyBreakdown.details.find(
+        (detail) => detail.code === activity.code
+      ).totalPayment,
+      description: activity.description,
+      schemeCode: activity.code
+    }))
+
+    // Construct the request payload based on the agreement data
+    /** @type {PaymentHubRequest} */
+    const paymentHubRequest = {
       sourceSystem: 'AHWR',
-      frn: 1234567890,
-      sbi: 123456789,
-      marketingYear: 2022,
+      frn: agreementData.frn,
+      sbi: agreementData.sbi,
+      marketingYear,
       paymentRequestNumber: 1,
-      paymentType: 1,
-      correlationId: '123e4567-e89b-12d3-a456-426655440000',
-      invoiceNumber: 'S1234567S1234567V001',
-      agreementNumber: 'AHWR12345678',
-      contractNumber: 'S1234567',
-      currency: 'GBP',
-      schedule: 'Q4',
-      dueDate: '09/11/2022',
-      value: 500,
-      debtType: 'irr',
-      recoveryDate: '09/11/2021',
-      pillar: 'DA',
-      originalInvoiceNumber: 'S1234567S1234567V001',
-      originalSettlementDate: '09/11/2021',
-      invoiceCorrectionReference: 'S1234567S1234567V001',
-      trader: '123456A',
-      vendor: '123456A',
-      invoiceLines: [
-        {
-          value: 500,
-          description: 'G00 - Gross value of claim',
-          schemeCode: 'A1234',
-          standardCode: 'ahwr-cows',
-          accountCode: 'SOS123',
-          deliveryBody: 'RP00',
-          marketingYear: 2022,
-          convergence: false,
-          stateAid: false
-        }
-      ]
+      correlationId: agreementData.correlationId,
+      invoiceNumber: invoice.invoiceNumber,
+      agreementNumber: agreementData.agreementNumber,
+      schedule: 'T4',
+      dueDate: '2022-11-09',
+      value: yearlyBreakdown.totalAgreementPayment,
+      invoiceLines
     }
 
-    await sendPaymentHubRequest(server, logger, payload)
+    // update the invoice with the payment hub request
+    await updateInvoice(invoice.invoiceNumber, {
+      paymentHubRequest
+    })
+
+    // send the payment hub request
+    await sendPaymentHubRequest(server, logger, paymentHubRequest)
 
     return {
       status: 'success',
@@ -74,4 +77,4 @@ async function updatePaymentHub({ server, logger }, agreementId) {
 
 export { updatePaymentHub }
 
-/** @import { PaymentHubPayload } from '~/src/api/common/types/payment-hub.d.js' */
+/** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
