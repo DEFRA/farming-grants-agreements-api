@@ -45,6 +45,26 @@
                             text: "Accept and continue"
                         }) }}
                     </form>
+                    
+                    <div class="govuk-inset-text">
+                        <a href="#" onclick="toggleContact(event)">Need to change your offer?</a>
+                        <div id="rpa-contact" style="display: none;">
+                          <p>Contact RPA — changes can't be made online.</p>
+                          <ul>
+                            <li><strong>Phone:</strong> 03000 200 301</li>
+                            <li><strong>Email:</strong> ruralpayments@defra.gov.uk</li>
+                            <li><strong>Hours:</strong> Mon–Fri, 8:30am–5pm</li>
+                          </ul>
+                        </div>
+
+                        <script>
+                        function toggleContact(event) {
+                          event.preventDefault();
+                          const el = document.getElementById('rpa-contact');
+                          el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                        }
+                        </script>
+                    </div>
                 </section>
 
                 <script src="/assets/js/accept-agreement.js"></script>
