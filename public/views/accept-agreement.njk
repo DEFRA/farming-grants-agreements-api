@@ -47,13 +47,23 @@
                     </form>
                     
                     <div class="govuk-inset-text">
-                        <h3 class="govuk-heading-s">Need to change your offer? Contact RPA, changes can't be made online</h3>
-                        <p class="govuk-body">Contact the Rural Payments Agency</p>
-                        <p class="govuk-body">If you need their phone or email:</p>
-                        <p class="govuk-body">
-                            <strong>Telephone:</strong> 03000 200 301<br>
-                            <strong>Email:</strong> ruralpayments@defra.gov.uk
-                        </p>
+                        <a href="#" onclick="toggleContact(event)">Need to change your offer?</a>
+                        <div id="rpa-contact" style="display: none;">
+                          <p>Contact RPA — changes can't be made online.</p>
+                          <ul>
+                            <li><strong>Phone:</strong> 03000 200 301</li>
+                            <li><strong>Email:</strong> ruralpayments@defra.gov.uk</li>
+                            <li><strong>Hours:</strong> Mon–Fri, 8:30am–5pm</li>
+                          </ul>
+                        </div>
+
+                        <script>
+                        function toggleContact(event) {
+                          event.preventDefault();
+                          const el = document.getElementById('rpa-contact');
+                          el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                        }
+                        </script>
                     </div>
                 </section>
 
