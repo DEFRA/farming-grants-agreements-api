@@ -29,7 +29,10 @@ const viewAgreementDocumentController = {
         agreementDocument: renderedAgreementDocument,
         agreementStatus: agreementData.status,
         agreementNumber: agreementData.agreementNumber,
-        agreementSignatureDate: agreementData.signatureDate
+        agreementSignatureDate: agreementData.signatureDate,
+        agreementName: agreementData.agreementName,
+        sbi: agreementData.sbi,
+        company: agreementData.company
       })
 
       // Return the HTML response

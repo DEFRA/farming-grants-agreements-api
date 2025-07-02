@@ -27,6 +27,15 @@
 {% endblock %}
 
 {% block content %}
+  <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+  <div class="govuk-width-container" style="border-bottom:1px solid #b1b4b6; padding-bottom: 8px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <span class="govuk-body govuk-!-font-size-24"><strong>{{ company }}</strong></span>
+      <span class="govuk-body govuk-!-font-size-24"><strong>Alfred Waldron</strong></span>
+    </div>
+    <div class="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">Single business identifier (SBI): {{ sbi }}</div>
+  </div>
+
     {% if agreementStatus === 'offered' %}
         <div class="govuk-width-container">
             <main class="govuk-main-wrapper" id="main-content" role="main">
@@ -45,7 +54,7 @@
                             text: "Accept and continue"
                         }) }}
                     </form>
-                    
+
                     <div class="govuk-inset-text">
                         <a href="#" onclick="toggleContact(event)">Need to change your offer?</a>
                         <div id="rpa-contact" style="display: none;">
@@ -91,24 +100,24 @@
 {% block footer %}
     <footer class="govuk-footer" role="contentinfo">
         <div class="govuk-width-container">
-            
+
             <div class="govuk-footer__meta">
             <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
-                
+
                 <h2 class="govuk-visually-hidden">Footer links</h2>
-                
+
                     <ul class="govuk-footer__inline-list">
-                    
+
                         <li class="govuk-footer__inline-list-item">
                         <a class="govuk-footer__link" href="/manage-prototype/clear-data">
                             Clear data
                         </a>
                         </li>
-                    
+
                     </ul>
-                
-                
-                
+
+
+
                 <svg
                 aria-hidden="true"
                 focusable="false"
@@ -124,14 +133,14 @@
                 />
                 </svg>
                 <span class="govuk-footer__licence-description">
-                
+
                     All content is available under the
                     <a
                     class="govuk-footer__link"
                     href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
                     rel="license"
                     >Open Government Licence v3.0</a>, except where otherwise stated
-                
+
                 </span>
             </div>
             <div class="govuk-footer__meta-item">
