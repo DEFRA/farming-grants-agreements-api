@@ -34,6 +34,23 @@ const viewAgreementDocumentController = {
         }))
       )
 
+      // Build dynamic payments array for the Payments table
+      const payments = (agreementData.payments?.activities || []).map(
+        (activity) => ({
+          name: activity.description,
+          code: activity.code,
+          rate: activity.paymentRate || activity.rate || '',
+          quarterly: activity.quarterlyPayment || '', // If available
+          yearly: activity.annualPayment
+            ? `£${activity.annualPayment.toFixed(2)}`
+            : ''
+        })
+      )
+      const totalQuarterly = '' // Set this if you have quarterly totals in your data
+      const totalYearly = agreementData.payments?.totalAnnualPayment
+        ? `£${agreementData.payments.totalAnnualPayment.toFixed(2)}`
+        : ''
+
       // Render the Accept Agreement page
       const renderedHTML = renderTemplate('accept-agreement.njk', {
         agreementDocument: renderedAgreementDocument,
@@ -43,7 +60,10 @@ const viewAgreementDocumentController = {
         agreementName: agreementData.agreementName,
         sbi: agreementData.sbi,
         company: agreementData.company,
-        actions // Pass dynamic actions array
+        actions, // Pass dynamic actions array
+        payments, // Pass dynamic payments array
+        totalQuarterly,
+        totalYearly
       })
 
       // Return the HTML response
