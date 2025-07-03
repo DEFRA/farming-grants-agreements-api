@@ -43,18 +43,18 @@
   <table class="govuk-table">
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header govuk-link">Action</th>
-        <th scope="col" class="govuk-table__header govuk-link">Code</th>
-        <th scope="col" class="govuk-table__header govuk-link">Land parcel</th>
+        <th scope="col" class="govuk-table__header">Action</th>
+        <th scope="col" class="govuk-table__header">Code</th>
+        <th scope="col" class="govuk-table__header">Land parcel</th>
         <th scope="col" class="govuk-table__header">Quantity</th>
       </tr>
     </thead>
     <tbody class="govuk-table__body">
       {% for action in actions %}
       <tr class="govuk-table__row">
-        <td class="govuk-table__cell govuk-link">{{ action.name }}</td>
-        <td class="govuk-table__cell govuk-link">{{ action.code }}</td>
-        <td class="govuk-table__cell govuk-link">{{ action.landParcel }}</td>
+        <td class="govuk-table__cell">{{ action.name }}</td>
+        <td class="govuk-table__cell">{{ action.code }}</td>
+        <td class="govuk-table__cell">{{ action.landParcel }}</td>
         <td class="govuk-table__cell">{{ action.quantity }}</td>
       </tr>
       {% endfor %}
