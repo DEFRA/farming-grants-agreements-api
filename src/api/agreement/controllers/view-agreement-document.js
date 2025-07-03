@@ -24,6 +24,16 @@ const viewAgreementDocumentController = {
         agreementData
       )
 
+      // Build dynamic actions array for the table
+      const actions = (agreementData.parcels || []).flatMap((parcel) =>
+        (parcel.activities ?? []).map((activity) => ({
+          name: activity.description || activity.title || '',
+          code: activity.code,
+          landParcel: parcel.parcelNumber,
+          quantity: activity.area ? `${activity.area} ha` : ''
+        }))
+      )
+
       // Render the Accept Agreement page
       const renderedHTML = renderTemplate('accept-agreement.njk', {
         agreementDocument: renderedAgreementDocument,
@@ -32,7 +42,8 @@ const viewAgreementDocumentController = {
         agreementSignatureDate: agreementData.signatureDate,
         agreementName: agreementData.agreementName,
         sbi: agreementData.sbi,
-        company: agreementData.company
+        company: agreementData.company,
+        actions // Pass dynamic actions array
       })
 
       // Return the HTML response

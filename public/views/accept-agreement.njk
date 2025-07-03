@@ -36,6 +36,31 @@
     <div id="sbi" class="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">Single business identifier (SBI): {{ sbi }}</div>
   </div>
 
+  <h1 class="govuk-heading-xl">Your funding offer</h1>
+  <p class="govuk-body">Review and accept your offer.</p>
+
+  <h2 class="govuk-heading-l">Actions</h2>
+  <table class="govuk-table">
+    <thead class="govuk-table__head">
+      <tr class="govuk-table__row">
+        <th scope="col" class="govuk-table__header govuk-link">Action</th>
+        <th scope="col" class="govuk-table__header govuk-link">Code</th>
+        <th scope="col" class="govuk-table__header govuk-link">Land parcel</th>
+        <th scope="col" class="govuk-table__header">Quantity</th>
+      </tr>
+    </thead>
+    <tbody class="govuk-table__body">
+      {% for action in actions %}
+      <tr class="govuk-table__row">
+        <td class="govuk-table__cell govuk-link">{{ action.name }}</td>
+        <td class="govuk-table__cell govuk-link">{{ action.code }}</td>
+        <td class="govuk-table__cell govuk-link">{{ action.landParcel }}</td>
+        <td class="govuk-table__cell">{{ action.quantity }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
     {% if agreementStatus === 'offered' %}
         <div class="govuk-width-container">
             <main class="govuk-main-wrapper" id="main-content" role="main">
