@@ -52,10 +52,10 @@
     <tbody class="govuk-table__body">
       {% for action in actions %}
       <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
-        <td class="govuk-table__cell">{{ action.name }}</td>
-        <td class="govuk-table__cell">{{ action.code }}</td>
-        <td class="govuk-table__cell">{{ action.landParcel }}</td>
-        <td class="govuk-table__cell">{{ action.quantity }}</td>
+        <td class="govuk-table__cell" id="actionTableActionRow{{ loop.index }}">{{ action.name }}</td>
+        <td class="govuk-table__cell" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
+        <td class="govuk-table__cell" id="actionTableLandParcelRow{{ loop.index }}">{{ action.landParcel }}</td>
+        <td class="govuk-table__cell" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -79,11 +79,11 @@
     <tbody class="govuk-table__body">
       {% for payment in payments %}
       <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
-        <td class="govuk-table__cell">{{ payment.name }}</td>
-        <td class="govuk-table__cell">{{ payment.code }}</td>
-        <td class="govuk-table__cell">{{ payment.rate }}</td>
-        <td class="govuk-table__cell">{{ payment.quarterly }}</td>
-        <td class="govuk-table__cell">{{ payment.yearly }}</td>
+        <td class="govuk-table__cell" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
+        <td class="govuk-table__cell" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
+        <td class="govuk-table__cell" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate }}</td>
+        <td class="govuk-table__cell" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{{ payment.quarterly }}</td>
+        <td class="govuk-table__cell" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly }}</td>
       </tr>
       {% endfor %}
     </tbody>
