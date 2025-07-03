@@ -51,7 +51,7 @@
     </thead>
     <tbody class="govuk-table__body">
       {% for action in actions %}
-      <tr class="govuk-table__row">
+      <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
         <td class="govuk-table__cell">{{ action.name }}</td>
         <td class="govuk-table__cell">{{ action.code }}</td>
         <td class="govuk-table__cell">{{ action.landParcel }}</td>
@@ -78,7 +78,7 @@
     </thead>
     <tbody class="govuk-table__body">
       {% for payment in payments %}
-      <tr class="govuk-table__row">
+      <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
         <td class="govuk-table__cell">{{ payment.name }}</td>
         <td class="govuk-table__cell">{{ payment.code }}</td>
         <td class="govuk-table__cell">{{ payment.rate }}</td>
