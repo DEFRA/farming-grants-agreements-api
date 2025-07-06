@@ -981,7 +981,8 @@ export default [
       {
         code: 'UPL4',
         name: 'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
-        title: 'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
+        title:
+          'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
         startDate,
         endDate,
         duration: '3 years',
@@ -991,7 +992,8 @@ export default [
       {
         code: 'SPM5',
         name: 'Keep native breeds on extensively managed habitats supplement (more than 80%)',
-        title: 'Keep native breeds on extensively managed habitats supplement (more than 80%)',
+        title:
+          'Keep native breeds on extensively managed habitats supplement (more than 80%)',
         startDate,
         endDate,
         duration: '3 years',
@@ -1001,7 +1003,8 @@ export default [
       {
         code: 'UPL10',
         name: 'Shepherding livestock on moorland (remove stock for at least 8 months)',
-        title: 'Shepherding livestock on moorland (remove stock for at least 8 months)',
+        title:
+          'Shepherding livestock on moorland (remove stock for at least 8 months)',
         startDate,
         endDate,
         duration: '3 years',
@@ -1033,7 +1036,8 @@ export default [
           },
           {
             code: 'UPL4',
-            description: 'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
+            description:
+              'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
             area: 8.3405,
             quantity: '8.3405 ha',
             startDate,
@@ -1041,7 +1045,8 @@ export default [
           },
           {
             code: 'SPM5',
-            description: 'Keep native breeds on extensively managed habitats supplement (more than 80%)',
+            description:
+              'Keep native breeds on extensively managed habitats supplement (more than 80%)',
             area: 8.3405,
             quantity: '8.3405 ha',
             startDate,
@@ -1049,7 +1054,8 @@ export default [
           },
           {
             code: 'UPL10',
-            description: 'Shepherding livestock on moorland (remove stock for at least 8 months)',
+            description:
+              'Shepherding livestock on moorland (remove stock for at least 8 months)',
             area: 8.3405,
             quantity: '8.3405 ha',
             startDate,
@@ -1064,7 +1070,7 @@ export default [
           code: 'CMOR1',
           description: 'Assess moorland and produce a written record',
           paymentRate: '£10.60 per ha and £27.27 per ha',
-          rate: 10.60,
+          rate: 10.6,
           quantity: 8.3405,
           measurement: '8.3405 ha',
           annualPayment: 360.41,
@@ -1084,7 +1090,8 @@ export default [
         },
         {
           code: 'UPL4',
-          description: 'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
+          description:
+            'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
           paymentRate: '£27 per hectare',
           rate: 27,
           quantity: 8.3405,
@@ -1095,7 +1102,8 @@ export default [
         },
         {
           code: 'SPM5',
-          description: 'Keep native breeds on extensively managed habitats supplement (more than 80%)',
+          description:
+            'Keep native breeds on extensively managed habitats supplement (more than 80%)',
           paymentRate: '£21 per hectare',
           rate: 21,
           quantity: 8.3405,
@@ -1106,7 +1114,8 @@ export default [
         },
         {
           code: 'UPL10',
-          description: 'Shepherding livestock on moorland (remove stock for at least 8 months)',
+          description:
+            'Shepherding livestock on moorland (remove stock for at least 8 months)',
           paymentRate: '£48 per hectare',
           rate: 48,
           quantity: 8.3405,
