@@ -573,5 +573,234 @@ export default [
         totalAgreementPayment: 12617.59
       }
     }
+  },
+  {
+    agreementNumber: 'SFI999999999',
+    agreementName: 'Sample Agreement',
+    correlationId: uuidv4(),
+    frn: '9999999990',
+    sbi: '999999999',
+    company: 'Agile Farm',
+    address: '123 Farm Lane, Farmville',
+    postcode: 'FA12 3RM',
+    username: 'Alfred Waldron',
+    agreementStartDate: startDate,
+    agreementEndDate: endDate,
+    actions: [
+      {
+        code: 'CMOR1',
+        name: 'Assess moorland and produce a written record',
+        title: 'Assess moorland and produce a written record',
+        startDate,
+        endDate,
+        duration: '3 years',
+        landParcel: 'SO3757 3159',
+        quantity: '8.3405 ha'
+      },
+      {
+        code: 'UPL3',
+        name: 'Limited livestock grazing on moorland',
+        title: 'Limited livestock grazing on moorland',
+        startDate,
+        endDate,
+        duration: '3 years',
+        landParcel: 'SO3757 3159',
+        quantity: '8.3405 ha'
+      },
+      {
+        code: 'UPL4',
+        name: 'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
+        title:
+          'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
+        startDate,
+        endDate,
+        duration: '3 years',
+        landParcel: 'SO3757 3159',
+        quantity: '8.3405 ha'
+      },
+      {
+        code: 'SPM5',
+        name: 'Keep native breeds on extensively managed habitats supplement (more than 80%)',
+        title:
+          'Keep native breeds on extensively managed habitats supplement (more than 80%)',
+        startDate,
+        endDate,
+        duration: '3 years',
+        landParcel: 'SO3757 3159',
+        quantity: '8.3405 ha'
+      },
+      {
+        code: 'UPL10',
+        name: 'Shepherding livestock on moorland (remove stock for at least 8 months)',
+        title:
+          'Shepherding livestock on moorland (remove stock for at least 8 months)',
+        startDate,
+        endDate,
+        duration: '3 years',
+        landParcel: 'SO3757 3159',
+        quantity: '8.3405 ha'
+      }
+    ],
+    parcels: [
+      {
+        parcelNumber: 'SO3757 3159',
+        parcelName: '',
+        totalArea: 8.3405,
+        activities: [
+          {
+            code: 'CMOR1',
+            description: 'Assess moorland and produce a written record',
+            area: 8.3405,
+            quantity: '8.3405 ha',
+            startDate,
+            endDate
+          },
+          {
+            code: 'UPL3',
+            description: 'Limited livestock grazing on moorland',
+            area: 8.3405,
+            quantity: '8.3405 ha',
+            startDate,
+            endDate
+          },
+          {
+            code: 'UPL4',
+            description:
+              'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
+            area: 8.3405,
+            quantity: '8.3405 ha',
+            startDate,
+            endDate
+          },
+          {
+            code: 'SPM5',
+            description:
+              'Keep native breeds on extensively managed habitats supplement (more than 80%)',
+            area: 8.3405,
+            quantity: '8.3405 ha',
+            startDate,
+            endDate
+          },
+          {
+            code: 'UPL10',
+            description:
+              'Shepherding livestock on moorland (remove stock for at least 8 months)',
+            area: 8.3405,
+            quantity: '8.3405 ha',
+            startDate,
+            endDate
+          }
+        ]
+      }
+    ],
+    payments: {
+      activities: [
+        {
+          code: 'CMOR1',
+          description: 'Assess moorland and produce a written record',
+          paymentRate: '£10.60 per ha and £27.27 per ha',
+          rate: 10.6,
+          quantity: 8.3405,
+          measurement: '8.3405 ha',
+          annualPayment: 360.41,
+          quarterly: '£90.10',
+          yearly: '£360.41'
+        },
+        {
+          code: 'UPL3',
+          description: 'Limited livestock grazing on moorland',
+          paymentRate: '£66 per hectare',
+          rate: 66,
+          quantity: 8.3405,
+          measurement: '8.3405 ha',
+          annualPayment: 550.47,
+          quarterly: '£137.61',
+          yearly: '£550.47'
+        },
+        {
+          code: 'UPL4',
+          description:
+            'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
+          paymentRate: '£27 per hectare',
+          rate: 27,
+          quantity: 8.3405,
+          measurement: '8.3405 ha',
+          annualPayment: 58.39,
+          quarterly: '£14.60',
+          yearly: '£58.39'
+        },
+        {
+          code: 'SPM5',
+          description:
+            'Keep native breeds on extensively managed habitats supplement (more than 80%)',
+          paymentRate: '£21 per hectare',
+          rate: 21,
+          quantity: 8.3405,
+          measurement: '8.3405 ha',
+          annualPayment: 91.75,
+          quarterly: '£22.94',
+          yearly: '£91.75'
+        },
+        {
+          code: 'UPL10',
+          description:
+            'Shepherding livestock on moorland (remove stock for at least 8 months)',
+          paymentRate: '£48 per hectare',
+          rate: 48,
+          quantity: 8.3405,
+          measurement: '8.3405 ha',
+          annualPayment: 400.34,
+          quarterly: '£100.09',
+          yearly: '£400.34'
+        }
+      ],
+      totalQuarterly: '£365.35',
+      totalAnnualPayment: 1461.36,
+      yearlyBreakdown: {
+        details: [
+          {
+            code: 'CMOR1',
+            year1: 360.41,
+            year2: 360.41,
+            year3: 360.41,
+            totalPayment: 1081.23
+          },
+          {
+            code: 'UPL3',
+            year1: 550.47,
+            year2: 550.47,
+            year3: 550.47,
+            totalPayment: 1651.41
+          },
+          {
+            code: 'UPL4',
+            year1: 58.39,
+            year2: 58.39,
+            year3: 58.39,
+            totalPayment: 175.17
+          },
+          {
+            code: 'SPM5',
+            year1: 91.75,
+            year2: 91.75,
+            year3: 91.75,
+            totalPayment: 275.25
+          },
+          {
+            code: 'UPL10',
+            year1: 400.34,
+            year2: 400.34,
+            year3: 400.34,
+            totalPayment: 1201.02
+          }
+        ],
+        annualTotals: {
+          year1: 1461.36,
+          year2: 1461.36,
+          year3: 1461.36
+        },
+        totalAgreementPayment: 4384.08
+      }
+    }
   }
 ]
