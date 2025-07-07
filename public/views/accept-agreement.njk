@@ -98,13 +98,13 @@
     </tfoot>
   </table>
 
-  {{ govukButton({
-    text: "Continue",
-    classes: "govuk-button govuk-button--primary",
-    attributes: {
-      onclick: "return false;"
-    }
-  }) }}
+  <form method="post" action="#" id="accept-agreement-form">
+    <input type="hidden" name="agreementNumber" value="{{agreementNumber}}">
+    <p id="accept-agreement-error" class="govuk-error-message"></p>
+    {{ govukButton({
+        text: "Continue"
+    }) }}
+  </form>
 
   {#
   {% if agreementStatus === 'offered' %}
