@@ -1,6 +1,7 @@
 import path from 'path'
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
+import inert from '@hapi/inert'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/api/router.js'
@@ -66,6 +67,7 @@ async function createServer(serverOptions = {}) {
   // router           - routes used in the app
   await server.register(
     [
+      inert,
       requestLogger,
       requestTracing,
       secureContext,

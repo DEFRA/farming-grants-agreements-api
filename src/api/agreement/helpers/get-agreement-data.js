@@ -3,7 +3,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 
 /**
  * Get agreement data for rendering templates
- * @param {any} searchTerms - The search terms to use to find the agreement
+ * @param {object} searchTerms - The search terms to use to find the agreement
  * @returns {Promise<Agreement>} The agreement data
  */
 const getAgreementData = async (searchTerms) => {
