@@ -32,12 +32,12 @@
 
 {% block content %}
   <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-  <div class="govuk-width-container" style="border-bottom:1px solid #b1b4b6; padding-bottom: 8px; margin-bottom: 24px;">
+  <div class="govuk-width-container" style="border-bottom:1px solid #b1b4b6; padding-bottom: 8px; margin-bottom: 0;">
     <div style="display: flex; justify-content: space-between; align-items: baseline;">
-      <span id="farmName" class="govuk-body govuk-!-font-size-19"><strong>{{ company }}</strong></span>
-      <span id="farmerName" class="govuk-body govuk-!-font-size-19"><strong>Alfred Waldron</strong></span>
+      <span id="farmName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>{{ company }}</strong></span>
+      <span id="farmerName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>Alfred Waldron</strong></span>
     </div>
-    <div id="sbi" class="govuk-body govuk-!-margin-bottom-0">Single business identifier (SBI): {{ sbi }}</div>
+    <div id="sbi" class="govuk-body" style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; line-height: 1;">Single business identifier (SBI): {{ sbi }}</div>
   </div>
 
   <h1 class="govuk-heading-xl">Review your funding offer</h1>
