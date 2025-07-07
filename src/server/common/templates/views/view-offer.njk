@@ -2,25 +2,138 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
 {% block content %}
-    <div class="govuk-width-container">
-        <main class="govuk-main-wrapper" id="main-content" role="main">
-            <h1 class="govuk-heading-xl">Read and accept your offer</h1>
-
-            <section>
-                {{ agreementDocument | safe }}
-            </section>
-
-            {% if agreementStatus === 'offered' %}
-            <section class="accept-section">
-                <form method="post" action="{{ '/agreement/accept-offer' if grantsProxy else '/accept-offer' }}" id="accept-offer-form">
-                    <input type="hidden" name="agreementId" value="{{agreementNumber}}">
-                    <p id="accept-agreement-error" class="govuk-error-message"></p>
-                    {{ govukButton({
-                        text: "Accept and continue"
-                    }) }}
-                </form>
-            </section>
-            {% endif %}
-        </main>
+  <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+  <div class="govuk-width-container" style="border-bottom:1px solid #b1b4b6; padding-bottom: 8px; margin-bottom: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <span id="farmName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>{{ company }}</strong></span>
+      <span id="farmerName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>Alfred Waldron</strong></span>
     </div>
+    <div id="sbi" class="govuk-body govuk-!-font-size-16"  style="margin-top: 3; margin-bottom: 0; padding-top: 0; padding-bottom: 0; line-height: 1;">Single business identifier (SBI): {{ sbi }}</div>
+  </div>
+
+  <h1 class="govuk-heading-xl">Review your funding offer</h1>
+
+  <h2 class="govuk-heading-l govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Actions</h2>
+  <table class="govuk-table">
+    <thead class="govuk-table__head">
+      <tr class="govuk-table__row">
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Land parcel</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Quantity</th>
+      </tr>
+    </thead>
+    <tbody class="govuk-table__body">
+      {% for action in actions %}
+      <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableActionRow{{ loop.index }}">{{ action.name }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.landParcel }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="govuk-body govuk-!-font-size-19" style="line-height:25px;">
+    If you accept this offer, these are the payments for the total quantity of land in each action.
+  </p>
+
+  <h2 class="govuk-heading-l govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Payments</h2>
+  <table class="govuk-table">
+    <thead class="govuk-table__head">
+      <tr class="govuk-table__row">
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Payment rate for each year</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Quarterly payment</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Yearly payment</th>
+      </tr>
+    </thead>
+    <tbody class="govuk-table__body">
+      {% for payment in payments %}
+      <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{{ payment.quarterly }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="govuk-table__cell" style="border-bottom: none;"></td>
+        <td class="govuk-table__cell" style="border-bottom: none;"></td>
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; border-bottom: none;">Total payment</td>
+        <td class="govuk-table__cell" style="border-bottom: none;"></td>
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly }}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+
+
+  {#
+  {% if agreementStatus === 'offered' %}
+      <div class="govuk-width-container">
+          <main class="govuk-main-wrapper" id="main-content" role="main">
+              <h1 class="govuk-heading-xl">Read and accept your agreement</h1>
+
+              <section>
+                  {{ agreementDocument | safe }}
+              </section>
+
+              {% if agreementStatus === 'offered' %}
+              <section class="accept-section">
+                  <form method="post" action="#" id="accept-agreement-form">
+                      <input type="hidden" name="agreementNumber" value="{{agreementNumber}}">
+                      <p id="accept-agreement-error" class="govuk-error-message"></p>
+                      {{ govukButton({
+                          text: "Accept and continue"
+                      }) }}
+                  </form>
+
+                  <div class="govuk-inset-text">
+                      <a href="#" onclick="toggleContact(event)">Need to change your offer?</a>
+                      <div id="rpa-contact" style="display: none;">
+                        <p>Contact RPA — changes can't be made online.</p>
+                        <ul>
+                          <li><strong>Phone:</strong> 03000 200 301</li>
+                          <li><strong>Email:</strong> ruralpayments@defra.gov.uk</li>
+                          <li><strong>Hours:</strong> Mon–Fri, 8:30am–5pm</li>
+                        </ul>
+                      </div>
+
+                      <script>
+                      function toggleContact(event) {
+                        event.preventDefault();
+                        const el = document.getElementById('rpa-contact');
+                        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                      }
+                      </script>
+                  </div>
+              </section>
+
+              <script src="/assets/js/accept-agreement.js"></script>
+              {% endif %}
+          </main>
+      </div>
+
+  {% else %}
+      <div class="govuk-width-container">
+          <main class="govuk-main-wrapper" id="main-content" role="main">
+              <div class="govuk-grid-row" role="main">
+                  <div class="govuk-grid-column-two-thirds">
+                      <h1 class="govuk-heading-l">
+                          Agreement accepted
+                      </h1>
+                      <p class="govuk-body">Your agreement is now live.</p>
+                  </div>
+              </div>
+          </main>
+      </div>
+  {% endif %}
+  #}
+
 {% endblock %}
