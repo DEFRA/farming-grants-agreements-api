@@ -55,9 +55,9 @@
       <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{{ payment.quarterly }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate | formatCurrency }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{{ payment.quarterly | formatCurrency }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly | formatCurrency }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -67,7 +67,7 @@
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
         <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; border-bottom: none;">Total payment</td>
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly | formatCurrency }}</td>
       </tr>
     </tfoot>
   </table>
