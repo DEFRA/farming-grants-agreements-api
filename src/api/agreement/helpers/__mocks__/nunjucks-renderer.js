@@ -3,4 +3,13 @@ const renderTemplate = jest.fn(
     `<html><body>Test HTML with ${data.agreementNumber}</body></html>`
 )
 
-export { renderTemplate }
+const formatCurrency = jest.fn((num) =>
+  typeof num === 'number'
+    ? num.toLocaleString('en-GB', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })
+    : '0.00'
+)
+
+export { renderTemplate, formatCurrency }

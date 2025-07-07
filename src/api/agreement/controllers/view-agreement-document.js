@@ -1,7 +1,10 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import {
+  renderTemplate,
+  formatCurrency
+} from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -48,7 +51,7 @@ const viewAgreementDocumentController = {
       )
       const totalQuarterly = '' // Set this if you have quarterly totals in your data
       const totalYearly = agreementData.payments?.totalAnnualPayment
-        ? `£${agreementData.payments.totalAnnualPayment.toFixed(2)}`
+        ? `£${formatCurrency(Number(agreementData.payments.totalAnnualPayment) || 0)}`
         : ''
 
       // Render the Accept Agreement page
