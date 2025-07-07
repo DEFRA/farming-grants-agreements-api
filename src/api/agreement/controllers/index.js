@@ -1,13 +1,13 @@
-import { createAgreementDocumentController } from '~/src/api/agreement/controllers/create-agreement-document.js'
-import { viewAgreementDocumentController } from '~/src/api/agreement/controllers/view-agreement-document.js'
-import { acceptAgreementDocumentController } from '~/src/api/agreement/controllers/accept-agreement-document.js'
-import { unacceptAgreementDocumentController } from '~/src/api/agreement/controllers/unaccept-agreement-document.js'
-import { getHTMLAgreementDocumentController } from '~/src/api/agreement/controllers/get-html-agreement-document.js'
+import { createOfferController } from '~/src/api/agreement/controllers/create-offer.controller.js'
+import { reviewOfferController } from '~/src/api/agreement/controllers/review-offer.controller.js'
+import { viewAgreementController } from '~/src/api/agreement/controllers/view-agreement.controller.js'
+import { acceptOfferController } from '~/src/api/agreement/controllers/accept-offer.controller.js'
+import { unacceptOfferController } from '~/src/api/agreement/controllers/unaccept-offer.controller.js'
 
 export {
-  createAgreementDocumentController,
-  viewAgreementDocumentController,
-  acceptAgreementDocumentController,
-  unacceptAgreementDocumentController,
-  getHTMLAgreementDocumentController
+  createOfferController,
+  reviewOfferController,
+  viewAgreementController,
+  acceptOfferController,
+  unacceptOfferController
 }

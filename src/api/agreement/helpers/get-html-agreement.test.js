@@ -17,7 +17,9 @@ describe('getHTMLAgreementDocument', () => {
   test('should return rendered HTML', async () => {
     const renderedHTML = await getHTMLAgreementDocument('SFI123456789')
 
-    expect(getAgreementData).toHaveBeenCalledWith('SFI123456789')
+    expect(getAgreementData).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123456789'
+    })
     expect(renderTemplate).toHaveBeenCalled()
     expect(renderedHTML).toMatch(/Test HTML with SFI123456789/)
   })

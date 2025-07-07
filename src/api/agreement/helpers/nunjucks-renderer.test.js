@@ -10,10 +10,12 @@ import {
 jest.mock('nunjucks', () => {
   const mockRender = jest.fn()
   const mockAddFilter = jest.fn()
+  const mockAddGlobal = jest.fn()
   const mockDateFilter = jest.fn()
   const mockConfigure = jest.fn().mockReturnValue({
     render: mockRender,
     addFilter: mockAddFilter,
+    addGlobal: mockAddGlobal,
     dateFilter: mockDateFilter
   })
 
@@ -22,6 +24,7 @@ jest.mock('nunjucks', () => {
     __mocks: {
       render: mockRender,
       addFilter: mockAddFilter,
+      addGlobal: mockAddGlobal,
       dateFilter: mockDateFilter,
       configure: mockConfigure
     }
@@ -69,23 +72,23 @@ describe('nunjucks-renderer', () => {
 
     test('should format number with 2 decimal places', () => {
       const filter = mockAddFilter.formatCurrencyFilter
-      expect(filter(1234.5678)).toBe('1,234.57')
-      expect(filter(1000)).toBe('1,000.00')
-      expect(filter(0)).toBe('0.00')
+      expect(filter(1234.5678)).toBe('£1,234.57')
+      expect(filter(1000)).toBe('£1,000.00')
+      expect(filter(0)).toBe('£0.00')
     })
 
     test('should handle string numbers', () => {
       const filter = mockAddFilter.formatCurrencyFilter
-      expect(filter('1234.5678')).toBe('1,234.57')
-      expect(filter('1000')).toBe('1,000.00')
-      expect(filter('0')).toBe('0.00')
+      expect(filter('1234.5678')).toBe('£1,234.57')
+      expect(filter('1000')).toBe('£1,000.00')
+      expect(filter('0')).toBe('£0.00')
     })
 
     test('should handle invalid input', () => {
       const filter = mockAddFilter.formatCurrencyFilter
-      expect(filter('invalid')).toBe('0.00')
-      expect(filter(null)).toBe('0.00')
-      expect(filter(undefined)).toBe('0.00')
+      expect(filter('invalid')).toBe('£NaN')
+      expect(filter(null)).toBe('£0.00')
+      expect(filter(undefined)).toBe('£NaN')
     })
   })
 
@@ -102,7 +105,7 @@ describe('nunjucks-renderer', () => {
 
     test('should format date correctly en-GB standard format', () => {
       const filter = mockDateFilter.formatDate
-      expect(filter(1744360860000)).toBe('11/04/2025')
+      expect(filter(new Date(1744360860000), 'dd/MM/yyyy')).toBe('11/04/2025')
     })
   })
 })

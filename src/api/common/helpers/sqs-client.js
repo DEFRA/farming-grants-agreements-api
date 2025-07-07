@@ -2,7 +2,7 @@ import Boom from '@hapi/boom'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 import { config } from '~/src/config/index.js'
-import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
+import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 
 /**
  * Handle an event from the SQS queue
@@ -15,7 +15,7 @@ export const handleEvent = async (payload, logger) => {
     logger.info(
       `Creating agreement from event: ${JSON.stringify(payload.data)}`
     )
-    const agreement = await createAgreement(payload.data)
+    const agreement = await createOffer(payload.data)
     logger.info(`Agreement created: ${JSON.stringify(agreement)}`)
     return agreement
   }

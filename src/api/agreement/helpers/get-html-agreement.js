@@ -182,7 +182,8 @@ const getHTMLAgreementDocument = async (agreementId, data) => {
     throw Boom.badRequest('Agreement ID is required')
   }
 
-  const agreementData = data || (await getAgreementData(agreementId))
+  const agreementData =
+    data || (await getAgreementData({ agreementNumber: agreementId }))
 
   if (!agreementData) {
     throw Boom.notFound(`Agreement not found ${agreementId}`)
@@ -194,7 +195,7 @@ const getHTMLAgreementDocument = async (agreementId, data) => {
   agreementData.summaryOfPayments = getSummaryOfPayments(agreementData)
   agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
 
-  return renderTemplate('sfi-agreement.njk', agreementData)
+  return renderTemplate('views/sfi-agreement.njk', agreementData)
 }
 
 export { getHTMLAgreementDocument }

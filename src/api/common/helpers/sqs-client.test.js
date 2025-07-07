@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 import { handleEvent, processMessage, sqsClientPlugin } from './sqs-client.js'
-import { createAgreement } from '~/src/api/agreement/helpers/create-agreement.js'
+import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 
 // Mock AWS SDK credential provider
 jest.mock('@aws-sdk/credential-provider-node', () => ({
@@ -13,7 +13,7 @@ jest.mock('@aws-sdk/credential-provider-node', () => ({
     })
 }))
 
-jest.mock('~/src/api/agreement/helpers/create-agreement.js')
+jest.mock('~/src/api/agreement/helpers/create-offer.js')
 jest.mock('@aws-sdk/client-sqs')
 jest.mock('~/src/config/index.js', () => ({
   config: {
@@ -88,7 +88,7 @@ describe('SQS Client', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
       )
-      expect(createAgreement).toHaveBeenCalledWith(mockPayload.data)
+      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
     })
 
     it('should throw an error for non-application-approved events', async () => {
@@ -101,7 +101,7 @@ describe('SQS Client', () => {
         'Unrecognized event type'
       )
 
-      expect(createAgreement).not.toHaveBeenCalled()
+      expect(createOffer).not.toHaveBeenCalled()
     })
   })
 
@@ -117,7 +117,7 @@ describe('SQS Client', () => {
 
       await processMessage(message, mockLogger)
 
-      expect(createAgreement).toHaveBeenCalledWith(mockPayload.data)
+      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
     })
 
     it('should handle invalid JSON in message body', async () => {
