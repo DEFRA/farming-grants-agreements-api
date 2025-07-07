@@ -61,7 +61,9 @@ const reviewOfferController = {
         sbi: agreementData.sbi,
         actions,
         payments,
-        totalYearly
+        totalYearly,
+        serviceName: 'Manage land-based actions',
+        serviceUrl: '/'
       })
 
       // Return the HTML response
