@@ -66,7 +66,7 @@ services:
   #   networks:
   #     - cdp-tenant
 
-  your-backend:
+  cdp-agreement-service:
     build: ./
     ports:
       - '3555:3555'

@@ -1,50 +1,50 @@
 import {
-  createAgreementDocumentController,
-  viewAgreementDocumentController,
-  acceptAgreementDocumentController,
-  unacceptAgreementDocumentController,
-  getHTMLAgreementDocumentController
+  reviewOfferController,
+  viewAgreementController,
+  createOfferController,
+  acceptOfferController,
+  unacceptOfferController
 } from '~/src/api/agreement/controllers/index.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
  */
-const agreementDocument = {
+const agreement = {
   plugin: {
-    name: 'agreementDocument',
+    name: 'agreement',
     register: (server) => {
       server.route([
         {
           method: 'GET',
-          path: '/agreement/{agreementId}',
-          ...viewAgreementDocumentController
+          path: '/review-offer/{agreementId}',
+          ...reviewOfferController
         },
         {
           method: 'GET',
-          path: '/api/agreement/{agreementId}',
-          ...getHTMLAgreementDocumentController
+          path: '/view-agreement/{agreementId}',
+          ...viewAgreementController
         },
         {
           method: 'POST',
-          path: '/api/agreement',
-          ...createAgreementDocumentController
+          path: '/create-offer',
+          ...createOfferController
         },
         {
           method: 'POST',
-          path: '/api/agreement/{agreementId}/accept',
-          ...acceptAgreementDocumentController
+          path: '/accept-offer/{agreementId?}',
+          ...acceptOfferController
         },
         {
           method: 'POST',
-          path: '/api/agreement/{agreementId}/unaccept',
-          ...unacceptAgreementDocumentController
+          path: '/unaccept-offer/{agreementId}',
+          ...unacceptOfferController
         }
       ])
     }
   }
 }
 
-export { agreementDocument }
+export { agreement }
 
 /**
  * @import { ServerRegisterPluginObject } from '@hapi/hapi'
