@@ -44,7 +44,6 @@ const reviewOfferController = {
         name: p.description || p.code,
         code: p.code,
         rate: p.rate,
-        quarterly: p.annualPayment ? (p.annualPayment / 4).toFixed(2) : '',
         yearly: p.annualPayment
       }))
 

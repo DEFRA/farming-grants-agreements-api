@@ -2,13 +2,16 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
 {% block content %}
-  <div class="govuk-width-container">
+  <div class="govuk-width-container" style="margin-top: 0;">
     <div style="display: flex; justify-content: space-between; align-items: baseline;">
       <span id="farmName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>{{ company }}</strong></span>
       <span id="farmerName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>Alfred Waldron</strong></span>
     </div>
-    <div id="sbi" class="govuk-body govuk-!-font-size-16"  style="margin-top: 3; margin-bottom: 0; padding-top: 0; padding-bottom: 0; line-height: 1;">Single business identifier (SBI): {{ sbi }}</div>
+    <div id="sbi" class="govuk-body govuk-!-font-size-16" style="margin-top: 3; margin-bottom: 0; padding-top: 0; padding-bottom: 0; line-height: 1;">
+      Single business identifier (SBI): {{ sbi }}
+    </div>
   </div>
+  <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
 
   <h1 class="govuk-heading-xl">Review your funding offer</h1>
 
@@ -55,7 +58,7 @@
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate | formatCurrency }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{{ payment.quarterly | formatCurrency }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{% if payment.quarterly is number %}{{ payment.quarterly | formatCurrency }}{% endif %}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly | formatCurrency }}</td>
       </tr>
       {% endfor %}
