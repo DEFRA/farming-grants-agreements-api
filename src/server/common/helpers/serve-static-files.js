@@ -35,6 +35,17 @@ export const serveStaticFiles = {
             }
           },
           options
+        },
+        {
+          method: 'GET',
+          path: '/assets/{param*}',
+          handler: {
+            directory: {
+              path: '.public/assets',
+              redirectToSlash: true
+            }
+          },
+          options
         }
       ])
     }
