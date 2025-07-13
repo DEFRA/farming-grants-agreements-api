@@ -1,6 +1,18 @@
-@use 'pkg:govuk-frontend';
+git @use 'govuk-frontend';
 @use 'variables';
 @use 'helpers';
 @use 'core';
 @use 'components';
 @use 'partials';
+
+@font-face {
+  font-family: 'GDS Transport';
+  src: url('/assets/fonts/gds-bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+.govuk-heading-xl {
+  font-family: 'GDS Transport', Arial, sans-serif;
+  font-weight: bold;
+}
