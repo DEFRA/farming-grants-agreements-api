@@ -1,5 +1,3 @@
-{% set govukRebrand = true %}
-
 {% extends "govuk/template.njk" %}
 
 {# Import GOVUK components globally #}
@@ -25,11 +23,8 @@
   {{ govukHeader({
     homepageUrl: "https://www.gov.uk/",
     classes: "govuk-header--full-width-border",
-    containerClasses: "govuk-width-container",
-    rebrand: true
+    containerClasses: "govuk-width-container"
   }) }}
-
-  {{ govukServiceNavigation({ serviceName: serviceName, serviceUrl: serviceUrl }) }}
 
   {{ defraAccountBar({
     businessName: "",
