@@ -21,7 +21,6 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history, not just the latest commit
           fetch-tags: true
-          ref: ${{ github.head_ref }}
 
       - name: Fetch main branch
         run: git fetch origin main:refs/remotes/origin/main
