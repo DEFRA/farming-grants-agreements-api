@@ -30,7 +30,7 @@ const reviewOfferController = {
         ;(parcel.activities ?? []).forEach((activity) => {
           actions.push({
             name:
-              agreementData.actions.find((a) => a.code === activity.code)
+              agreementData.actions?.find((a) => a.code === activity.code)
                 ?.title ?? activity.code,
             code: activity.code,
             landParcel: parcel.parcelNumber,
