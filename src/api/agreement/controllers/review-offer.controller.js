@@ -40,12 +40,14 @@ const reviewOfferController = {
       })
 
       // Map payments
-      const payments = (agreementData.payments?.activities || []).map((p) => ({
-        name: p.description || p.code,
-        code: p.code,
-        rate: p.rate,
-        yearly: p.annualPayment
-      }))
+      const payments = (agreementData.payments?.activities || []).map(
+        (payment) => ({
+          name: payment.description || payment.code,
+          code: payment.code,
+          rate: payment.rate,
+          yearly: payment.annualPayment
+        })
+      )
 
       const totalYearly = agreementData.payments?.totalAnnualPayment || 0
 
