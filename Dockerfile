@@ -15,8 +15,6 @@ COPY --chown=node:node package*.json ./
 RUN npm install
 COPY --chown=node:node . .
 RUN npm run build
-COPY --chown=node:node assets/fonts/gds-bold.ttf assets/fonts/gds-bold.ttf
-COPY --chown=node:node assets/fonts/gds-light.ttf assets/fonts/gds-light.ttf
 
 CMD [ "npm", "run", "docker:dev" ]
 
