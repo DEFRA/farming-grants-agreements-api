@@ -63,7 +63,7 @@ const reviewOfferController = {
         actions,
         payments,
         totalYearly,
-        serviceName: 'Manage land-based actions',
+        serviceName: 'Review funding offer',
         serviceUrl: '/'
       })
 
