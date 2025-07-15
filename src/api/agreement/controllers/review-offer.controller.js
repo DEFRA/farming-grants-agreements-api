@@ -24,13 +24,47 @@ const reviewOfferController = {
         agreementData
       )
 
+      // Map actions: flatten parcel activities to get land parcel and quantity
+      const actions = []
+      ;(agreementData.parcels || []).forEach((parcel) => {
+        ;(parcel.activities ?? []).forEach((activity) => {
+          actions.push({
+            name:
+              agreementData.actions?.find((a) => a.code === activity.code)
+                ?.title ?? activity.code,
+            code: activity.code,
+            landParcel: parcel.parcelNumber,
+            quantity: activity.area
+          })
+        })
+      })
+
+      // Map payments
+      const payments = (agreementData.payments?.activities || []).map(
+        (payment) => ({
+          name: payment.description || payment.code,
+          code: payment.code,
+          rate: payment.rate,
+          yearly: payment.annualPayment
+        })
+      )
+
+      const totalYearly = agreementData.payments?.totalAnnualPayment || 0
+
       // Render the Accept Agreement page
       const renderedHTML = renderTemplate('views/view-offer.njk', {
         agreementDocument: renderedAgreementDocument,
         agreementStatus: agreementData.status,
         agreementNumber: agreementData.agreementNumber,
         agreementSignatureDate: agreementData.signatureDate,
-        grantsProxy: request.headers['defra-grants-proxy'] === 'true'
+        grantsProxy: request.headers['defra-grants-proxy'] === 'true',
+        company: agreementData.company,
+        sbi: agreementData.sbi,
+        actions,
+        payments,
+        totalYearly,
+        serviceName: 'Review funding offer',
+        serviceUrl: '/'
       })
 
       // Return the HTML response

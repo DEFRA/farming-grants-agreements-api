@@ -1,5 +1,3 @@
-{% set govukRebrand = true %}
-
 {% extends "govuk/template.njk" %}
 
 {# Import GOVUK components globally #}
@@ -16,17 +14,17 @@
 
 {% block head %}
   <link href="{{ getAssetPath('stylesheets/application.scss') }}" rel="stylesheet">
+  <link rel="icon" href="/public/assets/images/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/public/assets/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/public/assets/images/favicon.svg" type="image/svg+xml">
 {% endblock %}
 
 {% block header %}
   {{ govukHeader({
     homepageUrl: "https://www.gov.uk/",
     classes: "govuk-header--full-width-border",
-    containerClasses: "govuk-width-container",
-    rebrand: true
+    containerClasses: "govuk-width-container"
   }) }}
-
-  {{ govukServiceNavigation({ serviceName: serviceName, serviceUrl: serviceUrl }) }}
 
   {{ defraAccountBar({
     businessName: "",
@@ -46,7 +44,7 @@
 {% endblock %}
 
 {% block pageTitle %}
-  {{ pageTitle }} | {{ serviceName }}
+  {{ serviceName }}
 {% endblock %}
 
 {% block beforeContent %}
