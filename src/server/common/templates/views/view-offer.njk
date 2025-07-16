@@ -63,7 +63,9 @@
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate | formatCurrency }}</td>
-              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{% if payment.quarterly is number %}{{ payment.quarterly | formatCurrency }}{% endif %}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">
+                {{ (payment.yearly / 4) | formatCurrency }}
+              </td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly | formatCurrency }}</td>
             </tr>
             {% endfor %}
