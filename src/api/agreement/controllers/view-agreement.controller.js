@@ -16,7 +16,11 @@ const viewAgreementController = {
       )
 
       // get HTML agreement
-      const renderedHtml = await getHTMLAgreementDocument(agreementId)
+      const renderedHtml = await getHTMLAgreementDocument(
+        agreementId,
+        null,
+        request.headers['defra-grants-proxy'] === 'true'
+      )
 
       // Return the HTML response
       return h.response(renderedHtml).type('text/html').code(statusCodes.ok)
