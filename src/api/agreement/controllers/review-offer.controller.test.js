@@ -580,4 +580,311 @@ describe('reviewOfferController', () => {
       error: errorMessage
     })
   })
+
+  test('should handle payments with null yearly values in reduce calculations', async () => {
+    // Arrange
+    const agreementId = 'SFI123456789'
+    const mockAgreementData = {
+      agreementNumber: agreementId,
+      status: 'DRAFT',
+      signatureDate: '2024-01-01',
+      company: 'Test Company',
+      sbi: '123456789',
+      parcels: [
+        {
+          parcelNumber: 'PARCEL001',
+          activities: [
+            {
+              code: 'SFI1',
+              area: 10.5
+            }
+          ]
+        }
+      ],
+      actions: [
+        {
+          code: 'SFI1',
+          title: 'Arable and Horticultural Soils'
+        }
+      ],
+      payments: {
+        activities: [
+          {
+            code: 'SFI1',
+            description: 'Arable and Horticultural Soils',
+            rate: 28,
+            annualPayment: 294
+          },
+          {
+            code: 'SFI2',
+            description: 'Test Action',
+            rate: 10,
+            annualPayment: null // This should test the || 0 condition
+          },
+          {
+            code: 'SFI3',
+            description: 'Another Test',
+            rate: 15,
+            annualPayment: undefined // This should test the || 0 condition
+          }
+        ],
+        totalAnnualPayment: 294
+      }
+    }
+
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementData')
+      .mockResolvedValue(mockAgreementData)
+
+    // Act
+    const { statusCode } = await server.inject({
+      method: 'GET',
+      url: `/review-offer/${agreementId}`
+    })
+
+    // Assert
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
+      'views/view-offer.njk',
+      expect.objectContaining({
+        payments: expect.arrayContaining([
+          expect.objectContaining({
+            name: 'Arable and Horticultural Soils',
+            code: 'SFI1',
+            rate: 28,
+            yearly: 294
+          }),
+          expect.objectContaining({
+            name: 'Test Action',
+            code: 'SFI2',
+            rate: 10,
+            yearly: null
+          }),
+          expect.objectContaining({
+            name: 'Another Test',
+            code: 'SFI3',
+            rate: 15,
+            yearly: undefined
+          })
+        ]),
+        totalYearly: 294, // Should only sum the valid values
+        totalQuarterly: 73.5 // Should only sum the valid values
+      })
+    )
+  })
+
+  test('should handle parcels with null activities', async () => {
+    // Arrange
+    const agreementId = 'SFI123456789'
+    const mockAgreementData = {
+      agreementNumber: agreementId,
+      status: 'DRAFT',
+      signatureDate: '2024-01-01',
+      company: 'Test Company',
+      sbi: '123456789',
+      parcels: [
+        {
+          parcelNumber: 'PARCEL001',
+          activities: null // This should test the ?? [] condition
+        },
+        {
+          parcelNumber: 'PARCEL002',
+          activities: [
+            {
+              code: 'SFI1',
+              area: 10.5
+            }
+          ]
+        }
+      ],
+      actions: [
+        {
+          code: 'SFI1',
+          title: 'Arable and Horticultural Soils'
+        }
+      ],
+      payments: {
+        activities: [
+          {
+            code: 'SFI1',
+            description: 'Arable and Horticultural Soils',
+            rate: 28,
+            annualPayment: 294
+          }
+        ],
+        totalAnnualPayment: 294
+      }
+    }
+
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementData')
+      .mockResolvedValue(mockAgreementData)
+
+    // Act
+    const { statusCode } = await server.inject({
+      method: 'GET',
+      url: `/review-offer/${agreementId}`
+    })
+
+    // Assert
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
+      'views/view-offer.njk',
+      expect.objectContaining({
+        actions: expect.arrayContaining([
+          expect.objectContaining({
+            name: 'Arable and Horticultural Soils',
+            code: 'SFI1',
+            landParcel: 'PARCEL002',
+            quantity: 10.5
+          })
+        ])
+      })
+    )
+  })
+
+  test('should handle missing defra-grants-proxy header', async () => {
+    // Arrange
+    const agreementId = 'SFI123456789'
+    const mockAgreementData = {
+      agreementNumber: agreementId,
+      status: 'DRAFT',
+      signatureDate: '2024-01-01',
+      company: 'Test Company',
+      sbi: '123456789',
+      parcels: [],
+      actions: [],
+      payments: {
+        activities: [],
+        totalAnnualPayment: 0
+      }
+    }
+
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementData')
+      .mockResolvedValue(mockAgreementData)
+
+    // Act
+    const { statusCode } = await server.inject({
+      method: 'GET',
+      url: `/review-offer/${agreementId}`
+      // No headers - this should test the === 'true' condition
+    })
+
+    // Assert
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
+      'views/view-offer.njk',
+      expect.objectContaining({
+        grantsProxy: false // Should be false when header is missing
+      })
+    )
+  })
+
+  test('should handle renderTemplate throwing an error', async () => {
+    // Arrange
+    const agreementId = 'SFI123456789'
+    const errorMessage = 'Template rendering failed'
+    const mockAgreementData = {
+      agreementNumber: agreementId,
+      status: 'DRAFT',
+      signatureDate: '2024-01-01',
+      company: 'Test Company',
+      sbi: '123456789',
+      parcels: [],
+      actions: [],
+      payments: {
+        activities: [],
+        totalAnnualPayment: 0
+      }
+    }
+
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementData')
+      .mockResolvedValue(mockAgreementData)
+    jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
+      throw new Error(errorMessage)
+    })
+
+    // Act
+    const { statusCode, result } = await server.inject({
+      method: 'GET',
+      url: `/review-offer/${agreementId}`
+    })
+
+    // Assert
+    expect(statusCode).toBe(statusCodes.internalServerError)
+    expect(result).toEqual({
+      message: 'Failed to fetch offer',
+      error: errorMessage
+    })
+  })
+
+  test('should handle payments with zero yearly values', async () => {
+    // Arrange
+    const agreementId = 'SFI123456789'
+    const mockAgreementData = {
+      agreementNumber: agreementId,
+      status: 'DRAFT',
+      signatureDate: '2024-01-01',
+      company: 'Test Company',
+      sbi: '123456789',
+      parcels: [
+        {
+          parcelNumber: 'PARCEL001',
+          activities: [
+            {
+              code: 'SFI1',
+              area: 10.5
+            }
+          ]
+        }
+      ],
+      actions: [
+        {
+          code: 'SFI1',
+          title: 'Arable and Horticultural Soils'
+        }
+      ],
+      payments: {
+        activities: [
+          {
+            code: 'SFI1',
+            description: 'Arable and Horticultural Soils',
+            rate: 28,
+            annualPayment: 0 // This should test the || 0 condition with zero
+          }
+        ],
+        totalAnnualPayment: 0
+      }
+    }
+
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementData')
+      .mockResolvedValue(mockAgreementData)
+
+    // Act
+    const { statusCode } = await server.inject({
+      method: 'GET',
+      url: `/review-offer/${agreementId}`
+    })
+
+    // Assert
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
+      'views/view-offer.njk',
+      expect.objectContaining({
+        payments: expect.arrayContaining([
+          expect.objectContaining({
+            name: 'Arable and Horticultural Soils',
+            code: 'SFI1',
+            rate: 28,
+            yearly: 0
+          })
+        ]),
+        totalYearly: 0,
+        totalQuarterly: 0
+      })
+    )
+  })
 })
