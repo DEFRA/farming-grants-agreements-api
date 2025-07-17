@@ -40,8 +40,12 @@ try {
   webpackManifest = {}
 }
 
-const getAssetPath = (asset) => {
+const getAssetPath = (asset, grantsProxy) => {
   const webpackAssetPath = webpackManifest?.[asset]
+  if (grantsProxy) {
+    return `/agreement/${assetPath}/${webpackAssetPath ?? asset}`
+  }
+  // If grantsProxy is false, we assume the asset path is relative to the public directory
   return `${assetPath}/${webpackAssetPath ?? asset}`
 }
 

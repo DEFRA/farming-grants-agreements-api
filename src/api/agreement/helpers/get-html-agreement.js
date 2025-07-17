@@ -177,7 +177,7 @@ const getAnnualPaymentSchedule = (agreementData) => {
  * @param {string} agreementId - The agreement ID to fetch
  * @param {object} [data] - The agreement data object (optional)
  */
-const getHTMLAgreementDocument = async (agreementId, data) => {
+const getHTMLAgreementDocument = async (agreementId, data, isProxy) => {
   if (agreementId == null) {
     throw Boom.badRequest('Agreement ID is required')
   }
@@ -194,6 +194,7 @@ const getHTMLAgreementDocument = async (agreementId, data) => {
   agreementData.agreementLevelActions = getAgreementLevelActions(agreementData)
   agreementData.summaryOfPayments = getSummaryOfPayments(agreementData)
   agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
+  agreementData.grantsProxy = isProxy
 
   return renderTemplate('views/sfi-agreement.njk', agreementData)
 }
