@@ -113,7 +113,8 @@ describe('reviewOfferController', () => {
             yearly: 294
           })
         ]),
-        totalYearly: 294
+        totalYearly: 294,
+        totalQuarterly: 73.5
       })
     )
   })
@@ -245,7 +246,8 @@ describe('reviewOfferController', () => {
             rate: 28,
             yearly: 294
           })
-        ])
+        ]),
+        totalQuarterly: 73.5
       })
     )
   })
@@ -284,7 +286,8 @@ describe('reviewOfferController', () => {
       expect.objectContaining({
         actions: [],
         payments: [],
-        totalYearly: 0
+        totalYearly: 0,
+        totalQuarterly: 0
       })
     )
   })
@@ -328,7 +331,8 @@ describe('reviewOfferController', () => {
       expect.objectContaining({
         actions: [],
         payments: [],
-        totalYearly: 0
+        totalYearly: 0,
+        totalQuarterly: 0
       })
     )
   })
@@ -378,7 +382,8 @@ describe('reviewOfferController', () => {
       'views/view-offer.njk',
       expect.objectContaining({
         payments: [],
-        totalYearly: 0
+        totalYearly: 0,
+        totalQuarterly: 0
       })
     )
   })

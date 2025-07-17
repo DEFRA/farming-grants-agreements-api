@@ -26,7 +26,7 @@
               <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
               <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
               <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Land parcel</th>
-              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; white-space: nowrap;">Quantity&nbsp;(ha)</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; white-space: nowrap;">Quantity</th>
             </tr>
           </thead>
           <tbody class="govuk-table__body">
@@ -35,7 +35,7 @@
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableActionRow{{ loop.index }}">{{ action.name }}</td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.landParcel }}</td>
-              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity }}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity }}&nbsp;ha</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -53,7 +53,7 @@
               <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
               <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
               <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Payment rate for each year</th>
-              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Quarterly payment</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Quarterly payment</th>
               <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Yearly payment</th>
             </tr>
           </thead>
@@ -63,7 +63,7 @@
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate | formatCurrency }}</td>
-              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">
                 {{ (payment.yearly / 4) | formatCurrency }}
               </td>
               <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly | formatCurrency }}</td>
@@ -75,7 +75,9 @@
               <td class="govuk-table__cell" style="border-bottom: none;"></td>
               <td class="govuk-table__cell" style="border-bottom: none;"></td>
               <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; border-bottom: none;">Total payment</td>
-              <td class="govuk-table__cell" style="border-bottom: none;"></td>
+              <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;">
+                {{ totalQuarterly | formatCurrency }}
+              </td>
               <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly | formatCurrency }}</td>
             </tr>
           </tfoot>
