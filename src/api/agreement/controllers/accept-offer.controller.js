@@ -25,11 +25,9 @@ const acceptOfferController = {
       await updatePaymentHub(request, agreementId)
 
       // Render the offer accepted template
-      const offerAcceptedTemplate = renderTemplate(
-        'views/offer-accepted.njk',
-        null,
-        request.headers['defra-grants-proxy'] === 'true'
-      )
+      const offerAcceptedTemplate = renderTemplate('views/offer-accepted.njk', {
+        grantsProxy: request.headers['defra-grants-proxy'] === 'true'
+      })
 
       // Return the HTML response
       return h.response(offerAcceptedTemplate).code(statusCodes.ok)
