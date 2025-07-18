@@ -84,11 +84,10 @@
         </table>
 
         {% if agreementStatus === 'offered' %}
-          <section class="accept-section">
-            <a href="/review-accept-offer/{{ agreementNumber }}" class="govuk-button govuk-button--start" role="button">
-              Continue
-            </a>
-          </section>
+          {{ govukButton({
+            text: "Continue",
+            href: '/review-accept-offer/' + agreementNumber
+          }) }}
         {% endif %}
       {% endblock %}
     </main>

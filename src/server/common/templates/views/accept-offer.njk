@@ -3,6 +3,10 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
+{% block pageTitle %}
+  Accept offer
+{% endblock %}
+
 {% block main %}
   <div class="govuk-width-container">
     {% block beforeContent %}{% endblock %}
@@ -19,12 +23,12 @@
         <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-!-margin-bottom-0">
 
         <!-- Back Link -->
-        <a href="javascript:history.back()" class="govuk-back-link govuk-!-margin-top-6">Back</a>
+        <a href="javascript:history.back()" class="govuk-back-link govuk-!-margin-top-2">Back</a>
 
-        <!-- Main Heading -->
+        <!-- Main Heading and Content -->
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-xl" style="font-family: 'GDS Transport', Arial, sans-serif; font-weight: bold;">Accept your offer</h1>
+            <h1 class="govuk-heading-xl govuk-!-margin-top-6" style="font-family: 'GDS Transport', Arial, sans-serif; font-weight: bold;">Accept your offer</h1>
 
             <!-- Confirmation Text -->
             <p class="govuk-body govuk-!-font-size-19" style="line-height:25px;">
@@ -36,9 +40,9 @@
               <li>you are entering into a legally binding agreement with Defra</li>
               <li>you and your land will remain eligible for the duration of the actions you have selected</li>
               <li>you will get any required regulatory consents, permissions and licences before you do your selected actions</li>
-              <li>you will complete your selected actions by following the guidance in <a href="https://www.gov.uk/find-funding-for-land-or-farms" class="govuk-link" rel="noopener noreferrer" target="_blank">Find funding for land or farms</a> that explains what you must do to get paid</li>
+              <li>you will complete your selected actions by following the guidance in <a href="https://www.gov.uk/find-funding-for-land-or-farms" class="govuk-link" rel="noopener noreferrer" target="_blank">Find funding for land or farms (opens in new tab)</a> that explains what you must do to get paid</li>
               <li>you will submit an annual declaration to confirm you have complied, or expect to have complied with the requirements of the actions you have selected for that year - the Rural Payments Agency will contact you when you need to do this</li>
-              <li>you will comply with the <a href="#" class="govuk-link">terms and conditions</a> for your selected actions</li>
+              <li>you will comply with the <a href="#" class="govuk-link">terms and conditions (opens in new tab)</a> for your selected actions</li>
             </ul>
 
             <!-- Accept Button -->
@@ -46,12 +50,13 @@
               <input type="hidden" name="agreementId" value="{{ agreementNumber }}">
               <p id="accept-agreement-error" class="govuk-error-message"></p>
               {{ govukButton({
-                text: "Accept offer"
+                text: "Accept offer",
+                classes: "govuk-button--start"
               }) }}
             </form>
 
             <!-- Expandable Section -->
-            <details class="govuk-details" data-module="govuk-details">
+            <details class="govuk-details" data-module="govuk-details" id="update-guidance-details">
               <summary class="govuk-details__summary">
                 <span class="govuk-details__summary-text">
                   If you need to make an update
@@ -73,4 +78,4 @@
       {% endblock %}
     </main>
   </div>
-{% endblock %}
+{% endblock %} 
