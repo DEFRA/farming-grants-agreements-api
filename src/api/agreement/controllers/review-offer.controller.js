@@ -49,7 +49,17 @@ const reviewOfferController = {
         })
       )
 
-      const totalYearly = agreementData.payments?.totalAnnualPayment || 0
+      // Calculate totalYearly as the sum of the displayed payments
+      const totalYearly = payments.reduce(
+        (sum, payment) => sum + (payment.yearly || 0),
+        0
+      )
+
+      // Calculate totalQuarterly as the sum of the displayed quarterly payments
+      const totalQuarterly = payments.reduce(
+        (sum, payment) => sum + (payment.yearly || 0) / 4,
+        0
+      )
 
       // Render the Accept Agreement page
       const renderedHTML = renderTemplate('views/view-offer.njk', {
@@ -63,6 +73,7 @@ const reviewOfferController = {
         actions,
         payments,
         totalYearly,
+        totalQuarterly,
         serviceName: 'Review funding offer',
         serviceUrl: '/'
       })
