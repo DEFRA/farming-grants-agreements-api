@@ -85,13 +85,9 @@
 
         {% if agreementStatus === 'offered' %}
           <section class="accept-section">
-            <form method="post" action="{{ '/agreement/accept-offer' if grantsProxy else '/accept-offer' }}" id="accept-offer-form">
-              <input type="hidden" name="agreementId" value="{{ agreementNumber }}">
-              <p id="accept-agreement-error" class="govuk-error-message"></p>
-              {{ govukButton({
-                text: "Continue"
-              }) }}
-            </form>
+            <a href="/review-accept-offer/{{ agreementNumber }}" class="govuk-button govuk-button--start" role="button">
+              Continue
+            </a>
           </section>
         {% endif %}
       {% endblock %}
