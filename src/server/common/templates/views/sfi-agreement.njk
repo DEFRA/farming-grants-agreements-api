@@ -1,11 +1,7 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 
-  {% block head %}
-    <link rel="stylesheet" href="/public/stylesheets/application.css">
-  {% endblock %}
-
-    {% block content %}
-      <div class="govuk-width-container">
+{% block content %}
+    <div class="govuk-width-container">
         <section>
             <table class="table-details govuk-body">
                 <tr>
@@ -198,14 +194,6 @@
             to RPA. For information on how we handle personal data go to www.gov.uk and search 'Rural Payments Agency
             personal information charter'.</p>
         </section>
-      </div>
-{% endblock %}
-
-{% block bodyEnd %}
-  <script type="module" src="{{ getAssetPath('application.js') }}"></script>
-  <script type="module">
-    import { initAll } from '/public/javascripts/application.js'
-    initAll()
-  </script>
+    </div>
 {% endblock %}
     

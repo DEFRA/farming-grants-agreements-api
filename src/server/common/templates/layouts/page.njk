@@ -13,7 +13,7 @@
 {% set mainClasses = "" %}
 
 {% block head %}
-  <link href="{{ getAssetPath('stylesheets/application.scss') }}" rel="stylesheet">
+  <link href="{{ getAssetPath('stylesheets/application.scss', grantsProxy) }}" rel="stylesheet">
 {% endblock %}
 
 {% block header %}
