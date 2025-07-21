@@ -1,88 +1,95 @@
+{% set bodyClasses = "view-offer-page" %}
+{% set mainClasses = "" %}
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
-{% block content %}
-    <div style="display: flex; justify-content: space-between; align-items: baseline;">
-      <span id="farmName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>{{ company }}</strong></span>
-      <span id="farmerName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0; "margin-top: -23;"><strong>Alfred Waldron</strong></span>
-    </div>
-    <div id="sbi" class="govuk-body govuk-!-font-size-16" style="margin-top: 3; margin-bottom: 0; padding-top: 0; padding-bottom: 0; line-height: 1;">
-      Single business identifier (SBI): {{ sbi }}
-    </div>
-  <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+{% block main %}
+  <div class="govuk-width-container">
+    {% block beforeContent %}{% endblock %}
+    <main id="main-content" role="main">
+      {% block content %}
+        <div class="govuk-!-margin-top-4" style="display: flex; justify-content: space-between; align-items: baseline;">
+          <span id="farmName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0;"><strong>{{ company }}</strong></span>
+          <span id="farmerName" class="govuk-body govuk-!-font-size-19" style="margin-bottom: 0; "margin-top: -23;"><strong>Alfred Waldron</strong></span>
+        </div>
+        <div id="sbi" class="govuk-body govuk-!-font-size-16" style="margin-top: 3; margin-bottom: 0; padding-top: 0; padding-bottom: 0; line-height: 1;">
+          Single business identifier (SBI): {{ sbi }}
+        </div>
+        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
 
-  <h1 class="govuk-heading-xl" style="font-family: 'GDS Transport', Arial, sans-serif; font-weight: bold; src: url('/assets/fonts/GDS%20Transport%20Bold.ttf') format('truetype');">Review your funding offer</h1>
+        <h1 class="govuk-heading-xl" style="font-family: 'GDS Transport', Arial, sans-serif; font-weight: bold; src: url('/assets/fonts/GDS%20Transport%20Bold.ttf') format('truetype');">Review your funding offer</h1>
 
-  <table class="govuk-table">
-    <caption class="govuk-table__caption govuk-table__caption--m">Actions</caption>
-    <thead class="govuk-table__head">
-      <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Land parcel</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; white-space: nowrap;">Quantity&nbsp;(ha)</th>
-      </tr>
-    </thead>
-    <tbody class="govuk-table__body">
-      {% for action in actions %}
-      <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableActionRow{{ loop.index }}">{{ action.name }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.landParcel }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        <table class="govuk-table">
+          <caption class="govuk-table__caption govuk-table__caption--m">Actions</caption>
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Land parcel</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; white-space: nowrap;">Quantity</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for action in actions %}
+            <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableActionRow{{ loop.index }}">{{ action.name }}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.landParcel }}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity }}&nbsp;ha</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
 
-  <br>
-  <p class="govuk-body govuk-!-font-size-19" style="line-height:25px;">
-    If you accept this offer, these are the payments for the total quantity of land in each action.
-  </p>
+        <br>
+        <p class="govuk-body govuk-!-font-size-19" style="line-height:25px;">
+          If you accept this offer, these are the payments for the total quantity of land in each action.
+        </p>
 
-  <table class="govuk-table">
-    <caption class="govuk-table__caption govuk-table__caption--m">Payments</caption>
-    <thead class="govuk-table__head">
-      <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Payment rate for each year</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Quarterly payment</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Yearly payment</th>
-      </tr>
-    </thead>
-    <tbody class="govuk-table__body">
-      {% for payment in payments %}
-      <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate | formatCurrency }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">{% if payment.quarterly is number %}{{ payment.quarterly | formatCurrency }}{% endif %}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly | formatCurrency }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <td class="govuk-table__cell" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; border-bottom: none;">Total payment</td>
-        <td class="govuk-table__cell" style="border-bottom: none;"></td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly | formatCurrency }}</td>
-      </tr>
-    </tfoot>
-  </table>
+        <table class="govuk-table">
+          <caption class="govuk-table__caption govuk-table__caption--m">Payments</caption>
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Payment rate for each year</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Quarterly payment</th>
+              <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Yearly payment</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for payment in payments %}
+            <tr class="govuk-table__row" id="paymentRow{{ loop.index }}">
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate | formatCurrency }}</td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">
+                {{ (payment.yearly / 4) | formatCurrency }}
+              </td>
+              <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly | formatCurrency }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="govuk-table__cell" style="border-bottom: none;"></td>
+              <td class="govuk-table__cell" style="border-bottom: none;"></td>
+              <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; border-bottom: none;">Total payment</td>
+              <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalQuarterlyPayment">
+                {{ totalQuarterly | formatCurrency }}
+              </td>
+              <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly | formatCurrency }}</td>
+            </tr>
+          </tfoot>
+        </table>
 
-  {% if agreementStatus === 'offered' %}
-    <section class="accept-section">
-      <form method="post" action="{{ '/agreement/accept-offer' if grantsProxy else '/accept-offer' }}" id="accept-offer-form">
-        <input type="hidden" name="agreementId" value="{{ agreementNumber }}">
-        <p id="accept-agreement-error" class="govuk-error-message"></p>
-        {{ govukButton({
-          text: "Continue"
-        }) }}
-      </form>
-    </section>
-  {% endif %}
-
+        {% if agreementStatus === 'offered' %}
+          {{ govukButton({
+            text: "Continue",
+            href: '/review-accept-offer/' + agreementNumber
+          }) }}
+        {% endif %}
+      {% endblock %}
+    </main>
+  </div>
 {% endblock %}
