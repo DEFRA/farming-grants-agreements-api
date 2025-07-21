@@ -68,11 +68,18 @@ const proxyFetch = (url, options) => {
  * @returns {Promise<object>} The response from the payment hub
  */
 export const sendPaymentHubRequest = async (server, logger, body) => {
-  if (config.get('env') === 'development') {
+  // Log payload in all environments except production
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    logger &&
+    typeof logger.info === 'function'
+  ) {
     logger.info(
       `Payload to be sent to payment hub: ${JSON.stringify(body, null, 2)}`
     )
+  }
 
+  if (config.get('env') === 'development') {
     return {
       status: 'success',
       message: 'Payload sent to payment hub successfully'
