@@ -84,9 +84,14 @@
         </table>
 
         {% if agreementStatus === 'offered' %}
+          {% if grantsProxy %}
+            {% set href = '/agreement/review-accept-offer/' + agreementNumber %}
+          {% else %}
+            {% set href = '/review-accept-offer/' + agreementNumber %}
+          {% endif %}
           {{ govukButton({
             text: "Continue",
-            href: '/review-accept-offer/' + agreementNumber
+            href: href
           }) }}
         {% endif %}
       {% endblock %}
