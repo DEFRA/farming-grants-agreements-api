@@ -132,9 +132,9 @@ describe('Payment Hub Helper', () => {
 
       const payload = { data: 'test-data' }
 
-      await expect(sendPaymentHubRequest(payload)).rejects.toThrow(
-        `Payment hub request failed: ${errorMessage}`
-      )
+      await expect(
+        sendPaymentHubRequest(server, logger, payload)
+      ).rejects.toThrow(`Payment hub request failed: ${errorMessage}`)
     })
 
     it('should throw an error when fetch fails', async () => {
@@ -143,7 +143,9 @@ describe('Payment Hub Helper', () => {
 
       const payload = { data: 'test-data' }
 
-      await expect(sendPaymentHubRequest(payload)).rejects.toThrow(networkError)
+      await expect(
+        sendPaymentHubRequest(server, logger, payload)
+      ).rejects.toThrow(networkError)
     })
 
     it('should throw an error if the keyname or key is not set', async () => {
@@ -156,9 +158,9 @@ describe('Payment Hub Helper', () => {
 
       const payload = { data: 'test-data' }
 
-      await expect(sendPaymentHubRequest(server, payload)).rejects.toThrow(
-        'Payment Hub keyname or key is not set'
-      )
+      await expect(
+        sendPaymentHubRequest(server, logger, payload)
+      ).rejects.toThrow('Payment Hub keyname or key is not set')
     })
   })
 
