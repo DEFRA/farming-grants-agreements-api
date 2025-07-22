@@ -69,6 +69,9 @@ const proxyFetch = (url, options) => {
  */
 export const sendPaymentHubRequest = async (server, logger, body) => {
   // Log payload in all environments except production
+  logger.info(
+    `logger is ${logger ? 'available' : 'not available'}, body: ${JSON.stringify(body, null, 2)}`
+  )
   if (
     process.env.NODE_ENV !== 'production' &&
     logger &&
