@@ -72,6 +72,8 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
   logger.info(
     `logger is ${logger ? 'available' : 'not available'}, body: ${JSON.stringify(body, null, 2)}`
   )
+  logger.info(`process.env.NODE_ENV is ${process.env.NODE_ENV}`)
+  logger.info(`type of logger.info is ${typeof logger.info}`)
   if (
     process.env.NODE_ENV !== 'production' &&
     logger &&
