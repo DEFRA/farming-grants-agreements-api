@@ -44,7 +44,7 @@ const acceptOfferController = {
         company: agreementData.company,
         sbi: agreementData.sbi,
         farmerName: agreementData.username || 'Alfred Waldron',
-        agreementStartDate: new Date(agreementData.agreementStartDate),
+        agreementStartDate: agreementData.agreementStartDate,
         nearestQuarterlyPaymentDate: getNextQuarter(
           agreementData.agreementStartDate
         )
