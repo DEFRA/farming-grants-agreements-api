@@ -31,6 +31,28 @@ async function acceptOffer(agreementId) {
   return agreement
 }
 
-export { acceptOffer }
+function getNextQuarter(dateString) {
+  const date = new Date(dateString)
+  let year = date.getFullYear()
+  const month = date.getMonth()
+
+  let quarter = Math.floor(month / 3) + 1
+
+  quarter += 1
+  if (quarter > 4) {
+    quarter = 1
+    year += 1
+  }
+
+  const startMonth = (quarter - 1) * 3
+  const start = new Date(year, startMonth, 1)
+
+  return start.toLocaleDateString('en-GB', {
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+export { acceptOffer, getNextQuarter }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */

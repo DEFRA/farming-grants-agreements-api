@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
-import { acceptOffer } from './accept-offer.js'
+import { acceptOffer, getNextQuarter } from './accept-offer.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
 
@@ -105,5 +105,31 @@ describe('acceptOffer', () => {
 
     // Act & Assert
     await expect(acceptOffer(agreementId)).rejects.toEqual(boomError)
+  })
+})
+
+describe('getNextQuarter', () => {
+  test('returns correct next quarter for Q1', () => {
+    expect(getNextQuarter('2024-01-15')).toBe('April 2024')
+    expect(getNextQuarter('2024-03-31')).toBe('April 2024')
+  })
+
+  test('returns correct next quarter for Q2', () => {
+    expect(getNextQuarter('2024-04-01')).toBe('July 2024')
+    expect(getNextQuarter('2024-06-30')).toBe('July 2024')
+  })
+
+  test('returns correct next quarter for Q3', () => {
+    expect(getNextQuarter('2024-07-01')).toBe('October 2024')
+    expect(getNextQuarter('2024-09-30')).toBe('October 2024')
+  })
+
+  test('returns correct next quarter for Q4 and rolls over year', () => {
+    expect(getNextQuarter('2024-10-01')).toBe('January 2025')
+    expect(getNextQuarter('2024-12-31')).toBe('January 2025')
+  })
+
+  test('handles invalid date string gracefully', () => {
+    expect(getNextQuarter('invalid-date')).toBe('Invalid Date')
   })
 })
