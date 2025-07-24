@@ -67,6 +67,12 @@ const config = convict({
     format: Boolean,
     default: isTest
   },
+  isPaymentHubLogging: {
+    doc: 'If logging of payment hub requests is enabled',
+    format: Boolean,
+    default: false,
+    env: 'PAYMENT_HUB_LOGGING'
+  },
   log: {
     enabled: {
       doc: 'Is logging enabled',

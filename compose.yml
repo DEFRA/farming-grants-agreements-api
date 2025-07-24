@@ -81,6 +81,7 @@ services:
     env_file:
       - 'compose/aws.env'
     environment:
+      PAYMENT_HUB_LOGGING: true
       PORT: 3555
       NODE_ENV: development
       LOCALSTACK_ENDPOINT: http://localstack:4566
