@@ -42,10 +42,11 @@ function getFirstPaymentDate(agreementStartDate) {
   nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 3)
   nextPaymentDate.setDate(nextPaymentDate.getDate() + 5)
 
-  return nextPaymentDate.toLocaleDateString('en-GB', {
+  const nextPaymentString = nextPaymentDate.toLocaleDateString('en-GB', {
     month: 'long',
     year: 'numeric'
   })
+  return nextPaymentString === 'Invalid Date' ? '' : nextPaymentString
 }
 
 export { acceptOffer, getFirstPaymentDate }
