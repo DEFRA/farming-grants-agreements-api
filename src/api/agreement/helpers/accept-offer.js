@@ -1,8 +1,6 @@
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 
-const MONTHS_PER_QUARTER = 3
-
 /**
  * Get agreement data for rendering templates
  * @returns {object} The agreement data
@@ -34,33 +32,22 @@ async function acceptOffer(agreementId) {
 }
 
 /**
- * Get the next quarter for a given date
- * @param {string} dateString - The date to get the next quarter for
- * @returns {string} The next quarter
+ * Get the first payment date for a given agreement start date
+ * The first quarterly payment date is always 3 calendar months + 5 days after the agreement start date
+ * @param {string} agreementStartDate - The date to get the next quarterly date for
+ * @returns {string} The next quarterly date in 'Month Year' format
  */
-function getNextQuarter(dateString) {
-  const date = new Date(dateString)
-  let year = date.getFullYear()
-  const month = date.getMonth()
+function getFirstPaymentDate(agreementStartDate) {
+  const nextPaymentDate = new Date(agreementStartDate)
+  nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 3)
+  nextPaymentDate.setDate(nextPaymentDate.getDate() + 5)
 
-  let quarter = Math.floor(month / MONTHS_PER_QUARTER) + 1
-
-  if (quarter === 4) {
-    quarter = 1
-    year += 1
-  } else {
-    quarter += 1
-  }
-
-  const startMonth = (quarter - 1) * MONTHS_PER_QUARTER
-  const start = new Date(year, startMonth, 1)
-
-  return start.toLocaleDateString('en-GB', {
+  return nextPaymentDate.toLocaleDateString('en-GB', {
     month: 'long',
     year: 'numeric'
   })
 }
 
-export { acceptOffer, getNextQuarter }
+export { acceptOffer, getFirstPaymentDate }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */

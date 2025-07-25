@@ -2,7 +2,7 @@ import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import {
   acceptOffer,
-  getNextQuarter
+  getFirstPaymentDate
 } from '~/src/api/agreement/helpers/accept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
@@ -45,7 +45,7 @@ const acceptOfferController = {
         sbi: agreementData.sbi,
         farmerName: agreementData.username || 'Alfred Waldron',
         agreementStartDate: agreementData.agreementStartDate,
-        nearestQuarterlyPaymentDate: getNextQuarter(
+        nearestQuarterlyPaymentDate: getFirstPaymentDate(
           agreementData.agreementStartDate
         )
       })
