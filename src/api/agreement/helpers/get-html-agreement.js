@@ -196,7 +196,8 @@ const getHTMLAgreementDocument = async (agreementId, data, isProxy) => {
   agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
   agreementData.grantsProxy = isProxy
 
-  return renderTemplate('views/sfi-agreement.njk', agreementData)
+  // return renderTemplate('views/sfi-agreement.njk', agreementData)
+  return renderTemplate('views/view-agreement.njk', agreementData)
 }
 
 export { getHTMLAgreementDocument }
