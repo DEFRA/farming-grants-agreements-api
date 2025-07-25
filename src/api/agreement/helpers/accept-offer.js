@@ -31,6 +31,24 @@ async function acceptOffer(agreementId) {
   return agreement
 }
 
-export { acceptOffer }
+/**
+ * Get the first payment date for a given agreement start date
+ * The first quarterly payment date is always 3 calendar months + 5 days after the agreement start date
+ * @param {string} agreementStartDate - The date to get the next quarterly date for
+ * @returns {string} The next quarterly date in 'Month Year' format
+ */
+function getFirstPaymentDate(agreementStartDate) {
+  const nextPaymentDate = new Date(agreementStartDate)
+  nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 3)
+  nextPaymentDate.setDate(nextPaymentDate.getDate() + 5)
+
+  const nextPaymentString = nextPaymentDate.toLocaleDateString('en-GB', {
+    month: 'long',
+    year: 'numeric'
+  })
+  return nextPaymentString === 'Invalid Date' ? '' : nextPaymentString
+}
+
+export { acceptOffer, getFirstPaymentDate }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
