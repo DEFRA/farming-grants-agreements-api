@@ -7,3 +7,34 @@
   padding-top: govuk-spacing(4);
   padding-bottom: govuk-spacing(3);
 }
+
+.dataset-info dd {
+  margin-left: 0px;
+  width: 35%;
+}
+
+.dataset-info dd,
+.dataset-info dt {
+  display: inline-block;
+  margin-bottom: 5px;
+  vertical-align: text-top;
+}
+
+.dataset-info dt {
+  width: 30%;
+  font-weight: bold;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+.toc {
+    font-size: 16px !important;
+    position: sticky;
+    float: left;
+    margin-bottom: 30px;
+}
+
+.toc a {
+    text-decoration: none;
+    font-size: 16px !important;
+}
