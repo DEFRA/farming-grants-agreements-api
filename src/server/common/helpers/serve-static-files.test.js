@@ -1,5 +1,7 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { createServer } from '~/src/api/index.js'
+import fs from 'fs'
+import path from 'path'
 import Wreck from '@hapi/wreck'
 
 jest.mock('@hapi/wreck', () => ({
@@ -42,8 +44,45 @@ describe('#serveStaticFiles', () => {
         method: 'GET',
         url: '/public/assets/images/govuk-crest.svg'
       })
-
       expect(statusCode).toBe(statusCodes.ok)
+    })
+
+    test('Should serve image from /public/assets/images as expected', async () => {
+      const filePath = path.resolve(
+        '.public/assets/images/govuk-icon-print.png'
+      )
+      const expectedStatus = fs.existsSync(filePath)
+        ? statusCodes.ok
+        : statusCodes.notFound
+
+      const { statusCode } = await server.inject({
+        method: 'GET',
+        url: '/public/assets/images/govuk-icon-print.png'
+      })
+
+      expect(statusCode).toBe(expectedStatus)
+    })
+
+    test('Should serve image from /assets/images as expected', async () => {
+      const filePath = path.resolve('public/assets/images/govuk-icon-print.png')
+      const expectedStatus = fs.existsSync(filePath)
+        ? statusCodes.ok
+        : statusCodes.notFound
+
+      const { statusCode } = await server.inject({
+        method: 'GET',
+        url: '/assets/images/govuk-icon-print.png'
+      })
+
+      expect(statusCode).toBe(expectedStatus)
+    })
+
+    test('Should return 404 for an invalid static file route', async () => {
+      const { statusCode } = await server.inject({
+        method: 'GET',
+        url: '/static/assets/images/govuk-icon-print.png'
+      })
+      expect(statusCode).toBe(statusCodes.notFound)
     })
   })
 })

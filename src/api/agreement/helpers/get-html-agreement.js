@@ -28,14 +28,9 @@ const formatCurrency = (value) => {
  */
 const getAgreementLand = (agreementData) => {
   return {
-    headings: [
-      { text: 'Parcel' },
-      { text: 'Parcel name' },
-      { text: 'Total parcel area (hectares)' }
-    ],
+    headings: [{ text: 'Parcel' }, { text: 'Total parcel area (ha)' }],
     data: agreementData.parcels.map((parcel) => [
       { text: parcel.parcelNumber },
-      { text: parcel.parcelName },
       { text: parcel.totalArea }
     ])
   }
@@ -49,11 +44,10 @@ const getAgreementLand = (agreementData) => {
 const getSummaryOfActions = (agreementData) => {
   return {
     headings: [
-      { text: 'Parcel number' },
+      { text: 'Parcel' },
       { text: 'Code' },
-      { text: 'Description' },
-      { text: 'Total parcel area (hectares)' },
-      { text: 'Area (hectares) / Length (meters) / Unit' },
+      { text: 'Action' },
+      { text: 'Total parcel area (ha)' },
       { text: 'Start date' },
       { text: 'End date' }
     ],
@@ -63,7 +57,6 @@ const getSummaryOfActions = (agreementData) => {
         { text: activity.code },
         { text: activity.description },
         { text: parcel.totalArea },
-        { text: activity.area },
         {
           text: activity.startDate.toLocaleDateString('en-GB', dateOptions)
         },
@@ -108,16 +101,16 @@ const getSummaryOfPayments = (agreementData) => {
   return {
     headings: [
       { text: 'Code' },
-      { text: 'Description' },
-      { text: 'Total area (hectares) / length (meters) / unit' },
+      { text: 'Action' },
+      { text: 'Total area (ha)' },
       { text: 'Payment rate' },
-      { text: 'Total annual agreement grant payment' }
+      { text: 'Total yearly payment' }
     ],
     data: agreementData.payments.activities.map((payment) => [
       { text: payment.code },
       { text: payment.description },
       { text: payment.measurement },
-      { text: payment.paymentRate },
+      { text: formatCurrency(Number(payment.paymentRate)) + ' per ha' },
       { text: formatCurrency(payment.annualPayment) }
     ])
   }
@@ -135,7 +128,7 @@ const getAnnualPaymentSchedule = (agreementData) => {
       { text: 'Year 1' },
       { text: 'Year 2' },
       { text: 'Year 3' },
-      { text: 'Total agreement grant payment' }
+      { text: 'Total payment' }
     ],
     data: [
       ...agreementData.payments.yearlyBreakdown.details.map((detail) => [
@@ -195,6 +188,7 @@ const getHTMLAgreementDocument = async (agreementId, data, isProxy) => {
   agreementData.summaryOfPayments = getSummaryOfPayments(agreementData)
   agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
   agreementData.grantsProxy = isProxy
+  agreementData.farmerName = agreementData.username
 
   return renderTemplate('views/sfi-agreement.njk', agreementData)
 }

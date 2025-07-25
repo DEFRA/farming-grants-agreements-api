@@ -17,7 +17,12 @@
             What happens next
           </h2>
           <p class="govuk-body">You can
-            <a href="#" class="govuk-link">view your full agreement</a>
+            {% if grantsProxy %}
+                <a href="/agreement/view-agreement/{{ agreementNumber }}" class="govuk-link">view your full agreement</a>
+            {% else %}
+                {% set href = '/review-accept-offer/' + agreementNumber %}
+                <a href="/view-agreement/{{ agreementNumber }}" class="govuk-link">view your full agreement</a>
+            {% endif %}
             including the terms and conditions for your selected actions.</p>
           <p class="govuk-body">
             <a href="#" target="_blank" class="govuk-link">Read the guidance (opens in new tab)</a>
