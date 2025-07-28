@@ -43,7 +43,7 @@ const acceptOfferController = {
         grantsProxy: request.headers['defra-grants-proxy'] === 'true',
         company: agreementData.company,
         sbi: agreementData.sbi,
-        farmerName: agreementData.username || 'Alfred Waldron',
+        farmerName: agreementData.username,
         agreementStartDate: agreementData.agreementStartDate,
         nearestQuarterlyPaymentDate: getFirstPaymentDate(
           agreementData.agreementStartDate

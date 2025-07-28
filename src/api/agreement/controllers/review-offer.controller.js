@@ -69,6 +69,7 @@ const reviewOfferController = {
         agreementSignatureDate: agreementData.signatureDate,
         company: agreementData.company,
         sbi: agreementData.sbi,
+        farmerName: agreementData.username,
         grantsProxy: request.headers['defra-grants-proxy'] === 'true',
         actions,
         payments,
