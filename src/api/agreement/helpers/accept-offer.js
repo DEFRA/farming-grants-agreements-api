@@ -39,8 +39,11 @@ async function acceptOffer(agreementId) {
  */
 function getFirstPaymentDate(agreementStartDate) {
   const nextPaymentDate = new Date(agreementStartDate)
-  nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 3)
-  nextPaymentDate.setDate(nextPaymentDate.getDate() + 5)
+  const THREE_MONTHS = 3
+  nextPaymentDate.setMonth(nextPaymentDate.getMonth() + THREE_MONTHS)
+
+  const FIVE_DAYS = 5
+  nextPaymentDate.setDate(nextPaymentDate.getDate() + FIVE_DAYS)
 
   const nextPaymentString = nextPaymentDate.toLocaleDateString('en-GB', {
     month: 'long',
