@@ -38,11 +38,11 @@ async function acceptOffer(agreementId) {
  * @returns {string} The next quarterly date in 'Month Year' format
  */
 function getFirstPaymentDate(agreementStartDate) {
-  const nextPaymentDate = new Date(agreementStartDate)
   const THREE_MONTHS = 3
-  nextPaymentDate.setMonth(nextPaymentDate.getMonth() + THREE_MONTHS)
-
   const FIVE_DAYS = 5
+
+  const nextPaymentDate = new Date(agreementStartDate)
+  nextPaymentDate.setMonth(nextPaymentDate.getMonth() + THREE_MONTHS)
   nextPaymentDate.setDate(nextPaymentDate.getDate() + FIVE_DAYS)
 
   const nextPaymentString = nextPaymentDate.toLocaleDateString('en-GB', {

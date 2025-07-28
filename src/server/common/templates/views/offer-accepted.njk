@@ -1,8 +1,6 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% block content %}
-  {% include "partials/user-details.njk" %}
-  <main class="govuk-main-wrapper" id="main-content" role="main">
     <div class="govuk-grid-row" role="main">
       <div class="govuk-grid-column-two-thirds">
         <div class="govuk-panel govuk-panel--confirmation">
@@ -10,18 +8,18 @@
             Offer accepted
           </h1>
           <div class="govuk-panel__body">
-            Agile Farm agreement is live
+            The start date for these actions is<br/>
+            {{ agreementStartDate | formatDate('d MMMM yyyy') }}
           </div>
         </div>
         <div class="govuk-panel__body">
+          <p class="govuk-body">Your reference number is {{ agreementNumber }}.</p>
           <h2 class="govuk-heading-m">
             What happens next
           </h2>
-          <p class="govuk-body" class="govuk-link">You can
-            <a href="#">view your full agreement</a>
+          <p class="govuk-body">You can
+            <a href="#" class="govuk-link">view your full agreement</a>
             including the terms and conditions for your selected actions.</p>
-          <p class="govuk-body">The start date for these actions is
-            {{ agreementStartDate | formatDate('d MMMM yyyy') }}.</p>
           <p class="govuk-body">
             <a href="#" target="_blank" class="govuk-link">Read the guidance (opens in new tab)</a>
             to check what you must do to get paid for each action.</p>
@@ -43,13 +41,8 @@
             <p>
               <a href="https://www.gov.uk/call-charges" target="_blank">Find out about call charges (opens in new tab)</a>
             </p>
-            <p>Email:
-              <a href="mailto:ruralpayments@defra.gov.uk">ruralpayments@defra.gov.uk</a>
-            </p>
-            <p>The RPA responds to email queries within 5 working days.</p>
           </div>
         </details>
       </div>
     </div>
-  </main>
 {% endblock %}
