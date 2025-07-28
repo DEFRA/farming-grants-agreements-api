@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
-import { acceptOffer } from './accept-offer.js'
+import { acceptOffer, getFirstPaymentDate } from './accept-offer.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
 
@@ -105,5 +105,16 @@ describe('acceptOffer', () => {
 
     // Act & Assert
     await expect(acceptOffer(agreementId)).rejects.toEqual(boomError)
+  })
+})
+
+describe('getFirstPaymentDate', () => {
+  test('returns correct first payment date', () => {
+    expect(getFirstPaymentDate('2024-02-15')).toBe('May 2024')
+    expect(getFirstPaymentDate('2024-02-31')).toBe('June 2024')
+  })
+
+  test('handles invalid date string gracefully', () => {
+    expect(getFirstPaymentDate('invalid-date')).toBe('')
   })
 })
