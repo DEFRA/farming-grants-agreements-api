@@ -124,37 +124,6 @@ describe('displayAcceptOfferController', () => {
     )
   })
 
-  test('should use fallback farmer name when username is not provided', async () => {
-    // Arrange
-    const agreementId = 'SFI123456789'
-    const mockAgreementData = {
-      agreementNumber: agreementId,
-      status: 'offered',
-      company: 'Test Company',
-      sbi: '123456789'
-      // No username field
-    }
-
-    jest
-      .spyOn(agreementDataHelper, 'getAgreementData')
-      .mockResolvedValue(mockAgreementData)
-
-    // Act
-    const { statusCode } = await server.inject({
-      method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
-    })
-
-    // Assert
-    expect(statusCode).toBe(statusCodes.ok)
-    expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-      'views/accept-offer.njk',
-      expect.objectContaining({
-        farmerName: 'Alfred Waldron' // Should use fallback
-      })
-    )
-  })
-
   test('should handle database errors', async () => {
     // Arrange
     const agreementId = 'SFI123456789'

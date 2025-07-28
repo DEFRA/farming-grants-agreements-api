@@ -32,7 +32,7 @@ const displayAcceptOfferController = {
         grantsProxy: request.headers['defra-grants-proxy'] === 'true',
         company: agreementData.company,
         sbi: agreementData.sbi,
-        farmerName: agreementData.username || 'Alfred Waldron'
+        farmerName: agreementData.username
       })
 
       // Return the HTML response
