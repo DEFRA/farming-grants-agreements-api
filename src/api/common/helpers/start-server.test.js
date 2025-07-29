@@ -1,15 +1,18 @@
 import hapi from '@hapi/hapi'
 
 const mockLoggerInfo = jest.fn()
+const mockLoggerWarn = jest.fn()
 const mockLoggerError = jest.fn()
 
 const mockHapiLoggerInfo = jest.fn()
+const mockHapiLoggerWarn = jest.fn()
 const mockHapiLoggerError = jest.fn()
 
 jest.mock('hapi-pino', () => ({
   register: (server) => {
     server.decorate('server', 'logger', {
       info: mockHapiLoggerInfo,
+      warn: mockHapiLoggerWarn,
       error: mockHapiLoggerError
     })
   },
@@ -18,6 +21,7 @@ jest.mock('hapi-pino', () => ({
 jest.mock('~/src/api/common/helpers/logging/logger.js', () => ({
   createLogger: () => ({
     info: (...args) => mockLoggerInfo(...args),
+    warn: (...args) => mockLoggerWarn(...args),
     error: (...args) => mockLoggerError(...args)
   })
 }))
@@ -32,6 +36,10 @@ describe('#startServer', () => {
   beforeAll(async () => {
     process.env = { ...PROCESS_ENV }
     process.env.PORT = '3098' // Set to obscure port to avoid conflicts
+
+    // Explicitly disable DB seeding for test consistency
+    const { config } = await import('~/src/config/index.js')
+    config.set('featureFlags.seedDb', false)
 
     createServerImport = await import('~/src/api/index.js')
     startServerImport = await import('~/src/api/common/helpers/start-server.js')
@@ -66,14 +74,10 @@ describe('#startServer', () => {
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         3,
-        'Setting up SQS client'
-      )
-      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
-        4,
         'Server started successfully'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
-        5,
+        4,
         'Access your backend on http://localhost:3098'
       )
     })
