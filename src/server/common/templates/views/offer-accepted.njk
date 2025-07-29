@@ -8,8 +8,7 @@
             Offer accepted
           </h1>
           <div class="govuk-panel__body">
-            The start date for these actions is<br/>
-            {{ agreementStartDate | formatDate('d MMMM yyyy') }}
+            The start date for these actions is {{ agreementStartDate | formatDate('d MMMM yyyy') }}
           </div>
         </div>
         <div class="govuk-panel__body">
@@ -23,8 +22,10 @@
           <p class="govuk-body">
             <a href="#" target="_blank" class="govuk-link">Read the guidance (opens in new tab)</a>
             to check what you must do to get paid for each action.</p>
-          <p class="govuk-body">You will receive your first payment for these actions in
-            {{ nearestQuarterlyPaymentDate }}.</p>
+          {% if nearestQuarterlyPaymentDate %}
+            <p class="govuk-body">You will receive your first payment for these actions in
+              {{ nearestQuarterlyPaymentDate }}.</p>
+          {% endif %}
         </div>
         <details class="govuk-details">
           <summary class="govuk-details__summary">
