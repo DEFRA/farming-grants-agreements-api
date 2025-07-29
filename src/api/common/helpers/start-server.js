@@ -3,11 +3,11 @@ import { config } from '~/src/config/index.js'
 import { createServer } from '~/src/api/index.js'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 
-async function startServer() {
+async function startServer(options = {}) {
   let server
 
   try {
-    server = await createServer()
+    server = await createServer(options)
     await server.start()
 
     server.logger.info('Server started successfully')
