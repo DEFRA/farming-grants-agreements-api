@@ -6,9 +6,9 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
 
 /**
  * Sends a payload to the payments hub
- * @param {import('@hapi/hapi').Request<ReqRefDefaults>} request
- * @param {string} agreementId
- * @returns {*}
+ * @param {import('@hapi/hapi').Request<ReqRefDefaults>} request - hapi request object
+ * @param {string} agreementNumber - Agreement number to update
+ * @returns {Promise<*>} Result of the payment hub update
  * @throws {Error} If the agreement data is not found or if there is an error
  */
 async function updatePaymentHub({ server, logger }, agreementNumber) {
