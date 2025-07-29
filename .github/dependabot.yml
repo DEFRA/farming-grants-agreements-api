@@ -15,12 +15,12 @@ updates:
           - 'babel-loader'
           - 'babel-plugin-module-resolver'
           - 'babel-plugin-transform-import-meta'
-          - 'tsx'
-          - 'webpack'
-          - 'webpack-*'
           - 'clean-webpack-plugin'
           - 'copy-webpack-plugin'
           - 'terser-webpack-plugin'
+          - 'tsx'
+          - 'webpack'
+          - 'webpack-*'
 
       lint:
         patterns:
@@ -28,18 +28,18 @@ updates:
           - 'eslint'
           - 'eslint-*'
           - 'prettier'
-          - 'stylelint-*'
           - 'stylelint'
+          - 'stylelint-*'
           - 'typescript'
 
       logging:
         patterns:
-          - 'hapi-pino'
+          - '@elastic/ecs-pino-format'
           - '*-pino'
           - '*-pino-format'
+          - 'hapi-pino'
           - 'pino'
           - 'pino-*'
-          - '@elastic/ecs-pino-format'
 
       tools:
         patterns:
