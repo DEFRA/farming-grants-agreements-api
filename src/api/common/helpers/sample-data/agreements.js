@@ -11,6 +11,10 @@ const earthBanksDescription = 'Maintain earth banks or stone-faced hedgebanks'
 const manageHedgerowDescription = 'Manage hedgerows'
 const manageHedgerowTreesDescription = 'Maintain or establish hedgerow trees'
 
+/**
+ * Sample data for agreements
+ * @type {Agreement[]}
+ */
 export default [
   {
     agreementNumber: 'SFI987654321',
@@ -698,7 +702,7 @@ export default [
         {
           code: 'CMOR1',
           description: 'Assess moorland and produce a written record',
-          paymentRate: 10.6,
+          paymentRate: '10.6',
           rate: 10.6,
           quantity: 4.5123,
           measurement: '4.5123 ha',
@@ -708,7 +712,7 @@ export default [
         {
           code: 'UPL3',
           description: 'Limited livestock grazing on moorland',
-          paymentRate: 66,
+          paymentRate: '66',
           rate: 66,
           quantity: 3.5125,
           measurement: '3.5125 ha',
@@ -719,7 +723,7 @@ export default [
           code: 'UPL4',
           description:
             'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
-          paymentRate: 7,
+          paymentRate: '7',
           rate: 7,
           quantity: 3.5125,
           measurement: '3.5125 ha',
@@ -730,7 +734,7 @@ export default [
           code: 'SPM5',
           description:
             'Keep native breeds on extensively managed habitats supplement (more than 80%)',
-          paymentRate: 11,
+          paymentRate: '11',
           rate: 11,
           quantity: 3.5125,
           measurement: '3.5125 ha',
@@ -741,7 +745,7 @@ export default [
           code: 'UPL10',
           description:
             'Shepherding livestock on moorland (remove stock for at least 8 months)',
-          paymentRate: 48,
+          paymentRate: '48',
           rate: 48,
           quantity: 8.3405,
           measurement: '8.3405 ha',
@@ -799,3 +803,5 @@ export default [
     }
   }
 ]
+
+/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */

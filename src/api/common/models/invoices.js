@@ -1,19 +1,27 @@
 import mongoose from 'mongoose'
+import { z } from 'zod'
+import { zodSchema as zodMongooseSchema } from '@zodyac/zod-mongoose'
 
 const collection = 'invoices'
 
-const schema = new mongoose.Schema(
-  {
-    agreementNumber: { type: String, required: true },
-    invoiceNumber: { type: String, required: true },
-    correlationId: { type: String, required: true },
-    paymentHubRequest: { type: Object, required: false }
-  },
-  {
-    collection,
-    timestamps: true
-  }
-)
+const invoiceSchema = z.object({
+  agreementNumber: z
+    .string()
+    .describe('ID of the agreement this invoice is for'),
+  invoiceNumber: z.string().describe('The invoice ID'),
+  correlationId: z.string().describe('The correlation ID for tracking'),
+  paymentHubRequest: z.record(z.any()).default({}).optional()
+})
+
+export const zodSchema = {
+  collection,
+  schema: invoiceSchema
+}
+
+const schema = zodMongooseSchema(invoiceSchema, {
+  collection,
+  timestamps: true
+})
 
 // Indexes for common queries
 schema.index({ agreementNumber: 1 })
