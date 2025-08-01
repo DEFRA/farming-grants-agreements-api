@@ -48,7 +48,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [
         {
           parcelNumber: 'PARCEL001',
@@ -127,7 +127,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [
         {
           parcelNumber: 'PARCEL001',
@@ -193,7 +193,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [
         {
           parcelNumber: 'PARCEL001',
@@ -260,7 +260,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [], // Empty parcels array
       actions: [],
       payments: {
@@ -300,7 +300,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [
         {
           parcelNumber: 'PARCEL001',
@@ -345,7 +345,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [
         {
           parcelNumber: 'PARCEL001',
@@ -396,7 +396,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [
         {
           parcelNumber: 'PARCEL001',
@@ -446,7 +446,7 @@ describe('reviewOfferController', () => {
       status: 'DRAFT',
       signatureDate: '2024-01-01',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       parcels: [],
       actions: [],
       payments: {

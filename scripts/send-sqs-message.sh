@@ -20,7 +20,7 @@ read -r -d '' MESSAGE << EOM
     "submittedAt":"2023-10-01T11:00:00Z",
     "agreementName":"Joe's farm funding 2025",
     "identifiers":{
-      "sbi":"1234567890",
+      "sbi":"106284736",
       "frn":"1234567890",
       "crn":"1234567890",
       "defraId":"1234567890"
@@ -54,4 +54,4 @@ aws sqs send-message \
   --endpoint-url "$AWS_ENDPOINT_URL" \
   --region "$AWS_REGION"
 
-echo "Message sent successfully!" 
+echo "Message sent successfully!"

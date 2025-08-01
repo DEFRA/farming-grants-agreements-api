@@ -20,7 +20,7 @@ describe('updatePaymentHub', () => {
     agreementNumber: 'SFI123456789',
     correlationId: 'test-correlation-id',
     frn: '1234567890',
-    sbi: '123456789',
+    sbi: '106284736',
     payments: {
       activities: [
         {
@@ -89,7 +89,7 @@ describe('updatePaymentHub', () => {
         paymentHubRequest: expect.objectContaining({
           sourceSystem: 'AHWR',
           frn: '1234567890',
-          sbi: '123456789',
+          sbi: '106284736',
           marketingYear: 2024,
           paymentRequestNumber: 1,
           correlationId: 'test-correlation-id',
@@ -222,7 +222,7 @@ describe('updatePaymentHub', () => {
       const expectedPaymentRequest = {
         sourceSystem: 'AHWR',
         frn: '1234567890',
-        sbi: '123456789',
+        sbi: '106284736',
         marketingYear: 2024,
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
