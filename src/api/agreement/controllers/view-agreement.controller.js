@@ -22,7 +22,7 @@ const extractPayload = (authToken, logger) => {
     const decoded = Jwt.token.decode(authToken)
     // Verify the token against the secret
     Jwt.token.verify(decoded, {
-      key: config.get('jwtToken'),
+      key: config.get('jwtSecret'),
       algorithms: ['HS256']
     })
     return decoded?.decoded?.payload || null
