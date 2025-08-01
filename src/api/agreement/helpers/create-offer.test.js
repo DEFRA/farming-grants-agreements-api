@@ -15,7 +15,7 @@ const targetDataStructure = {
   agreementName: 'Sample Agreement',
   correlationId: '1234545918345918475',
   frn: '1234567890',
-  sbi: '1234567890',
+  sbi: '106284736',
   company: 'Sample Farm Ltd',
   address: '123 Farm Lane, Farmville',
   postcode: 'FA12 3RM',
@@ -115,7 +115,7 @@ const agreementData = {
   createdAt: '2023-10-01T12:00:00Z',
   submittedAt: '2023-10-01T11:00:00Z',
   identifiers: {
-    sbi: '1234567890',
+    sbi: '106284736',
     frn: '1234567890',
     crn: '1234567890',
     defraId: '1234567890'

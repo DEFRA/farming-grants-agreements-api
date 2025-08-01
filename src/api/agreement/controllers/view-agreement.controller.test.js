@@ -17,7 +17,7 @@ describe('viewAgreementController', () => {
 
   const mockRenderedHtml = `<html><body>Test HTML with SFI123456789</body></html>`
   const mockAgreementData = {
-    sbi: '123456789',
+    sbi: '106284736',
     agreementNumber: 'SFI123456789'
   }
 
@@ -49,7 +49,7 @@ describe('viewAgreementController', () => {
     Jwt.token.decode = jest.fn().mockReturnValue({
       decoded: {
         payload: {
-          sbi: '123456789',
+          sbi: '106284736',
           source: 'defra'
         }
       }
@@ -242,7 +242,7 @@ describe('viewAgreementController', () => {
       const mockDecodedToken = {
         decoded: {
           payload: {
-            sbi: '123456789', // matches mockAgreementData.sbi
+            sbi: '106284736', // matches mockAgreementData.sbi
             source: 'defra'
           }
         }
@@ -297,7 +297,7 @@ describe('viewAgreementController', () => {
       const mockDecodedToken = {
         decoded: {
           payload: {
-            sbi: '123456789',
+            sbi: '106284736',
             source: 'unknown-source'
           }
         }

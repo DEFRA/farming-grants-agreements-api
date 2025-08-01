@@ -79,7 +79,7 @@ export default [
     agreementName: 'Sample Agreement',
     correlationId: uuidv4(),
     frn: '1234567890',
-    sbi: '123456789',
+    sbi: '106284736',
     company: 'Sample Farm Ltd',
     address: '123 Farm Lane, Farmville',
     postcode: 'FA12 3RM',

@@ -8,7 +8,7 @@ describe('getAgreementData', () => {
   const mockAgreement = {
     agreementNumber: 'SFI123456789',
     agreementName: 'Test Agreement',
-    sbi: '123456789',
+    sbi: '106284736',
     company: 'Test Farm Ltd',
     address: '123 Test Lane',
     postcode: 'TE1 1ST',
