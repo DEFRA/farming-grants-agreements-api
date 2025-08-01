@@ -26,13 +26,17 @@ describe('#formatDate', () => {
   })
 
   describe('With format attribute', () => {
-    test('Date should be in provided format', () => {
+    test("Date should be in provided format with formatter h:mm aaa 'on' EEEE do MMMM yyyy", () => {
       expect(
         formatDate(
           '2023-02-01T11:40:02.242Z',
           "h:mm aaa 'on' EEEE do MMMM yyyy"
         )
       ).toBe('11:40 am on Wednesday 1st February 2023')
+    })
+
+    test('Date should be in provided format with formatter d MMMM yyyy', () => {
+      expect(formatDate(new Date(), 'd MMMM yyyy')).toBe('1 February 2023')
     })
   })
 })
