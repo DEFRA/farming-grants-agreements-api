@@ -46,6 +46,7 @@
     "@hapi/catbox-memory": "^6.0.2",
     "@hapi/hapi": "^21.3.12",
     "@hapi/inert": "^7.1.0",
+    "@hapi/jwt": "^3.2.0",
     "@hapi/vision": "^7.0.3",
     "aws-embedded-metrics": "^4.2.0",
     "aws4": "^1.13.2",

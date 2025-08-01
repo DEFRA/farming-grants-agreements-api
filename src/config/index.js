@@ -158,6 +158,12 @@ const config = convict({
       env: 'WAIT_TIME_SECONDS'
     }
   },
+  jwtSecret: {
+    doc: 'JWT Secret',
+    format: String,
+    default: 'default-agreements-jwt-secret',
+    env: 'AGREEMENTS_JWT_SECRET'
+  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,
