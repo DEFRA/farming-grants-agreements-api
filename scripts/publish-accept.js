@@ -26,7 +26,7 @@ async function publishTestEvent() {
       submittedAt: '2023-10-01T11:00:00Z',
       agreementName: "Joe's farm funding 2025",
       identifiers: {
-        sbi: '1234567890',
+        sbi: '106284736',
         frn: '1234567890',
         crn: '1234567890',
         defraId: '1234567890'

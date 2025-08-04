@@ -41,7 +41,7 @@ describe('displayAcceptOfferController', () => {
       agreementNumber: agreementId,
       status: 'offered',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       username: 'Test User'
     }
 
@@ -64,7 +64,7 @@ describe('displayAcceptOfferController', () => {
       expect.objectContaining({
         agreementNumber: agreementId,
         company: 'Test Company',
-        sbi: '123456789',
+        sbi: '106284736',
         farmerName: 'Test User',
         status: 'offered',
         grantsProxy: false
@@ -98,7 +98,7 @@ describe('displayAcceptOfferController', () => {
       agreementNumber: agreementId,
       status: 'offered',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       username: 'Test User'
     }
 
@@ -156,7 +156,7 @@ describe('displayAcceptOfferController', () => {
       agreementNumber: agreementId,
       status: 'offered',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '106284736',
       username: 'Test User'
     }
 
