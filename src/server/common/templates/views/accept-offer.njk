@@ -35,6 +35,7 @@
       </ul>
 
       <!-- Accept Button -->
+      {% if status === 'offered' %}
       <form method="post" action="{{ '/agreement/accept-offer' if grantsProxy else '/accept-offer' }}" id="accept-offer-form">
         <input type="hidden" name="agreementId" value="{{ agreementNumber }}">
         <p id="accept-agreement-error" class="govuk-error-message"></p>
@@ -42,6 +43,7 @@
           text: "Accept offer"
         }) }}
       </form>
+      {% endif %}
 
       {% include "partials/help/update.njk" %}
     </div>

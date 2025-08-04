@@ -66,6 +66,7 @@ describe('displayAcceptOfferController', () => {
         company: 'Test Company',
         sbi: '123456789',
         farmerName: 'Test User',
+        status: 'offered',
         grantsProxy: false
       })
     )
@@ -119,7 +120,8 @@ describe('displayAcceptOfferController', () => {
     expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
       'views/accept-offer.njk',
       expect.objectContaining({
-        grantsProxy: true
+        grantsProxy: true,
+        status: 'offered'
       })
     )
   })
