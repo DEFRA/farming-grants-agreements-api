@@ -7,7 +7,6 @@ import Jwt from '@hapi/jwt'
 /**
  * Validates and verifies a JWT token against a secret to extract the payload
  * which will have the 'sbi' and 'source' data
- *
  * @param {string} authToken - The JWT token to verify and decode
  * @param {object} logger - Logger instance for error reporting
  * @returns {payload|null} The JWT payload object from the token or null if invalid/missing
