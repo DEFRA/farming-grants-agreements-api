@@ -38,7 +38,7 @@ describe('acceptOfferDocumentController', () => {
     getAgreementData.mockResolvedValue({
       agreementNumber: 'SFI123456789',
       company: 'Test Company',
-      sbi: '123456789',
+      sbi: '900000005',
       username: 'Test User'
     })
     acceptOffer.mockResolvedValue()
@@ -65,7 +65,7 @@ describe('acceptOfferDocumentController', () => {
       expect.objectContaining({
         agreementNumber: agreementId,
         company: 'Test Company',
-        sbi: '123456789',
+        sbi: '900000005',
         farmerName: 'Test User',
         grantsProxy: false
       })
