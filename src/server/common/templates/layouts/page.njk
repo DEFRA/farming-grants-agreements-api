@@ -20,7 +20,10 @@
   {{ govukHeader({
     homepageUrl: "https://www.gov.uk/",
     classes: "govuk-header--full-width-border",
-    containerClasses: "govuk-width-container"
+    containerClasses: "govuk-width-container",
+    serviceName: {
+      text: "Farming Grants Agreements"
+    }
   }) }}
 
   {{ defraAccountBar({
@@ -35,8 +38,16 @@
       tag: {
         text: "Beta"
       },
-      text: 'This is a new service - your feedback will help us to improve it.'
-    }) }}
+      html: '<span class="govuk-phase-banner__text">
+              This is a new service. Help us improve it and 
+                <a class="govuk-link" href="#" target="_blank" rel="noopener noreferrer">
+                  give your feedback <span class="govuk-visually-hidden">(opens in new tab)</span>
+                </a>.
+            </span>'
+    }) 
+    }}
+   
+
   </div>
 {% endblock %}
 
@@ -84,8 +95,7 @@
           text: "Accessibility statement"
         }
       ]
-    },
-    rebrand: true
+    }
   }) }}
 {% endblock %}
 
