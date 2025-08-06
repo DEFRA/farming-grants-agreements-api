@@ -11,23 +11,23 @@ jest.mock('@hapi/wreck', () => ({
 describe('#serveStaticFiles', () => {
   let server
 
+  beforeAll(async () => {
+    // Mock the well-known OIDC config before server starts
+    Wreck.get.mockResolvedValue({
+      payload: {
+        authorization_endpoint: 'https://mock-auth/authorize',
+        token_endpoint: 'https://mock-auth/token'
+      }
+    })
+    server = await createServer({ disableSQS: true })
+    await server.initialize()
+  })
+
+  afterAll(async () => {
+    await server.stop({ timeout: 0 })
+  })
+
   describe('When secure context is disabled', () => {
-    beforeEach(async () => {
-      // Mock the well-known OIDC config before server starts
-      Wreck.get.mockResolvedValue({
-        payload: {
-          authorization_endpoint: 'https://mock-auth/authorize',
-          token_endpoint: 'https://mock-auth/token'
-        }
-      })
-      server = await createServer({ disableSQS: true })
-      await server.initialize()
-    })
-
-    afterEach(async () => {
-      await server.stop({ timeout: 0 })
-    })
-
     test('Should serve favicon as expected', async () => {
       const { statusCode } = await server.inject({
         method: 'GET',
@@ -80,7 +80,7 @@ describe('#serveStaticFiles', () => {
     test('Should return 404 for an invalid static file route', async () => {
       const { statusCode } = await server.inject({
         method: 'GET',
-        url: '/static/assets/images/govuk-icon-print.png'
+        url: '/static/assets/images/i-dont-exist.png'
       })
       expect(statusCode).toBe(statusCodes.notFound)
     })
