@@ -34,150 +34,202 @@ describe('displayAcceptOfferController', () => {
       .mockImplementation(() => mockRenderedHtml)
   })
 
-  test('should return the rendered HTML accept offer page', async () => {
-    // Arrange
-    const agreementId = 'SFI123456789'
-    const mockAgreementData = {
-      agreementNumber: agreementId,
-      status: 'offered',
-      company: 'Test Company',
-      sbi: '106284736',
-      username: 'Test User'
-    }
-
-    jest
-      .spyOn(agreementDataHelper, 'getAgreementData')
-      .mockResolvedValue(mockAgreementData)
-
-    // Act
-    const { statusCode, headers, result } = await server.inject({
-      method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
-    })
-
-    // Assert
-    expect(statusCode).toBe(statusCodes.ok)
-    expect(headers['content-type']).toContain('text/html')
-    expect(result).toBe(mockRenderedHtml)
-    expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-      'views/accept-offer.njk',
-      expect.objectContaining({
+  describe('not yet accepted', () => {
+    test('should return the rendered HTML accept offer page', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const mockAgreementData = {
         agreementNumber: agreementId,
+        status: 'offered',
         company: 'Test Company',
         sbi: '106284736',
-        farmerName: 'Test User',
-        status: 'offered',
-        grantsProxy: false
-      })
-    )
-  })
-
-  test('should handle agreement not found', async () => {
-    // Arrange
-    const agreementId = 'INVALID123'
-    jest.spyOn(agreementDataHelper, 'getAgreementData').mockResolvedValue(null)
-
-    // Act
-    const { statusCode, result } = await server.inject({
-      method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
-    })
-
-    // Assert
-    expect(statusCode).toBe(statusCodes.notFound)
-    expect(result).toEqual({
-      message: 'Agreement not found',
-      error: 'Not Found'
-    })
-  })
-
-  test('should handle grants proxy header', async () => {
-    // Arrange
-    const agreementId = 'SFI123456789'
-    const mockAgreementData = {
-      agreementNumber: agreementId,
-      status: 'offered',
-      company: 'Test Company',
-      sbi: '106284736',
-      username: 'Test User'
-    }
-
-    jest
-      .spyOn(agreementDataHelper, 'getAgreementData')
-      .mockResolvedValue(mockAgreementData)
-
-    // Act
-    const { statusCode } = await server.inject({
-      method: 'GET',
-      url: `/review-accept-offer/${agreementId}`,
-      headers: {
-        'defra-grants-proxy': 'true'
+        username: 'Test User'
       }
-    })
 
-    // Assert
-    expect(statusCode).toBe(statusCodes.ok)
-    expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-      'views/accept-offer.njk',
-      expect.objectContaining({
-        grantsProxy: true,
-        status: 'offered'
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementData')
+        .mockResolvedValue(mockAgreementData)
+
+      // Act
+      const { statusCode, headers, result } = await server.inject({
+        method: 'GET',
+        url: `/review-accept-offer/${agreementId}`
       })
-    )
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(headers['content-type']).toContain('text/html')
+      expect(result).toBe(mockRenderedHtml)
+      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
+        'views/accept-offer.njk',
+        expect.objectContaining({
+          agreementNumber: agreementId,
+          company: 'Test Company',
+          sbi: '106284736',
+          farmerName: 'Test User',
+          status: 'offered',
+          grantsProxy: false
+        })
+      )
+    })
+
+    test('should handle agreement not found', async () => {
+      const agreementId = 'INVALID123'
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementData')
+        .mockResolvedValue(null)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: `/review-accept-offer/${agreementId}`
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.notFound)
+      expect(result).toEqual({
+        message: 'Agreement not found',
+        error: 'Not Found'
+      })
+    })
+
+    test('should handle grants proxy header', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'offered',
+        company: 'Test Company',
+        sbi: '106284736',
+        username: 'Test User'
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementData')
+        .mockResolvedValue(mockAgreementData)
+
+      // Act
+      const { statusCode } = await server.inject({
+        method: 'GET',
+        url: `/review-accept-offer/${agreementId}`,
+        headers: {
+          'defra-grants-proxy': 'true'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
+        'views/accept-offer.njk',
+        expect.objectContaining({
+          grantsProxy: true,
+          status: 'offered'
+        })
+      )
+    })
+
+    test('should handle database errors', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const errorMessage = 'Database connection failed'
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementData')
+        .mockRejectedValue(new Error(errorMessage))
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: `/review-accept-offer/${agreementId}`
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.internalServerError)
+      expect(result).toEqual({
+        message: 'Failed to display accept offer page',
+        error: errorMessage
+      })
+    })
+
+    test('should handle template rendering errors', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const errorMessage = 'Template rendering failed'
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'offered',
+        company: 'Test Company',
+        sbi: '106284736',
+        username: 'Test User'
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementData')
+        .mockResolvedValue(mockAgreementData)
+      jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
+        throw new Error(errorMessage)
+      })
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: `/review-accept-offer/${agreementId}`
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.internalServerError)
+      expect(result).toEqual({
+        message: 'Failed to display accept offer page',
+        error: errorMessage
+      })
+    })
   })
 
-  test('should handle database errors', async () => {
-    // Arrange
+  describe('already accepted', () => {
     const agreementId = 'SFI123456789'
-    const errorMessage = 'Database connection failed'
-    jest
-      .spyOn(agreementDataHelper, 'getAgreementData')
-      .mockRejectedValue(new Error(errorMessage))
 
-    // Act
-    const { statusCode, result } = await server.inject({
-      method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
+    beforeEach(() => {
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'accepted',
+        company: 'Test Company',
+        sbi: '106284736',
+        username: 'Test User'
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementData')
+        .mockResolvedValue(mockAgreementData)
     })
 
-    // Assert
-    expect(statusCode).toBe(statusCodes.internalServerError)
-    expect(result).toEqual({
-      message: 'Failed to display accept offer page',
-      error: errorMessage
-    })
-  })
+    test('should redirect to review offer', async () => {
+      // Arrange
+      const { statusCode, headers } = await server.inject({
+        method: 'GET',
+        url: `/review-accept-offer/${agreementId}`
+      })
 
-  test('should handle template rendering errors', async () => {
-    // Arrange
-    const agreementId = 'SFI123456789'
-    const errorMessage = 'Template rendering failed'
-    const mockAgreementData = {
-      agreementNumber: agreementId,
-      status: 'offered',
-      company: 'Test Company',
-      sbi: '106284736',
-      username: 'Test User'
-    }
-
-    jest
-      .spyOn(agreementDataHelper, 'getAgreementData')
-      .mockResolvedValue(mockAgreementData)
-    jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
-      throw new Error(errorMessage)
+      // Assert
+      expect(statusCode).toBe(statusCodes.redirect)
+      expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
+      expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
     })
 
-    // Act
-    const { statusCode, result } = await server.inject({
-      method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
-    })
+    test('should redirect to review offer when grants proxy is true', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
 
-    // Assert
-    expect(statusCode).toBe(statusCodes.internalServerError)
-    expect(result).toEqual({
-      message: 'Failed to display accept offer page',
-      error: errorMessage
+      const { statusCode, headers } = await server.inject({
+        method: 'GET',
+        url: `/review-accept-offer/${agreementId}`,
+        headers: {
+          'defra-grants-proxy': 'true'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.redirect)
+      expect(headers.location).toBe(`/agreement/offer-accepted/${agreementId}`)
+      expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
     })
   })
 })

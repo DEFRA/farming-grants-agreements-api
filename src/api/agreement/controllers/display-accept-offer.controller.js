@@ -26,6 +26,15 @@ const displayAcceptOfferController = {
           .code(statusCodes.notFound)
       }
 
+      if (agreementData.status !== 'offered') {
+        let baseUrl = ''
+        if (request.headers['defra-grants-proxy'] === 'true') {
+          baseUrl = '/agreement'
+        }
+
+        return h.redirect(`${baseUrl}/offer-accepted/${agreementId}`)
+      }
+
       // Render the accept offer template with agreement data
       const acceptOfferTemplate = renderTemplate('views/accept-offer.njk', {
         agreementNumber: agreementData.agreementNumber,
@@ -37,7 +46,10 @@ const displayAcceptOfferController = {
       })
 
       // Return the HTML response
-      return h.response(acceptOfferTemplate).code(statusCodes.ok)
+      return h
+        .response(acceptOfferTemplate)
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .code(statusCodes.ok)
     } catch (error) {
       request.logger.error(
         `Error displaying accept offer page: ${error.message}`

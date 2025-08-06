@@ -51,32 +51,24 @@ describe('acceptOfferDocumentController', () => {
       })
     })
 
-    test('should successfully accept an offer and return 200 OK', async () => {
+    test('should return 400 Bad Request when not accepted', async () => {
       const agreementId = 'SFI123456789'
 
       const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/${agreementId}`
+        method: 'GET',
+        url: `/offer-accepted/${agreementId}`
       })
 
       // Assert
       expect(getAgreementData).toHaveBeenCalledWith({
         agreementNumber: agreementId
       })
-      expect(acceptOffer).toHaveBeenCalledWith(agreementId)
-      expect(updatePaymentHub).toHaveBeenCalled()
-      expect(renderTemplate).toHaveBeenCalledWith(
-        'views/offer-accepted.njk',
-        expect.objectContaining({
-          agreementNumber: agreementId,
-          company: 'Test Company',
-          sbi: '106284736',
-          farmerName: 'Test User',
-          grantsProxy: false
-        })
-      )
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(result).toBe(mockRenderedHtml)
+      expect(acceptOffer).not.toHaveBeenCalled()
+      expect(updatePaymentHub).not.toHaveBeenCalled()
+      expect(renderTemplate).not.toHaveBeenCalled()
+      expect(statusCode).toBe(statusCodes.badRequest)
+      expect(result.message).toBe('Failed to display accept offer page')
+      expect(result.error).toBe('Agreement has not been accepted')
     })
 
     test('should handle agreement not found error', async () => {
@@ -86,66 +78,28 @@ describe('acceptOfferDocumentController', () => {
 
       // Act
       const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/${agreementId}`
+        method: 'GET',
+        url: `/offer-accepted/${agreementId}`
       })
 
       // Assert
-      expect(statusCode).toBe(statusCodes.notFound)
-      expect(result.message).toContain('Agreement not found with ID')
-      expect(result.error).toBe('Not Found')
-    })
-
-    test('should handle database errors from acceptOffer', async () => {
-      // Arrange
-      const error = new Error('Database connection failed')
-      acceptOffer.mockRejectedValue(error)
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/SFI123456789`
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(result).toEqual({
-        message: 'Failed to accept offer',
-        error: 'Database connection failed'
-      })
+      expect(statusCode).toBe(statusCodes.badRequest)
+      expect(result.message).toContain('Failed to display accept offer page')
+      expect(result.error).toBe(
+        'Agreement not found with ID invalid-agreement-id'
+      )
     })
 
     test('should handle missing agreement ID', async () => {
       // Act
       const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: '/accept-offer/'
+        method: 'GET',
+        url: '/offer-accepted/'
       })
 
       // Assert
-      expect(statusCode).toBe(statusCodes.badRequest)
-      expect(result.message).toBe('Agreement ID is required')
-    })
-
-    test('should handle grants proxy header', async () => {
-      const agreementId = 'SFI123456789'
-
-      const { statusCode } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/${agreementId}`,
-        headers: {
-          'defra-grants-proxy': 'true'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(renderTemplate).toHaveBeenCalledWith(
-        'views/offer-accepted.njk',
-        expect.objectContaining({
-          grantsProxy: true
-        })
-      )
+      expect(statusCode).toBe(statusCodes.notFound)
+      expect(result.message).toBe('Not Found')
     })
   })
 
@@ -163,33 +117,56 @@ describe('acceptOfferDocumentController', () => {
       })
     })
 
-    test('should redirect to review offer', async () => {
-      // Arrange
-      const { statusCode, headers } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/${agreementId}`
+    test('should successfully show offer accepted page and return 200 OK', async () => {
+      const agreementId = 'SFI123456789'
+
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: `/offer-accepted/${agreementId}`
       })
 
       // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
-      expect(renderTemplate).not.toHaveBeenCalled()
+      expect(getAgreementData).toHaveBeenCalledWith({
+        agreementNumber: agreementId
+      })
+      expect(acceptOffer).not.toHaveBeenCalled()
+      expect(updatePaymentHub).not.toHaveBeenCalled()
+      expect(renderTemplate).toHaveBeenCalledWith(
+        'views/offer-accepted.njk',
+        expect.objectContaining({
+          agreementNumber: agreementId,
+          company: 'Test Company',
+          sbi: '106284736',
+          farmerName: 'Test User',
+          grantsProxy: false
+        })
+      )
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(result).toBe(mockRenderedHtml)
     })
 
-    test('should redirect to review offer when grants proxy is true', async () => {
-      // Arrange
+    test('should handle grants proxy header', async () => {
+      const agreementId = 'SFI123456789'
+
       const { statusCode, headers } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/${agreementId}`,
+        method: 'GET',
+        url: `/offer-accepted/${agreementId}`,
         headers: {
           'defra-grants-proxy': 'true'
         }
       })
 
       // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/agreement/offer-accepted/${agreementId}`)
-      expect(renderTemplate).not.toHaveBeenCalled()
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(renderTemplate).toHaveBeenCalledWith(
+        'views/offer-accepted.njk',
+        expect.objectContaining({
+          grantsProxy: true
+        })
+      )
+      expect(headers['cache-control']).toBe(
+        'no-cache, no-store, must-revalidate'
+      )
     })
   })
 })

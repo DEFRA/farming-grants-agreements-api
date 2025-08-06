@@ -3,6 +3,7 @@ import {
   viewAgreementController,
   createOfferController,
   acceptOfferController,
+  offerAcceptedController,
   unacceptOfferController,
   displayAcceptOfferController
 } from '~/src/api/agreement/controllers/index.js'
@@ -39,6 +40,11 @@ const agreement = {
           method: 'POST',
           path: '/accept-offer/{agreementId?}',
           ...acceptOfferController
+        },
+        {
+          method: 'GET',
+          path: '/offer-accepted/{agreementId}',
+          ...offerAcceptedController
         },
         {
           method: 'POST',

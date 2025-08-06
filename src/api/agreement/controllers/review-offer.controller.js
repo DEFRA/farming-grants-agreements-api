@@ -18,6 +18,15 @@ const reviewOfferController = {
         agreementNumber: agreementId
       })
 
+      if (agreementData.status === 'accepted') {
+        let baseUrl = ''
+        if (request.headers['defra-grants-proxy'] === 'true') {
+          baseUrl = '/agreement'
+        }
+
+        return h.redirect(`${baseUrl}/offer-accepted/${agreementId}`)
+      }
+
       // Render the HTML agreement document
       const renderedAgreementDocument = await getHTMLAgreementDocument(
         agreementId,
@@ -80,7 +89,10 @@ const reviewOfferController = {
       })
 
       // Return the HTML response
-      return h.response(renderedHTML).code(statusCodes.ok)
+      return h
+        .response(renderedHTML)
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .code(statusCodes.ok)
     } catch (error) {
       request.logger.error(`Error fetching offer: ${error.message}`)
       return h
