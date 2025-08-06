@@ -169,8 +169,9 @@ const getAnnualPaymentSchedule = (agreementData) => {
  * Renders a Nunjucks template with agreement data
  * @param {string} agreementId - The agreement ID to fetch
  * @param {object} [data] - The agreement data object (optional)
+ * @param {string} baseUrl - The base URL to use for redirects
  */
-const getHTMLAgreementDocument = async (agreementId, data, isProxy) => {
+const getHTMLAgreementDocument = async (agreementId, data, baseUrl) => {
   if (agreementId == null) {
     throw Boom.badRequest('Agreement ID is required')
   }
@@ -187,7 +188,7 @@ const getHTMLAgreementDocument = async (agreementId, data, isProxy) => {
   agreementData.agreementLevelActions = getAgreementLevelActions(agreementData)
   agreementData.summaryOfPayments = getSummaryOfPayments(agreementData)
   agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
-  agreementData.grantsProxy = isProxy
+  agreementData.baseUrl = baseUrl
   agreementData.farmerName = agreementData.username
 
   return renderTemplate('views/sfi-agreement.njk', agreementData)

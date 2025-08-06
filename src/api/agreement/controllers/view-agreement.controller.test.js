@@ -81,7 +81,7 @@ describe('viewAgreementController', () => {
     expect(getHTMLAgreement.getHTMLAgreementDocument).toHaveBeenCalledWith(
       agreementId,
       mockAgreementData,
-      false
+      '/'
     )
   })
 

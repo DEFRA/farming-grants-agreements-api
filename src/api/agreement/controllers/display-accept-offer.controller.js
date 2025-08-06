@@ -1,6 +1,8 @@
+import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 
 /**
  * Controller to display the Accept Offer page
@@ -11,6 +13,7 @@ const displayAcceptOfferController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
+      const baseUrl = getBaseUrl(request)
 
       // Get the agreement data
       const agreementData = await getAgreementData({
@@ -27,18 +30,13 @@ const displayAcceptOfferController = {
       }
 
       if (agreementData.status !== 'offered') {
-        let baseUrl = ''
-        if (request.headers['defra-grants-proxy'] === 'true') {
-          baseUrl = '/agreement'
-        }
-
-        return h.redirect(`${baseUrl}/offer-accepted/${agreementId}`)
+        return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
       }
 
       // Render the accept offer template with agreement data
       const acceptOfferTemplate = renderTemplate('views/accept-offer.njk', {
         agreementNumber: agreementData.agreementNumber,
-        grantsProxy: request.headers['defra-grants-proxy'] === 'true',
+        baseUrl,
         company: agreementData.company,
         sbi: agreementData.sbi,
         farmerName: agreementData.username,

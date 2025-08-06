@@ -40,16 +40,20 @@ try {
   webpackManifest = {}
 }
 
-const getAssetPath = (asset, grantsProxy) => {
+/**
+ * @param {string} baseUrl
+ * @param {string} asset
+ * @returns {string}
+ */
+const getAssetPath = (baseUrl, asset) => {
   const webpackAssetPath = webpackManifest?.[asset]
-  if (grantsProxy) {
-    return `/agreement/${assetPath}/${webpackAssetPath ?? asset}`
-  }
-  // If grantsProxy is false, we assume the asset path is relative to the public directory
-  return `${assetPath}/${webpackAssetPath ?? asset}`
+  return path.join(baseUrl, assetPath, webpackAssetPath ?? asset)
 }
 
+const buildUrl = (...args) => path.join(...args)
+
 nunjucksEnvironment.addGlobal('getAssetPath', getAssetPath)
+nunjucksEnvironment.addGlobal('buildUrl', buildUrl)
 
 /**
  * @satisfies {ServerRegisterPluginObject<ServerViewsConfiguration>}

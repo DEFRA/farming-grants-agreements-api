@@ -68,7 +68,7 @@ describe('displayAcceptOfferController', () => {
           sbi: '106284736',
           farmerName: 'Test User',
           status: 'offered',
-          grantsProxy: false
+          baseUrl: '/'
         })
       )
     })
@@ -93,7 +93,7 @@ describe('displayAcceptOfferController', () => {
       })
     })
 
-    test('should handle grants proxy header', async () => {
+    test('should handle base URL header', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
       const mockAgreementData = {
@@ -113,7 +113,7 @@ describe('displayAcceptOfferController', () => {
         method: 'GET',
         url: `/review-accept-offer/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'true'
+          'x-base-url': '/defra-grants-proxy'
         }
       })
 
@@ -122,7 +122,7 @@ describe('displayAcceptOfferController', () => {
       expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
         'views/accept-offer.njk',
         expect.objectContaining({
-          grantsProxy: true,
+          baseUrl: '/defra-grants-proxy',
           status: 'offered'
         })
       )
@@ -214,7 +214,7 @@ describe('displayAcceptOfferController', () => {
       expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
     })
 
-    test('should redirect to review offer when grants proxy is true', async () => {
+    test('should redirect to review offer when base URL is set', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
 
@@ -222,13 +222,15 @@ describe('displayAcceptOfferController', () => {
         method: 'GET',
         url: `/review-accept-offer/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'true'
+          'x-base-url': '/defra-grants-proxy'
         }
       })
 
       // Assert
       expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/agreement/offer-accepted/${agreementId}`)
+      expect(headers.location).toBe(
+        `/defra-grants-proxy/offer-accepted/${agreementId}`
+      )
       expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
     })
   })

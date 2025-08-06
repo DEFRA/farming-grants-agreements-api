@@ -439,7 +439,7 @@ describe('reviewOfferController', () => {
       )
     })
 
-    test('should handle grants proxy header', async () => {
+    test('should handle base URL header', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
       const mockAgreementData = {
@@ -465,7 +465,7 @@ describe('reviewOfferController', () => {
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'true'
+          'x-base-url': '/defra-grants-proxy'
         }
       })
 
@@ -474,12 +474,12 @@ describe('reviewOfferController', () => {
       expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
         'views/view-offer.njk',
         expect.objectContaining({
-          grantsProxy: true
+          baseUrl: '/defra-grants-proxy'
         })
       )
     })
 
-    test('should handle grants proxy header as false', async () => {
+    test('should handle base URL header as false', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
       const mockAgreementData = {
@@ -505,7 +505,7 @@ describe('reviewOfferController', () => {
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'false'
+          'x-base-url': false
         }
       })
 
@@ -514,7 +514,7 @@ describe('reviewOfferController', () => {
       expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
         'views/view-offer.njk',
         expect.objectContaining({
-          grantsProxy: false
+          baseUrl: '/'
         })
       )
     })
@@ -744,7 +744,7 @@ describe('reviewOfferController', () => {
       )
     })
 
-    test('should handle missing defra-grants-proxy header', async () => {
+    test('should handle missing base URL header', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
       const mockAgreementData = {
@@ -777,7 +777,7 @@ describe('reviewOfferController', () => {
       expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
         'views/view-offer.njk',
         expect.objectContaining({
-          grantsProxy: false // Should be false when header is missing
+          baseUrl: '/' // Should be '/' when header is missing
         })
       )
     })
@@ -920,7 +920,7 @@ describe('reviewOfferController', () => {
       expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
     })
 
-    test('should redirect to review offer when grants proxy is true', async () => {
+    test('should redirect to review offer when base URL is set', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
 
@@ -928,13 +928,15 @@ describe('reviewOfferController', () => {
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'true'
+          'x-base-url': '/defra-grants-proxy'
         }
       })
 
       // Assert
       expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/agreement/offer-accepted/${agreementId}`)
+      expect(headers.location).toBe(
+        `/defra-grants-proxy/offer-accepted/${agreementId}`
+      )
       expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
     })
   })

@@ -13,7 +13,7 @@
 {% set mainClasses = "" %}
 
 {% block head %}
-  <link href="{{ getAssetPath('stylesheets/application.scss', grantsProxy) }}" rel="stylesheet">
+  <link href="{{ getAssetPath(baseUrl, 'stylesheets/application.scss') }}" rel="stylesheet">
 {% endblock %}
 
 {% block header %}
@@ -97,5 +97,5 @@
 {% endblock %}
 
 {% block bodyEnd %}
-  <script type="module" src="{{ getAssetPath('application.js', grantsProxy) }}"></script>
+  <script type="module" src="{{ getAssetPath(baseUrl, 'application.js') }}"></script>
 {% endblock %}

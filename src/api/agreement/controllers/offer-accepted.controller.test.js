@@ -138,21 +138,21 @@ describe('acceptOfferDocumentController', () => {
           company: 'Test Company',
           sbi: '106284736',
           farmerName: 'Test User',
-          grantsProxy: false
+          baseUrl: '/'
         })
       )
       expect(statusCode).toBe(statusCodes.ok)
       expect(result).toBe(mockRenderedHtml)
     })
 
-    test('should handle grants proxy header', async () => {
+    test('should handle base URL header', async () => {
       const agreementId = 'SFI123456789'
 
       const { statusCode, headers } = await server.inject({
         method: 'GET',
         url: `/offer-accepted/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'true'
+          'x-base-url': '/defra-grants-proxy'
         }
       })
 
@@ -161,7 +161,7 @@ describe('acceptOfferDocumentController', () => {
       expect(renderTemplate).toHaveBeenCalledWith(
         'views/offer-accepted.njk',
         expect.objectContaining({
-          grantsProxy: true
+          baseUrl: '/defra-grants-proxy'
         })
       )
       expect(headers['cache-control']).toBe(

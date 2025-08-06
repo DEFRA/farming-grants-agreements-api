@@ -1,8 +1,10 @@
+import Jwt from '@hapi/jwt'
+
 import { config } from '~/src/config/index.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import Jwt from '@hapi/jwt'
 
 /**
  * Validates and verifies a JWT token against a secret to extract the payload
@@ -80,7 +82,7 @@ const viewAgreementController = {
       const renderedHtml = await getHTMLAgreementDocument(
         agreementId,
         agreementData,
-        request.headers['defra-grants-proxy'] === 'true'
+        getBaseUrl(request)
       )
 
       // Return the HTML response

@@ -34,7 +34,6 @@ describe('#context', () => {
       expect(contextResult).toEqual({
         assetPath: '/public/assets/rebrand',
         breadcrumbs: [],
-        getAssetPath: expect.any(Function),
         navigation: [
           {
             isActive: true,
@@ -56,22 +55,6 @@ describe('#context', () => {
           organisationId: undefined,
           sbi: 106284736
         }
-      })
-    })
-
-    describe('With valid asset path', () => {
-      test('Should provide expected asset path', () => {
-        expect(contextResult.getAssetPath('application.js')).toBe(
-          '/public/javascripts/application.js'
-        )
-      })
-    })
-
-    describe('With invalid asset path', () => {
-      test('Should provide expected asset', () => {
-        expect(contextResult.getAssetPath('an-image.png')).toBe(
-          '/public/an-image.png'
-        )
       })
     })
   })
@@ -130,7 +113,6 @@ describe('#context cache', () => {
       expect(contextResult).toEqual({
         assetPath: '/public/assets/rebrand',
         breadcrumbs: [],
-        getAssetPath: expect.any(Function),
         navigation: [
           {
             isActive: true,

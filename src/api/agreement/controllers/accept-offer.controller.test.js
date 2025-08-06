@@ -72,7 +72,7 @@ describe('acceptOfferDocumentController', () => {
           company: 'Test Company',
           sbi: '106284736',
           farmerName: 'Test User',
-          grantsProxy: false
+          baseUrl: '/'
         })
       )
       expect(statusCode).toBe(statusCodes.ok)
@@ -127,14 +127,14 @@ describe('acceptOfferDocumentController', () => {
       expect(result.message).toBe('Agreement ID is required')
     })
 
-    test('should handle grants proxy header', async () => {
+    test('should handle base URL header', async () => {
       const agreementId = 'SFI123456789'
 
       const { statusCode } = await server.inject({
         method: 'POST',
         url: `/accept-offer/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'true'
+          'x-base-url': '/defra-grants-proxy'
         }
       })
 
@@ -143,7 +143,7 @@ describe('acceptOfferDocumentController', () => {
       expect(renderTemplate).toHaveBeenCalledWith(
         'views/offer-accepted.njk',
         expect.objectContaining({
-          grantsProxy: true
+          baseUrl: '/defra-grants-proxy'
         })
       )
     })
@@ -176,19 +176,21 @@ describe('acceptOfferDocumentController', () => {
       expect(renderTemplate).not.toHaveBeenCalled()
     })
 
-    test('should redirect to review offer when grants proxy is true', async () => {
+    test('should redirect to review offer when base URL is set', async () => {
       // Arrange
       const { statusCode, headers } = await server.inject({
         method: 'POST',
         url: `/accept-offer/${agreementId}`,
         headers: {
-          'defra-grants-proxy': 'true'
+          'x-base-url': '/defra-grants-proxy'
         }
       })
 
       // Assert
       expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/agreement/offer-accepted/${agreementId}`)
+      expect(headers.location).toBe(
+        `/defra-grants-proxy/offer-accepted/${agreementId}`
+      )
       expect(renderTemplate).not.toHaveBeenCalled()
     })
   })

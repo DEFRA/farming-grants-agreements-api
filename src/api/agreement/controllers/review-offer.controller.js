@@ -1,7 +1,9 @@
+import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 
 /**
  * Controller to serve the View Offer page
@@ -12,6 +14,7 @@ const reviewOfferController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
+      const baseUrl = getBaseUrl(request)
 
       // Get the agreement data
       const agreementData = await getAgreementData({
@@ -19,18 +22,14 @@ const reviewOfferController = {
       })
 
       if (agreementData.status === 'accepted') {
-        let baseUrl = ''
-        if (request.headers['defra-grants-proxy'] === 'true') {
-          baseUrl = '/agreement'
-        }
-
-        return h.redirect(`${baseUrl}/offer-accepted/${agreementId}`)
+        return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
       }
 
       // Render the HTML agreement document
       const renderedAgreementDocument = await getHTMLAgreementDocument(
         agreementId,
-        agreementData
+        agreementData,
+        baseUrl
       )
 
       // Map actions: flatten parcel activities to get land parcel and quantity
@@ -79,7 +78,7 @@ const reviewOfferController = {
         company: agreementData.company,
         sbi: agreementData.sbi,
         farmerName: agreementData.username,
-        grantsProxy: request.headers['defra-grants-proxy'] === 'true',
+        baseUrl,
         actions,
         payments,
         totalYearly,
