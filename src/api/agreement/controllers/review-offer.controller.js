@@ -2,6 +2,10 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import {
+  extractJwtPayload,
+  verifyJwtPayload
+} from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
  * Controller to serve the View Offer page
@@ -17,6 +21,20 @@ const reviewOfferController = {
       const agreementData = await getAgreementData({
         agreementNumber: agreementId
       })
+
+      // Extract SBI from JWT token
+      const jwtPayload = extractJwtPayload(
+        request.headers['x-encrypted-auth'],
+        request.logger
+      )
+
+      if (!jwtPayload || !verifyJwtPayload(jwtPayload, agreementData)) {
+        return h
+          .response({
+            message: 'Not authorized to review offer agreement document'
+          })
+          .code(statusCodes.unauthorized)
+      }
 
       // Render the HTML agreement document
       const renderedAgreementDocument = await getHTMLAgreementDocument(

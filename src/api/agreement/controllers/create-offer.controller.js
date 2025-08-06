@@ -1,6 +1,10 @@
 import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import {
+  extractJwtPayload,
+  verifyJwtPayload
+} from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -18,6 +22,20 @@ const createOfferController = {
 
       if (!agreementData) {
         throw Boom.internal('Agreement data is required')
+      }
+
+      // Extract SBI from JWT token
+      const jwtPayload = extractJwtPayload(
+        request.headers['x-encrypted-auth'],
+        request.logger
+      )
+
+      if (!jwtPayload || !verifyJwtPayload(jwtPayload, agreementData)) {
+        return h
+          .response({
+            message: 'Not authorized to create offer agreement document'
+          })
+          .code(statusCodes.unauthorized)
       }
 
       // Accept the agreement
