@@ -4,11 +4,13 @@ import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 jest.mock('~/src/api/agreement/helpers/accept-offer.js')
 jest.mock('~/src/api/agreement/helpers/update-payment-hub.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
+jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
 describe('acceptOfferDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -49,6 +51,9 @@ describe('acceptOfferDocumentController', () => {
         sbi: '106284736',
         username: 'Test User'
       })
+
+      // Mock JWT auth functions to return valid authorization by default
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
     })
 
     test('should successfully accept an offer and return 200 OK', async () => {
@@ -56,7 +61,10 @@ describe('acceptOfferDocumentController', () => {
 
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: `/accept-offer/${agreementId}`
+        url: `/accept-offer/${agreementId}`,
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
       })
 
       // Assert
@@ -87,7 +95,10 @@ describe('acceptOfferDocumentController', () => {
       // Act
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: `/accept-offer/${agreementId}`
+        url: `/accept-offer/${agreementId}`,
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
       })
 
       // Assert
@@ -104,7 +115,10 @@ describe('acceptOfferDocumentController', () => {
       // Act
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: `/accept-offer/SFI123456789`
+        url: `/accept-offer/SFI123456789`,
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
       })
 
       // Assert
@@ -119,7 +133,10 @@ describe('acceptOfferDocumentController', () => {
       // Act
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: '/accept-offer/'
+        url: '/accept-offer/',
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
       })
 
       // Assert
@@ -134,7 +151,8 @@ describe('acceptOfferDocumentController', () => {
         method: 'POST',
         url: `/accept-offer/${agreementId}`,
         headers: {
-          'x-base-url': '/defra-grants-proxy'
+          'x-base-url': '/defra-grants-proxy',
+          'x-encrypted-auth': 'valid-jwt-token'
         }
       })
 
@@ -192,6 +210,43 @@ describe('acceptOfferDocumentController', () => {
         `/defra-grants-proxy/offer-accepted/${agreementId}`
       )
       expect(renderTemplate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('JWT Authorization', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+
+      // Setup default mock implementations
+      getAgreementData.mockResolvedValue({
+        agreementNumber: 'SFI123456789',
+        company: 'Test Company',
+        sbi: '106284736',
+        username: 'Test User'
+      })
+      acceptOffer.mockResolvedValue()
+      updatePaymentHub.mockResolvedValue()
+      renderTemplate.mockReturnValue(mockRenderedHtml)
+    })
+
+    test('Should return 401 when invalid JWT token provided', async () => {
+      // Arrange
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: '/accept-offer/SFI123456789',
+        headers: {
+          'x-encrypted-auth': 'invalid-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.unauthorized)
+      expect(result).toEqual({
+        message: 'Not authorized to accept offer agreement document'
+      })
     })
   })
 })

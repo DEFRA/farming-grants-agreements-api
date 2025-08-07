@@ -4,6 +4,29 @@ import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
+import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+
+/**
+ * Flatten parcel activities to get land parcel and quantity
+ * @param {object} agreementData
+ * @returns {*[]} actions
+ */
+function flattenParcelActivities(agreementData) {
+  const actions = []
+  ;(agreementData.parcels || []).forEach((parcel) => {
+    ;(parcel.activities ?? []).forEach((activity) => {
+      actions.push({
+        name:
+          agreementData.actions?.find((a) => a.code === activity.code)?.title ??
+          activity.code,
+        code: activity.code,
+        landParcel: parcel.parcelNumber,
+        quantity: activity.area
+      })
+    })
+  })
+  return actions
+}
 
 /**
  * Controller to serve the View Offer page
@@ -25,6 +48,21 @@ const reviewOfferController = {
         return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
       }
 
+      // Validate JWT authentication based on feature flag
+      if (
+        !validateJwtAuthentication(
+          request.headers['x-encrypted-auth'],
+          agreementData,
+          request.logger
+        )
+      ) {
+        return h
+          .response({
+            message: 'Not authorized to review offer agreement document'
+          })
+          .code(statusCodes.unauthorized)
+      }
+
       // Render the HTML agreement document
       const renderedAgreementDocument = await getHTMLAgreementDocument(
         agreementId,
@@ -32,20 +70,7 @@ const reviewOfferController = {
         baseUrl
       )
 
-      // Map actions: flatten parcel activities to get land parcel and quantity
-      const actions = []
-      ;(agreementData.parcels || []).forEach((parcel) => {
-        ;(parcel.activities ?? []).forEach((activity) => {
-          actions.push({
-            name:
-              agreementData.actions?.find((a) => a.code === activity.code)
-                ?.title ?? activity.code,
-            code: activity.code,
-            landParcel: parcel.parcelNumber,
-            quantity: activity.area
-          })
-        })
-      })
+      const actions = flattenParcelActivities(agreementData)
 
       // Map payments
       const payments = (agreementData.payments?.activities || []).map(

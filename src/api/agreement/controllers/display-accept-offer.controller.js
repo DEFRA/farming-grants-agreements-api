@@ -3,6 +3,7 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
+import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
  * Controller to display the Accept Offer page
@@ -27,6 +28,21 @@ const displayAcceptOfferController = {
             error: 'Not Found'
           })
           .code(statusCodes.notFound)
+      }
+
+      // Validate JWT authentication based on feature flag
+      if (
+        !validateJwtAuthentication(
+          request.headers['x-encrypted-auth'],
+          agreementData,
+          request.logger
+        )
+      ) {
+        return h
+          .response({
+            message: 'Not authorized to display accept offer agreement document'
+          })
+          .code(statusCodes.unauthorized)
       }
 
       if (agreementData.status !== 'offered') {
