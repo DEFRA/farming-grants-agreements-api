@@ -60,6 +60,8 @@ const acceptOfferController = {
 
         // Update the payment hub
         await updatePaymentHub(request, agreementId)
+      } else if (agreementData.status !== 'accepted') {
+        return h.redirect(path.join(baseUrl, 'review-offer', agreementId))
       }
 
       // Render the offer accepted template with agreement data
