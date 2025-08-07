@@ -19,7 +19,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history, not just the latest commit
+          fetch-depth: 0 # Fetch all history, not just the latest commit
           fetch-tags: true
 
       - name: Fetch main branch
