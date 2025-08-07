@@ -7,10 +7,7 @@ import {
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import {
-  extractJwtPayload,
-  verifyJwtPayload
-} from '~/src/api/common/helpers/jwt-auth.js'
+import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -35,13 +32,14 @@ const acceptOfferController = {
         throw Boom.notFound(`Agreement not found with ID ${agreementId}`)
       }
 
-      // Extract SBI from JWT token
-      const jwtPayload = extractJwtPayload(
-        request.headers['x-encrypted-auth'],
-        request.logger
-      )
-
-      if (!jwtPayload || !verifyJwtPayload(jwtPayload, agreementData)) {
+      // Validate JWT authentication based on feature flag
+      if (
+        !validateJwtAuthentication(
+          request.headers['x-encrypted-auth'],
+          agreementData,
+          request.logger
+        )
+      ) {
         return h
           .response({
             message: 'Not authorized to accept offer agreement document'

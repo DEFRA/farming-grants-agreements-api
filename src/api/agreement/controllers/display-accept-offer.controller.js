@@ -1,10 +1,7 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
-import {
-  extractJwtPayload,
-  verifyJwtPayload
-} from '~/src/api/common/helpers/jwt-auth.js'
+import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
  * Controller to display the Accept Offer page
@@ -30,13 +27,14 @@ const displayAcceptOfferController = {
           .code(statusCodes.notFound)
       }
 
-      // Extract SBI from JWT token
-      const jwtPayload = extractJwtPayload(
-        request.headers['x-encrypted-auth'],
-        request.logger
-      )
-
-      if (!jwtPayload || !verifyJwtPayload(jwtPayload, agreementData)) {
+      // Validate JWT authentication based on feature flag
+      if (
+        !validateJwtAuthentication(
+          request.headers['x-encrypted-auth'],
+          agreementData,
+          request.logger
+        )
+      ) {
         return h
           .response({
             message: 'Not authorized to display accept offer agreement document'

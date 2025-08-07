@@ -42,11 +42,7 @@ describe('reviewOfferController', () => {
       .mockImplementation(() => mockRenderedHtml)
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'extractJwtPayload').mockReturnValue({
-      sbi: '106284736',
-      source: 'defra'
-    })
-    jest.spyOn(jwtAuth, 'verifyJwtPayload').mockReturnValue(true)
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
   test('should return the rendered HTML offer document', async () => {
@@ -957,26 +953,9 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockRenderedHtml)
     })
 
-    test('Should return 401 when no JWT token provided', async () => {
-      // Arrange
-      jest.spyOn(jwtAuth, 'extractJwtPayload').mockReturnValue(null)
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/review-offer/SFI123456789'
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to review offer agreement document'
-      })
-    })
-
     test('Should return 401 when invalid JWT token provided', async () => {
       // Arrange
-      jest.spyOn(jwtAuth, 'extractJwtPayload').mockReturnValue(null)
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
 
       // Act
       const { statusCode, result } = await server.inject({

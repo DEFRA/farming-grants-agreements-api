@@ -45,4 +45,26 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
   return jwtPayload.source === 'defra' && jwtPayload.sbi === agreementData.sbi
 }
 
-export { extractJwtPayload, verifyJwtPayload }
+/**
+ * Validates JWT authentication based on feature flag setting
+ * @param {string} authToken - The JWT token to verify and decode
+ * @param {object} agreementData - The agreement data object
+ * @param {object} logger - Logger instance for error reporting
+ * @returns {boolean} - true if JWT is disabled or JWT validation passes, false otherwise
+ */
+const validateJwtAuthentication = (authToken, agreementData, logger) => {
+  const isJwtEnabled = config.get('featureFlags.isJwtEnabled')
+  if (!isJwtEnabled) {
+    logger.info('JWT authentication is disabled via feature flag')
+    return true
+  }
+
+  const jwtPayload = extractJwtPayload(authToken, logger)
+  if (!jwtPayload) {
+    return false
+  }
+
+  return verifyJwtPayload(jwtPayload, agreementData)
+}
+
+export { extractJwtPayload, verifyJwtPayload, validateJwtAuthentication }

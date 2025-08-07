@@ -36,11 +36,7 @@ describe('displayAcceptOfferController', () => {
       .mockImplementation(() => mockRenderedHtml)
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'extractJwtPayload').mockReturnValue({
-      sbi: '106284736',
-      source: 'defra'
-    })
-    jest.spyOn(jwtAuth, 'verifyJwtPayload').mockReturnValue(true)
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
   test('should return the rendered HTML accept offer page', async () => {
@@ -221,26 +217,9 @@ describe('displayAcceptOfferController', () => {
         .mockImplementation(() => mockRenderedHtml)
     })
 
-    test('Should return 401 when no JWT token provided', async () => {
-      // Arrange
-      jest.spyOn(jwtAuth, 'extractJwtPayload').mockReturnValue(null)
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/review-accept-offer/SFI123456789'
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to display accept offer agreement document'
-      })
-    })
-
     test('Should return 401 when invalid JWT token provided', async () => {
       // Arrange
-      jest.spyOn(jwtAuth, 'extractJwtPayload').mockReturnValue(null)
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
 
       // Act
       const { statusCode, result } = await server.inject({
@@ -248,30 +227,6 @@ describe('displayAcceptOfferController', () => {
         url: '/review-accept-offer/SFI123456789',
         headers: {
           'x-encrypted-auth': 'invalid-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to display accept offer agreement document'
-      })
-    })
-
-    test('Should return 401 for Defra users with non-matching SBI', async () => {
-      // Arrange
-      jest.spyOn(jwtAuth, 'extractJwtPayload').mockReturnValue({
-        sbi: 'different-sbi',
-        source: 'defra'
-      })
-      jest.spyOn(jwtAuth, 'verifyJwtPayload').mockReturnValue(false)
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/review-accept-offer/SFI123456789',
-        headers: {
-          'x-encrypted-auth': 'defra-jwt-token'
         }
       })
 

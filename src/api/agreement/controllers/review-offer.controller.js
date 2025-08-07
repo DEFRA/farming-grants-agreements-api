@@ -2,10 +2,29 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
-import {
-  extractJwtPayload,
-  verifyJwtPayload
-} from '~/src/api/common/helpers/jwt-auth.js'
+import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+
+/**
+ * Flatten parcel activities to get land parcel and quantity
+ * @param {object} agreementData
+ * @returns {*[]} actions
+ */
+function flattenParcelActivities(agreementData) {
+  const actions = []
+  ;(agreementData.parcels || []).forEach((parcel) => {
+    ;(parcel.activities ?? []).forEach((activity) => {
+      actions.push({
+        name:
+          agreementData.actions?.find((a) => a.code === activity.code)?.title ??
+          activity.code,
+        code: activity.code,
+        landParcel: parcel.parcelNumber,
+        quantity: activity.area
+      })
+    })
+  })
+  return actions
+}
 
 /**
  * Controller to serve the View Offer page
@@ -22,13 +41,14 @@ const reviewOfferController = {
         agreementNumber: agreementId
       })
 
-      // Extract SBI from JWT token
-      const jwtPayload = extractJwtPayload(
-        request.headers['x-encrypted-auth'],
-        request.logger
-      )
-
-      if (!jwtPayload || !verifyJwtPayload(jwtPayload, agreementData)) {
+      // Validate JWT authentication based on feature flag
+      if (
+        !validateJwtAuthentication(
+          request.headers['x-encrypted-auth'],
+          agreementData,
+          request.logger
+        )
+      ) {
         return h
           .response({
             message: 'Not authorized to review offer agreement document'
@@ -42,20 +62,7 @@ const reviewOfferController = {
         agreementData
       )
 
-      // Map actions: flatten parcel activities to get land parcel and quantity
-      const actions = []
-      ;(agreementData.parcels || []).forEach((parcel) => {
-        ;(parcel.activities ?? []).forEach((activity) => {
-          actions.push({
-            name:
-              agreementData.actions?.find((a) => a.code === activity.code)
-                ?.title ?? activity.code,
-            code: activity.code,
-            landParcel: parcel.parcelNumber,
-            quantity: activity.area
-          })
-        })
-      })
+      const actions = flattenParcelActivities(agreementData)
 
       // Map payments
       const payments = (agreementData.payments?.activities || []).map(
