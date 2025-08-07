@@ -7,7 +7,11 @@ import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  __esModule: true,
+  ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
+  getAgreementDataById: jest.fn()
+}))
 jest.mock('~/src/api/agreement/helpers/get-html-agreement.js')
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 jest.mock('@hapi/jwt')
@@ -49,7 +53,7 @@ describe('viewAgreementController', () => {
 
     beforeEach(() => {
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
     })
 
@@ -72,9 +76,9 @@ describe('viewAgreementController', () => {
       expect(payload).toBe(mockRenderedHtml)
 
       // Verify mocks were called correctly
-      expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith({
-        agreementNumber: agreementId
-      })
+      expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
+        agreementId
+      )
       expect(getHTMLAgreement.getHTMLAgreementDocument).toHaveBeenCalledWith(
         agreementId,
         mockAgreementData,
@@ -98,9 +102,9 @@ describe('viewAgreementController', () => {
       expect(payload).toBe(mockRenderedHtml)
 
       // Verify the function defaulted to a reasonable value when ID was missing
-      expect(agreementDataHelper.getAgreementData).toHaveBeenCalledWith({
-        agreementNumber: 'undefined'
-      })
+      expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
+        'undefined'
+      )
     })
 
     test('Should handle error when template rendering fails', async () => {
@@ -131,7 +135,7 @@ describe('viewAgreementController', () => {
       // Arrange
       const errorMessage = 'Failed to render HTML'
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockImplementation(() => {
           throw new Error(errorMessage)
         })
@@ -157,7 +161,7 @@ describe('viewAgreementController', () => {
 
         // Mock default successful responses
         jest
-          .spyOn(agreementDataHelper, 'getAgreementData')
+          .spyOn(agreementDataHelper, 'getAgreementDataById')
           .mockResolvedValue(mockAgreementData)
 
         jest
@@ -198,7 +202,7 @@ describe('viewAgreementController', () => {
 
     beforeEach(() => {
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
     })
 

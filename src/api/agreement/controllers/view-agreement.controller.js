@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
@@ -17,9 +17,7 @@ const viewAgreementController = {
       const { agreementId } = request.params
       const baseUrl = getBaseUrl(request)
 
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
+      const agreementData = await getAgreementDataById(agreementId)
 
       // Validate JWT authentication based on feature flag
       if (

@@ -8,7 +8,11 @@ import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  __esModule: true,
+  ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
+  getAgreementDataById: jest.fn()
+}))
 jest.mock('~/src/api/agreement/helpers/get-html-agreement.js')
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
@@ -33,7 +37,7 @@ describe('reviewOfferController', () => {
     jest.clearAllMocks()
 
     // Setup default mock implementations
-    jest.spyOn(agreementDataHelper, 'getAgreementData')
+    jest.spyOn(agreementDataHelper, 'getAgreementDataById')
     jest
       .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
       .mockResolvedValue(mockRenderedDocumentHtml)
@@ -86,7 +90,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -168,7 +172,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -237,7 +241,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -285,7 +289,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -333,7 +337,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -388,7 +392,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -436,7 +440,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -483,7 +487,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -524,7 +528,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -552,7 +556,7 @@ describe('reviewOfferController', () => {
       const agreementId = 'SFI123456789'
       const errorMessage = 'Failed to fetch agreement data'
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockImplementation(() => {
           throw new Error(errorMessage)
         })
@@ -593,7 +597,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
       jest
         .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
@@ -668,7 +672,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -755,7 +759,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -802,7 +806,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -844,7 +848,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
       jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
         throw new Error(errorMessage)
@@ -907,7 +911,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -944,10 +948,12 @@ describe('reviewOfferController', () => {
         jest.clearAllMocks()
 
         // Mock default successful responses
-        jest.spyOn(agreementDataHelper, 'getAgreementData').mockResolvedValue({
-          sbi: '106284736',
-          agreementNumber: 'SFI123456789'
-        })
+        jest
+          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .mockResolvedValue({
+            sbi: '106284736',
+            agreementNumber: 'SFI123456789'
+          })
 
         jest
           .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
@@ -989,7 +995,7 @@ describe('reviewOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
     })
 

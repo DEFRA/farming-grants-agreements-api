@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
 import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
@@ -13,17 +13,11 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
  */
 async function updatePaymentHub({ server, logger }, agreementNumber) {
   try {
-    const agreementData = await getAgreementData({
-      agreementNumber
-    })
+    const agreementData = await getAgreementDataById(agreementNumber)
     const invoice = await createInvoice(
       agreementNumber,
       agreementData.correlationId
     )
-
-    if (!agreementData) {
-      throw Boom.notFound(`Agreement not found: ${agreementNumber}`)
-    }
 
     const marketingYear = new Date().getFullYear()
 

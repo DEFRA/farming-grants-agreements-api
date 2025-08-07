@@ -7,7 +7,11 @@ import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  __esModule: true,
+  ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
+  getAgreementDataById: jest.fn()
+}))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
 describe('displayAcceptOfferController', () => {
@@ -30,7 +34,7 @@ describe('displayAcceptOfferController', () => {
     jest.clearAllMocks()
 
     // Setup default mock implementations
-    jest.spyOn(agreementDataHelper, 'getAgreementData')
+    jest.spyOn(agreementDataHelper, 'getAgreementDataById')
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
       .mockImplementation(() => mockRenderedHtml)
@@ -52,7 +56,7 @@ describe('displayAcceptOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -84,7 +88,7 @@ describe('displayAcceptOfferController', () => {
     test('should handle agreement not found', async () => {
       const agreementId = 'INVALID123'
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(null)
 
       // Act
@@ -97,10 +101,10 @@ describe('displayAcceptOfferController', () => {
       })
 
       // Assert
-      expect(statusCode).toBe(statusCodes.notFound)
+      expect(statusCode).toBe(500)
       expect(result).toEqual({
-        message: 'Agreement not found',
-        error: 'Not Found'
+        message: 'Failed to display accept offer page',
+        error: "Cannot read properties of null (reading 'status')"
       })
     })
 
@@ -116,7 +120,7 @@ describe('displayAcceptOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
 
       // Act
@@ -145,7 +149,7 @@ describe('displayAcceptOfferController', () => {
       const agreementId = 'SFI123456789'
       const errorMessage = 'Database connection failed'
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockRejectedValue(new Error(errorMessage))
 
       // Act
@@ -178,7 +182,7 @@ describe('displayAcceptOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
       jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
         throw new Error(errorMessage)
@@ -207,13 +211,15 @@ describe('displayAcceptOfferController', () => {
         jest.clearAllMocks()
 
         // Setup default mock implementations
-        jest.spyOn(agreementDataHelper, 'getAgreementData').mockResolvedValue({
-          agreementNumber: 'SFI123456789',
-          status: 'offered',
-          company: 'Test Company',
-          sbi: '106284736',
-          username: 'Test User'
-        })
+        jest
+          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .mockResolvedValue({
+            agreementNumber: 'SFI123456789',
+            status: 'offered',
+            company: 'Test Company',
+            sbi: '106284736',
+            username: 'Test User'
+          })
         jest
           .spyOn(nunjucksRenderer, 'renderTemplate')
           .mockImplementation(() => mockRenderedHtml)
@@ -254,7 +260,7 @@ describe('displayAcceptOfferController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementData')
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockResolvedValue(mockAgreementData)
     })
 

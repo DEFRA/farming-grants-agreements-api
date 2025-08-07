@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 
 const dateOptions = {
@@ -176,8 +176,7 @@ const getHTMLAgreementDocument = async (agreementId, data, baseUrl) => {
     throw Boom.badRequest('Agreement ID is required')
   }
 
-  const agreementData =
-    data || (await getAgreementData({ agreementNumber: agreementId }))
+  const agreementData = data || (await getAgreementDataById(agreementId))
 
   if (!agreementData) {
     throw Boom.notFound(`Agreement not found ${agreementId}`)

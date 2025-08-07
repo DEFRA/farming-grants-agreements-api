@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
@@ -40,13 +40,7 @@ const reviewOfferController = {
       const baseUrl = getBaseUrl(request)
 
       // Get the agreement data
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
-
-      if (agreementData.status === 'accepted') {
-        return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
-      }
+      const agreementData = await getAgreementDataById(agreementId)
 
       // Validate JWT authentication based on feature flag
       if (
@@ -61,6 +55,10 @@ const reviewOfferController = {
             message: 'Not authorized to review offer agreement document'
           })
           .code(statusCodes.unauthorized)
+      }
+
+      if (agreementData.status === 'accepted') {
+        return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
       }
 
       // Render the HTML agreement document

@@ -1,10 +1,10 @@
 import { jest } from '@jest/globals'
 import agreementsModel from '~/src/api/common/models/agreements.js'
-import { getAgreementData } from './get-agreement-data.js'
+import { getAgreementDataById } from './get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
 
-describe('getAgreementData', () => {
+describe('getAgreementDataById', () => {
   const mockAgreement = {
     agreementNumber: 'SFI123456789',
     agreementName: 'Test Agreement',
@@ -60,7 +60,7 @@ describe('getAgreementData', () => {
     })
 
     // Act
-    const result = await getAgreementData({ agreementNumber: agreementId })
+    const result = await getAgreementDataById(agreementId)
 
     // Assert
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
@@ -85,9 +85,7 @@ describe('getAgreementData', () => {
     })
 
     // Act & Assert
-    await expect(
-      getAgreementData({ agreementNumber: agreementId })
-    ).rejects.toThrow(
+    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
       `Agreement not found using search terms: ${JSON.stringify({
         agreementNumber: agreementId
       })}`
@@ -102,7 +100,7 @@ describe('getAgreementData', () => {
     })
 
     // Act
-    const result = await getAgreementData({ agreementNumber: agreementId })
+    const result = await getAgreementDataById(agreementId)
 
     // Assert
     expect(result).toEqual(mockAgreement)

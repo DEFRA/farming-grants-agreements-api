@@ -34,6 +34,36 @@ const getAgreementData = async (searchTerms) => {
   return Promise.resolve(agreement[0])
 }
 
-export { getAgreementData }
+/**
+ * Validate the agreement ID
+ * @param {string} agreementId - The agreement ID to validate
+ */
+const validateAgreementId = (agreementId) => {
+  if (!agreementId || agreementId === '') {
+    throw Boom.badRequest('Agreement ID is required')
+  }
+}
+
+/**
+ * Get the agreement data before accepting
+ * @param {string} agreementId - The agreement ID to fetch
+ * @returns {Promise<Agreement>} The agreement data
+ */
+const getAgreementDataById = async (agreementId) => {
+  validateAgreementId(agreementId)
+
+  // Get the agreement data before accepting
+  const agreementData = await getAgreementData({
+    agreementNumber: agreementId
+  })
+
+  if (!agreementData) {
+    throw Boom.notFound(`Agreement not found with ID ${agreementId}`)
+  }
+
+  return agreementData
+}
+
+export { getAgreementDataById, getAgreementData }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */

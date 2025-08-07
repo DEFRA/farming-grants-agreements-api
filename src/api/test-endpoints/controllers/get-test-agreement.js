@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 
 /**
@@ -28,7 +28,7 @@ const getTestAgreementController = {
       const agreements = await Promise.all(
         idList.map(async (id) => {
           try {
-            return await getAgreementData({ agreementNumber: id })
+            return await getAgreementDataById(id)
           } catch (e) {
             return null
           }

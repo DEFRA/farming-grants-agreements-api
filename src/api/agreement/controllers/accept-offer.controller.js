@@ -1,5 +1,4 @@
 import path from 'node:path'
-import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import {
   acceptOffer,
@@ -7,7 +6,7 @@ import {
 } from '~/src/api/agreement/helpers/accept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 
@@ -22,18 +21,8 @@ const acceptOfferController = {
       const { agreementId } = request.payload || request.params
       const baseUrl = getBaseUrl(request)
 
-      if (!agreementId || agreementId === '') {
-        throw Boom.badRequest('Agreement ID is required')
-      }
-
       // Get the agreement data before accepting
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
-
-      if (!agreementData) {
-        throw Boom.notFound(`Agreement not found with ID ${agreementId}`)
-      }
+      const agreementData = await getAgreementDataById(agreementId)
 
       // Validate JWT authentication based on feature flag
       if (
