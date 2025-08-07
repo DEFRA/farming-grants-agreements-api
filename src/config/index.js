@@ -256,6 +256,12 @@ const config = convict({
       format: Boolean,
       default: false,
       env: 'ENABLE_TEST_ENDPOINTS'
+    },
+    isJwtEnabled: {
+      doc: 'Enable JWT authentication validation',
+      format: Boolean,
+      default: true,
+      env: 'JWT_ENABLED'
     }
   }
 })
