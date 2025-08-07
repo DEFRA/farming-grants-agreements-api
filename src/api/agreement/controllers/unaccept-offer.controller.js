@@ -1,8 +1,6 @@
 import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
  * Controller to change the status of an agreement document back to offered
@@ -16,26 +14,6 @@ const unacceptOfferController = {
 
       if (!agreementId || agreementId === '') {
         throw Boom.internalServerError('Agreement ID is required')
-      }
-
-      // Get the agreement data for authorization
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
-
-      // Validate JWT authentication based on feature flag
-      if (
-        !validateJwtAuthentication(
-          request.headers['x-encrypted-auth'],
-          agreementData,
-          request.logger
-        )
-      ) {
-        return h
-          .response({
-            message: 'Not authorized to unaccept offer agreement document'
-          })
-          .code(statusCodes.unauthorized)
       }
 
       // Unaccept the agreement
