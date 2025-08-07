@@ -2,7 +2,6 @@ import { createOfferController } from '~/src/api/agreement/controllers/create-of
 import { reviewOfferController } from '~/src/api/agreement/controllers/review-offer.controller.js'
 import { viewAgreementController } from '~/src/api/agreement/controllers/view-agreement.controller.js'
 import { acceptOfferController } from '~/src/api/agreement/controllers/accept-offer.controller.js'
-import { offerAcceptedController } from '~/src/api/agreement/controllers/offer-accepted.controller.js'
 import { unacceptOfferController } from '~/src/api/agreement/controllers/unaccept-offer.controller.js'
 import { displayAcceptOfferController } from '~/src/api/agreement/controllers/display-accept-offer.controller.js'
 
@@ -11,7 +10,6 @@ export {
   reviewOfferController,
   viewAgreementController,
   acceptOfferController,
-  offerAcceptedController,
   unacceptOfferController,
   displayAcceptOfferController
 }

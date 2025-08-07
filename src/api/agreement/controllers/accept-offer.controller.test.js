@@ -181,35 +181,82 @@ describe('acceptOfferDocumentController', () => {
       })
     })
 
-    test('should redirect to review offer', async () => {
-      // Arrange
-      const { statusCode, headers } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/${agreementId}`
+    describe('POST', () => {
+      test('should redirect to review offer', async () => {
+        // Arrange
+        const { statusCode, headers } = await server.inject({
+          method: 'POST',
+          url: `/accept-offer/${agreementId}`,
+          headers: {
+            'x-encrypted-auth': 'valid-jwt-token'
+          }
+        })
+
+        // Assert
+        expect(statusCode).toBe(statusCodes.redirect)
+        expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
+        expect(renderTemplate).not.toHaveBeenCalled()
       })
 
-      // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
-      expect(renderTemplate).not.toHaveBeenCalled()
+      test('should redirect to review offer when base URL is set', async () => {
+        // Arrange
+        const { statusCode, headers } = await server.inject({
+          method: 'POST',
+          url: `/accept-offer/${agreementId}`,
+          headers: {
+            'x-base-url': '/defra-grants-proxy',
+            'x-encrypted-auth': 'valid-jwt-token'
+          }
+        })
+
+        // Assert
+        expect(statusCode).toBe(statusCodes.redirect)
+        expect(headers.location).toBe(
+          `/defra-grants-proxy/offer-accepted/${agreementId}`
+        )
+        expect(renderTemplate).not.toHaveBeenCalled()
+      })
     })
 
-    test('should redirect to review offer when base URL is set', async () => {
-      // Arrange
-      const { statusCode, headers } = await server.inject({
-        method: 'POST',
-        url: `/accept-offer/${agreementId}`,
-        headers: {
-          'x-base-url': '/defra-grants-proxy'
-        }
+    describe('GET', () => {
+      test('should return accepted offer page', async () => {
+        const { statusCode } = await server.inject({
+          method: 'GET',
+          url: `/offer-accepted/${agreementId}`,
+          headers: {
+            'x-encrypted-auth': 'valid-jwt-token'
+          }
+        })
+
+        // Assert
+        expect(statusCode).toBe(statusCodes.ok)
+        expect(renderTemplate).toHaveBeenCalledWith(
+          'views/offer-accepted.njk',
+          expect.objectContaining({
+            baseUrl: '/'
+          })
+        )
       })
 
-      // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(
-        `/defra-grants-proxy/offer-accepted/${agreementId}`
-      )
-      expect(renderTemplate).not.toHaveBeenCalled()
+      test('should return accepted offer page when base URL is set', async () => {
+        const { statusCode } = await server.inject({
+          method: 'GET',
+          url: `/offer-accepted/${agreementId}`,
+          headers: {
+            'x-base-url': '/defra-grants-proxy',
+            'x-encrypted-auth': 'valid-jwt-token'
+          }
+        })
+
+        // Assert
+        expect(statusCode).toBe(statusCodes.ok)
+        expect(renderTemplate).toHaveBeenCalledWith(
+          'views/offer-accepted.njk',
+          expect.objectContaining({
+            baseUrl: '/defra-grants-proxy'
+          })
+        )
+      })
     })
   })
 
