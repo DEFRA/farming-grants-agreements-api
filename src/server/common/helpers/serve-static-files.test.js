@@ -64,7 +64,9 @@ describe('#serveStaticFiles', () => {
     })
 
     test('Should serve image from /assets/images as expected', async () => {
-      const filePath = path.resolve('public/assets/images/govuk-icon-print.png')
+      const filePath = path.resolve(
+        '.public/assets/images/govuk-icon-print.png'
+      )
       const expectedStatus = fs.existsSync(filePath)
         ? statusCodes.ok
         : statusCodes.notFound
