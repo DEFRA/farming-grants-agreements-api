@@ -110,7 +110,7 @@ const getSummaryOfPayments = (agreementData) => {
       { text: payment.code },
       { text: payment.description },
       { text: payment.measurement },
-      { text: formatCurrency(Number(payment.paymentRate)) + ' per ha' },
+      { text: formatCurrency(payment.rate) + ' per ha' },
       { text: formatCurrency(payment.annualPayment) }
     ])
   }
