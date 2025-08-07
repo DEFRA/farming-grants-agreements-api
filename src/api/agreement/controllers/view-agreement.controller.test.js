@@ -2,13 +2,14 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 import * as getHTMLAgreement from '~/src/api/agreement/helpers/get-html-agreement.js'
-import Jwt from '@hapi/jwt'
+import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
 jest.mock('~/src/api/agreement/helpers/get-html-agreement.js')
+jest.mock('~/src/api/common/helpers/jwt-auth.js')
 jest.mock('@hapi/jwt')
 
 describe('viewAgreementController', () => {
@@ -43,17 +44,8 @@ describe('viewAgreementController', () => {
       .spyOn(getHTMLAgreement, 'getHTMLAgreementDocument')
       .mockResolvedValue(mockRenderedHtml)
 
-    Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
-
-    // Mock JWT decode to return a valid Defra token by default
-    Jwt.token.decode = jest.fn().mockReturnValue({
-      decoded: {
-        payload: {
-          sbi: '106284736',
-          source: 'defra'
-        }
-      }
-    })
+    // Mock JWT auth functions
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
   test('Should return HTML when valid agreement ID and valid auth are provided', async () => {
@@ -168,27 +160,9 @@ describe('viewAgreementController', () => {
         .mockResolvedValue(mockRenderedHtml)
     })
 
-    test('Should return 401 when no JWT token provided', async () => {
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789'
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to view offer agreement document'
-      })
-    })
-
     test('Should return 401 when invalid JWT token provided', async () => {
       // Arrange
-      const mockDecodedToken = { decoded: { payload: null } }
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecodedToken)
-      Jwt.token.verify = jest.fn().mockImplementation(() => {
-        throw new Error('Invalid token format')
-      })
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
 
       // Act
       const { statusCode, result } = await server.inject({
@@ -196,147 +170,6 @@ describe('viewAgreementController', () => {
         url: '/view-agreement/SFI123456789',
         headers: {
           'x-encrypted-auth': 'invalid-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to view offer agreement document'
-      })
-      expect(Jwt.token.decode).toHaveBeenCalledWith('invalid-token')
-      expect(Jwt.token.verify).toHaveBeenCalledWith(mockDecodedToken, {
-        key: expect.any(String),
-        algorithms: ['HS256']
-      })
-    })
-
-    test('Should authorize Entra users regardless of SBI match', async () => {
-      // Arrange
-      const mockDecodedToken = {
-        decoded: {
-          payload: {
-            sbi: 'different-sbi',
-            source: 'entra'
-          }
-        }
-      }
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecodedToken)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789',
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-    })
-
-    test('Should authorize Defra users with matching SBI', async () => {
-      // Arrange
-      const mockDecodedToken = {
-        decoded: {
-          payload: {
-            sbi: '106284736', // matches mockAgreementData.sbi
-            source: 'defra'
-          }
-        }
-      }
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecodedToken)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789',
-        headers: {
-          'x-encrypted-auth': 'defra-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-    })
-
-    test('Should return 401 for Defra users with non-matching SBI', async () => {
-      // Arrange
-      const mockDecodedToken = {
-        decoded: {
-          payload: {
-            sbi: 'different-sbi',
-            source: 'defra'
-          }
-        }
-      }
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecodedToken)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789',
-        headers: {
-          'x-encrypted-auth': 'defra-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to view offer agreement document'
-      })
-    })
-
-    test('Should return 401 for unknown source type', async () => {
-      // Arrange
-      const mockDecodedToken = {
-        decoded: {
-          payload: {
-            sbi: '106284736',
-            source: 'unknown-source'
-          }
-        }
-      }
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecodedToken)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789',
-        headers: {
-          'x-encrypted-auth': 'unknown-source-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to view offer agreement document'
-      })
-    })
-
-    test('Should return 401 when JWT payload is malformed', async () => {
-      // Arrange
-      const mockDecodedToken = {
-        decoded: {
-          payload: null
-        }
-      }
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecodedToken)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789',
-        headers: {
-          'x-encrypted-auth': 'malformed-jwt-token'
         }
       })
 

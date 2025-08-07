@@ -2,11 +2,13 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import * as nunjucksRenderer from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
+import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
+jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
 describe('displayAcceptOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -32,6 +34,9 @@ describe('displayAcceptOfferController', () => {
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
       .mockImplementation(() => mockRenderedHtml)
+
+    // Mock JWT auth functions to return valid authorization by default
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
   test('should return the rendered HTML accept offer page', async () => {
@@ -52,7 +57,10 @@ describe('displayAcceptOfferController', () => {
     // Act
     const { statusCode, headers, result } = await server.inject({
       method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
+      url: `/review-accept-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -80,7 +88,10 @@ describe('displayAcceptOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
+      url: `/review-accept-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -111,7 +122,8 @@ describe('displayAcceptOfferController', () => {
       method: 'GET',
       url: `/review-accept-offer/${agreementId}`,
       headers: {
-        'defra-grants-proxy': 'true'
+        'defra-grants-proxy': 'true',
+        'x-encrypted-auth': 'valid-jwt-token'
       }
     })
 
@@ -137,7 +149,10 @@ describe('displayAcceptOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
+      url: `/review-accept-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -170,7 +185,10 @@ describe('displayAcceptOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: `/review-accept-offer/${agreementId}`
+      url: `/review-accept-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -178,6 +196,45 @@ describe('displayAcceptOfferController', () => {
     expect(result).toEqual({
       message: 'Failed to display accept offer page',
       error: errorMessage
+    })
+  })
+
+  // JWT Authorization Tests
+  describe('JWT Authorization', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+
+      // Setup default mock implementations
+      jest.spyOn(agreementDataHelper, 'getAgreementData').mockResolvedValue({
+        agreementNumber: 'SFI123456789',
+        status: 'offered',
+        company: 'Test Company',
+        sbi: '106284736',
+        username: 'Test User'
+      })
+      jest
+        .spyOn(nunjucksRenderer, 'renderTemplate')
+        .mockImplementation(() => mockRenderedHtml)
+    })
+
+    test('Should return 401 when invalid JWT token provided', async () => {
+      // Arrange
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: '/review-accept-offer/SFI123456789',
+        headers: {
+          'x-encrypted-auth': 'invalid-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.unauthorized)
+      expect(result).toEqual({
+        message: 'Not authorized to display accept offer agreement document'
+      })
     })
   })
 })

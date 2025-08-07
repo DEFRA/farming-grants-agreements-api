@@ -3,12 +3,14 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import * as nunjucksRenderer from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 import * as htmlAgreementHelper from '~/src/api/agreement/helpers/get-html-agreement.js'
+import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js')
 jest.mock('~/src/api/agreement/helpers/get-html-agreement.js')
+jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
 describe('reviewOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -38,6 +40,9 @@ describe('reviewOfferController', () => {
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
       .mockImplementation(() => mockRenderedHtml)
+
+    // Mock JWT auth functions to return valid authorization by default
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
   test('should return the rendered HTML offer document', async () => {
@@ -86,7 +91,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode, headers, result } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -165,7 +173,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -231,7 +242,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -276,7 +290,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -321,7 +338,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -373,7 +393,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -418,7 +441,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -464,7 +490,8 @@ describe('reviewOfferController', () => {
       method: 'GET',
       url: `/review-offer/${agreementId}`,
       headers: {
-        'defra-grants-proxy': 'true'
+        'defra-grants-proxy': 'true',
+        'x-encrypted-auth': 'valid-jwt-token'
       }
     })
 
@@ -504,7 +531,8 @@ describe('reviewOfferController', () => {
       method: 'GET',
       url: `/review-offer/${agreementId}`,
       headers: {
-        'defra-grants-proxy': 'false'
+        'defra-grants-proxy': 'false',
+        'x-encrypted-auth': 'valid-jwt-token'
       }
     })
 
@@ -531,7 +559,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -570,7 +601,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -639,7 +673,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -723,7 +760,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -767,8 +807,11 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
-      // No headers - this should test the === 'true' condition
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
+      // No defra-grants-proxy header - this should test the === 'true' condition
     })
 
     // Assert
@@ -809,7 +852,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -866,7 +912,10 @@ describe('reviewOfferController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: `/review-offer/${agreementId}`
+      url: `/review-offer/${agreementId}`,
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
     })
 
     // Assert
@@ -886,5 +935,42 @@ describe('reviewOfferController', () => {
         totalQuarterly: 0
       })
     )
+  })
+
+  // JWT Authorization Tests
+  describe('JWT Authorization', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+
+      // Mock default successful responses
+      jest.spyOn(agreementDataHelper, 'getAgreementData').mockResolvedValue({
+        sbi: '106284736',
+        agreementNumber: 'SFI123456789'
+      })
+
+      jest
+        .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
+        .mockResolvedValue(mockRenderedHtml)
+    })
+
+    test('Should return 401 when invalid JWT token provided', async () => {
+      // Arrange
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: '/review-offer/SFI123456789',
+        headers: {
+          'x-encrypted-auth': 'invalid-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.unauthorized)
+      expect(result).toEqual({
+        message: 'Not authorized to review offer agreement document'
+      })
+    })
   })
 })
