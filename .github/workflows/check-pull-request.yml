@@ -40,6 +40,9 @@ jobs:
       - name: Test Docker Image Build
         run: |
           set +e
+          ls -lha
+          ls -lha .git
+          tree
           docker build --no-cache --tag farming-grants-agreements-api .
           exit $?
 
