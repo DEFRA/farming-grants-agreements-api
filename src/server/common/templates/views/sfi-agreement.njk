@@ -67,8 +67,9 @@
                     </ul>
                 </div>
                 <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6">
-                    <button class="govuk-link govuk-body-s gem-c-print-link__button" data-module="print-link" data-print-link-module-started="true">Print this page</button>
-                    
+                    <button class="govuk-link govuk-body-s gem-c-print-link__button" data-module="print-link" data-print-link-module-started="true" style="background: url('{{ buildUrl(baseUrl, '/public/assets/images/govuk-icon-print.png') }}') no-repeat 10px 50%;">
+                      Print this page
+                    </button>
                 </div>
             </nav>
         </div>
@@ -91,7 +92,7 @@
             <h2 id="parties" class="govuk-heading-l">2. Parties to the agreement</h2>
             <p class="govuk-body">This Agreement is between:</p>
             <p class="govuk-body">You, {{ company }}, of {{ address }}, {{ postcode }}
-                and the Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and 
+                and the Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and
                 Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").
             </p>
             <h2 id="land" class="govuk-heading-l">3. Land covered by agreement</h2>
@@ -115,7 +116,7 @@
                                 classes: "govuk-table--small-text-until-tablet",
                                 head: summaryOfActions.headings,
                                 rows: summaryOfActions.data
-                                }) 
+                                })
                 }}
             </table>
             <h2 id="payment" class="govuk-heading-l">5. Summary of payments</h2>
@@ -137,7 +138,7 @@
                                 classes: "govuk-table--small-text-until-tablet",
                                 head: summaryOfPayments.headings,
                                 rows: summaryOfPayments.data
-                                }) 
+                                })
                 }}
             </table>
             <p class="govuk-body">
@@ -161,7 +162,7 @@
                                 classes: "govuk-table--small-text-until-tablet",
                                 head: annualPaymentSchedule.headings,
                                 rows: annualPaymentSchedule.data
-                                }) 
+                                })
                 }}
             </table>
             <p class="govuk-body">
