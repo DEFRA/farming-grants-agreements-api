@@ -67,7 +67,11 @@
                     </ul>
                 </div>
                 <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6">
-                    <button class="govuk-link govuk-body-s gem-c-print-link__button" data-module="print-link" data-print-link-module-started="true" style="background: url('{{ buildUrl(baseUrl, '/public/assets/images/govuk-icon-print.png') }}') no-repeat 10px 50%;">
+                    <button
+                      class="govuk-link govuk-body-s gem-c-print-link__button"
+                      data-module="print-link"
+                      data-print-link-module-started="true"
+                      style="--print-icon-url: url('{{ buildUrl(baseUrl, '/public/assets/images/govuk-icon-print.png') }}');">
                       Print this page
                     </button>
                 </div>
