@@ -1,4 +1,4 @@
-import Boom from '@hapi/boom'
+import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import {
   acceptOffer,
@@ -6,8 +6,9 @@ import {
 } from '~/src/api/agreement/helpers/accept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -18,19 +19,10 @@ const acceptOfferController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.payload || request.params
-
-      if (!agreementId || agreementId === '') {
-        throw Boom.badRequest('Agreement ID is required')
-      }
+      const baseUrl = getBaseUrl(request)
 
       // Get the agreement data before accepting
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
-
-      if (!agreementData) {
-        throw Boom.notFound(`Agreement not found with ID ${agreementId}`)
-      }
+      const agreementData = await getAgreementDataById(agreementId)
 
       // Validate JWT authentication based on feature flag
       if (
@@ -47,16 +39,26 @@ const acceptOfferController = {
           .code(statusCodes.unauthorized)
       }
 
-      // Accept the agreement
-      await acceptOffer(agreementId)
+      if (request.method === 'get' && agreementData.status !== 'accepted') {
+        return h.redirect(path.join(baseUrl, 'review-offer', agreementId))
+      }
 
-      // Update the payment hub
-      await updatePaymentHub(request, agreementId)
+      if (request.method === 'post') {
+        if (agreementData.status !== 'offered') {
+          return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
+        }
+
+        // Accept the agreement
+        await acceptOffer(agreementId)
+
+        // Update the payment hub
+        await updatePaymentHub(request, agreementId)
+      }
 
       // Render the offer accepted template with agreement data
       const offerAcceptedTemplate = renderTemplate('views/offer-accepted.njk', {
         agreementNumber: agreementData.agreementNumber,
-        grantsProxy: request.headers['defra-grants-proxy'] === 'true',
+        baseUrl,
         company: agreementData.company,
         sbi: agreementData.sbi,
         farmerName: agreementData.username,
@@ -67,7 +69,10 @@ const acceptOfferController = {
       })
 
       // Return the HTML response
-      return h.response(offerAcceptedTemplate).code(statusCodes.ok)
+      return h
+        .response(offerAcceptedTemplate)
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .code(statusCodes.ok)
     } catch (error) {
       if (error.isBoom) {
         return error

@@ -1,6 +1,9 @@
+import path from 'node:path'
+
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
@@ -12,10 +15,9 @@ const viewAgreementController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
+      const baseUrl = getBaseUrl(request)
 
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
+      const agreementData = await getAgreementDataById(agreementId)
 
       // Validate JWT authentication based on feature flag
       if (
@@ -32,6 +34,10 @@ const viewAgreementController = {
           .code(statusCodes.unauthorized)
       }
 
+      if (agreementData.status !== 'accepted') {
+        return h.redirect(path.join(baseUrl, 'review-offer', agreementId))
+      }
+
       request.logger.info(
         `Rendering HTML agreement document for agreementId: ${agreementId}`
       )
@@ -40,11 +46,15 @@ const viewAgreementController = {
       const renderedHtml = await getHTMLAgreementDocument(
         agreementId,
         agreementData,
-        request.headers['defra-grants-proxy'] === 'true'
+        baseUrl
       )
 
       // Return the HTML response
-      return h.response(renderedHtml).type('text/html').code(statusCodes.ok)
+      return h
+        .response(renderedHtml)
+        .type('text/html')
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .code(statusCodes.ok)
     } catch (error) {
       request.logger.error(
         `Error rendering agreement document: ${error.message}`
@@ -55,6 +65,7 @@ const viewAgreementController = {
           message: 'Failed to generate agreement document',
           error: error.message
         })
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.internalServerError)
     }
   }

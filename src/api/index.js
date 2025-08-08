@@ -13,6 +13,7 @@ import { requestTracing } from '~/src/api/common/helpers/request-tracing.js'
 import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
 import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
+import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
 
 async function createServer(serverOptions = {}) {
   setupProxy()
@@ -58,13 +59,14 @@ async function createServer(serverOptions = {}) {
   }
 
   // Hapi Plugins:
-  // requestLogger    - automatically logs incoming requests
-  // requestTracing   - trace header logging and propagation
-  // secureContext    - loads CA certificates from environment config
-  // pulse            - provides shutdown handlers
-  // mongooseDb       - sets up mongoose connection pool and attaches to `server` and `request` objects
-  // sqsClientPlugin  - AWS SQS client
-  // router           - routes used in the app
+  // requestLogger      - automatically logs incoming requests
+  // requestTracing     - trace header logging and propagation
+  // secureContext      - loads CA certificates from environment config
+  // pulse              - provides shutdown handlers
+  // mongooseDb         - sets up mongoose connection pool and attaches to `server` and `request` objects
+  // sqsClientPlugin    - AWS SQS client
+  // errorHandlerPlugin - sets up default error handling
+  // router             - routes used in the app
   await server.register(
     [
       inert,
@@ -74,6 +76,7 @@ async function createServer(serverOptions = {}) {
       pulse,
       mongooseDb,
       options.disableSQS ? null : sqsClientPlugin,
+      errorHandlerPlugin,
       router
     ].filter(Boolean)
   )

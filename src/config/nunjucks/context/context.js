@@ -46,15 +46,7 @@ export async function context(request) {
     serviceUrl: '/',
     auth,
     breadcrumbs: [],
-    navigation: buildNavigation(request),
-
-    /**
-     * @param {string} asset
-     */
-    getAssetPath(asset) {
-      const webpackAssetPath = webpackManifest?.[asset]
-      return `${assetPath}/${webpackAssetPath ?? asset}`
-    }
+    navigation: buildNavigation(request)
   }
 }
 

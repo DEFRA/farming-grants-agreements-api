@@ -1,6 +1,8 @@
+import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
@@ -12,20 +14,10 @@ const displayAcceptOfferController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
+      const baseUrl = getBaseUrl(request)
 
       // Get the agreement data
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
-
-      if (!agreementData) {
-        return h
-          .response({
-            message: 'Agreement not found',
-            error: 'Not Found'
-          })
-          .code(statusCodes.notFound)
-      }
+      const agreementData = await getAgreementDataById(agreementId)
 
       // Validate JWT authentication based on feature flag
       if (
@@ -42,10 +34,14 @@ const displayAcceptOfferController = {
           .code(statusCodes.unauthorized)
       }
 
+      if (agreementData.status !== 'offered') {
+        return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
+      }
+
       // Render the accept offer template with agreement data
       const acceptOfferTemplate = renderTemplate('views/accept-offer.njk', {
         agreementNumber: agreementData.agreementNumber,
-        grantsProxy: request.headers['defra-grants-proxy'] === 'true',
+        baseUrl,
         company: agreementData.company,
         sbi: agreementData.sbi,
         farmerName: agreementData.username,
@@ -53,7 +49,10 @@ const displayAcceptOfferController = {
       })
 
       // Return the HTML response
-      return h.response(acceptOfferTemplate).code(statusCodes.ok)
+      return h
+        .response(acceptOfferTemplate)
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .code(statusCodes.ok)
     } catch (error) {
       request.logger.error(
         `Error displaying accept offer page: ${error.message}`
