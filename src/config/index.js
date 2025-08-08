@@ -118,6 +118,65 @@ const config = convict({
       format: String,
       default: 'test',
       env: 'AWS_SECRET_ACCESS_KEY'
+    },
+    sns: {
+      endpoint: {
+        doc: 'AWS SNS endpoint',
+        format: String,
+        default: 'http://localhost:4566',
+        env: 'SNS_ENDPOINT'
+      },
+      eventSource: {
+        doc: 'AWS SNS Cloud event source for emitted events',
+        format: String,
+        default: 'urn:service:agreement',
+        env: 'SNS_EVENT_SOURCE'
+      },
+      topic: {
+        offerCreated: {
+          arn: {
+            doc: 'AWS SNS Topic ARN for Offer Created events',
+            format: String,
+            default: 'arn:aws:sns:eu-west-2:000000000000:grant_offer_created',
+            env: 'SNS_TOPIC_ARN_OFFER_CREATED'
+          },
+          type: {
+            doc: 'AWS SNS Topic type for Offer Created events',
+            format: String,
+            default: 'io.onsite.agreement.offer.created',
+            env: 'SNS_TOPIC_TYPE_OFFER_CREATED'
+          }
+        },
+        offerAccepted: {
+          arn: {
+            doc: 'AWS SNS Topic ARN for Offer Accepted events',
+            format: String,
+            default: 'arn:aws:sns:eu-west-2:000000000000:grant_offer_accepted',
+            env: 'SNS_TOPIC_ARN_OFFER_ACCEPTED'
+          },
+          type: {
+            doc: 'AWS SNS Topic type for Offer Accepted events',
+            format: String,
+            default: 'io.onsite.agreement.offer.accepted',
+            env: 'SNS_TOPIC_TYPE_OFFER_ACCEPTED'
+          }
+        },
+        applicationApproved: {
+          arn: {
+            doc: 'AWS SNS Topic ARN for Application Approved events',
+            format: String,
+            default:
+              'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            env: 'SNS_TOPIC_ARN_APPLICATION_APPROVED'
+          },
+          type: {
+            doc: 'AWS SNS Topic type for Application Approved events',
+            format: String,
+            default: 'io.onsite.agreement.application.approved',
+            env: 'SNS_TOPIC_TYPE_APPLICATION_APPROVED'
+          }
+        }
+      }
     }
   },
   sqs: {
