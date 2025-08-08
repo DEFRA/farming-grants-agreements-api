@@ -1,7 +1,9 @@
+import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 
 /**
@@ -35,11 +37,10 @@ const reviewOfferController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
+      const baseUrl = getBaseUrl(request)
 
       // Get the agreement data
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
+      const agreementData = await getAgreementDataById(agreementId)
 
       // Validate JWT authentication based on feature flag
       if (
@@ -56,10 +57,15 @@ const reviewOfferController = {
           .code(statusCodes.unauthorized)
       }
 
+      if (agreementData.status === 'accepted') {
+        return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
+      }
+
       // Render the HTML agreement document
       const renderedAgreementDocument = await getHTMLAgreementDocument(
         agreementId,
-        agreementData
+        agreementData,
+        baseUrl
       )
 
       const actions = flattenParcelActivities(agreementData)
@@ -95,7 +101,7 @@ const reviewOfferController = {
         company: agreementData.company,
         sbi: agreementData.sbi,
         farmerName: agreementData.username,
-        grantsProxy: request.headers['defra-grants-proxy'] === 'true',
+        baseUrl,
         actions,
         payments,
         totalYearly,
@@ -105,7 +111,10 @@ const reviewOfferController = {
       })
 
       // Return the HTML response
-      return h.response(renderedHTML).code(statusCodes.ok)
+      return h
+        .response(renderedHTML)
+        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        .code(statusCodes.ok)
     } catch (error) {
       request.logger.error(`Error fetching offer: ${error.message}`)
       return h

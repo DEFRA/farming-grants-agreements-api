@@ -41,6 +41,11 @@ const agreement = {
           ...acceptOfferController
         },
         {
+          method: 'GET',
+          path: '/offer-accepted/{agreementId}',
+          ...acceptOfferController
+        },
+        {
           method: 'POST',
           path: '/unaccept-offer/{agreementId}',
           ...unacceptOfferController

@@ -41,7 +41,7 @@ export const serveStaticFiles = {
           path: '/assets/{param*}',
           handler: {
             directory: {
-              path: '.public/assets',
+              path: `${process.cwd()}/.public/assets/`,
               redirectToSlash: true
             }
           },

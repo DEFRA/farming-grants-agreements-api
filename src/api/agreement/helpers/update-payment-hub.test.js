@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import { updatePaymentHub } from './update-payment-hub.js'
-import { getAgreementData } from './get-agreement-data.js'
+import { getAgreementDataById } from './get-agreement-data.js'
 import { createInvoice } from './invoice/create-invoice.js'
 import { updateInvoice } from './invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
@@ -12,6 +12,9 @@ jest.mock('./invoice/create-invoice.js')
 jest.mock('./invoice/update-invoice.js')
 jest.mock('~/src/api/common/helpers/payment-hub/index.js')
 jest.mock('@hapi/boom')
+jest.mock('./get-agreement-data.js', () => ({
+  getAgreementDataById: jest.fn()
+}))
 
 describe('updatePaymentHub', () => {
   let mockServer, mockLogger, mockContext
@@ -60,7 +63,7 @@ describe('updatePaymentHub', () => {
     mockContext = { server: mockServer, logger: mockLogger }
 
     // Setup successful mocks by default
-    getAgreementData.mockResolvedValue(mockAgreementData)
+    getAgreementDataById.mockResolvedValue(mockAgreementData)
     createInvoice.mockResolvedValue(mockInvoice)
     updateInvoice.mockResolvedValue({ acknowledged: true })
     sendPaymentHubRequest.mockResolvedValue({ success: true })
@@ -79,7 +82,7 @@ describe('updatePaymentHub', () => {
 
       const result = await updatePaymentHub(mockContext, agreementNumber)
 
-      expect(getAgreementData).toHaveBeenCalledWith({ agreementNumber })
+      expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
       expect(createInvoice).toHaveBeenCalledWith(
         agreementNumber,
         'test-correlation-id'
@@ -140,7 +143,7 @@ describe('updatePaymentHub', () => {
         }
       }
 
-      getAgreementData.mockResolvedValue(agreementWithNoActivities)
+      getAgreementDataById.mockResolvedValue(agreementWithNoActivities)
 
       const result = await updatePaymentHub(mockContext, 'SFI123456789')
 
@@ -159,7 +162,7 @@ describe('updatePaymentHub', () => {
     it('should throw Boom error when agreement is not found', async () => {
       const notFoundError = new Error('Agreement not found')
       notFoundError.isBoom = true
-      getAgreementData.mockRejectedValue(notFoundError)
+      getAgreementDataById.mockRejectedValue(notFoundError)
 
       await expect(updatePaymentHub(mockContext, 'INVALID')).rejects.toThrow(
         'Agreement not found'
@@ -264,7 +267,7 @@ describe('updatePaymentHub', () => {
         }
       }
 
-      getAgreementData.mockResolvedValue(agreementWithMissingDetails)
+      getAgreementDataById.mockResolvedValue(agreementWithMissingDetails)
 
       // This should throw an error when trying to find the detail
       await expect(
@@ -277,8 +280,8 @@ describe('updatePaymentHub', () => {
     it('should call functions in correct sequence', async () => {
       const callOrder = []
 
-      getAgreementData.mockImplementation(() => {
-        callOrder.push('getAgreementData')
+      getAgreementDataById.mockImplementation(() => {
+        callOrder.push('getAgreementDataById')
         return Promise.resolve(mockAgreementData)
       })
 
@@ -300,7 +303,7 @@ describe('updatePaymentHub', () => {
       await updatePaymentHub(mockContext, 'SFI123456789')
 
       expect(callOrder).toEqual([
-        'getAgreementData',
+        'getAgreementDataById',
         'createInvoice',
         'updateInvoice',
         'sendPaymentHubRequest'
