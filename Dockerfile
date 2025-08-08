@@ -32,6 +32,7 @@ USER node
 COPY --from=development /home/node/package*.json ./
 COPY --from=development /home/node/.server ./.server/
 COPY --from=development /home/node/.public ./.public/
+COPY --chown=node:node .git/refs/heads/main ./.git-commit
 
 RUN npm ci --omit=dev
 

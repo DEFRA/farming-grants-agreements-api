@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals'
+import { existsSync, readFileSync } from 'node:fs'
 
 import nunjucks from 'nunjucks'
 import {
@@ -6,6 +7,11 @@ import {
   formatDate,
   renderTemplate
 } from './nunjucks-renderer.js'
+
+jest.mock('node:fs', () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn()
+}))
 
 jest.mock('nunjucks', () => {
   const mockRender = jest.fn()
@@ -43,18 +49,42 @@ describe('nunjucks-renderer', () => {
   })
 
   describe('renderTemplate', () => {
-    test('should render template with provided data', () => {
+    test('should render template with provided data and default gitHash when .git-commit is missing', () => {
       // Arrange
       const templatePath = 'test-template.njk'
       const data = { test: 'data' }
       const expectedHtml = '<div>Test HTML</div>'
       mockRender.mockReturnValue(expectedHtml)
+      existsSync.mockReturnValue(false)
 
       // Act
       const result = renderTemplate(templatePath, data)
 
       // Assert
-      expect(mockRender).toHaveBeenCalledWith(templatePath, data)
+      expect(mockRender).toHaveBeenCalledWith(templatePath, {
+        ...data,
+        gitHash: 'dev'
+      })
+      expect(result).toBe(expectedHtml)
+    })
+
+    test('should include gitHash from .git-commit file when present', () => {
+      // Arrange
+      const templatePath = 'test-template.njk'
+      const data = { example: 'value' }
+      const expectedHtml = '<p>OK</p>'
+      mockRender.mockReturnValue(expectedHtml)
+      existsSync.mockReturnValue(true)
+      readFileSync.mockReturnValue(' abc123\n')
+
+      // Act
+      const result = renderTemplate(templatePath, data)
+
+      // Assert
+      expect(mockRender).toHaveBeenCalledWith(templatePath, {
+        ...data,
+        gitHash: 'abc123'
+      })
       expect(result).toBe(expectedHtml)
     })
   })
