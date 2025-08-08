@@ -4,11 +4,45 @@ set -euo pipefail
 # Lists SNS topics, SNS subscriptions (notifications), and SQS queues from LocalStack
 
 # Endpoint and credentials defaults for LocalStack
-ENDPOINT="${LOCALSTACK_ENDPOINT:-http://localhost:4566}"
+export ENDPOINT="${ENDPOINT:-http://localhost:4566}"
 export AWS_REGION="${AWS_REGION:-eu-west-2}"
 export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-$AWS_REGION}"
 export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
+
+# Args
+SHOW_MESSAGES=false
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+
+Options:
+  -m, --messages       Show up to 10 messages per SQS queue (peek; not deleted)
+  -h, --help           Show this help
+
+Environment overrides:
+  ENDPOINT              Default: http://localhost:4566
+  AWS_REGION            Default: eu-west-2
+  AWS_DEFAULT_REGION    Default: eu-west-2
+  AWS_ACCESS_KEY_ID     Default: test
+  AWS_SECRET_ACCESS_KEY Default: test
+EOF
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    -m|--messages|--show-messages)
+      SHOW_MESSAGES=true
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      ;;
+  esac
+done
 
 # Prefer local awslocal if installed; otherwise, if using localhost and the
 # LocalStack container is available, exec into it; else fall back to aws.
@@ -35,8 +69,8 @@ run() {
 }
 
 echo "LocalStack endpoint: $ENDPOINT"
-echo "AWS region:        $AWS_REGION"
-echo "Using CLI:         $CLI_LABEL"
+echo "AWS region:          $AWS_REGION"
+echo "Using CLI:           $CLI_LABEL"
 echo
 
 echo "=== SNS Topics ==="
@@ -64,6 +98,23 @@ if [[ -n "${QUEUE_URLS}" ]]; then
       --attribute-names QueueArn ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible RedrivePolicy \
       --query 'Attributes' \
       --output table || true
+
+    if [[ "${SHOW_MESSAGES}" == true ]]; then
+      echo "  Messages (peek up to 10):"
+      MESSAGES=$(run sqs receive-message \
+        --queue-url "${url}" \
+        --max-number-of-messages 10 \
+        --visibility-timeout 0 \
+        --wait-time-seconds 0 \
+        --attribute-names All \
+        --message-attribute-names All \
+        --output json 2>/dev/null || true)
+      if command -v jq >/dev/null 2>&1; then
+        echo "${MESSAGES}" | jq -r '.Messages // [] | .[] | {MessageId, ReceiptHandle, Attributes, MessageAttributes, Body}'
+      else
+        echo "${MESSAGES}"
+      fi
+    fi
   done
   echo
 fi
