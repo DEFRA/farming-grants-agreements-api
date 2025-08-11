@@ -10,15 +10,11 @@ export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-$AWS_REGION}"
 export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
 
-# Args
-SHOW_MESSAGES=false
-
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [options]
 
 Options:
-  -m, --messages       Show up to 10 messages per SQS queue (peek; not deleted)
   -h, --help           Show this help
 
 Environment overrides:
@@ -32,13 +28,11 @@ EOF
 
 for arg in "$@"; do
   case "$arg" in
-    -m|--messages|--show-messages)
-      SHOW_MESSAGES=true
-      ;;
     -h|--help)
       usage
       exit 0
       ;;
+
     *)
       ;;
   esac
@@ -99,21 +93,19 @@ if [[ -n "${QUEUE_URLS}" ]]; then
       --query 'Attributes' \
       --output table || true
 
-    if [[ "${SHOW_MESSAGES}" == true ]]; then
-      echo "  Messages (peek up to 10):"
-      MESSAGES=$(run sqs receive-message \
-        --queue-url "${url}" \
-        --max-number-of-messages 10 \
-        --visibility-timeout 0 \
+    echo "  Messages (up to 10):"
+    MESSAGES=$(run sqs receive-message \
+      --queue-url "${url}" \
+      --max-number-of-messages 10 \
+      --visibility-timeout 0 \
         --wait-time-seconds 0 \
         --attribute-names All \
         --message-attribute-names All \
         --output json 2>/dev/null || true)
-      if command -v jq >/dev/null 2>&1; then
-        echo "${MESSAGES}" | jq -r '.Messages // [] | .[] | {MessageId, ReceiptHandle, Attributes, MessageAttributes, Body}'
-      else
-        echo "${MESSAGES}"
-      fi
+    if command -v jq >/dev/null 2>&1; then
+      echo "${MESSAGES}" | jq -r '.Messages // [] | .[] | {MessageId, ReceiptHandle, Attributes, MessageAttributes, Body}'
+    else
+      echo "${MESSAGES}"
     fi
   done
   echo
