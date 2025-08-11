@@ -29,7 +29,7 @@ RUN apk update && \
     apk add curl
 USER node
 
-ARG JWT_ENABLED=false
+ARG JWT_ENABLED=true
 ENV JWT_ENABLED=${JWT_ENABLED}
 
 COPY --from=development /home/node/package*.json ./
