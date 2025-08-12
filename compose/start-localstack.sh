@@ -11,14 +11,14 @@ echo "🚀 Initializing SNS + SQS in LocalStack..."
 
 # Define associative arrays for topics and queues
 declare -A TOPICS=(
+  [application_approved]="grant_application_approved"
   [offer_created]="grant_offer_created"
   [offer_accepted]="grant_offer_accepted"
-  [application_approved]="grant_application_approved"
 )
 declare -A QUEUES=(
+  [application_approved]="application_approved"
   [offer_created]="create_agreement"
   [offer_accepted]="accept_offer"
-  [application_approved]="application_approved"
 )
 
 # Associative arrays for ARNs and URLs
