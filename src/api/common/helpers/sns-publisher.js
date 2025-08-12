@@ -73,9 +73,8 @@ export async function publishEvent(
         break
       }
 
-      // exponential backoff with jitter
-      const backoffMs =
-        Math.min(1000 * 2 ** attempt, 5000) + Math.random() * 200
+      // exponential backoff
+      const backoffMs = Math.min(1000 * 2 ** attempt, 5000)
       await new Promise((resolve) => setTimeout(resolve, backoffMs))
       attempt += 1
     }

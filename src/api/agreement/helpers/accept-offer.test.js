@@ -31,6 +31,18 @@ describe('acceptOffer', () => {
     jest.useRealTimers()
   })
 
+  test('throws Boom.badRequest if agreementNumber is missing', async () => {
+    await expect(acceptOffer({}, mockLogger)).rejects.toThrow(
+      Boom.badRequest('Agreement data is required')
+    )
+    await expect(acceptOffer(undefined, mockLogger)).rejects.toThrow(
+      Boom.badRequest('Agreement data is required')
+    )
+    await expect(
+      acceptOffer({ agreementNumber: undefined }, mockLogger)
+    ).rejects.toThrow(Boom.badRequest('Agreement data is required'))
+  })
+
   test('should successfully accept an agreement', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
