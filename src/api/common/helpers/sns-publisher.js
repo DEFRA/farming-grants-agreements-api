@@ -13,15 +13,20 @@ const snsClient = new SNSClient({
 
 /**
  * Publish an SNS message with basic retry on transient errors
- * @param {object} logger - Logger with info/error methods
  * @param {object} params
  * @param {string} params.topicArn - SNS Topic ARN
  * @param {string} params.type - CloudEvent type
  * @param {string} params.time - ISO timestamp
  * @param {object} params.data - Event payload
+ * @param {object} logger - Logger with info/error methods
+ * @param {object} client - SNS client optional for testing
  * @returns {Promise<void>}
  */
-export async function publishEvent(logger, { topicArn, type, time, data }) {
+export async function publishEvent(
+  { topicArn, type, time, data },
+  logger,
+  client = snsClient
+) {
   const message = {
     id: uuidv4(),
     source: config.get('aws.sns.eventSource'),
@@ -38,7 +43,7 @@ export async function publishEvent(logger, { topicArn, type, time, data }) {
 
   while (attempt < maxAttempts) {
     try {
-      await snsClient.send(
+      await client.send(
         new PublishCommand({
           TopicArn: topicArn,
           Message: JSON.stringify(message)

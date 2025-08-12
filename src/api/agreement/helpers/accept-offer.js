@@ -17,7 +17,7 @@ async function acceptOffer(agreementData, logger) {
   const acceptanceTime = new Date().toISOString()
 
   // Publish event to SNS
-  await publishEvent(logger, {
+  await publishEvent({
     topicArn: config.get('aws.sns.topic.offerAccepted.arn'),
     type: config.get('aws.sns.topic.offerAccepted.type'),
     time: acceptanceTime,
@@ -25,7 +25,8 @@ async function acceptOffer(agreementData, logger) {
       correlationId: agreementData?.correlationId,
       clientRef: agreementData?.clientRef,
       offerId: agreementData?.agreementNumber
-    }
+    },
+    logger
   })
 
   // Update the agreement in the database

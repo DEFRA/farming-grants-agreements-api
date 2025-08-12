@@ -61,6 +61,13 @@ describe('acceptOfferDocumentController', () => {
     })
 
     test('should successfully accept an offer and return 200 OK', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() }
+      // Register a test-only extension to inject the mock logger
+      server.ext('onPreHandler', (request, h) => {
+        request.logger = mockLogger
+        return h.continue
+      })
+
       const agreementId = 'SFI123456789'
 
       const { statusCode, result } = await server.inject({
@@ -73,7 +80,16 @@ describe('acceptOfferDocumentController', () => {
 
       // Assert
       expect(getAgreementDataById).toHaveBeenCalledWith(agreementId)
-      expect(acceptOffer).toHaveBeenCalledWith(agreementId)
+      expect(acceptOffer).toHaveBeenCalledWith(
+        {
+          agreementNumber: agreementId,
+          company: 'Test Company',
+          sbi: '106284736',
+          status: 'offered',
+          username: 'Test User'
+        },
+        mockLogger
+      )
       expect(updatePaymentHub).toHaveBeenCalled()
       expect(renderTemplate).toHaveBeenCalledWith(
         'views/offer-accepted.njk',
