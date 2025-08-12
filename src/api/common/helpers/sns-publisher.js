@@ -1,6 +1,7 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { v4 as uuidv4 } from 'uuid'
 import { config } from '~/src/config/index.js'
+import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 
 const snsClient = new SNSClient({
   region: config.get('aws.region'),
@@ -56,7 +57,7 @@ export async function publishEvent(
     } catch (error) {
       lastError = error
       const isRetryable =
-        error?.$metadata?.httpStatusCode >= 500 ||
+        error?.$metadata?.httpStatusCode >= statusCodes.internalServerError ||
         error?.name === 'ThrottlingException' ||
         error?.name === 'TimeoutError' ||
         error?.name === 'NetworkingError'
@@ -74,7 +75,8 @@ export async function publishEvent(
       }
 
       // exponential backoff
-      const backoffMs = Math.min(1000 * 2 ** attempt, 5000)
+      const waitTime = 5000
+      const backoffMs = Math.min(1000 * 2 ** attempt, waitTime)
       await new Promise((resolve) => setTimeout(resolve, backoffMs))
       attempt += 1
     }
