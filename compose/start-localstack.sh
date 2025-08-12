@@ -9,35 +9,41 @@ export AWS_SECRET_ACCESS_KEY=test
 
 echo "🚀 Initializing SNS + SQS in LocalStack..."
 
-TOPIC_OFFER_CREATED_NAME="grant_offer_created"
-TOPIC_OFFER_ACCEPTED_NAME="grant_offer_accepted"
-TOPIC_APPLICATION_APPROVED_NAME="grant_application_approved"
+# Define associative arrays for topics and queues
+declare -A TOPICS=(
+  [offer_created]="grant_offer_created"
+  [offer_accepted]="grant_offer_accepted"
+  [application_approved]="grant_application_approved"
+)
+declare -A QUEUES=(
+  [offer_created]="create_agreement"
+  [offer_accepted]="accept_offer"
+  [application_approved]="application_approved"
+)
 
-# Create SNS topic and capture ARN
-TOPIC_OFFER_CREATED_ARN=$(awslocal sns create-topic --name "$TOPIC_OFFER_CREATED_NAME" --query 'TopicArn' --output text)
-echo "✅ Created topic: $TOPIC_OFFER_CREATED_ARN"
+# Associative arrays for ARNs and URLs
+declare -A TOPIC_ARNS
+declare -A QUEUE_URLS
+declare -A QUEUE_ARNS
 
-TOPIC_OFFER_ACCEPTED_ARN=$(awslocal sns create-topic --name "$TOPIC_OFFER_ACCEPTED_NAME" --query 'TopicArn' --output text)
-echo "✅ Created topic: $TOPIC_OFFER_ACCEPTED_ARN"
+# Create SNS topics
+for key in "${!TOPICS[@]}"; do
+  topic_name="${TOPICS[$key]}"
+  arn=$(awslocal sns create-topic --name "$topic_name" --query 'TopicArn' --output text)
+  TOPIC_ARNS[$key]="$arn"
+  echo "✅ Created topic: $arn"
+done
 
-TOPIC_APPLICATION_APPROVED_ARN=$(awslocal sns create-topic --name "$TOPIC_APPLICATION_APPROVED_NAME" --query 'TopicArn' --output text)
-echo "✅ Created topic: $TOPIC_APPLICATION_APPROVED_ARN"
+# Create SQS queues and get ARNs
+for key in "${!QUEUES[@]}"; do
+  queue_name="${QUEUES[$key]}"
+  url=$(awslocal sqs create-queue --queue-name "$queue_name" --query 'QueueUrl' --output text)
+  arn=$(awslocal sqs get-queue-attributes --queue-url "$url" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
+  QUEUE_URLS[$key]="$url"
+  QUEUE_ARNS[$key]="$arn"
+  echo "✅ Created queue: $url"
+done
 
-# Create SQS queue
-QUEUE_OFFER_CREATED_NAME="create_agreement"
-QUEUE_OFFER_CREATED_URL=$(awslocal sqs create-queue --queue-name "$QUEUE_OFFER_CREATED_NAME" --query 'QueueUrl' --output text)
-QUEUE_OFFER_CREATED_ARN=$(awslocal sqs get-queue-attributes --queue-url "$QUEUE_OFFER_CREATED_URL" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
-echo "✅ Created queue: $QUEUE_OFFER_CREATED_URL"
-
-QUEUE_OFFER_ACCEPTED_NAME="accept_offer"
-QUEUE_OFFER_ACCEPTED_URL=$(awslocal sqs create-queue --queue-name "$QUEUE_OFFER_ACCEPTED_NAME" --query 'QueueUrl' --output text)
-QUEUE_OFFER_ACCEPTED_ARN=$(awslocal sqs get-queue-attributes --queue-url "$QUEUE_OFFER_ACCEPTED_URL" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
-echo "✅ Created queue: $QUEUE_OFFER_ACCEPTED_URL"
-
-QUEUE_APPLICATION_APPROVED_NAME="application_approved"
-QUEUE_APPLICATION_APPROVED_URL=$(awslocal sqs create-queue --queue-name "$QUEUE_APPLICATION_APPROVED_NAME" --query 'QueueUrl' --output text)
-QUEUE_APPLICATION_APPROVED_ARN=$(awslocal sqs get-queue-attributes --queue-url "$QUEUE_APPLICATION_APPROVED_URL" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
-echo "✅ Created queue: $QUEUE_APPLICATION_APPROVED_URL"
 
 wait_for_topic() {
   local arn="$1"
@@ -55,31 +61,19 @@ wait_for_topic() {
 }
 
 # Ensure all topics are fully registered
-wait_for_topic "$TOPIC_OFFER_CREATED_ARN" "$TOPIC_OFFER_CREATED_NAME"
-wait_for_topic "$TOPIC_OFFER_ACCEPTED_ARN" "$TOPIC_OFFER_ACCEPTED_NAME"
-wait_for_topic "$TOPIC_APPLICATION_APPROVED_ARN" "$TOPIC_APPLICATION_APPROVED_NAME"
+for key in "${!TOPICS[@]}"; do
+  wait_for_topic "${TOPIC_ARNS[$key]}" "${TOPICS[$key]}"
+done
 
-# Subscribe queue to topic
-awslocal sns subscribe \
-  --topic-arn "$TOPIC_OFFER_CREATED_ARN" \
-  --protocol sqs \
-  --notification-endpoint "$QUEUE_OFFER_CREATED_ARN" \
-  --attributes '{ "RawMessageDelivery": "true"}'
-echo "🔗 Subscribed queue to topic: $QUEUE_OFFER_CREATED_ARN"
-
-awslocal sns subscribe \
-  --topic-arn "$TOPIC_OFFER_ACCEPTED_ARN" \
-  --protocol sqs \
-  --notification-endpoint "$QUEUE_OFFER_ACCEPTED_ARN" \
-  --attributes '{ "RawMessageDelivery": "true"}'
-echo "🔗 Subscribed queue to topic: $QUEUE_OFFER_ACCEPTED_ARN"
-
-awslocal sns subscribe \
-  --topic-arn "$TOPIC_APPLICATION_APPROVED_ARN" \
-  --protocol sqs \
-  --notification-endpoint "$QUEUE_APPLICATION_APPROVED_ARN" \
-  --attributes '{ "RawMessageDelivery": "true"}'
-echo "🔗 Subscribed queue to topic: $QUEUE_APPLICATION_APPROVED_ARN"
+# Subscribe each queue to its topic
+for key in "${!TOPICS[@]}"; do
+  awslocal sns subscribe \
+    --topic-arn "${TOPIC_ARNS[$key]}" \
+    --protocol sqs \
+    --notification-endpoint "${QUEUE_ARNS[$key]}" \
+    --attributes '{ "RawMessageDelivery": "true"}'
+  echo "🔗 Subscribed queue to topic: ${QUEUE_ARNS[$key]}"
+done
 
 # Optional extras
 # awslocal s3 mb s3://my-bucket
