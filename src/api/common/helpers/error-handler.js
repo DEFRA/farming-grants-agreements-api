@@ -20,8 +20,8 @@ export const errorHandlerPlugin = {
           )
 
           try {
-            const { nunjucksEnvironment } = await import(
-              '~/src/config/nunjucks/nunjucks.js'
+            const { renderTemplate } = await import(
+              '~/src/api/agreement/helpers/nunjucks-renderer.js'
             )
 
             const { context } = await import(
@@ -36,7 +36,7 @@ export const errorHandlerPlugin = {
               errorMessage: templateContext.errorMessage
             })
 
-            const html = nunjucksEnvironment.render(
+            const html = renderTemplate(
               'views/unauthorized.njk',
               templateContext
             )

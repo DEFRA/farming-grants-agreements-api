@@ -41,9 +41,10 @@ describe('reviewOfferController', () => {
     jest
       .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
       .mockResolvedValue(mockRenderedDocumentHtml)
+
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockImplementation(() => mockRenderedHtml)
+      .mockReturnValue(mockRenderedHtml)
 
     // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)

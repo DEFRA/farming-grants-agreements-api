@@ -35,9 +35,10 @@ describe('displayAcceptOfferController', () => {
 
     // Setup default mock implementations
     jest.spyOn(agreementDataHelper, 'getAgreementDataById')
+
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockImplementation(() => mockRenderedHtml)
+      .mockReturnValue(mockRenderedHtml)
 
     // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)

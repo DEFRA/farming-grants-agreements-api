@@ -42,6 +42,7 @@ describe('acceptOfferDocumentController', () => {
 
     acceptOffer.mockResolvedValue()
     updatePaymentHub.mockResolvedValue()
+
     renderTemplate.mockReturnValue(mockRenderedHtml)
   })
 
