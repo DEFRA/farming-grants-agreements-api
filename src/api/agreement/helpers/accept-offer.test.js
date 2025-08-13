@@ -44,6 +44,13 @@ describe('acceptOffer', () => {
   })
 
   test('should successfully accept an agreement', async () => {
+    const agreementData = {
+      agreementNumber: 'SFI123456789',
+      correlationId: 'test-correlation-id',
+      clientRef: 'test-client-ref',
+      frn: 'test-frn',
+      sbi: 'test-sbi'
+    }
     // Arrange
     const agreementId = 'SFI123456789'
     agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
@@ -51,23 +58,23 @@ describe('acceptOffer', () => {
     snsPublisher.publishEvent.mockReturnValue(mockEventResult)
 
     // Act
-    const result = await acceptOffer(
-      { agreementNumber: agreementId },
-      mockLogger
-    )
+    const result = await acceptOffer(agreementData, mockLogger)
 
     // Assert
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
-      expect.objectContaining(
-        {
-          topicArn: expect.any(String),
-          type: expect.any(String),
-          data: expect.objectContaining({
-            offerId: agreementId
-          })
-        },
-        mockLogger
-      )
+      expect.objectContaining({
+        topicArn: expect.any(String),
+        type: expect.any(String),
+        time: expect.any(String),
+        data: expect.objectContaining({
+          correlationId: expect.anything(),
+          clientRef: expect.anything(),
+          offerId: agreementId,
+          frn: expect.anything(),
+          sbi: expect.anything()
+        })
+      }),
+      mockLogger
     )
     expect(agreementsModel.updateOne).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
