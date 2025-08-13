@@ -133,26 +133,11 @@ const config = convict({
         env: 'SNS_EVENT_SOURCE'
       },
       topic: {
-        applicationApproved: {
-          arn: {
-            doc: 'AWS SNS Topic ARN for Application Approved events',
-            format: String,
-            default:
-              'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
-            env: 'SNS_TOPIC_ARN_APPLICATION_APPROVED'
-          },
-          type: {
-            doc: 'AWS SNS Topic type for Application Approved events',
-            format: String,
-            default: 'io.onsite.agreement.application.approved',
-            env: 'SNS_TOPIC_TYPE_APPLICATION_APPROVED'
-          }
-        },
         offerCreated: {
           arn: {
             doc: 'AWS SNS Topic ARN for Offer Created events',
             format: String,
-            default: 'arn:aws:sns:eu-west-2:000000000000:grant_offer_created',
+            default: 'arn:aws:sns:eu-west-2:000000000000:offer_created',
             env: 'SNS_TOPIC_ARN_OFFER_CREATED'
           },
           type: {
@@ -166,7 +151,7 @@ const config = convict({
           arn: {
             doc: 'AWS SNS Topic ARN for Offer Accepted events',
             format: String,
-            default: 'arn:aws:sns:eu-west-2:000000000000:grant_offer_accepted',
+            default: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
             env: 'SNS_TOPIC_ARN_OFFER_ACCEPTED'
           },
           type: {

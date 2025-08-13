@@ -164,10 +164,19 @@ const agreementData = {
 describe('createAgreement', () => {
   let mockLogger
 
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
   beforeEach(() => {
     jest.clearAllMocks()
     agreementsModel.create.mockImplementation((data) => Promise.resolve(data))
     mockLogger = { info: jest.fn(), error: jest.fn() }
+    jest.setSystemTime(new Date('2025-01-01'))
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
   })
 
   it('should create an agreement with valid data', async () => {
@@ -182,15 +191,15 @@ describe('createAgreement', () => {
 
     expect(publishEvent).toHaveBeenCalledWith(
       {
+        time: '2025-01-01T00:00:00.000Z',
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:offer_created',
+        type: 'io.onsite.agreement.offer.created',
         data: {
           correlationId: expect.any(String),
-          frn: '1234567890',
           offerId: expect.any(String),
+          frn: '1234567890',
           sbi: '106284736'
-        },
-        time: expect.any(String),
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:grant_offer_created',
-        type: 'io.onsite.agreement.offer.created'
+        }
       },
       mockLogger
     )
@@ -573,6 +582,7 @@ describe('createAgreement', () => {
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Database connection error'))
       )
+
       await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
         'Database connection error'
       )
@@ -582,6 +592,7 @@ describe('createAgreement', () => {
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Generic error'))
       )
+
       await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
         'Generic error'
       )
