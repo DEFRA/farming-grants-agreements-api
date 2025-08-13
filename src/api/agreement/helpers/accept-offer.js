@@ -17,17 +17,21 @@ async function acceptOffer(agreementData, logger) {
   const acceptanceTime = new Date().toISOString()
 
   // Publish event to SNS
-  await publishEvent({
-    topicArn: config.get('aws.sns.topic.offerAccepted.arn'),
-    type: config.get('aws.sns.topic.offerAccepted.type'),
-    time: acceptanceTime,
-    data: {
-      correlationId: agreementData?.correlationId,
-      clientRef: agreementData?.clientRef,
-      offerId: agreementData?.agreementNumber
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.offerAccepted.arn'),
+      type: config.get('aws.sns.topic.offerAccepted.type'),
+      time: acceptanceTime,
+      data: {
+        correlationId: agreementData?.correlationId,
+        clientRef: agreementData?.clientRef,
+        offerId: agreementData?.agreementNumber,
+        frn: agreementData?.frn,
+        sbi: agreementData?.sbi
+      }
     },
     logger
-  })
+  )
 
   // Update the agreement in the database
   const agreement = await agreementsModel
