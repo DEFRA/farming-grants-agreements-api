@@ -9,6 +9,7 @@ import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
+import Boom from '@hapi/boom'
 
 /**
  * Controller to serve HTML agreement document
@@ -32,11 +33,9 @@ const acceptOfferController = {
           request.logger
         )
       ) {
-        return h
-          .response({
-            message: 'Not authorized to accept offer agreement document'
-          })
-          .code(statusCodes.unauthorized)
+        throw Boom.unauthorized(
+          'Not authorized to accept offer agreement document'
+        )
       }
 
       if (request.method === 'get' && agreementData.status !== 'accepted') {

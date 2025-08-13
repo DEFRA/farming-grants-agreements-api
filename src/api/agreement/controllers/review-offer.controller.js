@@ -5,6 +5,7 @@ import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-a
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import Boom from '@hapi/boom'
 
 /**
  * Flatten parcel activities to get land parcel and quantity
@@ -50,11 +51,9 @@ const reviewOfferController = {
           request.logger
         )
       ) {
-        return h
-          .response({
-            message: 'Not authorized to review offer agreement document'
-          })
-          .code(statusCodes.unauthorized)
+        throw Boom.unauthorized(
+          'Not authorized to review offer agreement document'
+        )
       }
 
       if (agreementData.status === 'accepted') {
@@ -116,6 +115,11 @@ const reviewOfferController = {
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {
+      // Let Boom errors pass through to the error handler
+      if (error.isBoom) {
+        throw error
+      }
+
       request.logger.error(`Error fetching offer: ${error.message}`)
       return h
         .response({
