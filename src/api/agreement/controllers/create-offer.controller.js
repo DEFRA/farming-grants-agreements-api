@@ -37,7 +37,7 @@ const createOfferController = {
       }
 
       // Accept the agreement
-      await createOffer(agreementData)
+      await createOffer(agreementData, request.logger)
 
       // Return the HTML response
       return h.response({ message: 'Agreement created' }).code(statusCodes.ok)

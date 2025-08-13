@@ -62,18 +62,18 @@ describe('acceptOffer', () => {
 
     // Assert
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        topicArn: expect.any(String),
-        type: expect.any(String),
-        time: expect.any(String),
-        data: expect.objectContaining({
-          correlationId: expect.anything(),
-          clientRef: expect.anything(),
-          offerId: agreementId,
-          frn: expect.anything(),
-          sbi: expect.anything()
-        })
-      }),
+      {
+        time: '2024-01-01T00:00:00.000Z',
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
+        type: 'io.onsite.agreement.offer.accepted',
+        data: {
+          clientRef: 'test-client-ref',
+          correlationId: 'test-correlation-id',
+          offerId: 'SFI123456789',
+          frn: 'test-frn',
+          sbi: 'test-sbi'
+        }
+      },
       mockLogger
     )
     expect(agreementsModel.updateOne).toHaveBeenCalledWith(
