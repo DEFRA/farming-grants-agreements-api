@@ -4,6 +4,27 @@ import data from '~/src/api/common/helpers/sample-data/index.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 
+const publishEvents = async (sampleData, logger) => {
+  for (const item of sampleData) {
+    // Publish event to SNS
+    await publishEvent(
+      {
+        topicArn: config.get('aws.sns.topic.offerCreated.arn'),
+        type: config.get('aws.sns.topic.offerCreated.type'),
+        time: new Date().toISOString(),
+        data: {
+          correlationId: item?.correlationId,
+          clientRef: item?.clientRef,
+          offerId: item?.agreementNumber,
+          frn: item?.frn,
+          sbi: item?.sbi
+        }
+      },
+      logger
+    )
+  }
+}
+
 export async function seedDatabase(logger) {
   while (mongoose.connection.readyState !== mongoose.STATES.connected) {
     logger.info('Waiting for mongoose to connect...')
@@ -28,24 +49,7 @@ export async function seedDatabase(logger) {
           `Successfully inserted ${sampleData.length} documents into the '${name}' collection`
         )
 
-        for (const item of sampleData) {
-          // Publish event to SNS
-          await publishEvent(
-            {
-              topicArn: config.get('aws.sns.topic.offerCreated.arn'),
-              type: config.get('aws.sns.topic.offerCreated.type'),
-              time: new Date().toISOString(),
-              data: {
-                correlationId: item?.correlationId,
-                clientRef: item?.clientRef,
-                offerId: item?.agreementNumber,
-                frn: item?.frn,
-                sbi: item?.sbi
-              }
-            },
-            logger
-          )
-        }
+        await publishEvents(sampleData, logger)
       }
     } catch (e) {
       logger.error(e)
