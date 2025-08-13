@@ -7,8 +7,12 @@ import {
   generateAgreementNumber
 } from './create-offer.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
+import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
+jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+  publishEvent: jest.fn().mockResolvedValue(true)
+}))
 
 const targetDataStructure = {
   agreementNumber: 'SFI987654321',
@@ -158,13 +162,16 @@ const agreementData = {
 }
 
 describe('createAgreement', () => {
+  let mockLogger
+
   beforeEach(() => {
     jest.clearAllMocks()
     agreementsModel.create.mockImplementation((data) => Promise.resolve(data))
+    mockLogger = { info: jest.fn(), error: jest.fn() }
   })
 
   it('should create an agreement with valid data', async () => {
-    const result = await createOffer(agreementData)
+    const result = await createOffer(agreementData, mockLogger)
 
     // Check if the result matches the target data structure
     expect(result).toEqual({
@@ -172,6 +179,21 @@ describe('createAgreement', () => {
       agreementNumber: expect.any(String),
       correlationId: expect.any(String)
     })
+
+    expect(publishEvent).toHaveBeenCalledWith(
+      {
+        data: {
+          correlationId: expect.any(String),
+          frn: '1234567890',
+          offerId: expect.any(String),
+          sbi: '106284736'
+        },
+        time: expect.any(String),
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:grant_offer_created',
+        type: 'io.onsite.agreement.offer.created'
+      },
+      mockLogger
+    )
   })
 
   describe('groupParcelsById', () => {
@@ -551,8 +573,7 @@ describe('createAgreement', () => {
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Database connection error'))
       )
-
-      await expect(createOffer(agreementData)).rejects.toThrow(
+      await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
         'Database connection error'
       )
     })
@@ -561,8 +582,9 @@ describe('createAgreement', () => {
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Generic error'))
       )
-
-      await expect(createOffer(agreementData)).rejects.toThrow('Generic error')
+      await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
+        'Generic error'
+      )
     })
   })
 })

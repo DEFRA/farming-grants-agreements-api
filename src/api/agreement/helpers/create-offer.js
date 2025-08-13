@@ -1,6 +1,8 @@
 import crypto from 'crypto'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
+import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { config } from '~/src/config/index.js'
 
 export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
@@ -153,9 +155,10 @@ export const calculateYearlyPayments = (activities) => {
 /**
  * Create a new offer
  * @param {Agreement} agreementData - The agreement data
+ * @param {Request<ReqRefDefaults>['logger']} logger
  * @returns {Promise<Agreement>} The agreement data
  */
-const createOffer = (agreementData) => {
+const createOffer = async (agreementData, logger) => {
   if (!agreementData) {
     throw new Error('Offer data is required')
   }
@@ -190,9 +193,29 @@ const createOffer = (agreementData) => {
   }
 
   // Create the new agreement
-  return agreementsModel.create(data)
+  const createdAgreement = await agreementsModel.create(data)
+
+  // Publish event to SNS
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.offerCreated.arn'),
+      type: config.get('aws.sns.topic.offerCreated.type'),
+      time: new Date().toISOString(),
+      data: {
+        correlationId: data?.correlationId,
+        clientRef: data?.clientRef,
+        offerId: data?.agreementNumber,
+        frn: data?.frn,
+        sbi: data?.sbi
+      }
+    },
+    logger
+  )
+
+  return createdAgreement
 }
 
 export { createOffer }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Request } from '@hapi/hapi' */
