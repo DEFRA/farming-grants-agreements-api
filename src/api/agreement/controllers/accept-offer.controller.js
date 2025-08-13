@@ -49,7 +49,7 @@ const acceptOfferController = {
         }
 
         // Accept the agreement
-        await acceptOffer(agreementId)
+        await acceptOffer(agreementData, request.logger)
 
         // Update the payment hub
         await updatePaymentHub(request, agreementId)

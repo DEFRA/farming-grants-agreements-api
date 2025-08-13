@@ -2,8 +2,10 @@ import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { acceptOffer, getFirstPaymentDate } from './accept-offer.js'
+import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
+jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('acceptOffer', () => {
   const mockUpdateResult = {
@@ -13,6 +15,7 @@ describe('acceptOffer', () => {
     upsertedCount: 0,
     matchedCount: 1
   }
+  let mockLogger
 
   beforeAll(() => {
     jest.useFakeTimers()
@@ -21,21 +24,51 @@ describe('acceptOffer', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.setSystemTime(new Date('2024-01-01'))
+    mockLogger = { info: jest.fn(), error: jest.fn() }
   })
 
   afterAll(() => {
     jest.useRealTimers()
   })
 
+  test('throws Boom.badRequest if agreementNumber is missing', async () => {
+    await expect(acceptOffer({}, mockLogger)).rejects.toThrow(
+      Boom.badRequest('Agreement data is required')
+    )
+    await expect(acceptOffer(undefined, mockLogger)).rejects.toThrow(
+      Boom.badRequest('Agreement data is required')
+    )
+    await expect(
+      acceptOffer({ agreementNumber: undefined }, mockLogger)
+    ).rejects.toThrow(Boom.badRequest('Agreement data is required'))
+  })
+
   test('should successfully accept an agreement', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
     agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
+    const mockEventResult = Promise.resolve()
+    snsPublisher.publishEvent.mockReturnValue(mockEventResult)
 
     // Act
-    const result = await acceptOffer(agreementId)
+    const result = await acceptOffer(
+      { agreementNumber: agreementId },
+      mockLogger
+    )
 
     // Assert
+    expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
+      expect.objectContaining(
+        {
+          topicArn: expect.any(String),
+          type: expect.any(String),
+          data: expect.objectContaining({
+            offerId: agreementId
+          })
+        },
+        mockLogger
+      )
+    )
     expect(agreementsModel.updateOne).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
@@ -56,7 +89,10 @@ describe('acceptOffer', () => {
     agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
 
     // Act
-    const result = await acceptOffer(agreementId)
+    const result = await acceptOffer(
+      { agreementNumber: agreementId },
+      mockLogger
+    )
 
     // Assert
     expect(agreementsModel.updateOne).toHaveBeenCalledWith(
@@ -80,9 +116,9 @@ describe('acceptOffer', () => {
     agreementsModel.updateOne.mockResolvedValue(null)
 
     // Act & Assert
-    await expect(acceptOffer(agreementId)).rejects.toThrow(
-      Boom.notFound('Offer not found with ID SFI999999999')
-    )
+    await expect(
+      acceptOffer({ agreementNumber: agreementId }, mockLogger)
+    ).rejects.toThrow(Boom.notFound('Offer not found with ID SFI999999999'))
   })
 
   test('should handle database errors and log them', async () => {
@@ -92,9 +128,9 @@ describe('acceptOffer', () => {
     agreementsModel.updateOne.mockRejectedValue(dbError)
 
     // Act & Assert
-    await expect(acceptOffer(agreementId)).rejects.toThrow(
-      Boom.internal('Database connection failed')
-    )
+    await expect(
+      acceptOffer({ agreementNumber: agreementId }, mockLogger)
+    ).rejects.toThrow(Boom.internal('Database connection failed'))
   })
 
   test('should rethrow Boom errors without wrapping', async () => {
@@ -104,7 +140,9 @@ describe('acceptOffer', () => {
     agreementsModel.updateOne.mockRejectedValue(boomError)
 
     // Act & Assert
-    await expect(acceptOffer(agreementId)).rejects.toEqual(boomError)
+    await expect(
+      acceptOffer({ agreementNumber: agreementId }, mockLogger)
+    ).rejects.toEqual(boomError)
   })
 })
 
