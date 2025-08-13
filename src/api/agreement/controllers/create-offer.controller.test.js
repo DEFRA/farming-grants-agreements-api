@@ -9,6 +9,7 @@ jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
 describe('createOfferController', () => {
   let server
+  let mockLogger
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
@@ -24,6 +25,13 @@ describe('createOfferController', () => {
 
     // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
+
+    // Patch request.logger to use mockLogger
+    mockLogger = { info: jest.fn(), error: jest.fn() }
+    server.ext('onRequest', (request, h) => {
+      request.logger = mockLogger
+      return h.continue
+    })
   })
 
   test('successfully creates offer', async () => {
@@ -42,11 +50,14 @@ describe('createOfferController', () => {
       }
     })
 
-    expect(createOffer).toHaveBeenCalledWith({
-      agreementId: '123',
-      sbi: '106284736',
-      data: 'test data'
-    })
+    expect(createOffer).toHaveBeenCalledWith(
+      {
+        agreementId: '123',
+        sbi: '106284736',
+        data: 'test data'
+      },
+      mockLogger
+    )
     expect(statusCode).toBe(statusCodes.ok)
     expect(result).toEqual({
       message: 'Agreement created'

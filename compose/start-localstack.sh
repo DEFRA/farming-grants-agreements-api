@@ -12,13 +12,13 @@ echo "🚀 Initializing SNS + SQS in LocalStack..."
 # Define associative arrays for topics and queues
 declare -A TOPICS=(
   [application_approved]="grant_application_approved" # ↓ Grants UI has approved an application
-  [offer_created]="grant_offer_created"               # ↓ We have created the offer (based on Grants UI)
-  [offer_accepted]="grant_offer_accepted"             # - User has accepted the offer
+  [offer_created]="offer_created"                     # ↓ We have created the offer (based on Grants UI)
+  [offer_accepted]="agreement_accepted"               # - User has accepted the offer
 )
 declare -A QUEUES=(
   [application_approved]="create_agreement" # We need to create the agreement in response to the application being approved
-  [offer_created]="offer_created"
-  [offer_accepted]="offer_accepted"
+  [offer_created]="record_offer"
+  [offer_accepted]="record_agreement_acceptance"
 )
 
 # Associative arrays for ARNs and URLs
