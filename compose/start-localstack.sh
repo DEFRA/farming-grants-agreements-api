@@ -9,36 +9,71 @@ export AWS_SECRET_ACCESS_KEY=test
 
 echo "🚀 Initializing SNS + SQS in LocalStack..."
 
-TOPIC_NAME="grant_application_approved"
-QUEUE_NAME="create_agreement"
+# Define associative arrays for topics and queues
+declare -A TOPICS=(
+  [application_approved]="grant_application_approved" # ↓ Grants UI has approved an application
+  [offer_created]="grant_offer_created"               # ↓ We have created the offer (based on Grants UI)
+  [offer_accepted]="grant_offer_accepted"             # - User has accepted the offer
+)
+declare -A QUEUES=(
+  [application_approved]="create_agreement" # We need to create the agreement in response to the application being approved
+  [offer_created]="offer_created"
+  [offer_accepted]="offer_accepted"
+)
 
-# Create SNS topic and capture ARN
-TOPIC_ARN=$(awslocal sns create-topic --name "$TOPIC_NAME" --query 'TopicArn' --output text)
-echo "✅ Created topic: $TOPIC_ARN"
+# Associative arrays for ARNs and URLs
+declare -A TOPIC_ARNS
+declare -A QUEUE_URLS
+declare -A QUEUE_ARNS
 
-# Create SQS queue
-QUEUE_URL=$(awslocal sqs create-queue --queue-name "$QUEUE_NAME" --query 'QueueUrl' --output text)
-QUEUE_ARN=$(awslocal sqs get-queue-attributes --queue-url "$QUEUE_URL" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
-echo "✅ Created queue: $QUEUE_URL"
-
-# Retry loop to ensure topic is fully registered
-echo "⏳ Waiting for SNS topic to be available..."
-for i in {1..5}; do
-  if awslocal sns get-topic-attributes --topic-arn "$TOPIC_ARN" > /dev/null 2>&1; then
-    echo "✅ Topic is now available."
-    break
-  fi
-  echo "🔄 Still waiting..."
-  sleep 1
+# Create SNS topics
+for key in "${!TOPICS[@]}"; do
+  topic_name="${TOPICS[$key]}"
+  arn=$(awslocal sns create-topic --name "$topic_name" --query 'TopicArn' --output text)
+  TOPIC_ARNS[$key]="$arn"
+  echo "✅ Created topic: $arn"
 done
 
-# Subscribe queue to topic
-awslocal sns subscribe \
-  --topic-arn "$TOPIC_ARN" \
-  --protocol sqs \
-  --notification-endpoint "$QUEUE_ARN" \
-  --attributes '{ "RawMessageDelivery": "true"}'
-echo "🔗 Subscribed queue to topic."
+# Create SQS queues and get ARNs
+for key in "${!QUEUES[@]}"; do
+  queue_name="${QUEUES[$key]}"
+  url=$(awslocal sqs create-queue --queue-name "$queue_name" --query 'QueueUrl' --output text)
+  arn=$(awslocal sqs get-queue-attributes --queue-url "$url" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
+  QUEUE_URLS[$key]="$url"
+  QUEUE_ARNS[$key]="$arn"
+  echo "✅ Created queue: $url"
+done
+
+
+wait_for_topic() {
+  local arn="$1"
+  local name="$2"
+  echo "⏳ Waiting for SNS topic to be available: ${name}"
+  for i in {1..10}; do
+    if awslocal sns get-topic-attributes --topic-arn "$arn" > /dev/null 2>&1; then
+      echo "✅ Topic is now available: ${name}"
+      return 0
+    fi
+    echo "🔄 Still waiting for ${name}..."
+    sleep 1
+  done
+  echo "⚠️  Timeout waiting for topic: ${name}"
+}
+
+# Ensure all topics are fully registered
+for key in "${!TOPICS[@]}"; do
+  wait_for_topic "${TOPIC_ARNS[$key]}" "${TOPICS[$key]}"
+done
+
+# Subscribe each queue to its topic
+for key in "${!TOPICS[@]}"; do
+  awslocal sns subscribe \
+    --topic-arn "${TOPIC_ARNS[$key]}" \
+    --protocol sqs \
+    --notification-endpoint "${QUEUE_ARNS[$key]}" \
+    --attributes '{ "RawMessageDelivery": "true"}'
+  echo "🔗 Subscribed queue to topic: ${QUEUE_ARNS[$key]}"
+done
 
 # Optional extras
 # awslocal s3 mb s3://my-bucket

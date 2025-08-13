@@ -1,22 +1,44 @@
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
+import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * Get agreement data for rendering templates
- * @returns {object} The agreement data
- * @param {string} agreementId - The agreement ID to fetch
+ * @param {Agreement} agreementData - The agreement data
+ * @param {Request<ReqRefDefaults>['logger']} logger - The logger object
  * @returns {Promise<Agreement>} The agreement data
  */
-async function acceptOffer(agreementId) {
+async function acceptOffer(agreementData, logger) {
+  if (!agreementData?.agreementNumber) {
+    throw Boom.badRequest('Agreement data is required')
+  }
+
+  const acceptanceTime = new Date().toISOString()
+
+  // Publish event to SNS
+  await publishEvent({
+    topicArn: config.get('aws.sns.topic.offerAccepted.arn'),
+    type: config.get('aws.sns.topic.offerAccepted.type'),
+    time: acceptanceTime,
+    data: {
+      correlationId: agreementData?.correlationId,
+      clientRef: agreementData?.clientRef,
+      offerId: agreementData?.agreementNumber
+    },
+    logger
+  })
+
+  // Update the agreement in the database
   const agreement = await agreementsModel
     .updateOne(
       {
-        agreementNumber: agreementId
+        agreementNumber: agreementData.agreementNumber
       },
       {
         $set: {
           status: 'accepted',
-          signatureDate: new Date().toISOString()
+          signatureDate: acceptanceTime
         }
       }
     )
@@ -25,7 +47,9 @@ async function acceptOffer(agreementId) {
     })
 
   if (!agreement) {
-    throw Boom.notFound(`Offer not found with ID ${agreementId}`)
+    throw Boom.notFound(
+      `Offer not found with ID ${agreementData?.agreementNumber}`
+    )
   }
 
   return agreement
@@ -55,3 +79,4 @@ function getFirstPaymentDate(agreementStartDate) {
 export { acceptOffer, getFirstPaymentDate }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Request } from '@hapi/hapi' */
