@@ -3,14 +3,19 @@ import { v4 as uuidv4 } from 'uuid'
 import { config } from '~/src/config/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 
-const snsClient = new SNSClient({
-  region: config.get('aws.region'),
-  endpoint: config.get('aws.sns.endpoint'),
-  credentials: {
-    accessKeyId: config.get('aws.accessKeyId'),
-    secretAccessKey: config.get('aws.secretAccessKey')
-  }
-})
+const snsClient = new SNSClient(
+  process.env.NODE_ENV === 'development'
+    ? {
+        region: config.get('aws.region'),
+        endpoint: config.get('aws.sns.endpoint'),
+        credentials: {
+          accessKeyId: config.get('aws.accessKeyId'),
+          secretAccessKey: config.get('aws.secretAccessKey')
+        }
+      }
+    : // Production will automatically use the default credentials
+      {}
+)
 
 /**
  * Publish an SNS message with basic retry on transient errors
@@ -19,7 +24,7 @@ const snsClient = new SNSClient({
  * @param {string} params.type - CloudEvent type
  * @param {string} params.time - ISO timestamp
  * @param {object} params.data - Event payload
- * @param {object} logger - Logger with info/error methods
+ * @param {Request<ReqRefDefaults>['logger']} logger
  * @param {object} client - SNS client optional for testing
  * @returns {Promise<void>}
  */
@@ -84,3 +89,5 @@ export async function publishEvent(
 
   throw lastError
 }
+
+/** @import { Request } from '@hapi/hapi' */
