@@ -42,6 +42,7 @@ describe('acceptOfferDocumentController', () => {
 
     acceptOffer.mockResolvedValue()
     updatePaymentHub.mockResolvedValue()
+
     renderTemplate.mockReturnValue(mockRenderedHtml)
   })
 
@@ -311,9 +312,11 @@ describe('acceptOfferDocumentController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toEqual({
-        message: 'Not authorized to accept offer agreement document'
-      })
+      expect(result).toContain('<!DOCTYPE html>')
+      expect(result).toContain('You are not authorized to access this page')
+      expect(result).toContain(
+        'Not authorized to accept offer agreement document'
+      )
     })
   })
 })

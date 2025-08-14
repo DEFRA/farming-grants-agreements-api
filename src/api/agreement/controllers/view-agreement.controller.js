@@ -5,6 +5,7 @@ import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-a
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import Boom from '@hapi/boom'
 
 /**
  * Controller to serve HTML agreement document
@@ -27,11 +28,9 @@ const viewAgreementController = {
           request.logger
         )
       ) {
-        return h
-          .response({
-            message: 'Not authorized to view offer agreement document'
-          })
-          .code(statusCodes.unauthorized)
+        throw Boom.unauthorized(
+          'Not authorized to view offer agreement document'
+        )
       }
 
       if (agreementData.status !== 'accepted') {
@@ -56,6 +55,11 @@ const viewAgreementController = {
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {
+      // Let Boom errors pass through to the error handler
+      if (error.isBoom) {
+        throw error
+      }
+
       request.logger.error(
         `Error rendering agreement document: ${error.message}`
       )

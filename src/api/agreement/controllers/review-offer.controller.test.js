@@ -41,9 +41,10 @@ describe('reviewOfferController', () => {
     jest
       .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
       .mockResolvedValue(mockRenderedDocumentHtml)
+
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockImplementation(() => mockRenderedHtml)
+      .mockReturnValue(mockRenderedHtml)
 
     // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
@@ -975,9 +976,11 @@ describe('reviewOfferController', () => {
 
         // Assert
         expect(statusCode).toBe(statusCodes.unauthorized)
-        expect(result).toEqual({
-          message: 'Not authorized to review offer agreement document'
-        })
+        expect(result).toContain('<!DOCTYPE html>')
+        expect(result).toContain('You are not authorized to access this page')
+        expect(result).toContain(
+          'Not authorized to review offer agreement document'
+        )
       })
     })
   })
