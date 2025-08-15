@@ -43,7 +43,7 @@ export async function publishEvent(
     data
   }
 
-  const maxAttempts = 3
+  const maxAttempts = config.get('aws.sns.maxAttempts')
   let attempt = 0
   let lastError
 

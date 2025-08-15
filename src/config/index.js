@@ -126,6 +126,12 @@ const config = convict({
         default: 'http://localhost:4566',
         env: 'SNS_ENDPOINT'
       },
+      maxAttempts: {
+        doc: 'AWS SNS max publish attempts before error',
+        format: Number,
+        default: 3,
+        env: 'SNS_MAX_ATTEMPTS'
+      },
       eventSource: {
         doc: 'AWS SNS Cloud event source for emitted events',
         format: String,
