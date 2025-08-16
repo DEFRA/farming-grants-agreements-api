@@ -17,6 +17,11 @@ export const errorHandlerPlugin = {
         response.output.headers.Expires = '0'
         response.output.headers['Surrogate-Control'] = 'no-store'
       }
+
+       if (Buffer.isBuffer(response?.source) || response?.source?.pipe) {
+          return h.continue;
+        }
+
       return h.continue
     })
   }

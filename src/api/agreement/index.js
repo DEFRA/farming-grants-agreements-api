@@ -1,6 +1,8 @@
 import {
   reviewOfferController,
   viewAgreementController,
+  viewAgreementPDFController,
+  viewAgreementPDFKitController,
   createOfferController,
   acceptOfferController,
   unacceptOfferController,
@@ -29,6 +31,16 @@ const agreement = {
           method: 'GET',
           path: '/view-agreement/{agreementId}',
           ...viewAgreementController
+        },
+        {
+          method: 'GET',
+          path: '/view-agreement-pdf/{agreementId}',
+          ...viewAgreementPDFController
+        },
+        {
+          method: 'GET',
+          path: '/view-agreement-pdfkit/{agreementId}',
+          ...viewAgreementPDFKitController
         },
         {
           method: 'POST',

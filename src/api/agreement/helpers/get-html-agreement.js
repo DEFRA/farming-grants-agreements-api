@@ -193,4 +193,26 @@ const getHTMLAgreementDocument = async (agreementId, data, baseUrl) => {
   return renderTemplate('views/sfi-agreement.njk', agreementData)
 }
 
-export { getHTMLAgreementDocument }
+const getAgreementDocumentData = async (agreementId, data, baseUrl) => {
+  if (agreementId == null) {
+    throw Boom.badRequest('Agreement ID is required')
+  }
+
+  const agreementData = data || (await getAgreementDataById(agreementId))
+
+  if (!agreementData) {
+    throw Boom.notFound(`Agreement not found ${agreementId}`)
+  }
+
+  agreementData.agreementLand = getAgreementLand(agreementData)
+  agreementData.summaryOfActions = getSummaryOfActions(agreementData)
+  agreementData.agreementLevelActions = getAgreementLevelActions(agreementData)
+  agreementData.summaryOfPayments = getSummaryOfPayments(agreementData)
+  agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
+  agreementData.baseUrl = baseUrl
+  agreementData.farmerName = agreementData.username
+
+  return agreementData
+}
+
+export { getHTMLAgreementDocument, getAgreementDocumentData }
