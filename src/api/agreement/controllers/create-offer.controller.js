@@ -29,11 +29,9 @@ const createOfferController = {
           request.logger
         )
       ) {
-        return h
-          .response({
-            message: 'Not authorized to create offer agreement document'
-          })
-          .code(statusCodes.unauthorized)
+        throw Boom.unauthorized(
+          'Not authorized to create offer agreement document'
+        )
       }
 
       // Accept the agreement

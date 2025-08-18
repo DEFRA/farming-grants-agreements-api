@@ -4,6 +4,7 @@ import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-
 import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import Boom from '@hapi/boom'
 
 /**
  * Controller to display the Accept Offer page
@@ -27,11 +28,9 @@ const displayAcceptOfferController = {
           request.logger
         )
       ) {
-        return h
-          .response({
-            message: 'Not authorized to display accept offer agreement document'
-          })
-          .code(statusCodes.unauthorized)
+        throw Boom.unauthorized(
+          'Not authorized to display accept offer agreement document'
+        )
       }
 
       if (agreementData.status !== 'offered') {
@@ -54,6 +53,11 @@ const displayAcceptOfferController = {
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {
+      // Let Boom errors pass through to the error handler
+      if (error.isBoom) {
+        throw error
+      }
+
       request.logger.error(
         `Error displaying accept offer page: ${error.message}`
       )
