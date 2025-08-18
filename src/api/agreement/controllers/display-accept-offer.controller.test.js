@@ -35,9 +35,10 @@ describe('displayAcceptOfferController', () => {
 
     // Setup default mock implementations
     jest.spyOn(agreementDataHelper, 'getAgreementDataById')
+
     jest
       .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockImplementation(() => mockRenderedHtml)
+      .mockReturnValue(mockRenderedHtml)
 
     // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
@@ -240,9 +241,11 @@ describe('displayAcceptOfferController', () => {
 
         // Assert
         expect(statusCode).toBe(statusCodes.unauthorized)
-        expect(result).toEqual({
-          message: 'Not authorized to display accept offer agreement document'
-        })
+        expect(result).toContain('<!DOCTYPE html>')
+        expect(result).toContain('You are not authorized to access this page')
+        expect(result).toContain(
+          'Not authorized to display accept offer agreement document'
+        )
       })
     })
   })

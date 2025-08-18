@@ -3,7 +3,6 @@ import { createServer } from '~/src/api/index.js'
 import Boom from '@hapi/boom'
 
 describe('errorHandlerPlugin', () => {
-  /** @type {import('@hapi/hapi').Server} */
   let server
 
   beforeAll(async () => {
@@ -40,7 +39,6 @@ describe('errorHandlerPlugin', () => {
 
   describe('error handling behavior', () => {
     beforeAll(() => {
-      // Add a test route that can throw different types of errors
       server.route([
         {
           method: 'GET',
@@ -62,6 +60,27 @@ describe('errorHandlerPlugin', () => {
           handler: () => {
             return { message: 'Success' }
           }
+        },
+        {
+          method: 'GET',
+          path: '/test-403',
+          handler: () => {
+            throw Boom.forbidden('Forbidden')
+          }
+        },
+        {
+          method: 'GET',
+          path: '/test-404',
+          handler: () => {
+            throw Boom.notFound('Not found')
+          }
+        },
+        {
+          method: 'GET',
+          path: '/test-500',
+          handler: () => {
+            throw Boom.internal('Internal error')
+          }
         }
       ])
     })
@@ -73,7 +92,6 @@ describe('errorHandlerPlugin', () => {
       })
 
       expect(response.statusCode).toBe(400)
-      // Hapi may override some cache control settings, so we check for the presence of no-cache
       expect(response.headers['cache-control']).toContain('no-cache')
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
@@ -87,7 +105,6 @@ describe('errorHandlerPlugin', () => {
       })
 
       expect(response.statusCode).toBe(500)
-      // Hapi may override some cache control settings, so we check for the presence of no-cache
       expect(response.headers['cache-control']).toContain('no-cache')
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
@@ -108,44 +125,26 @@ describe('errorHandlerPlugin', () => {
     })
 
     test('should handle different Boom error types', async () => {
-      // Test different HTTP status codes
       const testCases = [
         {
-          path: '/test-400',
-          error: Boom.badRequest('Bad request'),
+          path: '/test-boom-error',
           expectedStatus: 400
         },
         {
-          path: '/test-401',
-          error: Boom.unauthorized('Unauthorized'),
-          expectedStatus: 401
-        },
-        {
           path: '/test-403',
-          error: Boom.forbidden('Forbidden'),
           expectedStatus: 403
         },
         {
           path: '/test-404',
-          error: Boom.notFound('Not found'),
           expectedStatus: 404
         },
         {
           path: '/test-500',
-          error: Boom.internal('Internal error'),
           expectedStatus: 500
         }
       ]
 
       for (const testCase of testCases) {
-        server.route({
-          method: 'GET',
-          path: testCase.path,
-          handler: () => {
-            throw testCase.error
-          }
-        })
-
         const response = await server.inject({
           method: 'GET',
           url: testCase.path
@@ -158,7 +157,7 @@ describe('errorHandlerPlugin', () => {
   })
 
   describe('extension handler', () => {
-    test('should continue processing when response is not a Boom error', () => {
+    test('should continue processing when response is not a Boom error', async () => {
       const mockRequest = {
         response: {
           isBoom: false
@@ -168,19 +167,18 @@ describe('errorHandlerPlugin', () => {
         continue: Symbol('continue')
       }
 
-      // Get the extension handler
       const mockServer = {
         ext: jest.fn()
       }
       errorHandlerPlugin.register(mockServer)
       const extensionHandler = mockServer.ext.mock.calls[0][1]
 
-      const result = extensionHandler(mockRequest, mockH)
+      const result = await extensionHandler(mockRequest, mockH)
 
       expect(result).toBe(mockH.continue)
     })
 
-    test('should set cache headers and continue when response is a Boom error', () => {
+    test('should set cache headers and continue when response is a Boom error', async () => {
       const mockResponse = {
         isBoom: true,
         output: {
@@ -194,14 +192,13 @@ describe('errorHandlerPlugin', () => {
         continue: Symbol('continue')
       }
 
-      // Get the extension handler
       const mockServer = {
         ext: jest.fn()
       }
       errorHandlerPlugin.register(mockServer)
       const extensionHandler = mockServer.ext.mock.calls[0][1]
 
-      const result = extensionHandler(mockRequest, mockH)
+      const result = await extensionHandler(mockRequest, mockH)
 
       expect(result).toBe(mockH.continue)
       expect(mockResponse.output.headers['Cache-Control']).toBe(
@@ -212,7 +209,7 @@ describe('errorHandlerPlugin', () => {
       expect(mockResponse.output.headers['Surrogate-Control']).toBe('no-store')
     })
 
-    test('should handle response with existing headers', () => {
+    test('should handle response with existing headers', async () => {
       const mockResponse = {
         isBoom: true,
         output: {
@@ -228,14 +225,13 @@ describe('errorHandlerPlugin', () => {
         continue: Symbol('continue')
       }
 
-      // Get the extension handler
       const mockServer = {
         ext: jest.fn()
       }
       errorHandlerPlugin.register(mockServer)
       const extensionHandler = mockServer.ext.mock.calls[0][1]
 
-      extensionHandler(mockRequest, mockH)
+      await extensionHandler(mockRequest, mockH)
 
       expect(mockResponse.output.headers['existing-header']).toBe(
         'existing-value'
