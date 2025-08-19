@@ -173,4 +173,104 @@ describe('getAgreement', () => {
 
     await expect(getAgreement('SFI123456789')).rejects.toThrow(errorMessage)
   })
+
+  test('should throw Bad Request when agreementId is missing', async () => {
+    await expect(getAgreement(null)).rejects.toThrow('Agreement ID is required')
+    await expect(getAgreement(undefined)).rejects.toThrow(
+      'Agreement ID is required'
+    )
+  })
+
+  test('should throw Not Found when agreement is not returned', async () => {
+    getAgreementDataModule.getAgreementDataById.mockResolvedValueOnce(undefined)
+    await expect(getAgreement('SFI123456789')).rejects.toThrow(
+      'Agreement not found SFI123456789'
+    )
+  })
+
+  test('should compute tables from provided data with values', async () => {
+    const agreementData = {
+      status: 'offered',
+      username: 'User Name',
+      agreementNumber: 'SFI000000001',
+      parcels: [
+        {
+          parcelNumber: 'ABC123',
+          totalArea: 2.5,
+          activities: [
+            {
+              code: 'ACT1',
+              description: 'Action One',
+              startDate: new Date('2024-01-01T00:00:00Z'),
+              endDate: new Date('2024-12-31T00:00:00Z'),
+              area: 1.25
+            }
+          ]
+        }
+      ],
+      actions: [
+        {
+          code: 'ACT1',
+          title: 'Action One Title',
+          startDate: new Date('2024-01-01T00:00:00Z'),
+          endDate: new Date('2024-12-31T00:00:00Z'),
+          duration: '1 year'
+        }
+      ],
+      payments: {
+        activities: [
+          {
+            code: 'ACT1',
+            description: 'Action One',
+            measurement: 2.5,
+            rate: 123,
+            annualPayment: 456
+          }
+        ],
+        yearlyBreakdown: {
+          details: [
+            {
+              code: 'ACT1',
+              year1: 100,
+              year2: 200,
+              year3: 300,
+              totalPayment: 600
+            }
+          ],
+          annualTotals: { year1: 100, year2: 200, year3: 300 },
+          totalAgreementPayment: 600
+        }
+      }
+    }
+
+    const agreement = await getAgreement('SFI000000001', agreementData)
+
+    // Agreement land table should have one row with parcel info
+    expect(agreement.agreementLand.data).toHaveLength(1)
+    expect(agreement.agreementLand.data[0][0].text).toBe('ABC123')
+    expect(agreement.agreementLand.data[0][1].text).toBe(2.5)
+
+    // Summary of actions should reflect activity mapping
+    expect(agreement.summaryOfActions.data).toHaveLength(1)
+    expect(agreement.summaryOfActions.data[0][1].text).toBe('ACT1')
+    expect(agreement.summaryOfActions.data[0][2].text).toBe('Action One')
+
+    // Agreement level actions should include formatted dates and duration
+    expect(agreement.agreementLevelActions.data).toHaveLength(1)
+    expect(agreement.agreementLevelActions.data[0][0].text).toBe('ACT1')
+    expect(agreement.agreementLevelActions.data[0][4].text).toBe('1 year')
+
+    // Summary of payments should include currency formatting
+    expect(agreement.summaryOfPayments.data).toHaveLength(1)
+    expect(agreement.summaryOfPayments.data[0][3].text).toContain('per ha')
+    expect(agreement.summaryOfPayments.data[0][4].text).toMatch(/£\d/)
+
+    // Annual payment schedule should include row for detail and a Total row
+    expect(agreement.annualPaymentSchedule.data).toHaveLength(2)
+    expect(agreement.annualPaymentSchedule.data[0][0].text).toBe('ACT1')
+    expect(agreement.annualPaymentSchedule.data[1][0].text).toBe('Total')
+
+    // Farmer name is copied from username
+    expect(agreement.farmerName).toBe('User Name')
+  })
 })
