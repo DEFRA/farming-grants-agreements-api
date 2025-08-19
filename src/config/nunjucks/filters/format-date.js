@@ -5,7 +5,14 @@ import { format, isDate, parseISO } from 'date-fns'
  * @param {string} formattedDateStr
  */
 export function formatDate(value, formattedDateStr = 'EEE do MMMM yyyy') {
-  const date = isDate(value) ? value : parseISO(value)
+  if (!value) {
+    return ''
+  }
 
-  return format(date, formattedDateStr)
+  try {
+    const date = isDate(value) ? value : parseISO(String(value))
+    return format(date, formattedDateStr)
+  } catch {
+    return ''
+  }
 }

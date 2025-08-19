@@ -1,7 +1,6 @@
 import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import Boom from '@hapi/boom'
@@ -38,18 +37,14 @@ const displayAcceptOfferController = {
       }
 
       // Render the accept offer template with agreement data
-      const acceptOfferTemplate = renderTemplate('views/accept-offer.njk', {
-        agreementNumber: agreementData.agreementNumber,
-        baseUrl,
-        company: agreementData.company,
-        sbi: agreementData.sbi,
-        farmerName: agreementData.username,
-        status: agreementData.status
-      })
-
-      // Return the HTML response
       return h
-        .response(acceptOfferTemplate)
+        .view('views/accept-offer.njk', {
+          agreementNumber: agreementData.agreementNumber,
+          company: agreementData.company,
+          sbi: agreementData.sbi,
+          farmerName: agreementData.username,
+          status: agreementData.status
+        })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {

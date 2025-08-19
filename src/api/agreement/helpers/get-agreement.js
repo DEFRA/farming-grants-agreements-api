@@ -1,6 +1,5 @@
 import Boom from '@hapi/boom'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 
 const dateOptions = {
   year: 'numeric',
@@ -169,28 +168,26 @@ const getAnnualPaymentSchedule = (agreementData) => {
  * Renders a Nunjucks template with agreement data
  * @param {string} agreementId - The agreement ID to fetch
  * @param {object} [data] - The agreement data object (optional)
- * @param {string} baseUrl - The base URL to use for redirects
  */
-const getHTMLAgreementDocument = async (agreementId, data, baseUrl) => {
+const getAgreement = async (agreementId, data) => {
   if (agreementId == null) {
     throw Boom.badRequest('Agreement ID is required')
   }
 
-  const agreementData = data || (await getAgreementDataById(agreementId))
+  const agreement = data || (await getAgreementDataById(agreementId))
 
-  if (!agreementData) {
+  if (!agreement) {
     throw Boom.notFound(`Agreement not found ${agreementId}`)
   }
 
-  agreementData.agreementLand = getAgreementLand(agreementData)
-  agreementData.summaryOfActions = getSummaryOfActions(agreementData)
-  agreementData.agreementLevelActions = getAgreementLevelActions(agreementData)
-  agreementData.summaryOfPayments = getSummaryOfPayments(agreementData)
-  agreementData.annualPaymentSchedule = getAnnualPaymentSchedule(agreementData)
-  agreementData.baseUrl = baseUrl
-  agreementData.farmerName = agreementData.username
+  agreement.agreementLand = getAgreementLand(agreement)
+  agreement.summaryOfActions = getSummaryOfActions(agreement)
+  agreement.agreementLevelActions = getAgreementLevelActions(agreement)
+  agreement.summaryOfPayments = getSummaryOfPayments(agreement)
+  agreement.annualPaymentSchedule = getAnnualPaymentSchedule(agreement)
+  agreement.farmerName = agreement.username
 
-  return renderTemplate('views/sfi-agreement.njk', agreementData)
+  return agreement
 }
 
-export { getHTMLAgreementDocument }
+export { getAgreement }

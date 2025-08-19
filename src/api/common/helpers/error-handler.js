@@ -4,7 +4,7 @@
 export const errorHandlerPlugin = {
   name: 'error-handler',
   register: (server) => {
-    server.ext('onPreResponse', async (request, h) => {
+    server.ext('onPreResponse', (request, h) => {
       const response = request.response
       if (response.isBoom) {
         // Prevent all forms of caching in the browser and proxies
@@ -20,33 +20,10 @@ export const errorHandlerPlugin = {
           )
 
           try {
-            const { renderTemplate } = await import(
-              '~/src/api/agreement/helpers/nunjucks-renderer.js'
-            )
-
-            const { context } = await import(
-              '~/src/config/nunjucks/context/context.js'
-            )
-            const templateContext = context(request)
-            templateContext.errorMessage = response.message
-
-            request.server.logger.info('Context generated successfully:', {
-              serviceName: templateContext.serviceName,
-              auth: templateContext.auth,
-              errorMessage: templateContext.errorMessage
-            })
-
-            const html = renderTemplate(
-              'views/unauthorized.njk',
-              templateContext
-            )
-            request.server.logger.info(
-              'Template rendered successfully, length:',
-              html.length
-            )
-
             return h
-              .response(html)
+              .view('views/unauthorized.njk', {
+                errorMessage: response.message
+              })
               .code(401)
               .type('text/html')
               .header(

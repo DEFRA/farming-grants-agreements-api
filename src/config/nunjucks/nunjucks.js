@@ -79,7 +79,7 @@ export const nunjucksConfig = {
       environment: nunjucksEnvironment
     },
     relativeTo: path.resolve(dirname, '../..'),
-    path: 'server',
+    path: 'server/common/templates',
     isCached: config.get('isProduction'),
     context
   }

@@ -4,6 +4,7 @@ import path from 'node:path'
 import { config } from '~/src/config/index.js'
 import { buildNavigation } from '~/src/config/nunjucks/context/build-navigation.js'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
+import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 
 const logger = createLogger()
 const assetPath = config.get('assetPath')
@@ -41,10 +42,10 @@ export async function context(request) {
   }
 
   return {
+    baseUrl: getBaseUrl(request),
     assetPath: `${assetPath}/assets/rebrand`,
     serviceName: config.get('serviceName'),
     serviceTitle: config.get('serviceTitle'),
-    serviceUrl: '/',
     auth,
     breadcrumbs: [],
     navigation: buildNavigation(request)

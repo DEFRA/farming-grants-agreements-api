@@ -3,7 +3,6 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 jest.mock('~/src/api/agreement/helpers/accept-offer.js')
@@ -13,14 +12,11 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
   getAgreementDataById: jest.fn()
 }))
-jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
 describe('acceptOfferDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
-
-  const mockRenderedHtml = `<!DOCTYPE html><html><body>Offer accepted</body></html>`
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
@@ -38,12 +34,9 @@ describe('acceptOfferDocumentController', () => {
     acceptOffer.mockReset()
     getAgreementDataById.mockReset()
     updatePaymentHub.mockReset()
-    renderTemplate.mockReset()
 
     acceptOffer.mockResolvedValue()
     updatePaymentHub.mockResolvedValue()
-
-    renderTemplate.mockReturnValue(mockRenderedHtml)
   })
 
   describe('not yet accepted', () => {
@@ -92,18 +85,9 @@ describe('acceptOfferDocumentController', () => {
         mockLogger
       )
       expect(updatePaymentHub).toHaveBeenCalled()
-      expect(renderTemplate).toHaveBeenCalledWith(
-        'views/offer-accepted.njk',
-        expect.objectContaining({
-          agreementNumber: agreementId,
-          company: 'Test Company',
-          sbi: '106284736',
-          farmerName: 'Test User',
-          baseUrl: '/'
-        })
-      )
       expect(statusCode).toBe(statusCodes.ok)
-      expect(result).toBe(mockRenderedHtml)
+      expect(String(result)).toContain('Offer accepted')
+      expect(String(result)).toContain(agreementId)
     })
 
     test('should handle agreement not found error', async () => {
@@ -168,7 +152,7 @@ describe('acceptOfferDocumentController', () => {
     test('should handle base URL header', async () => {
       const agreementId = 'SFI123456789'
 
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'POST',
         url: `/accept-offer/${agreementId}`,
         headers: {
@@ -179,12 +163,9 @@ describe('acceptOfferDocumentController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(renderTemplate).toHaveBeenCalledWith(
-        'views/offer-accepted.njk',
-        expect.objectContaining({
-          baseUrl: '/defra-grants-proxy'
-        })
-      )
+      expect(String(result)).toContain('Offer accepted')
+      expect(String(result)).toContain(agreementId)
+      expect(String(result)).toContain('/defra-grants-proxy')
     })
   })
 
@@ -216,7 +197,6 @@ describe('acceptOfferDocumentController', () => {
         // Assert
         expect(statusCode).toBe(statusCodes.redirect)
         expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
-        expect(renderTemplate).not.toHaveBeenCalled()
       })
 
       test('should redirect to review offer when base URL is set', async () => {
@@ -235,13 +215,12 @@ describe('acceptOfferDocumentController', () => {
         expect(headers.location).toBe(
           `/defra-grants-proxy/offer-accepted/${agreementId}`
         )
-        expect(renderTemplate).not.toHaveBeenCalled()
       })
     })
 
     describe('GET', () => {
       test('should return accepted offer page', async () => {
-        const { statusCode } = await server.inject({
+        const { statusCode, result } = await server.inject({
           method: 'GET',
           url: `/offer-accepted/${agreementId}`,
           headers: {
@@ -251,16 +230,11 @@ describe('acceptOfferDocumentController', () => {
 
         // Assert
         expect(statusCode).toBe(statusCodes.ok)
-        expect(renderTemplate).toHaveBeenCalledWith(
-          'views/offer-accepted.njk',
-          expect.objectContaining({
-            baseUrl: '/'
-          })
-        )
+        expect(String(result)).toContain('Offer accepted')
       })
 
       test('should return accepted offer page when base URL is set', async () => {
-        const { statusCode } = await server.inject({
+        const { statusCode, result } = await server.inject({
           method: 'GET',
           url: `/offer-accepted/${agreementId}`,
           headers: {
@@ -271,12 +245,8 @@ describe('acceptOfferDocumentController', () => {
 
         // Assert
         expect(statusCode).toBe(statusCodes.ok)
-        expect(renderTemplate).toHaveBeenCalledWith(
-          'views/offer-accepted.njk',
-          expect.objectContaining({
-            baseUrl: '/defra-grants-proxy'
-          })
-        )
+        expect(String(result)).toContain('Offer accepted')
+        expect(String(result)).toContain('/defra-grants-proxy')
       })
     })
   })
@@ -294,7 +264,6 @@ describe('acceptOfferDocumentController', () => {
       })
       acceptOffer.mockResolvedValue()
       updatePaymentHub.mockResolvedValue()
-      renderTemplate.mockReturnValue(mockRenderedHtml)
     })
 
     test('Should return 401 when invalid JWT token provided', async () => {

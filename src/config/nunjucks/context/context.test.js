@@ -32,6 +32,7 @@ describe('#context', () => {
 
     test('Should provide expected context', () => {
       expect(contextResult).toEqual({
+        baseUrl: '/',
         assetPath: '/public/assets/rebrand',
         breadcrumbs: [],
         navigation: [
@@ -48,7 +49,6 @@ describe('#context', () => {
         ],
         serviceName: 'farming-grants-agreements-api',
         serviceTitle: 'Manage land-based actions',
-        serviceUrl: '/',
         auth: {
           isAuthenticated: false,
           name: undefined,
@@ -112,6 +112,7 @@ describe('#context cache', () => {
 
     test('Should provide expected context', () => {
       expect(contextResult).toEqual({
+        baseUrl: '/',
         assetPath: '/public/assets/rebrand',
         breadcrumbs: [],
         navigation: [
@@ -128,7 +129,6 @@ describe('#context cache', () => {
         ],
         serviceName: 'farming-grants-agreements-api',
         serviceTitle: 'Manage land-based actions',
-        serviceUrl: '/',
         auth: {
           isAuthenticated: false,
           name: undefined,

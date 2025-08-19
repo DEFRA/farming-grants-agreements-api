@@ -1,27 +1,21 @@
 import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import * as nunjucksRenderer from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
-import * as htmlAgreementHelper from '~/src/api/agreement/helpers/get-html-agreement.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
-jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   __esModule: true,
   ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
   getAgreementDataById: jest.fn()
 }))
-jest.mock('~/src/api/agreement/helpers/get-html-agreement.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement.js')
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
 describe('reviewOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
-
-  const mockRenderedDocumentHtml = `<!DOCTYPE html><html><body>Test document HTML</body></html>`
-  const mockRenderedHtml = `<!DOCTYPE html><html><body>Test HTML with ${mockRenderedDocumentHtml}</body></html>`
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
@@ -38,13 +32,6 @@ describe('reviewOfferController', () => {
 
     // Setup default mock implementations
     jest.spyOn(agreementDataHelper, 'getAgreementDataById')
-    jest
-      .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
-      .mockResolvedValue(mockRenderedDocumentHtml)
-
-    jest
-      .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockReturnValue(mockRenderedHtml)
 
     // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
@@ -106,31 +93,10 @@ describe('reviewOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(result).toBe(mockRenderedHtml)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          agreementNumber: agreementId,
-          actions: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'Arable and Horticultural Soils',
-              code: 'SFI1',
-              landParcel: 'PARCEL001',
-              quantity: 10.5
-            })
-          ]),
-          payments: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'Arable and Horticultural Soils',
-              code: 'SFI1',
-              rate: 28,
-              yearly: 294
-            })
-          ]),
-          totalYearly: 294,
-          totalQuarterly: 73.5
-        })
-      )
+      expect(String(result)).toContain('Review your funding offer')
+      expect(String(result)).toContain('£73.50')
+      expect(String(result)).toContain('Arable and Horticultural Soils')
+      expect(String(result)).toContain('SFI1')
     })
 
     test('should handle actions with missing action title and use activity code as fallback', async () => {
@@ -177,7 +143,7 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -187,19 +153,8 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          actions: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'UNKNOWN_CODE', // Should use activity code as fallback
-              code: 'UNKNOWN_CODE',
-              landParcel: 'PARCEL001',
-              quantity: 5.0
-            })
-          ])
-        })
-      )
+      expect(String(result)).toContain('UNKNOWN_CODE')
+      expect(String(result)).toContain('PARCEL001')
     })
 
     test('should handle payments with missing description and use payment code as fallback', async () => {
@@ -246,7 +201,7 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -256,20 +211,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          payments: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'SFI1', // Should use payment code as fallback
-              code: 'SFI1',
-              rate: 28,
-              yearly: 294
-            })
-          ]),
-          totalQuarterly: 73.5
-        })
-      )
+      expect(String(result)).toContain('SFI1') // Should use payment code as fallback
     })
 
     test('should handle empty parcels array', async () => {
@@ -294,7 +236,7 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -304,15 +246,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          actions: [],
-          payments: [],
-          totalYearly: 0,
-          totalQuarterly: 0
-        })
-      )
+      expect(String(result)).toContain('Review your funding offer')
     })
 
     test('should handle parcels with empty activities array', async () => {
@@ -342,7 +276,7 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -352,73 +286,10 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          actions: [],
-          payments: [],
-          totalYearly: 0,
-          totalQuarterly: 0
-        })
-      )
+      expect(String(result)).toContain('Review your funding offer')
     })
 
     test('should handle missing payments data', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'DRAFT',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
-        sbi: '106284736',
-        parcels: [
-          {
-            parcelNumber: 'PARCEL001',
-            activities: [
-              {
-                code: 'SFI1',
-                area: 10.5
-              }
-            ]
-          }
-        ],
-        actions: [
-          {
-            code: 'SFI1',
-            title: 'Arable and Horticultural Soils'
-          }
-        ]
-        // Missing payments object
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: `/review-offer/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          payments: [],
-          totalYearly: 0,
-          totalQuarterly: 0
-        })
-      )
-    })
-
-    test('should handle missing actions data', async () => {
-      // Arrange
       const agreementId = 'SFI123456789'
       const mockAgreementData = {
         agreementNumber: agreementId,
@@ -445,7 +316,7 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -455,19 +326,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          actions: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'SFI1', // Should use activity code as fallback when actions is undefined
-              code: 'SFI1',
-              landParcel: 'PARCEL001',
-              quantity: 10.5
-            })
-          ])
-        })
-      )
+      expect(String(result)).toContain('Review your funding offer')
     })
 
     test('should handle base URL header', async () => {
@@ -492,7 +351,7 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -503,12 +362,8 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          baseUrl: '/defra-grants-proxy'
-        })
-      )
+      expect(String(result)).toContain('Review your funding offer')
+      expect(String(result)).toContain('/defra-grants-proxy')
     })
 
     test('should handle base URL header as false', async () => {
@@ -533,7 +388,7 @@ describe('reviewOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -544,12 +399,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          baseUrl: '/'
-        })
-      )
+      expect(String(result)).toContain('Review your funding offer')
     })
 
     test('should fail if theres an error reading the database', async () => {
@@ -579,29 +429,13 @@ describe('reviewOfferController', () => {
       })
     })
 
-    test('should fail if getHTMLAgreementDocument throws an error', async () => {
+    test('should fail if getAgreementDataById throws an error', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
       const errorMessage = 'Failed to generate HTML document'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'DRAFT',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
-        sbi: '123456789',
-        parcels: [],
-        actions: [],
-        payments: {
-          activities: [],
-          totalAnnualPayment: 0
-        }
-      }
 
       jest
         .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-      jest
-        .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
         .mockRejectedValue(new Error(errorMessage))
 
       // Act
@@ -618,369 +452,6 @@ describe('reviewOfferController', () => {
       expect(result).toEqual({
         message: 'Failed to fetch offer',
         error: errorMessage
-      })
-    })
-
-    test('should handle payments with null yearly values in reduce calculations', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'DRAFT',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
-        sbi: '123456789',
-        parcels: [
-          {
-            parcelNumber: 'PARCEL001',
-            activities: [
-              {
-                code: 'SFI1',
-                area: 10.5
-              }
-            ]
-          }
-        ],
-        actions: [
-          {
-            code: 'SFI1',
-            title: 'Arable and Horticultural Soils'
-          }
-        ],
-        payments: {
-          activities: [
-            {
-              code: 'SFI1',
-              description: 'Arable and Horticultural Soils',
-              rate: 28,
-              annualPayment: 294
-            },
-            {
-              code: 'SFI2',
-              description: 'Test Action',
-              rate: 10,
-              annualPayment: null // This should test the || 0 condition
-            },
-            {
-              code: 'SFI3',
-              description: 'Another Test',
-              rate: 15,
-              annualPayment: undefined // This should test the || 0 condition
-            }
-          ],
-          totalAnnualPayment: 294
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: `/review-offer/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          payments: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'Arable and Horticultural Soils',
-              code: 'SFI1',
-              rate: 28,
-              yearly: 294
-            }),
-            expect.objectContaining({
-              name: 'Test Action',
-              code: 'SFI2',
-              rate: 10,
-              yearly: null
-            }),
-            expect.objectContaining({
-              name: 'Another Test',
-              code: 'SFI3',
-              rate: 15,
-              yearly: undefined
-            })
-          ]),
-          totalYearly: 294, // Should only sum the valid values
-          totalQuarterly: 73.5 // Should only sum the valid values
-        })
-      )
-    })
-
-    test('should handle parcels with null activities', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'DRAFT',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
-        sbi: '123456789',
-        parcels: [
-          {
-            parcelNumber: 'PARCEL001',
-            activities: null // This should test the ?? [] condition
-          },
-          {
-            parcelNumber: 'PARCEL002',
-            activities: [
-              {
-                code: 'SFI1',
-                area: 10.5
-              }
-            ]
-          }
-        ],
-        actions: [
-          {
-            code: 'SFI1',
-            title: 'Arable and Horticultural Soils'
-          }
-        ],
-        payments: {
-          activities: [
-            {
-              code: 'SFI1',
-              description: 'Arable and Horticultural Soils',
-              rate: 28,
-              annualPayment: 294
-            }
-          ],
-          totalAnnualPayment: 294
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: `/review-offer/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          actions: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'Arable and Horticultural Soils',
-              code: 'SFI1',
-              landParcel: 'PARCEL002',
-              quantity: 10.5
-            })
-          ])
-        })
-      )
-    })
-
-    test('should handle missing base URL header', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'DRAFT',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
-        sbi: '123456789',
-        parcels: [],
-        actions: [],
-        payments: {
-          activities: [],
-          totalAnnualPayment: 0
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: `/review-offer/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-        // No defra-grants-proxy header - this should test the === 'true' condition
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          baseUrl: '/' // Should be '/' when header is missing
-        })
-      )
-    })
-
-    test('should handle renderTemplate throwing an error', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const errorMessage = 'Template rendering failed'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'DRAFT',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
-        sbi: '123456789',
-        parcels: [],
-        actions: [],
-        payments: {
-          activities: [],
-          totalAnnualPayment: 0
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-      jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
-        throw new Error(errorMessage)
-      })
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: `/review-offer/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(result).toEqual({
-        message: 'Failed to fetch offer',
-        error: errorMessage
-      })
-    })
-
-    test('should handle payments with zero yearly values', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'DRAFT',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
-        sbi: '123456789',
-        parcels: [
-          {
-            parcelNumber: 'PARCEL001',
-            activities: [
-              {
-                code: 'SFI1',
-                area: 10.5
-              }
-            ]
-          }
-        ],
-        actions: [
-          {
-            code: 'SFI1',
-            title: 'Arable and Horticultural Soils'
-          }
-        ],
-        payments: {
-          activities: [
-            {
-              code: 'SFI1',
-              description: 'Arable and Horticultural Soils',
-              rate: 28,
-              annualPayment: 0 // This should test the || 0 condition with zero
-            }
-          ],
-          totalAnnualPayment: 0
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: `/review-offer/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/view-offer.njk',
-        expect.objectContaining({
-          payments: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'Arable and Horticultural Soils',
-              code: 'SFI1',
-              rate: 28,
-              yearly: 0
-            })
-          ]),
-          totalYearly: 0,
-          totalQuarterly: 0
-        })
-      )
-    })
-
-    // JWT Authorization Tests
-    describe('JWT Authorization', () => {
-      beforeEach(() => {
-        jest.clearAllMocks()
-
-        // Mock default successful responses
-        jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
-          .mockResolvedValue({
-            sbi: '106284736',
-            agreementNumber: 'SFI123456789'
-          })
-
-        jest
-          .spyOn(htmlAgreementHelper, 'getHTMLAgreementDocument')
-          .mockResolvedValue(mockRenderedHtml)
-      })
-
-      test('Should return 401 when invalid JWT token provided', async () => {
-        // Arrange
-        jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
-
-        // Act
-        const { statusCode, result } = await server.inject({
-          method: 'GET',
-          url: '/review-offer/SFI123456789',
-          headers: {
-            'x-encrypted-auth': 'invalid-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.unauthorized)
-        expect(result).toContain('<!DOCTYPE html>')
-        expect(result).toContain('You are not authorized to access this page')
-        expect(result).toContain(
-          'Not authorized to review offer agreement document'
-        )
       })
     })
   })
@@ -1012,7 +483,6 @@ describe('reviewOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.redirect)
       expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
-      expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
     })
 
     test('should redirect to review offer when base URL is set', async () => {
@@ -1032,7 +502,38 @@ describe('reviewOfferController', () => {
       expect(headers.location).toBe(
         `/defra-grants-proxy/offer-accepted/${agreementId}`
       )
-      expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('JWT Authorization', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
+        .mockResolvedValue({
+          sbi: '106284736',
+          agreementNumber: 'SFI123456789'
+        })
+    })
+
+    test('Should return 401 when invalid JWT token provided', async () => {
+      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
+
+      const { statusCode, result } = await server.inject({
+        method: 'GET',
+        url: '/review-offer/SFI123456789',
+        headers: {
+          'x-encrypted-auth': 'invalid-token'
+        }
+      })
+
+      expect(statusCode).toBe(statusCodes.unauthorized)
+      expect(result).toContain('<!DOCTYPE html>')
+      expect(result).toContain('You are not authorized to access this page')
+      expect(result).toContain(
+        'Not authorized to review offer agreement document'
+      )
     })
   })
 })

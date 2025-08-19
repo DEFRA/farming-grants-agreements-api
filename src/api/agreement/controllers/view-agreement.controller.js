@@ -1,7 +1,7 @@
 import path from 'node:path'
 
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
+import { getAgreement } from '~/src/api/agreement/helpers/get-agreement.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
@@ -41,8 +41,8 @@ const viewAgreementController = {
         `Rendering HTML agreement document for agreementId: ${agreementId}`
       )
 
-      // get HTML agreement
-      const renderedHtml = await getHTMLAgreementDocument(
+      // get agreement
+      const fullAgreementData = await getAgreement(
         agreementId,
         agreementData,
         baseUrl
@@ -50,7 +50,7 @@ const viewAgreementController = {
 
       // Return the HTML response
       return h
-        .response(renderedHtml)
+        .view('views/sfi-agreement.njk', fullAgreementData)
         .type('text/html')
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)

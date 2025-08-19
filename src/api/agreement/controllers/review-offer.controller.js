@@ -1,8 +1,6 @@
 import path from 'node:path'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { getHTMLAgreementDocument } from '~/src/api/agreement/helpers/get-html-agreement.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import Boom from '@hapi/boom'
@@ -60,13 +58,6 @@ const reviewOfferController = {
         return h.redirect(path.join(baseUrl, 'offer-accepted', agreementId))
       }
 
-      // Render the HTML agreement document
-      const renderedAgreementDocument = await getHTMLAgreementDocument(
-        agreementId,
-        agreementData,
-        baseUrl
-      )
-
       const actions = flattenParcelActivities(agreementData)
 
       // Map payments
@@ -91,25 +82,20 @@ const reviewOfferController = {
         0
       )
 
-      // Render the Accept Agreement page
-      const renderedHTML = renderTemplate('views/view-offer.njk', {
-        agreementDocument: renderedAgreementDocument,
-        agreementStatus: agreementData.status,
-        agreementNumber: agreementData.agreementNumber,
-        agreementSignatureDate: agreementData.signatureDate,
-        company: agreementData.company,
-        sbi: agreementData.sbi,
-        farmerName: agreementData.username,
-        baseUrl,
-        actions,
-        payments,
-        totalYearly,
-        totalQuarterly
-      })
-
-      // Return the HTML response
+      // Render the page with base context automatically applied
       return h
-        .response(renderedHTML)
+        .view('views/view-offer.njk', {
+          agreementStatus: agreementData.status,
+          agreementNumber: agreementData.agreementNumber,
+          agreementSignatureDate: agreementData.signatureDate,
+          company: agreementData.company,
+          sbi: agreementData.sbi,
+          farmerName: agreementData.username,
+          actions,
+          payments,
+          totalYearly,
+          totalQuarterly
+        })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {
