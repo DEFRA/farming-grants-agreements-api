@@ -5,7 +5,7 @@ const renderTemplate = jest.fn((templatePath, data) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unauthorized - ${data.serviceName || 'Service'}</title>
+    <title>Unauthorized - ${data.serviceTitle || 'Service'}</title>
 </head>
 <body>
     <div class="govuk-width-container">

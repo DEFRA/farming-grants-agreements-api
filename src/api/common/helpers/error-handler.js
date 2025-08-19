@@ -27,7 +27,7 @@ export const errorHandlerPlugin = {
             const { context } = await import(
               '~/src/config/nunjucks/context/context.js'
             )
-            const templateContext = await context(request)
+            const templateContext = context(request)
             templateContext.errorMessage = response.message
 
             request.server.logger.info('Context generated successfully:', {

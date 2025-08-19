@@ -47,6 +47,7 @@ describe('#context', () => {
           }
         ],
         serviceName: 'farming-grants-agreements-api',
+        serviceTitle: 'Manage land-based actions',
         serviceUrl: '/',
         auth: {
           isAuthenticated: false,
@@ -126,6 +127,7 @@ describe('#context cache', () => {
           }
         ],
         serviceName: 'farming-grants-agreements-api',
+        serviceTitle: 'Manage land-based actions',
         serviceUrl: '/',
         auth: {
           isAuthenticated: false,

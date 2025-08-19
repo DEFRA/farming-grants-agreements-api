@@ -43,6 +43,7 @@ export async function context(request) {
   return {
     assetPath: `${assetPath}/assets/rebrand`,
     serviceName: config.get('serviceName'),
+    serviceTitle: config.get('serviceTitle'),
     serviceUrl: '/',
     auth,
     breadcrumbs: [],

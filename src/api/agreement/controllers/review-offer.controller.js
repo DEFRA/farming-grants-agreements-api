@@ -104,9 +104,7 @@ const reviewOfferController = {
         actions,
         payments,
         totalYearly,
-        totalQuarterly,
-        serviceName: 'Review funding offer',
-        serviceUrl: '/'
+        totalQuarterly
       })
 
       // Return the HTML response
