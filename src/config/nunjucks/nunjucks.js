@@ -54,6 +54,7 @@ const buildUrl = (...args) => path.join(...args)
 
 nunjucksEnvironment.addGlobal('getAssetPath', getAssetPath)
 nunjucksEnvironment.addGlobal('buildUrl', buildUrl)
+nunjucksEnvironment.addGlobal('govukRebrand', true)
 
 /**
  * @satisfies {ServerRegisterPluginObject<ServerViewsConfiguration>}
