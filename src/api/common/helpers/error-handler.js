@@ -1,71 +1,73 @@
-/**
- * Hapi plugin for registering the default error handler
- */
 export const errorHandlerPlugin = {
   name: 'error-handler',
   register: (server) => {
     server.ext('onPreResponse', async (request, h) => {
-      const response = request.response
-      if (response.isBoom) {
-        // Prevent all forms of caching in the browser and proxies
-        response.output.headers['Cache-Control'] =
-          'no-store, no-cache, must-revalidate, proxy-revalidate'
-        response.output.headers.Pragma = 'no-cache'
-        response.output.headers.Expires = '0'
-        response.output.headers['Surrogate-Control'] = 'no-store'
+      const res = request.response
 
-        if (response.output.statusCode === 401) {
-          request.server.logger.info(
-            'Handling 401 error with unauthorized template'
-          )
+      // Only handle Boom errors
+      if (!res?.isBoom) return h.continue
 
-          try {
-            const { renderTemplate } = await import(
-              '~/src/api/agreement/helpers/nunjucks-renderer.js'
-            )
-
-            const { context } = await import(
-              '~/src/config/nunjucks/context/context.js'
-            )
-            const templateContext = await context(request)
-            templateContext.errorMessage = response.message
-
-            request.server.logger.info('Context generated successfully:', {
-              serviceName: templateContext.serviceName,
-              auth: templateContext.auth,
-              errorMessage: templateContext.errorMessage
-            })
-
-            const html = renderTemplate(
-              'views/unauthorized.njk',
-              templateContext
-            )
-            request.server.logger.info(
-              'Template rendered successfully, length:',
-              html.length
-            )
-
-            return h
-              .response(html)
-              .code(401)
-              .type('text/html')
-              .header(
-                'Cache-Control',
-                'no-store, no-cache, must-revalidate, proxy-revalidate'
-              )
-              .header('Pragma', 'no-cache')
-              .header('Expires', '0')
-              .header('Surrogate-Control', 'no-store')
-          } catch (error) {
-            request.server.logger.error(
-              'Failed to render unauthorized template:',
-              error
-            )
-            return h.continue
-          }
-        }
+      // Never cache error pages
+      const noCache = {
+        'Cache-Control':
+          'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+        'Surrogate-Control': 'no-store',
+        Vary: 'Authorization'
       }
-      return h.continue
+
+      const status = res.output?.statusCode ?? 500
+
+      // Map statuses to templates (extend as needed)
+      const TEMPLATE_BY_STATUS = {
+        401: 'views/unauthorized.njk',
+        403: 'views/forbidden.njk'
+      }
+
+      const templatePath = TEMPLATE_BY_STATUS[status]
+
+      // If we don't have a template for this status, let Hapi/ Boom continue
+      if (!templatePath) {
+        Object.assign(res.output.headers, noCache)
+        return h.continue
+      }
+
+      server.logger.info(`Handling ${status} with template ${templatePath}`)
+
+      try {
+        const [{ renderTemplate }, { context }] = await Promise.all([
+          import('~/src/api/agreement/helpers/nunjucks-renderer.js'),
+          import('~/src/config/nunjucks/context/context.js')
+        ])
+
+        const templateContext = await context(request)
+        templateContext.errorMessage = res.message
+
+        server.logger.info('Context generated', {
+          serviceName: templateContext.serviceName,
+          auth: templateContext.auth,
+          errorMessage: templateContext.errorMessage
+        })
+
+        const html = renderTemplate(templatePath, templateContext)
+        server.logger.info('Template rendered', { length: html.length })
+
+        const reply = h.response(html).code(status).type('text/html')
+        for (const [k, v] of Object.entries(noCache)) reply.header(k, v)
+
+        // Helpful auth hint for 401s
+        if (status === 401) {
+          reply.header('WWW-Authenticate', 'Bearer realm="agreements"')
+        }
+
+        return reply
+      } catch (error) {
+        server.logger.error(`Failed to render ${status} template`, error)
+        // Fall back to default Boom payload (still no-cache)
+        Object.assign(res.output.headers, noCache)
+        return h.continue
+      }
     })
   }
 }

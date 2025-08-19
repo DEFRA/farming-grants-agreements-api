@@ -33,9 +33,11 @@ const acceptOfferController = {
           request.logger
         )
       ) {
-        throw Boom.unauthorized(
-          'Not authorized to accept offer agreement document'
-        )
+        throw Boom.forbidden('Forbidden to accept offer agreement document')
+
+        // throw Boom.unauthorized(
+        //   'Not authorized to accept offer agreement document'
+        // )
       }
 
       if (request.method === 'get' && agreementData.status !== 'accepted') {
