@@ -20,6 +20,15 @@ const acceptOfferController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.payload || request.params
+
+      if (agreementId === 1) {
+        throw Boom.forbidden('Forbidden to accept offer agreement document')
+      } else if (agreementId === 2) {
+        throw Boom.unauthorized(
+          'Not authorized to accept offer agreement document'
+        )
+      }
+
       const baseUrl = getBaseUrl(request)
 
       // Get the agreement data before accepting
@@ -33,11 +42,11 @@ const acceptOfferController = {
           request.logger
         )
       ) {
-        throw Boom.forbidden('Forbidden to accept offer agreement document')
+        // throw Boom.forbidden('Forbidden to accept offer agreement document')
 
-        // throw Boom.unauthorized(
-        //   'Not authorized to accept offer agreement document'
-        // )
+        throw Boom.unauthorized(
+          'Not authorized to accept offer agreement document'
+        )
       }
 
       if (request.method === 'get' && agreementData.status !== 'accepted') {

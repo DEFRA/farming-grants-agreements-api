@@ -37,12 +37,18 @@
       <!-- Accept Button -->
       {% if status === 'offered' %}
       <form method="post" action="{{ buildUrl(baseUrl, 'accept-offer') }}" id="accept-offer-form">
-        <input type="hidden" name="agreementId" value="{{ agreementNumber }}">
+        <input type="hidden" name="agreementId" value="1">
         <p id="accept-agreement-error" class="govuk-error-message"></p>
         {{ govukButton({
-          text: "Accept offer"
+          text: "Accept offer - Forbidden"
         }) }}
       </form>
+       <form method="post" action="{{ buildUrl(baseUrl, 'accept-offer') }}" id="accept-offer-form-1">
+        <input type="hidden" name="agreementId" value="2">
+        <p id="accept-agreement-error" class="govuk-error-message"></p>
+        {{ govukButton({
+          text: "Accept offer - unauthorized"
+        }) }}
       {% endif %}
 
       {% include "partials/help/update.njk" %}
