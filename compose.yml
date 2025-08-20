@@ -88,6 +88,7 @@ services:
       LOCALSTACK_ENDPOINT: http://localstack:4566
       MONGO_URI: mongodb://mongodb:27017/
       SEED_DB: true
+      SNS_ENDPOINT: http://localstack:4566
       SQS_ENDPOINT: http://localstack:4566
       QUEUE_URL: http://localstack:4566/000000000000/create_agreement
       QUEUE_NAME: create_agreement
