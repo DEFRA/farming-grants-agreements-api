@@ -186,7 +186,7 @@ describe('acceptOfferDocumentController', () => {
     describe('POST', () => {
       test('should redirect to review offer', async () => {
         // Arrange
-        const { statusCode, headers } = await server.inject({
+        const { statusCode, headers, result } = await server.inject({
           method: 'POST',
           url: `/accept-offer/${agreementId}`,
           headers: {
@@ -197,11 +197,12 @@ describe('acceptOfferDocumentController', () => {
         // Assert
         expect(statusCode).toBe(statusCodes.redirect)
         expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
+        expect(result).toBe('')
       })
 
       test('should redirect to review offer when base URL is set', async () => {
         // Arrange
-        const { statusCode, headers } = await server.inject({
+        const { statusCode, headers, result } = await server.inject({
           method: 'POST',
           url: `/accept-offer/${agreementId}`,
           headers: {
@@ -215,6 +216,7 @@ describe('acceptOfferDocumentController', () => {
         expect(headers.location).toBe(
           `/defra-grants-proxy/offer-accepted/${agreementId}`
         )
+        expect(result).toBe('')
       })
     })
 

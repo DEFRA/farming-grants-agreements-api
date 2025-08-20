@@ -475,7 +475,7 @@ describe('reviewOfferController', () => {
 
     test('should redirect to review offer', async () => {
       // Arrange
-      const { statusCode, headers } = await server.inject({
+      const { statusCode, headers, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`
       })
@@ -483,13 +483,14 @@ describe('reviewOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.redirect)
       expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
+      expect(result).toBe('')
     })
 
     test('should redirect to review offer when base URL is set', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
 
-      const { statusCode, headers } = await server.inject({
+      const { statusCode, headers, result } = await server.inject({
         method: 'GET',
         url: `/review-offer/${agreementId}`,
         headers: {
@@ -502,6 +503,7 @@ describe('reviewOfferController', () => {
       expect(headers.location).toBe(
         `/defra-grants-proxy/offer-accepted/${agreementId}`
       )
+      expect(result).toBe('')
     })
   })
 

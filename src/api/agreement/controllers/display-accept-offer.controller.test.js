@@ -145,6 +145,58 @@ describe('displayAcceptOfferController', () => {
       })
     })
 
+    describe('template rendering errors', () => {
+      let originalView
+
+      beforeEach(() => {
+        // Mock the view rendering to throw an error
+        originalView =
+          server.realm.plugins.vision.manager._engines.njk.compileFunc
+        server.realm.plugins.vision.manager._engines.njk.compileFunc = () => {
+          throw new Error('Template rendering failed')
+        }
+      })
+
+      afterEach(() => {
+        // Restore the original view function
+        server.realm.plugins.vision.manager._engines.njk.compileFunc =
+          originalView
+      })
+
+      test('should handle template rendering errors', async () => {
+        // Arrange
+        const agreementId = 'SFI123456789'
+        const mockAgreementData = {
+          agreementNumber: agreementId,
+          status: 'offered',
+          company: 'Test Company',
+          sbi: '106284736',
+          username: 'Test User'
+        }
+
+        jest
+          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .mockResolvedValue(mockAgreementData)
+
+        // Act
+        const { statusCode, result } = await server.inject({
+          method: 'GET',
+          url: `/review-accept-offer/${agreementId}`,
+          headers: {
+            'x-encrypted-auth': 'valid-jwt-token'
+          }
+        })
+
+        // Assert
+        expect(statusCode).toBe(statusCodes.internalServerError)
+        expect(result).toEqual({
+          message: 'An internal server error occurred',
+          error: 'Internal Server Error',
+          statusCode: statusCodes.internalServerError
+        })
+      })
+    })
+
     // JWT Authorization Tests
     describe('JWT Authorization', () => {
       beforeEach(() => {
@@ -205,7 +257,7 @@ describe('displayAcceptOfferController', () => {
 
     test('should redirect to review offer', async () => {
       // Arrange
-      const { statusCode, headers } = await server.inject({
+      const { statusCode, headers, result } = await server.inject({
         method: 'GET',
         url: `/review-accept-offer/${agreementId}`
       })
@@ -213,11 +265,12 @@ describe('displayAcceptOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.redirect)
       expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
+      expect(result).toBe('')
     })
 
     test('should redirect to review offer when base URL is set', async () => {
       // Arrange
-      const { statusCode, headers } = await server.inject({
+      const { statusCode, headers, result } = await server.inject({
         method: 'GET',
         url: `/review-accept-offer/${agreementId}`,
         headers: {
@@ -230,6 +283,7 @@ describe('displayAcceptOfferController', () => {
       expect(headers.location).toBe(
         `/defra-grants-proxy/offer-accepted/${agreementId}`
       )
+      expect(result).toBe('')
     })
   })
 })
