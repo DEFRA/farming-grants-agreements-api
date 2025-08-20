@@ -3,9 +3,7 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 
-{% block pageTitle %}
-  Accept offer
-{% endblock %}
+{% set pageTitle = 'Accept offer' %}
 
 {% block beforeContent %}
   {{ super() }}

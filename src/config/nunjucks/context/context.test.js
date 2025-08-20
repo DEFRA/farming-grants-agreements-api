@@ -1,3 +1,5 @@
+import { config } from '../../index.js'
+
 const mockReadFileSync = jest.fn()
 const mockLoggerError = jest.fn()
 
@@ -32,6 +34,7 @@ describe('#context', () => {
 
     test('Should provide expected context', () => {
       expect(contextResult).toEqual({
+        baseUrl: '/',
         assetPath: '/public/assets/rebrand',
         breadcrumbs: [],
         navigation: [
@@ -46,8 +49,8 @@ describe('#context', () => {
             url: '/about'
           }
         ],
-        serviceName: 'farming-grants-agreements-api',
-        serviceUrl: '/',
+        serviceName: config.get('serviceName'),
+        serviceTitle: config.get('serviceTitle'),
         auth: {
           isAuthenticated: false,
           name: undefined,
@@ -111,6 +114,7 @@ describe('#context cache', () => {
 
     test('Should provide expected context', () => {
       expect(contextResult).toEqual({
+        baseUrl: '/',
         assetPath: '/public/assets/rebrand',
         breadcrumbs: [],
         navigation: [
@@ -125,8 +129,8 @@ describe('#context cache', () => {
             url: '/about'
           }
         ],
-        serviceName: 'farming-grants-agreements-api',
-        serviceUrl: '/',
+        serviceName: config.get('serviceName'),
+        serviceTitle: config.get('serviceTitle'),
         auth: {
           isAuthenticated: false,
           name: undefined,

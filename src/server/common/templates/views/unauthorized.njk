@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unauthorized - {{ serviceName }}</title>
+    <title>Unauthorized{% if serviceTitle %} - {{ serviceTitle }}{% endif %}</title>
     <link href="https://www.gov.uk/static/govuk-frontend-5.11.0.min.css" rel="stylesheet">
 </head>
 <body>

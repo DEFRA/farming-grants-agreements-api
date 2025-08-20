@@ -81,6 +81,13 @@ describe('errorHandlerPlugin', () => {
           handler: () => {
             throw Boom.internal('Internal error')
           }
+        },
+        {
+          method: 'GET',
+          path: '/test-401',
+          handler: () => {
+            throw Boom.unauthorized('Unauthorized')
+          }
         }
       ])
     })
@@ -141,6 +148,10 @@ describe('errorHandlerPlugin', () => {
         {
           path: '/test-500',
           expectedStatus: 500
+        },
+        {
+          path: '/test-401',
+          expectedStatus: 401
         }
       ]
 
@@ -153,6 +164,23 @@ describe('errorHandlerPlugin', () => {
         expect(response.statusCode).toBe(testCase.expectedStatus)
         expect(response.headers['cache-control']).toContain('no-cache')
       }
+    })
+
+    test('should render unauthorized template for 401 errors', async () => {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/test-401'
+      })
+
+      expect(response.statusCode).toBe(401)
+      expect(response.headers['content-type']).toContain('text/html')
+      expect(response.payload).toContain(
+        'You are not authorized to access this page'
+      )
+      expect(response.headers['cache-control']).toContain('no-cache')
+      expect(response.headers.pragma).toBe('no-cache')
+      expect(response.headers.expires).toBe('0')
+      expect(response.headers['surrogate-control']).toBe('no-store')
     })
   })
 
@@ -239,6 +267,35 @@ describe('errorHandlerPlugin', () => {
       expect(mockResponse.output.headers['Cache-Control']).toBe(
         'no-store, no-cache, must-revalidate, proxy-revalidate'
       )
+    })
+
+    test('should continue when unauthorized template rendering fails', async () => {
+      const mockRequest = {
+        response: {
+          isBoom: true,
+          output: {
+            statusCode: 401,
+            headers: {}
+          },
+          message: 'Unauthorized'
+        },
+        server: { logger: { info: jest.fn(), error: jest.fn() } }
+      }
+      const mockH = {
+        continue: Symbol('continue'),
+        view: jest.fn(() => {
+          throw new Error('Render failed')
+        })
+      }
+
+      const mockServer = { ext: jest.fn() }
+      errorHandlerPlugin.register(mockServer)
+      const extensionHandler = mockServer.ext.mock.calls[0][1]
+
+      const result = await extensionHandler(mockRequest, mockH)
+
+      expect(result).toBe(mockH.continue)
+      expect(mockRequest.server.logger.error).toHaveBeenCalled()
     })
   })
 })

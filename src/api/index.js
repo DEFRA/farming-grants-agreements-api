@@ -14,6 +14,7 @@ import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
 import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
 import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
+import { nunjucksConfig } from '~/src/config/nunjucks/nunjucks.js'
 
 async function createServer(serverOptions = {}) {
   setupProxy()
@@ -75,6 +76,7 @@ async function createServer(serverOptions = {}) {
       secureContext,
       pulse,
       mongooseDb,
+      nunjucksConfig,
       options.disableSQS ? null : sqsClientPlugin,
       errorHandlerPlugin,
       router
