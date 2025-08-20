@@ -11,7 +11,8 @@ jest.mock('~/src/config/index.js')
 
 describe('jwt-auth', () => {
   const mockLogger = {
-    error: jest.fn()
+    error: jest.fn(),
+    info: jest.fn()
   }
 
   beforeEach(() => {
