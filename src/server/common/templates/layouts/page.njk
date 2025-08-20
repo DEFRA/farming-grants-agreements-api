@@ -1,6 +1,7 @@
 {% extends "govuk/template.njk" %}
 
 {# Import GOVUK components globally #}
+{% from "govuk/components/header/macro.njk" import govukHeader %}
 {% from "govuk/components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
 {% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
 {% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
@@ -23,33 +24,35 @@
     containerClasses: "govuk-width-container"
   }) }}
 
-  {{ defraAccountBar({
-    businessName: "",
-    sbi: auth.sbi | default(""),
-    userName: ""
-  }) }}
+  {% if serviceTitle %}
+    <section aria-label="Service information" class="govuk-service-navigation" data-module="govuk-service-navigation" data-govuk-service-navigation-init="">
+      <div class="govuk-width-container">
+        <div class="govuk-service-navigation__container">
+          <span class="govuk-service-navigation__service-name">
+            {{ serviceTitle }}
+          </span>
+        </div>
+      </div>
+    </section>
+  {% endif %}
 
   <div class="govuk-width-container">
-
     {{ govukPhaseBanner({
       tag: {
         text: "Beta"
       },
       html: '<span class="govuk-phase-banner__text">
-              This is a new service. Help us improve it and 
+              This is a new service. Help us improve it and
                 <a class="govuk-link" href="#" target="_blank" rel="noopener noreferrer">
                   give your feedback <span class="govuk-visually-hidden">(opens in new tab)</span>
                 </a>.
             </span>'
-    }) 
-    }}
-   
-
+    }) }}
   </div>
 {% endblock %}
 
 {% block pageTitle %}
-  {{ serviceName }}
+  GOV.UK{% if serviceTitle %} - {{ serviceTitle }}{% endif %}{% if pageTitle %} - {{ pageTitle }}{% endif %}
 {% endblock %}
 
 {% block beforeContent %}
@@ -68,7 +71,11 @@
     }) }}
   {% endif %}
 
-  {% include "partials/account-details.njk" %}
+  {{ defraAccountBar({
+    businessName: company,
+    sbi: auth.sbi | default(sbi),
+    userName: farmerName
+  }) }}
 {% endblock %}
 
 <main id="main-content" class="{{ mainClasses }}" role="main">

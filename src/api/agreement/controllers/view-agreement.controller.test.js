@@ -1,18 +1,17 @@
 import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
-import * as getHTMLAgreement from '~/src/api/agreement/helpers/get-html-agreement.js'
+import * as getAgreement from '~/src/api/agreement/helpers/get-agreement.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
-jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   __esModule: true,
   ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
   getAgreementDataById: jest.fn()
 }))
-jest.mock('~/src/api/agreement/helpers/get-html-agreement.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement.js')
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 jest.mock('@hapi/jwt')
 
@@ -36,9 +35,7 @@ describe('viewAgreementController', () => {
     jest.clearAllMocks()
 
     // Mock default successful responses for all tests
-    jest
-      .spyOn(getHTMLAgreement, 'getHTMLAgreementDocument')
-      .mockResolvedValue(mockRenderedHtml)
+    jest.spyOn(getAgreement, 'getAgreement').mockResolvedValue(mockRenderedHtml)
 
     // Mock JWT auth functions
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
@@ -73,13 +70,13 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(payload).toBe(mockRenderedHtml)
+      expect(payload).toContain('Agile Farm agreement')
 
       // Verify mocks were called correctly
       expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
         agreementId
       )
-      expect(getHTMLAgreement.getHTMLAgreementDocument).toHaveBeenCalledWith(
+      expect(getAgreement.getAgreement).toHaveBeenCalledWith(
         agreementId,
         mockAgreementData,
         '/'
@@ -99,7 +96,7 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(payload).toBe(mockRenderedHtml)
+      expect(payload).toContain('Agile Farm agreement')
 
       // Verify the function defaulted to a reasonable value when ID was missing
       expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
@@ -111,7 +108,7 @@ describe('viewAgreementController', () => {
       // Arrange
       const errorMessage = 'Failed to render HTML'
       jest
-        .spyOn(getHTMLAgreement, 'getHTMLAgreementDocument')
+        .spyOn(getAgreement, 'getAgreement')
         .mockRejectedValue(new Error(errorMessage))
 
       // Act
@@ -165,7 +162,7 @@ describe('viewAgreementController', () => {
           .mockResolvedValue(mockAgreementData)
 
         jest
-          .spyOn(getHTMLAgreement, 'getHTMLAgreementDocument')
+          .spyOn(getAgreement, 'getAgreement')
           .mockResolvedValue(mockRenderedHtml)
       })
 

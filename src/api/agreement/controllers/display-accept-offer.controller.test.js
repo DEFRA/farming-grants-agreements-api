@@ -1,12 +1,10 @@
 import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import * as nunjucksRenderer from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
-jest.mock('~/src/api/agreement/helpers/nunjucks-renderer.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   __esModule: true,
   ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
@@ -17,8 +15,6 @@ jest.mock('~/src/api/common/helpers/jwt-auth.js')
 describe('displayAcceptOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
-
-  const mockRenderedHtml = `<!DOCTYPE html><html><body>Test accept offer HTML</body></html>`
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
@@ -35,12 +31,6 @@ describe('displayAcceptOfferController', () => {
 
     // Setup default mock implementations
     jest.spyOn(agreementDataHelper, 'getAgreementDataById')
-
-    jest
-      .spyOn(nunjucksRenderer, 'renderTemplate')
-      .mockReturnValue(mockRenderedHtml)
-
-    // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
@@ -72,18 +62,8 @@ describe('displayAcceptOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(result).toBe(mockRenderedHtml)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/accept-offer.njk',
-        expect.objectContaining({
-          agreementNumber: agreementId,
-          company: 'Test Company',
-          sbi: '106284736',
-          farmerName: 'Test User',
-          status: 'offered',
-          baseUrl: '/'
-        })
-      )
+      expect(String(result)).toContain('Accept your offer')
+      expect(String(result)).toContain(agreementId)
     })
 
     test('should handle agreement not found', async () => {
@@ -125,7 +105,7 @@ describe('displayAcceptOfferController', () => {
         .mockResolvedValue(mockAgreementData)
 
       // Act
-      const { statusCode } = await server.inject({
+      const { statusCode, result } = await server.inject({
         method: 'GET',
         url: `/review-accept-offer/${agreementId}`,
         headers: {
@@ -136,13 +116,8 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(nunjucksRenderer.renderTemplate).toHaveBeenCalledWith(
-        'views/accept-offer.njk',
-        expect.objectContaining({
-          baseUrl: '/defra-grants-proxy',
-          status: 'offered'
-        })
-      )
+      expect(String(result)).toContain('Accept your offer')
+      expect(String(result)).toContain('/defra-grants-proxy')
     })
 
     test('should handle database errors', async () => {
@@ -170,39 +145,55 @@ describe('displayAcceptOfferController', () => {
       })
     })
 
-    test('should handle template rendering errors', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const errorMessage = 'Template rendering failed'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'offered',
-        company: 'Test Company',
-        sbi: '106284736',
-        username: 'Test User'
-      }
+    describe('template rendering errors', () => {
+      let originalView
 
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-      jest.spyOn(nunjucksRenderer, 'renderTemplate').mockImplementation(() => {
-        throw new Error(errorMessage)
-      })
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: `/review-accept-offer/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
+      beforeEach(() => {
+        // Mock the view rendering to throw an error
+        originalView =
+          server.realm.plugins.vision.manager._engines.njk.compileFunc
+        server.realm.plugins.vision.manager._engines.njk.compileFunc = () => {
+          throw new Error('Template rendering failed')
         }
       })
 
-      // Assert
-      expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(result).toEqual({
-        message: 'Failed to display accept offer page',
-        error: errorMessage
+      afterEach(() => {
+        // Restore the original view function
+        server.realm.plugins.vision.manager._engines.njk.compileFunc =
+          originalView
+      })
+
+      test('should handle template rendering errors', async () => {
+        // Arrange
+        const agreementId = 'SFI123456789'
+        const mockAgreementData = {
+          agreementNumber: agreementId,
+          status: 'offered',
+          company: 'Test Company',
+          sbi: '106284736',
+          username: 'Test User'
+        }
+
+        jest
+          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .mockResolvedValue(mockAgreementData)
+
+        // Act
+        const { statusCode, result } = await server.inject({
+          method: 'GET',
+          url: `/review-accept-offer/${agreementId}`,
+          headers: {
+            'x-encrypted-auth': 'valid-jwt-token'
+          }
+        })
+
+        // Assert
+        expect(statusCode).toBe(statusCodes.internalServerError)
+        expect(result).toEqual({
+          message: 'An internal server error occurred',
+          error: 'Internal Server Error',
+          statusCode: statusCodes.internalServerError
+        })
       })
     })
 
@@ -221,9 +212,6 @@ describe('displayAcceptOfferController', () => {
             sbi: '106284736',
             username: 'Test User'
           })
-        jest
-          .spyOn(nunjucksRenderer, 'renderTemplate')
-          .mockImplementation(() => mockRenderedHtml)
       })
 
       test('Should return 401 when invalid JWT token provided', async () => {
@@ -269,7 +257,7 @@ describe('displayAcceptOfferController', () => {
 
     test('should redirect to review offer', async () => {
       // Arrange
-      const { statusCode, headers } = await server.inject({
+      const { statusCode, headers, result } = await server.inject({
         method: 'GET',
         url: `/review-accept-offer/${agreementId}`
       })
@@ -277,14 +265,12 @@ describe('displayAcceptOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.redirect)
       expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
-      expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
+      expect(result).toBe('')
     })
 
     test('should redirect to review offer when base URL is set', async () => {
       // Arrange
-      const agreementId = 'SFI123456789'
-
-      const { statusCode, headers } = await server.inject({
+      const { statusCode, headers, result } = await server.inject({
         method: 'GET',
         url: `/review-accept-offer/${agreementId}`,
         headers: {
@@ -297,7 +283,7 @@ describe('displayAcceptOfferController', () => {
       expect(headers.location).toBe(
         `/defra-grants-proxy/offer-accepted/${agreementId}`
       )
-      expect(nunjucksRenderer.renderTemplate).not.toHaveBeenCalled()
+      expect(result).toBe('')
     })
   })
 })

@@ -17,6 +17,15 @@ describe('#formatDate', () => {
         'Wed 1st February 2023'
       )
     })
+
+    test('Should return empty string when no value provided', () => {
+      expect(formatDate(undefined)).toBe('')
+      expect(formatDate(null)).toBe('')
+    })
+
+    test('Should return empty string on invalid date', () => {
+      expect(formatDate('invalid-date')).toBe('')
+    })
   })
 
   describe('With Date object', () => {

@@ -5,7 +5,6 @@ import {
   getFirstPaymentDate
 } from '~/src/api/agreement/helpers/accept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
@@ -55,21 +54,17 @@ const acceptOfferController = {
       }
 
       // Render the offer accepted template with agreement data
-      const offerAcceptedTemplate = renderTemplate('views/offer-accepted.njk', {
-        agreementNumber: agreementData.agreementNumber,
-        baseUrl,
-        company: agreementData.company,
-        sbi: agreementData.sbi,
-        farmerName: agreementData.username,
-        agreementStartDate: agreementData.agreementStartDate,
-        nearestQuarterlyPaymentDate: getFirstPaymentDate(
-          agreementData.agreementStartDate
-        )
-      })
-
-      // Return the HTML response
       return h
-        .response(offerAcceptedTemplate)
+        .view('views/offer-accepted.njk', {
+          agreementNumber: agreementData.agreementNumber,
+          company: agreementData.company,
+          sbi: agreementData.sbi,
+          farmerName: agreementData.username,
+          agreementStartDate: agreementData.agreementStartDate,
+          nearestQuarterlyPaymentDate: getFirstPaymentDate(
+            agreementData.agreementStartDate
+          )
+        })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {

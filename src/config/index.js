@@ -41,6 +41,12 @@ const config = convict({
     format: String,
     default: 'farming-grants-agreements-api'
   },
+  serviceTitle: {
+    doc: 'Service Title',
+    format: String,
+    // Pending sign off on "Manage land-based actions"
+    default: ''
+  },
   root: {
     doc: 'Project root',
     format: String,
