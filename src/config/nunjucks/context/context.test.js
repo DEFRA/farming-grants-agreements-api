@@ -1,3 +1,5 @@
+import { config } from '../../index.js'
+
 const mockReadFileSync = jest.fn()
 const mockLoggerError = jest.fn()
 
@@ -47,8 +49,8 @@ describe('#context', () => {
             url: '/about'
           }
         ],
-        serviceName: 'farming-grants-agreements-api',
-        serviceTitle: 'Manage land-based actions',
+        serviceName: config.get('serviceName'),
+        serviceTitle: config.get('serviceTitle'),
         auth: {
           isAuthenticated: false,
           name: undefined,
@@ -127,8 +129,8 @@ describe('#context cache', () => {
             url: '/about'
           }
         ],
-        serviceName: 'farming-grants-agreements-api',
-        serviceTitle: 'Manage land-based actions',
+        serviceName: config.get('serviceName'),
+        serviceTitle: config.get('serviceTitle'),
         auth: {
           isAuthenticated: false,
           name: undefined,

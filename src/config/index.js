@@ -44,7 +44,8 @@ const config = convict({
   serviceTitle: {
     doc: 'Service Title',
     format: String,
-    default: 'Manage land-based actions'
+    // Pending sign off on "Manage land-based actions"
+    default: ''
   },
   root: {
     doc: 'Project root',

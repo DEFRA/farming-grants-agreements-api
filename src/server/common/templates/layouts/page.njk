@@ -24,15 +24,17 @@
     containerClasses: "govuk-width-container"
   }) }}
 
-  <section aria-label="Service information" class="govuk-service-navigation" data-module="govuk-service-navigation" data-govuk-service-navigation-init="">
-    <div class="govuk-width-container">
-      <div class="govuk-service-navigation__container">
-        <span class="govuk-service-navigation__service-name">
-          {{ serviceTitle }}
-        </span>
+  {% if serviceTitle %}
+    <section aria-label="Service information" class="govuk-service-navigation" data-module="govuk-service-navigation" data-govuk-service-navigation-init="">
+      <div class="govuk-width-container">
+        <div class="govuk-service-navigation__container">
+          <span class="govuk-service-navigation__service-name">
+            {{ serviceTitle }}
+          </span>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  {% endif %}
 
   <div class="govuk-width-container">
     {{ govukPhaseBanner({
@@ -50,7 +52,7 @@
 {% endblock %}
 
 {% block pageTitle %}
-  GOV.UK - {{ serviceTitle }}{% if pageTitle %} - {{ pageTitle }}{% endif %}
+  GOV.UK{% if serviceTitle %} - {{ serviceTitle }}{% endif %}{% if pageTitle %} - {{ pageTitle }}{% endif %}
 {% endblock %}
 
 {% block beforeContent %}
