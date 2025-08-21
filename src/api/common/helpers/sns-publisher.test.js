@@ -30,6 +30,8 @@ describe('publishEvent', () => {
           return 'test-secret-key'
         case 'aws.sns.eventSource':
           return 'test-source'
+        case 'aws.sns.maxAttempts':
+          return 3
         default:
           return undefined
       }
