@@ -51,6 +51,7 @@ describe('createOfferController', () => {
     })
 
     expect(createOffer).toHaveBeenCalledWith(
+      expect.any(String),
       {
         agreementId: '123',
         sbi: '106284736',

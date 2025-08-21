@@ -53,6 +53,7 @@ const paymentsSchema = new mongoose.Schema({
 
 const schema = new mongoose.Schema(
   {
+    notificationMessageId: { type: String, required: true, unique: true },
     agreementNumber: { type: String, required: true },
     agreementName: { type: String, required: true },
     correlationId: { type: String, required: true },

@@ -3,6 +3,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
+import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
@@ -154,13 +155,18 @@ export const calculateYearlyPayments = (activities) => {
 
 /**
  * Create a new offer
+ * @param {string} notificationMessageId - The AWS notification message ID
  * @param {Agreement} agreementData - The agreement data
  * @param {Request<ReqRefDefaults>['logger']} logger
  * @returns {Promise<Agreement>} The agreement data
  */
-const createOffer = async (agreementData, logger) => {
+const createOffer = async (notificationMessageId, agreementData, logger) => {
   if (!agreementData) {
     throw new Error('Offer data is required')
+  }
+
+  if (await getAgreementData({ notificationMessageId })) {
+    throw new Error('Agreement has already been created')
   }
 
   const { identifiers, answers } = agreementData
@@ -169,6 +175,7 @@ const createOffer = async (agreementData, logger) => {
   const paymentActivities = createPaymentActivities(answers.actionApplications)
 
   const data = {
+    notificationMessageId,
     agreementNumber: generateAgreementNumber(),
     agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
     correlationId: uuidv4(),

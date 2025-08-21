@@ -13,6 +13,7 @@ const manageHedgerowTreesDescription = 'Maintain or establish hedgerow trees'
 
 export default [
   {
+    notificationMessageId: uuidv4(),
     agreementNumber: 'SFI987654321',
     agreementName: 'Sample Agreement',
     correlationId: uuidv4(),
@@ -75,6 +76,7 @@ export default [
     }
   },
   {
+    notificationMessageId: uuidv4(),
     agreementNumber: 'SFI123456789',
     agreementName: 'Sample Agreement',
     correlationId: uuidv4(),
@@ -575,6 +577,7 @@ export default [
     }
   },
   {
+    notificationMessageId: uuidv4(),
     agreementNumber: 'SFI999999999',
     agreementName: 'Sample Agreement',
     correlationId: uuidv4(),

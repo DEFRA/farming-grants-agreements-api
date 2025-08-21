@@ -83,12 +83,16 @@ describe('SQS Client', () => {
         data: { id: '123', status: 'approved' }
       }
 
-      await handleEvent(mockPayload, mockLogger)
+      await handleEvent('aws-message-id', mockPayload, mockLogger)
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
       )
-      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
+      expect(createOffer).toHaveBeenCalledWith(
+        'aws-message-id',
+        mockPayload.data,
+        mockLogger
+      )
     })
 
     it('should throw an error for non-application-approved events', async () => {
@@ -97,9 +101,9 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
 
-      await expect(handleEvent(mockPayload, mockLogger)).rejects.toThrow(
-        'Unrecognized event type'
-      )
+      await expect(
+        handleEvent('aws-message-id', mockPayload, mockLogger)
+      ).rejects.toThrow('Unrecognized event type')
 
       expect(createOffer).not.toHaveBeenCalled()
     })
@@ -112,12 +116,17 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
       const message = {
+        MessageId: 'aws-message-id',
         Body: JSON.stringify(mockPayload)
       }
 
       await processMessage(message, mockLogger)
 
-      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
+      expect(createOffer).toHaveBeenCalledWith(
+        'aws-message-id',
+        mockPayload.data,
+        mockLogger
+      )
     })
 
     it('should handle invalid JSON in message body', async () => {

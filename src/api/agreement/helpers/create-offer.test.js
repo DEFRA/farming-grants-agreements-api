@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 import {
   createOffer,
   calculateYearlyPayments,
@@ -8,10 +10,14 @@ import {
 } from './create-offer.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
 jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: jest.fn().mockResolvedValue(true)
+}))
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  getAgreementData: jest.fn().mockResolvedValue(null)
 }))
 
 const targetDataStructure = {
@@ -161,7 +167,7 @@ const agreementData = {
   }
 }
 
-describe('createAgreement', () => {
+describe('createOffer', () => {
   let mockLogger
 
   beforeAll(() => {
@@ -175,16 +181,25 @@ describe('createAgreement', () => {
     jest.setSystemTime(new Date('2025-01-01'))
   })
 
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
   afterAll(() => {
     jest.useRealTimers()
   })
 
   it('should create an agreement with valid data', async () => {
-    const result = await createOffer(agreementData, mockLogger)
+    const result = await createOffer(
+      'aws-message-id',
+      agreementData,
+      mockLogger
+    )
 
     // Check if the result matches the target data structure
     expect(result).toEqual({
       ...targetDataStructure,
+      notificationMessageId: 'aws-message-id',
       agreementNumber: expect.any(String),
       correlationId: expect.any(String)
     })
@@ -203,6 +218,22 @@ describe('createAgreement', () => {
       },
       mockLogger
     )
+  })
+
+  describe('when notificationMessageId already exists', () => {
+    it('should throw an error', async () => {
+      const notificationMessageId = 'test-message-id'
+      const agreementData = { answers: { actionApplications: [] } }
+
+      // Mock getAgreementData to return a value, indicating the notificationMessageId exists
+      getAgreementData.mockResolvedValueOnce({ id: 'existing-agreement' })
+
+      await expect(
+        createOffer(notificationMessageId, agreementData, mockLogger)
+      ).rejects.toThrow('Agreement has already been created')
+
+      expect(getAgreementData).toHaveBeenCalledWith({ notificationMessageId })
+    })
   })
 
   describe('groupParcelsById', () => {
@@ -583,9 +614,9 @@ describe('createAgreement', () => {
         Promise.reject(new Error('Database connection error'))
       )
 
-      await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
-        'Database connection error'
-      )
+      await expect(
+        createOffer(uuidv4(), agreementData, mockLogger)
+      ).rejects.toThrow('Database connection error')
     })
 
     it('should handle generic errors when creating an agreement', async () => {
@@ -593,9 +624,9 @@ describe('createAgreement', () => {
         Promise.reject(new Error('Generic error'))
       )
 
-      await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
-        'Generic error'
-      )
+      await expect(
+        createOffer(uuidv4(), agreementData, mockLogger)
+      ).rejects.toThrow('Generic error')
     })
   })
 })
