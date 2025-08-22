@@ -33,7 +33,7 @@ const searchForAgreement = (searchTerms) =>
 const getAgreementData = async (searchTerms) => {
   const agreement = await searchForAgreement(searchTerms)
 
-  if (!agreement[0]) {
+  if (!agreement?.[0]) {
     throw Boom.notFound(
       `Agreement not found using search terms: ${JSON.stringify(searchTerms)}`
     )
@@ -64,10 +64,6 @@ const getAgreementDataById = async (agreementId) => {
   const agreementData = await getAgreementData({
     agreementNumber: agreementId
   })
-
-  if (!agreementData) {
-    throw Boom.notFound(`Agreement not found with ID ${agreementId}`)
-  }
 
   return agreementData
 }

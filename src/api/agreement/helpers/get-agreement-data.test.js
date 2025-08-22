@@ -65,6 +65,18 @@ describe('getAgreementData', () => {
       jest.clearAllMocks()
     })
 
+    test('should throw Boom.badRequest when agreementId is empty', async () => {
+      await expect(getAgreementDataById('')).rejects.toThrow(
+        'Agreement ID is required'
+      )
+    })
+
+    test('should throw Boom.badRequest when agreementId is undefined', async () => {
+      await expect(getAgreementDataById(undefined)).rejects.toThrow(
+        'Agreement ID is required'
+      )
+    })
+
     test('should return agreement data when found', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
@@ -166,6 +178,21 @@ describe('getAgreementData', () => {
       await expect(doesAgreementExist(searchTerms)).rejects.toThrow(
         'Database connection error'
       )
+    })
+
+    test('should throw Boom.internal when aggregate throws', async () => {
+      // Arrange
+      const Boom = (await import('@hapi/boom')).default
+      const searchTerms = { notificationMessageId: 'boom-test-id' }
+      const mockError = new Error('Boom error')
+      agreementsModel.aggregate.mockReturnValue({
+        catch: jest.fn().mockImplementation((cb) => {
+          throw cb(mockError)
+        })
+      })
+
+      // Act & Assert
+      await expect(doesAgreementExist(searchTerms)).rejects.toThrow(Boom.Boom)
     })
 
     test('should work with different search terms', async () => {
