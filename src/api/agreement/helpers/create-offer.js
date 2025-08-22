@@ -101,7 +101,8 @@ export const createPaymentActivities = (actionApplications) => {
       existing.annualPayment = existing.quantity * existing.rate
     } else {
       const quantity = actionApplication.appliedFor.quantity
-      const rate = actionApplication.rate || 6.0
+      const testRate = 6.0
+      const rate = actionApplication.rate || testRate
       groupedActivities.set(actionCode, {
         code: actionApplication.code,
         description: actionApplication.description || '',
