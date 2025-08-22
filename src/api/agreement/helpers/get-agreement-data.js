@@ -2,12 +2,12 @@ import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 
 /**
- * Get agreement data for rendering templates
+ * Search for an agreement
  * @param {object} searchTerms - The search terms to use to find the agreement
  * @returns {Promise<Agreement>} The agreement data
  */
-const getAgreementData = async (searchTerms) => {
-  const agreement = await agreementsModel
+const searchForAgreement = (searchTerms) =>
+  agreementsModel
     .aggregate([
       {
         $match: searchTerms
@@ -24,6 +24,14 @@ const getAgreementData = async (searchTerms) => {
     .catch((error) => {
       throw Boom.internal(error)
     })
+
+/**
+ * Get agreement data for rendering templates
+ * @param {object} searchTerms - The search terms to use to find the agreement
+ * @returns {Promise<Agreement>} The agreement data
+ */
+const getAgreementData = async (searchTerms) => {
+  const agreement = await searchForAgreement(searchTerms)
 
   if (!agreement[0]) {
     throw Boom.notFound(
@@ -64,6 +72,16 @@ const getAgreementDataById = async (agreementId) => {
   return agreementData
 }
 
-export { getAgreementDataById, getAgreementData }
+/**
+ * Check if the agreement already exists
+ * @param {object} searchTerms - The search terms to use to find the agreement
+ * @returns {Promise<boolean>} Whether the agreement exists
+ */
+const doesAgreementExist = async (searchTerms) => {
+  const agreement = await searchForAgreement(searchTerms)
+  return agreement.length > 0
+}
+
+export { getAgreementDataById, getAgreementData, doesAgreementExist }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */

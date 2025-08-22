@@ -70,6 +70,14 @@ describe('SQS Client', () => {
       on: jest.fn()
     }
     Consumer.create.mockReturnValue(mockConsumer)
+
+    // Setup createOffer mock to return a mock agreement
+    createOffer.mockResolvedValue({
+      agreementNumber: 'SFI123456789',
+      notificationMessageId: 'test-message-id',
+      frn: '123456789',
+      sbi: '123456789'
+    })
   })
 
   afterEach(() => {

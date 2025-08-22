@@ -3,6 +3,7 @@ import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 import { config } from '~/src/config/index.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { seedDatabase } from './seed-database.js'
 
 /**
  * Handle an event from the SQS queue
@@ -13,15 +14,13 @@ import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
  */
 export const handleEvent = async (notificationMessageId, payload, logger) => {
   if (payload.type.indexOf('application.approved') !== -1) {
-    logger.info(
-      `Creating agreement from event: ${JSON.stringify(payload.data)}`
-    )
+    logger.info(`Creating agreement from event: ${notificationMessageId}`)
     const agreement = await createOffer(
       notificationMessageId,
       payload.data,
       logger
     )
-    logger.info(`Agreement created: ${JSON.stringify(agreement)}`)
+    logger.info(`Agreement created: ${agreement.agreementNumber}`)
     return agreement
   }
 
@@ -127,6 +126,22 @@ export const sqsClientPlugin = {
           error: err.message,
           stack: err.stack
         })
+      })
+
+      app.on('started', () => {
+        server.logger.info('SQS Consumer started')
+
+        // Seed the database if required
+        if (config.get('featureFlags.seedDb') === true) {
+          server.logger.info('Seeding database')
+
+          seedDatabase(server.logger).catch((err) => {
+            server.logger.error('Error seeding database failed:', {
+              error: err.message,
+              stack: err.stack
+            })
+          })
+        }
       })
 
       app.start()

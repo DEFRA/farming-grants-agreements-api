@@ -10,14 +10,14 @@ import {
 } from './create-offer.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
 jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: jest.fn().mockResolvedValue(true)
 }))
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  getAgreementData: jest.fn().mockResolvedValue(null)
+  doesAgreementExist: jest.fn().mockResolvedValue(false)
 }))
 
 const targetDataStructure = {
@@ -124,6 +124,7 @@ const agreementData = {
   code: 'frps-private-beta',
   createdAt: '2023-10-01T12:00:00Z',
   submittedAt: '2023-10-01T11:00:00Z',
+  agreementNumber: 'SFI987654321',
   identifiers: {
     sbi: '106284736',
     frn: '1234567890',
@@ -190,6 +191,9 @@ describe('createOffer', () => {
   })
 
   it('should create an agreement with valid data', async () => {
+    // Mock doesAgreementExist to return false for new agreements
+    doesAgreementExist.mockResolvedValueOnce(false)
+
     const result = await createOffer(
       'aws-message-id',
       agreementData,
@@ -197,9 +201,10 @@ describe('createOffer', () => {
     )
 
     // Check if the result matches the target data structure
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ...targetDataStructure,
       notificationMessageId: 'aws-message-id',
+      // These fields are dynamic, so we check for their types
       agreementNumber: expect.any(String),
       correlationId: expect.any(String)
     })
@@ -225,14 +230,14 @@ describe('createOffer', () => {
       const notificationMessageId = 'test-message-id'
       const agreementData = { answers: { actionApplications: [] } }
 
-      // Mock getAgreementData to return a value, indicating the notificationMessageId exists
-      getAgreementData.mockResolvedValueOnce({ id: 'existing-agreement' })
+      // Mock doesAgreementExist to return true, indicating the notificationMessageId exists
+      doesAgreementExist.mockResolvedValueOnce(true)
 
       await expect(
         createOffer(notificationMessageId, agreementData, mockLogger)
       ).rejects.toThrow('Agreement has already been created')
 
-      expect(getAgreementData).toHaveBeenCalledWith({ notificationMessageId })
+      expect(doesAgreementExist).toHaveBeenCalledWith({ notificationMessageId })
     })
   })
 
@@ -610,6 +615,8 @@ describe('createOffer', () => {
     })
 
     it('should handle database errors gracefully', async () => {
+      // Mock doesAgreementExist to return false so the function continues to the database call
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Database connection error'))
       )
@@ -620,6 +627,8 @@ describe('createOffer', () => {
     })
 
     it('should handle generic errors when creating an agreement', async () => {
+      // Mock doesAgreementExist to return false so the function continues to the database call
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Generic error'))
       )

@@ -3,7 +3,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
@@ -101,7 +101,7 @@ export const createPaymentActivities = (actionApplications) => {
       existing.annualPayment = existing.quantity * existing.rate
     } else {
       const quantity = actionApplication.appliedFor.quantity
-      const rate = 6.0
+      const rate = actionApplication.rate || 6.0
       groupedActivities.set(actionCode, {
         code: actionApplication.code,
         description: actionApplication.description || '',
@@ -165,7 +165,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     throw new Error('Offer data is required')
   }
 
-  if (await getAgreementData({ notificationMessageId })) {
+  if (await doesAgreementExist({ notificationMessageId })) {
     throw new Error('Agreement has already been created')
   }
 
@@ -174,9 +174,14 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
   const parcels = groupParcelsById(answers.actionApplications)
   const paymentActivities = createPaymentActivities(answers.actionApplications)
 
+  let agreementNumber = generateAgreementNumber()
+  if (config.get('featureFlags.seedDb')) {
+    agreementNumber = agreementData.agreementNumber
+  }
+
   const data = {
     notificationMessageId,
-    agreementNumber: generateAgreementNumber(),
+    agreementNumber,
     agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
     correlationId: uuidv4(),
     frn: identifiers.frn,
