@@ -3,20 +3,24 @@ import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 import { config } from '~/src/config/index.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { seedDatabase } from './seed-database.js'
 
 /**
  * Handle an event from the SQS queue
- * @param { Message } payload - The message payload
- * @param { import('@hapi/hapi').Server } logger - The logger instance
+ * @param {string} notificationMessageId - The AWS notification message ID
+ * @param {object} payload - The message payload
+ * @param {import('@hapi/hapi').Server} logger - The logger instance
  * @returns {Promise<Agreement>}
  */
-export const handleEvent = async (payload, logger) => {
+export const handleEvent = async (notificationMessageId, payload, logger) => {
   if (payload.type.indexOf('application.approved') !== -1) {
-    logger.info(
-      `Creating agreement from event: ${JSON.stringify(payload.data)}`
+    logger.info(`Creating agreement from event: ${notificationMessageId}`)
+    const agreement = await createOffer(
+      notificationMessageId,
+      payload.data,
+      logger
     )
-    const agreement = await createOffer(payload.data)
-    logger.info(`Agreement created: ${JSON.stringify(agreement)}`)
+    logger.info(`Agreement created: ${agreement.agreementNumber}`)
     return agreement
   }
 
@@ -32,7 +36,7 @@ export const handleEvent = async (payload, logger) => {
 export const processMessage = async (message, logger) => {
   try {
     const messageBody = JSON.parse(message.Body)
-    await handleEvent(messageBody, logger)
+    await handleEvent(message.MessageId, messageBody, logger)
   } catch (error) {
     logger.error('Error processing message:', {
       message,
@@ -122,6 +126,22 @@ export const sqsClientPlugin = {
           error: err.message,
           stack: err.stack
         })
+      })
+
+      app.on('started', () => {
+        server.logger.info('SQS Consumer started')
+
+        // Seed the database if required
+        if (config.get('featureFlags.seedDb') === true) {
+          server.logger.info('Seeding database')
+
+          seedDatabase(server.logger).catch((err) => {
+            server.logger.error('Error seeding database failed:', {
+              error: err.message,
+              stack: err.stack
+            })
+          })
+        }
       })
 
       app.start()

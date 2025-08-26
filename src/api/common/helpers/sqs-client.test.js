@@ -3,6 +3,9 @@ import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 import { handleEvent, processMessage, sqsClientPlugin } from './sqs-client.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { seedDatabase } from './seed-database.js'
+
+jest.mock('./seed-database.js')
 
 // Mock AWS SDK credential provider
 jest.mock('@aws-sdk/credential-provider-node', () => ({
@@ -25,6 +28,8 @@ jest.mock('~/src/config/index.js', () => ({
           return 5
         case 'sqs.visibilityTimeout':
           return 30
+        case 'featureFlags.seedDb':
+          return true
         default:
           return undefined
       }
@@ -70,6 +75,14 @@ describe('SQS Client', () => {
       on: jest.fn()
     }
     Consumer.create.mockReturnValue(mockConsumer)
+
+    // Setup createOffer mock to return a mock agreement
+    createOffer.mockResolvedValue({
+      agreementNumber: 'SFI123456789',
+      notificationMessageId: 'test-message-id',
+      frn: '123456789',
+      sbi: '123456789'
+    })
   })
 
   afterEach(() => {
@@ -83,12 +96,16 @@ describe('SQS Client', () => {
         data: { id: '123', status: 'approved' }
       }
 
-      await handleEvent(mockPayload, mockLogger)
+      await handleEvent('aws-message-id', mockPayload, mockLogger)
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
       )
-      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
+      expect(createOffer).toHaveBeenCalledWith(
+        'aws-message-id',
+        mockPayload.data,
+        mockLogger
+      )
     })
 
     it('should throw an error for non-application-approved events', async () => {
@@ -97,9 +114,9 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
 
-      await expect(handleEvent(mockPayload, mockLogger)).rejects.toThrow(
-        'Unrecognized event type'
-      )
+      await expect(
+        handleEvent('aws-message-id', mockPayload, mockLogger)
+      ).rejects.toThrow('Unrecognized event type')
 
       expect(createOffer).not.toHaveBeenCalled()
     })
@@ -112,12 +129,17 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
       const message = {
+        MessageId: 'aws-message-id',
         Body: JSON.stringify(mockPayload)
       }
 
       await processMessage(message, mockLogger)
 
-      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
+      expect(createOffer).toHaveBeenCalledWith(
+        'aws-message-id',
+        mockPayload.data,
+        mockLogger
+      )
     })
 
     it('should handle invalid JSON in message body', async () => {
@@ -301,6 +323,36 @@ describe('SQS Client', () => {
         'SQS Message processing error:',
         expect.objectContaining({
           error: error.message
+        })
+      )
+    })
+
+    it('should seed the database if featureFlags.seedDb is true on start', () => {
+      sqsClientPlugin.plugin.register(server, options)
+
+      seedDatabase.mockResolvedValue(true)
+
+      mockConsumer.on.mock.calls.find((call) => call[0] === 'started')[1]()
+
+      expect(mockLogger.info).toHaveBeenCalledWith('SQS Consumer started')
+      expect(seedDatabase).toHaveBeenCalledWith(server.logger)
+    })
+
+    it('should log error if seeding database fails', async () => {
+      sqsClientPlugin.plugin.register(server, options)
+
+      const error = new Error('Seeding failed')
+      seedDatabase.mockRejectedValue(error)
+
+      await mockConsumer.on.mock.calls.find(
+        (call) => call[0] === 'started'
+      )[1]()
+
+      expect(server.logger.error).toHaveBeenCalledWith(
+        'Error seeding database failed:',
+        expect.objectContaining({
+          error: error.message,
+          stack: error.stack
         })
       )
     })

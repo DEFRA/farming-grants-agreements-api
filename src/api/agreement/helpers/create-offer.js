@@ -3,6 +3,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
+import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
@@ -100,7 +101,8 @@ export const createPaymentActivities = (actionApplications) => {
       existing.annualPayment = existing.quantity * existing.rate
     } else {
       const quantity = actionApplication.appliedFor.quantity
-      const rate = 6.0
+      const testRate = 6.0
+      const rate = actionApplication.rate || testRate
       groupedActivities.set(actionCode, {
         code: actionApplication.code,
         description: actionApplication.description || '',
@@ -154,13 +156,18 @@ export const calculateYearlyPayments = (activities) => {
 
 /**
  * Create a new offer
+ * @param {string} notificationMessageId - The AWS notification message ID
  * @param {Agreement} agreementData - The agreement data
  * @param {Request<ReqRefDefaults>['logger']} logger
  * @returns {Promise<Agreement>} The agreement data
  */
-const createOffer = async (agreementData, logger) => {
+const createOffer = async (notificationMessageId, agreementData, logger) => {
   if (!agreementData) {
     throw new Error('Offer data is required')
+  }
+
+  if (await doesAgreementExist({ notificationMessageId })) {
+    throw new Error('Agreement has already been created')
   }
 
   const { identifiers, answers } = agreementData
@@ -168,8 +175,14 @@ const createOffer = async (agreementData, logger) => {
   const parcels = groupParcelsById(answers.actionApplications)
   const paymentActivities = createPaymentActivities(answers.actionApplications)
 
+  let agreementNumber = generateAgreementNumber()
+  if (config.get('featureFlags.seedDb')) {
+    agreementNumber = agreementData.agreementNumber
+  }
+
   const data = {
-    agreementNumber: generateAgreementNumber(),
+    notificationMessageId,
+    agreementNumber,
     agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
     correlationId: uuidv4(),
     frn: identifiers.frn,
