@@ -185,6 +185,8 @@ const getAgreement = async (agreementId, data) => {
   agreement.agreementLevelActions = getAgreementLevelActions(agreement)
   agreement.summaryOfPayments = getSummaryOfPayments(agreement)
   agreement.annualPaymentSchedule = getAnnualPaymentSchedule(agreement)
+  agreement.farmerName = agreement.username
+  agreement.agreementNumber = agreementId
 
   return agreement
 }

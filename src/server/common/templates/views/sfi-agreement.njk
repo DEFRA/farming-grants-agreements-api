@@ -20,11 +20,11 @@
                 <dd>
                     Address:
                 </dd>
-                <dt>{{ address }}</dt>
+                <dt>{{ agreement.address }}</dt>
                 <dd>
                     Agreement name:
                 </dd>
-                <dt>{{ agreementName }}</dt>
+                <dt>{{ agreement.agreementName }}</dt>
                 <dd>
                     Agreement number:
                 </dd>
@@ -95,7 +95,7 @@
             </p>
             <h2 id="parties" class="govuk-heading-l">2. Parties to the agreement</h2>
             <p class="govuk-body">This Agreement is between:</p>
-            <p class="govuk-body">You, {{ agreement.company }}, of {{ address }}, {{ postcode }}
+            <p class="govuk-body">You, {{ agreement.company }}, of {{ agreement.address }}, {{ agreement.postcode }}
                 and the Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and
                 Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").
             </p>

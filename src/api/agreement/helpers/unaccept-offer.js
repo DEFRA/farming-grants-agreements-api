@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import versionsModel from '~/src/api/common/models/versions.js'
 
 /**
  * Unaccepts an agreement and changes it's status back to Offered
@@ -7,7 +7,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
  * @param {string} agreementId - The agreement ID to fetch
  */
 async function unacceptOffer(agreementId) {
-  const agreement = await agreementsModel
+  const agreement = await versionsModel
     .updateOne(
       {
         agreementNumber: agreementId

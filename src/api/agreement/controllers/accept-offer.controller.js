@@ -19,7 +19,7 @@ const acceptOfferController = {
 
       if (status === 'offered') {
         // Accept the agreement
-        await acceptOffer(agreementData, request.logger)
+        await acceptOffer(agreementId, agreementData, request.logger)
 
         // Update the payment hub
         await updatePaymentHub(request, agreementNumber)
