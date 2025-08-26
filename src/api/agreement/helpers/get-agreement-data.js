@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
+import agreementGroupModel from '~/src/api/common/models/agreement_groups.js'
 
 /**
  * Search for an agreement
@@ -42,6 +43,42 @@ const getAgreementData = async (searchTerms) => {
   return Promise.resolve(agreement[0])
 }
 
+export const getAgreementGroupData = async (searchTerms) => {
+  if (!searchTerms || typeof searchTerms !== 'object') {
+    throw Boom.badRequest('searchTerms must be an object')
+  }
+
+  const agreementsGroup = await agreementGroupModel
+    .findOne(searchTerms)
+    .select('_id agreementNumber agreementName')
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
+
+  if (!agreementsGroup) {
+    throw Boom.notFound(
+      `AgreementsGroup not found using search terms: ${JSON.stringify(searchTerms)}`
+    )
+  }
+
+  const agreementData = await agreementsModel
+    .findOne({ agreementGroup: agreementsGroup._id })
+    .sort({ createdAt: -1, _id: -1 })
+    .lean()
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
+
+  if (!agreementData) {
+    throw Boom.notFound(
+      `Agreement not found with the group Id ${agreementsGroup._id.toString()}`
+    )
+  }
+  agreementData.agreementNumber = agreementsGroup.agreementNumber
+
+  return Promise.resolve(agreementData)
+}
+
 /**
  * Validate the agreement ID
  * @param {string} agreementId - The agreement ID to validate
@@ -61,7 +98,7 @@ const getAgreementDataById = async (agreementId) => {
   validateAgreementId(agreementId)
 
   // Get the agreement data before accepting
-  const agreementData = await getAgreementData({
+  const agreementData = await getAgreementGroupData({
     agreementNumber: agreementId
   })
 

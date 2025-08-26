@@ -75,6 +75,7 @@ describe('acceptOfferDocumentController', () => {
       // Assert
       expect(getAgreementDataById).toHaveBeenCalledWith(agreementId)
       expect(acceptOffer).toHaveBeenCalledWith(
+        agreementId,
         {
           agreementNumber: agreementId,
           company: 'Test Company',

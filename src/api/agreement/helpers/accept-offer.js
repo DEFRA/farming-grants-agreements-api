@@ -1,16 +1,17 @@
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import agreementsGroupModel from '~/src/api/common/models/agreement_groups.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 
 /**
  * Get agreement data for rendering templates
+ * @param {agreementNumber} agreementNumber - The agreement Id
  * @param {Agreement} agreementData - The agreement data
  * @param {Request<ReqRefDefaults>['logger']} logger - The logger object
  * @returns {Promise<Agreement>} The agreement data
  */
-async function acceptOffer(agreementData, logger) {
-  if (!agreementData?.agreementNumber) {
+async function acceptOffer(agreementNumber, agreementData, logger) {
+  if (!agreementNumber || !agreementData) {
     throw Boom.badRequest('Agreement data is required')
   }
 
@@ -25,7 +26,7 @@ async function acceptOffer(agreementData, logger) {
       data: {
         correlationId: agreementData?.correlationId,
         clientRef: agreementData?.clientRef,
-        offerId: agreementData?.agreementNumber,
+        offerId: agreementNumber,
         frn: agreementData?.frn,
         sbi: agreementData?.sbi
       }
@@ -34,10 +35,10 @@ async function acceptOffer(agreementData, logger) {
   )
 
   // Update the agreement in the database
-  const agreement = await agreementsModel
-    .updateOne(
+  const agreement = await agreementsGroupModel
+    .updateOneAgreement(
       {
-        agreementNumber: agreementData.agreementNumber
+        agreementNumber: agreementNumber
       },
       {
         $set: {
@@ -51,9 +52,7 @@ async function acceptOffer(agreementData, logger) {
     })
 
   if (!agreement) {
-    throw Boom.notFound(
-      `Offer not found with ID ${agreementData?.agreementNumber}`
-    )
+    throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
   }
 
   return agreement

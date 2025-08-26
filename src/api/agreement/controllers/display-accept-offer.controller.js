@@ -39,7 +39,7 @@ const displayAcceptOfferController = {
       // Render the accept offer template with agreement data
       return h
         .view('views/accept-offer.njk', {
-          agreementNumber: agreementData.agreementNumber,
+          agreementNumber: agreementId,
           company: agreementData.company,
           sbi: agreementData.sbi,
           farmerName: agreementData.username,

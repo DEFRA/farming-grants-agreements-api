@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import agreementGroupModel from '~/src/api/common/models/agreement_groups.js'
 import { v4 as uuidv4 } from 'uuid'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
@@ -182,7 +182,6 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
 
   const data = {
     notificationMessageId,
-    agreementNumber,
     agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
     correlationId: uuidv4(),
     frn: identifiers.frn,
@@ -205,8 +204,16 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     }
   }
 
-  // Create the new agreement
-  const createdAgreement = await agreementsModel.create(data)
+  const agreementGroup = await agreementGroupModel.createWithAgreements({
+    group: {
+      agreementNumber: agreementNumber,
+      frn: identifiers.frn,
+      sbi: identifiers.sbi,
+      agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
+      createdBy: 'system'
+    },
+    agreements: [data] // can pass multiple payloads
+  })
 
   // Publish event to SNS
   await publishEvent(
@@ -217,15 +224,15 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
       data: {
         correlationId: data?.correlationId,
         clientRef: data?.clientRef,
-        offerId: data?.agreementNumber,
-        frn: data?.frn,
-        sbi: data?.sbi
+        offerId: agreementGroup.agreementNumber,
+        frn: agreementGroup.frn,
+        sbi: agreementGroup.sbi
       }
     },
     logger
   )
 
-  return createdAgreement
+  return agreementGroup
 }
 
 export { createOffer }

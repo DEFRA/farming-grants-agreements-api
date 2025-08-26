@@ -128,7 +128,7 @@ const reviewOfferController = {
       return h
         .view('views/view-offer.njk', {
           agreementStatus: agreementData.status,
-          agreementNumber: agreementData.agreementNumber,
+          agreementNumber: agreementId,
           agreementSignatureDate: agreementData.signatureDate,
           company: agreementData.company,
           sbi: agreementData.sbi,

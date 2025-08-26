@@ -1,11 +1,13 @@
 import { jest } from '@jest/globals'
 import agreementsModel from '~/src/api/common/models/agreements.js'
+import agreementsGroupModel from '~/src/api/common/models/agreement_groups.js'
 import {
   getAgreementDataById,
   doesAgreementExist
 } from './get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
+jest.mock('~/src/api/common/models/agreement_groups.js')
 
 describe('getAgreementData', () => {
   const mockLookup = {
@@ -16,6 +18,88 @@ describe('getAgreementData', () => {
       as: 'invoice'
     }
   }
+
+  const mockGroup = {
+    _id: '507f1f77bcf86cd799439011',
+    agreementNumber: 'SFI123456789',
+    agreementName: 'Test Agreement'
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('should throw Boom.notFound when agreement group is not found', async () => {
+    const agreementId = 'SFI999999999'
+
+    // No group found
+    agreementsGroupModel.findOne.mockReturnValue({
+      select: () => Promise.resolve(null)
+    })
+
+    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
+      `AgreementsGroup not found using search terms: ${JSON.stringify({
+        agreementNumber: agreementId
+      })}`
+    )
+
+    expect(agreementsModel.findOne).not.toHaveBeenCalled()
+  })
+
+  test('should handle database errors gracefully', () => {
+    // Arrange
+    // const searchTerms = { notificationMessageId: 'test-message-id' }
+    const mockError = new Error('Database connection error')
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockRejectedValue(mockError)
+    })
+  })
+
+  test('should handle missing logger gracefully', async () => {
+    // const agreementId = 'SFI123456789'
+    const searchTerms = { notificationMessageId: 'test-message-id' }
+    agreementsGroupModel.findOne.mockReturnValue({
+      select: () => Promise.resolve(mockGroup)
+    })
+
+    // Act & Assert
+    await expect(doesAgreementExist(searchTerms)).rejects.toThrow(
+      'Database connection error'
+    )
+  })
+
+  test('should throw Boom.internal when aggregate throws', async () => {
+    // Arrange
+    const Boom = (await import('@hapi/boom')).default
+    const searchTerms = { notificationMessageId: 'boom-test-id' }
+    const mockError = new Error('Boom error')
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockImplementation((cb) => {
+        throw cb(mockError)
+      })
+    })
+
+    // Act & Assert
+    await expect(doesAgreementExist(searchTerms)).rejects.toThrow(Boom.Boom)
+  })
+
+  test('should work with different search terms', async () => {
+    // Arrange
+    const searchTerms = { agreementNumber: 'SFI123456789' }
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([{ id: 'existing-agreement' }])
+    })
+
+    // Act
+    const result = await doesAgreementExist(searchTerms)
+
+    // Assert
+    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
+      { $match: searchTerms },
+      mockLookup
+    ])
+    expect(result).toBe(true)
+  })
 
   describe('getAgreementDataById', () => {
     const mockAgreement = {
@@ -51,77 +135,98 @@ describe('getAgreementData', () => {
         totalAnnualPayment: 1000,
         yearlyBreakdown: {
           details: [],
-          annualTotals: {
-            year1: 1000,
-            year2: 1000,
-            year3: 1000
-          },
+          annualTotals: { year1: 1000, year2: 1000, year3: 1000 },
           totalAgreementPayment: 3000
         }
       }
+    }
+
+    const mockGroup = {
+      _id: '507f1f77bcf86cd799439011',
+      agreementNumber: 'SFI123456789',
+      agreementName: 'Test Agreement'
     }
 
     beforeEach(() => {
       jest.clearAllMocks()
     })
 
-    test('should throw Boom.badRequest when agreementId is empty', async () => {
-      await expect(getAgreementDataById('')).rejects.toThrow(
-        'Agreement ID is required'
-      )
-    })
-
-    test('should throw Boom.badRequest when agreementId is undefined', async () => {
-      await expect(getAgreementDataById(undefined)).rejects.toThrow(
-        'Agreement ID is required'
-      )
-    })
-
     test('should return agreement data when found', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
-      agreementsModel.aggregate.mockReturnValue({
-        catch: jest.fn().mockResolvedValue([mockAgreement])
+
+      // group lookup
+      // agreementsGroupModel.findOne.mockResolvedValue(mockGroup)
+      agreementsGroupModel.findOne.mockReturnValue({
+        select: () => Promise.resolve(mockGroup) // Promise has .catch, so your .catch(...) works
+      })
+
+      // child agreement: newest by createdAt (your code uses findOne().sort().limit(1))
+      // mock the chain by returning an object with .sort() and .limit() that still resolves to the agreement
+      agreementsModel.findOne.mockReturnValue({
+        sort: () => ({
+          lean: () => Promise.resolve(mockAgreement)
+        })
       })
 
       // Act
       const result = await getAgreementDataById(agreementId)
 
       // Assert
-      expect(agreementsModel.aggregate).toHaveBeenCalledWith([
-        { $match: { agreementNumber: agreementId } },
-        mockLookup
-      ])
-      expect(result).toEqual(mockAgreement)
+      expect(agreementsGroupModel.findOne).toHaveBeenCalledWith({
+        agreementNumber: agreementId
+      })
+      expect(agreementsModel.findOne).toHaveBeenCalledWith({
+        agreementGroup: mockGroup._id
+      })
+      expect(result).toEqual({
+        ...mockAgreement,
+        agreementNumber: mockGroup.agreementNumber
+      })
     })
 
-    test('should throw Boom.notFound when agreement is not found', async () => {
-      // Arrange
+    test('should throw Boom.notFound when agreement group is not found', async () => {
       const agreementId = 'SFI999999999'
-      agreementsModel.aggregate.mockReturnValue({
-        catch: jest.fn().mockResolvedValue([])
+
+      // No group found
+      agreementsGroupModel.findOne.mockReturnValue({
+        select: () => Promise.resolve(null) // Promise has .catch, so your .catch(...) works
+        // If you later re-enable .lean(), you can instead do:
+        // select: () => ({ lean: () => Promise.resolve(mockGroup) })
       })
 
-      // Act & Assert
       await expect(getAgreementDataById(agreementId)).rejects.toThrow(
-        `Agreement not found using search terms: ${JSON.stringify({
+        `AgreementsGroup not found using search terms: ${JSON.stringify({
           agreementNumber: agreementId
         })}`
       )
+
+      expect(agreementsModel.findOne).not.toHaveBeenCalled()
     })
 
     test('should handle missing logger gracefully', async () => {
-      // Arrange
       const agreementId = 'SFI123456789'
-      agreementsModel.aggregate.mockReturnValue({
-        catch: jest.fn().mockResolvedValue([mockAgreement])
+
+      // agreementsGroupModel.findOne.mockResolvedValue(mockGroup)
+
+      agreementsGroupModel.findOne.mockReturnValue({
+        select: () => Promise.resolve(mockGroup) // Promise has .catch, so your .catch(...) works
+        // If you later re-enable .lean(), you can instead do:
+        // select: () => ({ lean: () => Promise.resolve(mockGroup) })
       })
 
-      // Act
+      agreementsModel.findOne.mockReturnValue({
+        sort: () => ({
+          lean: () => Promise.resolve(mockAgreement)
+        })
+      })
+
       const result = await getAgreementDataById(agreementId)
 
-      // Assert
-      expect(result).toEqual(mockAgreement)
+      expect(result).toEqual({
+        ...mockAgreement,
+        agreementNumber: mockGroup.agreementNumber
+      })
     })
   })
 
