@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid'
+
 import {
   createOffer,
   calculateYearlyPayments,
@@ -8,10 +10,14 @@ import {
 } from './create-offer.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/agreements.js')
 jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: jest.fn().mockResolvedValue(true)
+}))
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  doesAgreementExist: jest.fn().mockResolvedValue(false)
 }))
 
 const targetDataStructure = {
@@ -118,6 +124,7 @@ const agreementData = {
   code: 'frps-private-beta',
   createdAt: '2023-10-01T12:00:00Z',
   submittedAt: '2023-10-01T11:00:00Z',
+  agreementNumber: 'SFI987654321',
   identifiers: {
     sbi: '106284736',
     frn: '1234567890',
@@ -161,7 +168,7 @@ const agreementData = {
   }
 }
 
-describe('createAgreement', () => {
+describe('createOffer', () => {
   let mockLogger
 
   beforeAll(() => {
@@ -175,16 +182,29 @@ describe('createAgreement', () => {
     jest.setSystemTime(new Date('2025-01-01'))
   })
 
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
   afterAll(() => {
     jest.useRealTimers()
   })
 
   it('should create an agreement with valid data', async () => {
-    const result = await createOffer(agreementData, mockLogger)
+    // Mock doesAgreementExist to return false for new agreements
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const result = await createOffer(
+      'aws-message-id',
+      agreementData,
+      mockLogger
+    )
 
     // Check if the result matches the target data structure
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ...targetDataStructure,
+      notificationMessageId: 'aws-message-id',
+      // These fields are dynamic, so we check for their types
       agreementNumber: expect.any(String),
       correlationId: expect.any(String)
     })
@@ -203,6 +223,22 @@ describe('createAgreement', () => {
       },
       mockLogger
     )
+  })
+
+  describe('when notificationMessageId already exists', () => {
+    it('should throw an error', async () => {
+      const notificationMessageId = 'test-message-id'
+      const agreementData = { answers: { actionApplications: [] } }
+
+      // Mock doesAgreementExist to return true, indicating the notificationMessageId exists
+      doesAgreementExist.mockResolvedValueOnce(true)
+
+      await expect(
+        createOffer(notificationMessageId, agreementData, mockLogger)
+      ).rejects.toThrow('Agreement has already been created')
+
+      expect(doesAgreementExist).toHaveBeenCalledWith({ notificationMessageId })
+    })
   })
 
   describe('groupParcelsById', () => {
@@ -579,23 +615,27 @@ describe('createAgreement', () => {
     })
 
     it('should handle database errors gracefully', async () => {
+      // Mock doesAgreementExist to return false so the function continues to the database call
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Database connection error'))
       )
 
-      await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
-        'Database connection error'
-      )
+      await expect(
+        createOffer(uuidv4(), agreementData, mockLogger)
+      ).rejects.toThrow('Database connection error')
     })
 
     it('should handle generic errors when creating an agreement', async () => {
+      // Mock doesAgreementExist to return false so the function continues to the database call
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.create.mockImplementation(() =>
         Promise.reject(new Error('Generic error'))
       )
 
-      await expect(createOffer(agreementData, mockLogger)).rejects.toThrow(
-        'Generic error'
-      )
+      await expect(
+        createOffer(uuidv4(), agreementData, mockLogger)
+      ).rejects.toThrow('Generic error')
     })
   })
 })

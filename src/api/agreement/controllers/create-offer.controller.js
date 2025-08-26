@@ -2,6 +2,7 @@ import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import { v4 as uuidv4 } from 'uuid'
 
 /**
  * Controller to serve HTML agreement document
@@ -35,7 +36,7 @@ const createOfferController = {
       }
 
       // Accept the agreement
-      await createOffer(agreementData, request.logger)
+      await createOffer(uuidv4(), agreementData, request.logger)
 
       // Return the HTML response
       return h.response({ message: 'Agreement created' }).code(statusCodes.ok)

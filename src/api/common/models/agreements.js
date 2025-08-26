@@ -53,6 +53,7 @@ const paymentsSchema = new mongoose.Schema({
 
 const schema = new mongoose.Schema(
   {
+    notificationMessageId: { type: String, required: true },
     agreementNumber: { type: String, required: true },
     agreementName: { type: String, required: true },
     correlationId: { type: String, required: true },
@@ -83,6 +84,7 @@ const schema = new mongoose.Schema(
 )
 
 // Indexes for common queries
+schema.index({ notificationMessageId: 1 }, { unique: true })
 schema.index({ agreementNumber: 1 }, { unique: true })
 schema.index({ sbi: 1 })
 schema.index({ agreementStartDate: 1 })

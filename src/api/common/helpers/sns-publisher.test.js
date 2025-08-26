@@ -9,6 +9,17 @@ jest.mock('~/src/config/index.js', () => ({
   config: { get: jest.fn() }
 }))
 
+// Mock setTimeout to use shorter delays for faster tests
+const originalSetTimeout = global.setTimeout
+
+beforeAll(() => {
+  global.setTimeout = (fn, delay) => originalSetTimeout(fn, Math.min(delay, 10))
+})
+
+afterAll(() => {
+  global.setTimeout = originalSetTimeout
+})
+
 describe('publishEvent', () => {
   const mockSend = jest.fn()
   const logger = { info: jest.fn(), error: jest.fn() }
@@ -108,7 +119,10 @@ describe('publishEvent', () => {
         logger,
         mockClient
       )
-    ).rejects.toMatchObject({ name: 'InternalError', message: 'fail' })
+    ).rejects.toMatchObject({
+      name: 'InternalError',
+      message: 'fail'
+    })
 
     expect(mockSend).toHaveBeenCalledTimes(3)
     expect(logger.error).toHaveBeenCalled()
@@ -132,7 +146,10 @@ describe('publishEvent', () => {
         logger,
         mockClient
       )
-    ).rejects.toMatchObject({ name: 'BadRequest', message: 'bad request' })
+    ).rejects.toMatchObject({
+      name: 'BadRequest',
+      message: 'bad request'
+    })
 
     expect(mockSend).toHaveBeenCalledTimes(1)
     expect(logger.error).toHaveBeenCalledWith(
