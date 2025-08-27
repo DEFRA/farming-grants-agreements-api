@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import models from '~/src/api/common/models/index.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { processMessage } from '~/src/api/common/helpers/sqs-client.js'
+import { processMessage } from '~/src/api/common/helpers/sqs-message-processor.js'
 
 async function publishSampleAgreementEvents(tableData, logger) {
   for (const row of tableData) {

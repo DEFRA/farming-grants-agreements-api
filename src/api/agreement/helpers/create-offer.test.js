@@ -225,6 +225,30 @@ describe('createOffer', () => {
     )
   })
 
+  it('should generate an agreement number when seedDb is true but agreementNumber is empty', async () => {
+    // Enable DB seeding and provide an empty agreementNumber
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', true)
+
+    const emptyAgreementData = {
+      ...agreementData,
+      agreementNumber: ''
+    }
+
+    // Ensure the notification id hasn't been used
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const result = await createOffer(uuidv4(), emptyAgreementData, mockLogger)
+
+    // Should fall back to a generated SFI number
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).not.toBe('')
+
+    // Restore previous config
+    config.set('featureFlags.seedDb', previous)
+  })
+
   describe('when notificationMessageId already exists', () => {
     it('should throw an error', async () => {
       const notificationMessageId = 'test-message-id'
