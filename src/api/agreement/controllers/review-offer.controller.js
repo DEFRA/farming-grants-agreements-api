@@ -44,30 +44,37 @@ const reviewOfferController = {
       const jwtSecret = config.get('jwtSecret')
       const authHeader = request.headers['x-encrypted-auth']
 
-      request.logger.info('JWT Debug Info:', {
-        agreementId,
-        isJwtEnabled,
-        hasJwtSecret: !!jwtSecret,
-        jwtSecretLength: jwtSecret ? jwtSecret.length : 0,
-        hasAuthHeader: !!authHeader,
-        authHeaderLength: authHeader ? authHeader.length : 0,
-        authHeaderPreview: authHeader
-          ? `${authHeader.substring(0, 20)}...`
-          : 'none'
-      })
+      request.logger.info(
+        {
+          agreementId,
+          isJwtEnabled,
+          hasJwtSecret: !!jwtSecret,
+          jwtSecretLength: jwtSecret ? jwtSecret.length : 0,
+          hasAuthHeader: !!authHeader,
+          authHeaderLength: authHeader ? authHeader.length : 0,
+          authHeaderPreview: authHeader
+            ? `${authHeader.substring(0, 20)}...`
+            : 'none'
+        },
+        'JWT Debug Info:'
+      )
 
       // Add clear token presence logging
       if (authHeader) {
-        request.logger.info('✅ JWT TOKEN IS PRESENT:', {
-          tokenLength: authHeader.length,
-          isJwtFormat: authHeader.startsWith('eyJ') && authHeader.includes('.')
-        })
+        request.logger.info(
+          {
+            tokenLength: authHeader.length,
+            isJwtFormat:
+              authHeader.startsWith('eyJ') && authHeader.includes('.')
+          },
+          '✅ JWT TOKEN IS PRESENT:'
+        )
       } else {
         request.logger.warn('❌ NO JWT TOKEN PRESENT - Auth header missing')
       }
 
       // Log all headers for debugging
-      request.logger.info('All request headers:', Object.keys(request.headers))
+      request.logger.info(Object.keys(request.headers), 'All request headers:')
 
       // Get the agreement data
       const agreementData = await getAgreementDataById(agreementId)
@@ -79,11 +86,14 @@ const reviewOfferController = {
         request.logger
       )
 
-      request.logger.info('🔐 JWT Validation Result:', {
-        passed: jwtValidationResult,
-        agreementId,
-        isJwtEnabled
-      })
+      request.logger.info(
+        {
+          passed: jwtValidationResult,
+          agreementId,
+          isJwtEnabled
+        },
+        '🔐 JWT Validation Result:'
+      )
 
       if (!jwtValidationResult) {
         request.logger.error('❌ JWT Validation FAILED - Throwing 401 error')
