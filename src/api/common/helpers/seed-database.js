@@ -2,8 +2,9 @@ import mongoose from 'mongoose'
 import models from '~/src/api/common/models/index.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { processMessage } from '~/src/api/common/helpers/sqs-client.js'
 
-async function publishAgreementEvents(tableData, logger) {
+async function publishSampleAgreementEvents(tableData, logger) {
   for (const row of tableData) {
     await publishEvent(
       {
@@ -13,11 +14,27 @@ async function publishAgreementEvents(tableData, logger) {
         time: new Date().toISOString(),
         data: row
       },
-      logger
+      logger,
+      process.env.NODE_ENV === 'development'
+        ? undefined
+        : {
+            // We're not allowed to publish application approved events on the platform
+            // this mocks the SNS send/process logic for sample data
+            send: async ({ input: { Message } }) => {
+              const body = JSON.parse(Message)
+              await processMessage(
+                {
+                  MessageId: body.id,
+                  Body: Message
+                },
+                logger
+              )
+            }
+          }
     )
   }
   logger.info(
-    `Successfully inserted ${tableData.length} documents into the 'agreements' collection`
+    `Successfully published ${tableData.length} 'agreements' documents`
   )
 }
 
@@ -39,7 +56,7 @@ export async function seedDatabase(logger) {
 
       const tableData = sampleData[name]
       if (tableData?.length && name === 'agreements') {
-        await publishAgreementEvents(tableData, logger)
+        await publishSampleAgreementEvents(tableData, logger)
       }
     } catch (e) {
       logger.error(e)
