@@ -35,8 +35,8 @@ export const errorHandlerPlugin = {
               .header('Surrogate-Control', 'no-store')
           } catch (error) {
             request.server.logger.error(
-              'Failed to render unauthorized template:',
-              error
+              error,
+              'Failed to render unauthorized template:'
             )
             return h.continue
           }
