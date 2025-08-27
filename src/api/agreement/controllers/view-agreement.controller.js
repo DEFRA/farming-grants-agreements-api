@@ -1,11 +1,5 @@
-import path from 'node:path'
-
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreement } from '~/src/api/agreement/helpers/get-agreement.js'
-import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
-import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
-import Boom from '@hapi/boom'
 
 /**
  * Controller to serve HTML agreement document
@@ -15,35 +9,16 @@ import Boom from '@hapi/boom'
 const viewAgreementController = {
   handler: async (request, h) => {
     try {
-      const { agreementId } = request.params
-      const baseUrl = getBaseUrl(request)
-
-      const agreementData = await getAgreementDataById(agreementId)
-
-      // Validate JWT authentication based on feature flag
-      if (
-        !validateJwtAuthentication(
-          request.headers['x-encrypted-auth'],
-          agreementData,
-          request.logger
-        )
-      ) {
-        throw Boom.unauthorized(
-          'Not authorized to view offer agreement document'
-        )
-      }
-
-      if (agreementData.status !== 'accepted') {
-        return h.redirect(path.join(baseUrl, 'review-offer', agreementId))
-      }
+      const { agreementData, baseUrl } = request.pre
+      const { agreementNumber } = agreementData
 
       request.logger.info(
-        `Rendering HTML agreement document for agreementId: ${agreementId}`
+        `Rendering HTML agreement document for agreementNumber: ${agreementNumber}`
       )
 
       // get agreement
       const fullAgreementData = await getAgreement(
-        agreementId,
+        agreementNumber,
         agreementData,
         baseUrl
       )

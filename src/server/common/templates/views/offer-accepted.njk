@@ -1,3 +1,4 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
 {% extends 'layouts/page.njk' %}
 {% set pageTitle = 'Offer accepted' %}
 {% block content %}
@@ -16,9 +17,19 @@
           <h2 class="govuk-heading-m">
             What happens next
           </h2>
-          <p class="govuk-body">You can
-            <a href="{{ buildUrl(baseUrl, 'view-agreement', agreementNumber) }}" class="govuk-link">view your full agreement</a>
-            including the terms and conditions for your selected actions.</p>
+          <form method="post" class="govuk-!-display-inline">
+            <p class="govuk-body">
+              You can
+              <button
+                type="submit"
+                name="action"
+                value="view-agreement"
+                class="govuk-body govuk-link link-button">
+                view your full agreement
+              </button>
+              including the terms and conditions for your selected actions.
+            </p>
+          </form>
           <p class="govuk-body">
             <a href="#" target="_blank" class="govuk-link">Read the guidance (opens in new tab)</a>
             to check what you must do to get paid for each action.</p>
