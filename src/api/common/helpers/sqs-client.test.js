@@ -1,7 +1,8 @@
 import { jest } from '@jest/globals'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
-import { handleEvent, processMessage, sqsClientPlugin } from './sqs-client.js'
+import { sqsClientPlugin } from './sqs-client.js'
+import { handleEvent } from './sqs-message-processor.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 import { seedDatabase } from './seed-database.js'
 
@@ -119,80 +120,6 @@ describe('SQS Client', () => {
       ).rejects.toThrow('Unrecognized event type')
 
       expect(createOffer).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('processMessage', () => {
-    it('should process valid SNS message', async () => {
-      const mockPayload = {
-        type: 'application.approved',
-        data: { id: '123' }
-      }
-      const message = {
-        MessageId: 'aws-message-id',
-        Body: JSON.stringify(mockPayload)
-      }
-
-      await processMessage(message, mockLogger)
-
-      expect(createOffer).toHaveBeenCalledWith(
-        'aws-message-id',
-        mockPayload.data,
-        mockLogger
-      )
-    })
-
-    it('should handle invalid JSON in message body', async () => {
-      const message = {
-        Body: 'invalid json'
-      }
-
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Invalid message format'
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        })
-      )
-    })
-
-    it('should handle invalid JSON in SNS message', async () => {
-      const message = {
-        Body: 'invalid json'
-      }
-
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Invalid message format'
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        })
-      )
-    })
-
-    it('should handle non-SyntaxError with Boom.boomify', async () => {
-      const message = {
-        Body: JSON.stringify({
-          Message: JSON.stringify({ type: 'invalid.type' })
-        })
-      }
-
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Error processing SQS message'
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        })
-      )
     })
   })
 

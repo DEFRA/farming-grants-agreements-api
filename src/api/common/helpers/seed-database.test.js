@@ -11,7 +11,7 @@ describe('seedDatabase', () => {
       process.env.NODE_ENV = 'test'
 
       // mocks required for this test
-      jest.doMock('~/src/api/common/helpers/sqs-client.js', () => ({
+      jest.doMock('~/src/api/common/helpers/sqs-message-processor.js', () => ({
         processMessage: mockProcessMessage
       }))
 
