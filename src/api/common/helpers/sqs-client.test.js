@@ -123,10 +123,6 @@ describe('SQS Client', () => {
     })
   })
 
-  describe('processMessage', () => {
-    // processMessage tests moved to sqs-message-processor.test.js
-  })
-
   describe('sqsClientPlugin', () => {
     const options = {
       awsRegion: 'us-east-1',
