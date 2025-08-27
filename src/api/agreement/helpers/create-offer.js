@@ -176,7 +176,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
   const paymentActivities = createPaymentActivities(answers.actionApplications)
 
   let agreementNumber = generateAgreementNumber()
-  if (config.get('featureFlags.seedDb')) {
+  if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {
     agreementNumber = agreementData.agreementNumber
   }
 
