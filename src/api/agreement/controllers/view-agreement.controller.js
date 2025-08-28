@@ -9,18 +9,16 @@ import { getAgreement } from '~/src/api/agreement/helpers/get-agreement.js'
 const viewAgreementController = {
   handler: async (request, h) => {
     try {
-      const { agreementData, baseUrl } = request.pre
-      const { agreementNumber } = agreementData
+      const { agreementData } = request.auth.credentials
 
       request.logger.info(
-        `Rendering HTML agreement document for agreementNumber: ${agreementNumber}`
+        `Rendering HTML agreement document for agreementNumber: ${agreementData.agreementNumber}`
       )
 
       // get agreement
       const fullAgreementData = await getAgreement(
-        agreementNumber,
-        agreementData,
-        baseUrl
+        agreementData.agreementNumber,
+        agreementData
       )
 
       // Return the HTML response

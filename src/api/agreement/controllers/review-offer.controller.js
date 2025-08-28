@@ -30,7 +30,7 @@ function flattenParcelActivities(agreementData) {
 const reviewOfferController = {
   handler: (request, h) => {
     try {
-      const { agreementData } = request.pre
+      const { agreementData } = request.auth.credentials
 
       const actions = flattenParcelActivities(agreementData)
 

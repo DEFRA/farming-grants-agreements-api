@@ -1,8 +1,5 @@
 import { Boom } from '@hapi/boom'
-import {
-  preFetchAgreement,
-  getControllerByAction
-} from '~/src/api/agreement/controllers/index.js'
+import { getControllerByAction } from '~/src/api/agreement/controllers/index.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
@@ -15,7 +12,7 @@ const agreement = {
         method: ['GET', 'POST'],
         path: '/{agreementId}',
         options: {
-          pre: [{ method: preFetchAgreement }]
+          auth: 'grants-ui-jwt'
         },
         /**
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
@@ -24,9 +21,9 @@ const agreement = {
         handler: (request, h) => {
           const payload = request.payload || {}
           const { action } = payload
-          const agreementStatus = request.pre.agreementData.status
+          const { agreementData } = request.auth.credentials
 
-          const controller = getControllerByAction(agreementStatus)(action)
+          const controller = getControllerByAction(agreementData.status)(action)
           if (!controller?.handler) {
             throw Boom.badRequest(
               `Unrecognised action in POST payload: ${String(action)}`

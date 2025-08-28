@@ -9,7 +9,7 @@ const displayAcceptOfferController = {
   handler: (request, h) => {
     try {
       // Get the agreement data
-      const { agreementData } = request.pre
+      const { agreementData } = request.auth.credentials
 
       // Render the accept offer template with agreement data
       return h

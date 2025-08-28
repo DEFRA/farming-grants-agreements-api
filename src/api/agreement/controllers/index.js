@@ -3,9 +3,6 @@ import { reviewOfferController } from '~/src/api/agreement/controllers/review-of
 import { viewAgreementController } from '~/src/api/agreement/controllers/view-agreement.controller.js'
 import { acceptOfferController } from '~/src/api/agreement/controllers/accept-offer.controller.js'
 import { displayAcceptOfferController } from '~/src/api/agreement/controllers/display-accept-offer.controller.js'
-import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
-import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
 
 export const getControllerByAction = (agreementStatus) => {
   let chooseControllerByActionOffer
@@ -37,29 +34,4 @@ export const getControllerByAction = (agreementStatus) => {
   }
 
   return chooseControllerByActionOffer
-}
-
-export const preFetchAgreement = async (request, h) => {
-  const { agreementId } = request.params
-  if (!agreementId) return h.continue
-
-  // Get the agreement data before accepting
-  const agreementData = await getAgreementDataById(agreementId)
-
-  // Validate JWT authentication based on feature flag
-  if (
-    !validateJwtAuthentication(
-      request.headers['x-encrypted-auth'],
-      agreementData,
-      request.logger
-    )
-  ) {
-    throw Boom.unauthorized('Not authorized to accept offer agreement document')
-  }
-
-  const baseUrl = getBaseUrl(request)
-
-  request.pre = { ...(request.pre || {}), agreementData, baseUrl }
-
-  return h.continue
 }

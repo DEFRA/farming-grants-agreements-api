@@ -14,7 +14,7 @@ const acceptOfferController = {
   handler: async (request, h) => {
     try {
       // Get the agreement data before accepting
-      const { agreementData } = request.pre
+      const { agreementData } = request.auth.credentials
       const { agreementNumber, status } = agreementData
 
       if (status === 'offered') {
