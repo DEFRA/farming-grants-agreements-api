@@ -28,11 +28,6 @@ const acceptOfferController = {
       // Render the offer accepted template with agreement data
       return h
         .view('views/offer-accepted.njk', {
-          agreementNumber: agreementData.agreementNumber,
-          company: agreementData.company,
-          sbi: agreementData.sbi,
-          farmerName: agreementData.username,
-          agreementStartDate: agreementData.agreementStartDate,
           nearestQuarterlyPaymentDate: getFirstPaymentDate(
             agreementData.agreementStartDate
           )

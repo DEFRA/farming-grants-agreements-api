@@ -59,12 +59,6 @@ const reviewOfferController = {
       // Render the page with base context automatically applied
       return h
         .view('views/view-offer.njk', {
-          agreementStatus: agreementData.status,
-          agreementNumber: agreementData.agreementNumber,
-          agreementSignatureDate: agreementData.signatureDate,
-          company: agreementData.company,
-          sbi: agreementData.sbi,
-          farmerName: agreementData.username,
           actions,
           payments,
           totalYearly,

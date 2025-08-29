@@ -48,7 +48,8 @@ export function context(request) {
     serviceTitle: config.get('serviceTitle'),
     auth,
     breadcrumbs: [],
-    navigation: buildNavigation(request)
+    navigation: buildNavigation(request),
+    agreement: request?.auth?.credentials?.agreementData
   }
 }
 

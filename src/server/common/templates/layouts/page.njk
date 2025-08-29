@@ -72,9 +72,9 @@
   {% endif %}
 
   {{ defraAccountBar({
-    businessName: company,
+    businessName: agreement.company,
     sbi: auth.sbi | default(sbi),
-    userName: farmerName
+    userName: agreement.username
   }) }}
 {% endblock %}
 
