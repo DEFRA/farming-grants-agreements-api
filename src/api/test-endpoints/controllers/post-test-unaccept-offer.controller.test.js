@@ -1,7 +1,16 @@
 import Boom from '@hapi/boom'
-import { createServer } from '~/src/api/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import hapi from '@hapi/hapi'
 import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
+import { testEndpoints } from '~/src/api/test-endpoints/index.js'
+
+// Mock config
+jest.mock('~/src/config/index.js', () => ({
+  get: jest.fn().mockImplementation((key) => {
+    if (key === 'featureFlags.testEndpoints') return true
+    if (key === 'port') return 0
+    return ''
+  })
+}))
 
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
@@ -12,7 +21,13 @@ describe('unacceptOfferController', () => {
   let server
 
   beforeAll(async () => {
-    server = await createServer({ disableSQS: true })
+    // Create a test server with just the test endpoints
+    server = hapi.server({
+      port: 0
+    })
+
+    // Register the test endpoints plugin and initialize server
+    testEndpoints.plugin.register(server)
     await server.initialize()
   })
 
@@ -25,16 +40,19 @@ describe('unacceptOfferController', () => {
   })
 
   test('should successfully unaccept an agreement and return 200 OK', async () => {
+    // Arrange
     const agreementId = 'SFI123456789'
+    unacceptOffer.mockResolvedValue({ modifiedCount: 1 })
 
+    // Act
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: `/unaccept-offer/${agreementId}`
+      url: `/api/test/unaccept-offer/${agreementId}`
     })
 
     // Assert
-    expect(unacceptOffer).toHaveBeenCalledWith('SFI123456789')
-    expect(statusCode).toBe(statusCodes.ok)
+    expect(unacceptOffer).toHaveBeenCalledWith(agreementId)
+    expect(statusCode).toBe(200)
     expect(result).toEqual({
       message: 'Offer unaccepted'
     })
@@ -49,34 +67,31 @@ describe('unacceptOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: `/unaccept-offer/${agreementId}`
+      url: `/api/test/unaccept-offer/${agreementId}`
     })
 
     // Assert
-    expect(statusCode).toBe(statusCodes.notFound)
-    expect(result).toEqual({
-      message: 'Offer not found',
-      error: 'Not Found',
-      statusCode: statusCodes.notFound
-    })
+    expect(statusCode).toBe(404)
+    expect(result.statusCode).toBe(404)
+    expect(result.error).toBe('Not Found')
   })
 
-  test('should handle database errors from acceptAgreement', async () => {
+  test('should handle database errors from unacceptOffer', async () => {
     // Arrange
-    const error = new Error('Database connection failed')
-    unacceptOffer.mockRejectedValue(error)
+    unacceptOffer.mockRejectedValue(Boom.internal('Database connection failed'))
 
     // Act
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: `/unaccept-offer/valid-agreement-id`
+      url: '/api/test/unaccept-offer/valid-agreement-id'
     })
 
     // Assert
-    expect(statusCode).toBe(statusCodes.internalServerError)
+    expect(statusCode).toBe(500)
     expect(result).toEqual({
-      message: 'Failed to unaccept offer',
-      error: 'Database connection failed'
+      statusCode: 500,
+      error: 'Internal Server Error',
+      message: 'An internal server error occurred'
     })
   })
 })

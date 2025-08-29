@@ -2,6 +2,7 @@ import path from 'path'
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
 import inert from '@hapi/inert'
+import Boom from '@hapi/boom'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/api/router.js'
@@ -15,6 +16,33 @@ import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
 import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
 import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
 import { nunjucksConfig } from '~/src/config/nunjucks/nunjucks.js'
+import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
+
+const customGrantsUiJwtScheme = () => ({
+  authenticate: async (request, h) => {
+    const { agreementId } = request.params
+    const agreementData = await getAgreementDataById(agreementId)
+
+    if (
+      !validateJwtAuthentication(
+        request.headers['x-encrypted-auth'],
+        agreementData,
+        request.logger
+      )
+    ) {
+      throw Boom.unauthorized(
+        'Not authorized to accept offer agreement document'
+      )
+    }
+
+    return h.authenticated({
+      credentials: {
+        agreementData
+      }
+    })
+  }
+})
 
 async function createServer(serverOptions = {}) {
   setupProxy()
@@ -53,6 +81,9 @@ async function createServer(serverOptions = {}) {
       }
     ]
   })
+
+  server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
+  server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
 
   const options = {
     disableSQS: false,
