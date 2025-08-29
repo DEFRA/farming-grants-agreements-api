@@ -1,3 +1,5 @@
+import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+
 /**
  * Hapi plugin for registering the default error handler
  */
@@ -14,11 +16,11 @@ export const errorHandlerPlugin = {
           errorMessage: response.message
         }
 
-        if (response.output.statusCode === 401) {
+        if (response.output.statusCode === statusCodes.unauthorized) {
           template = 'views/error/unauthorized.njk'
         }
 
-        if (response.output.statusCode === 404) {
+        if (response.output.statusCode === statusCodes.notFound) {
           template = 'views/error/not-found.njk'
         }
 

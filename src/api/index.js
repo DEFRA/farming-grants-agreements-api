@@ -19,6 +19,31 @@ import { nunjucksConfig } from '~/src/config/nunjucks/nunjucks.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
 
+const customGrantsUiJwtScheme = () => ({
+  authenticate: async (request, h) => {
+    const { agreementId } = request.params
+    const agreementData = await getAgreementDataById(agreementId)
+
+    if (
+      !validateJwtAuthentication(
+        request.headers['x-encrypted-auth'],
+        agreementData,
+        request.logger
+      )
+    ) {
+      throw Boom.unauthorized(
+        'Not authorized to accept offer agreement document'
+      )
+    }
+
+    return h.authenticated({
+      credentials: {
+        agreementData
+      }
+    })
+  }
+})
+
 async function createServer(serverOptions = {}) {
   setupProxy()
   const server = hapi.server({
@@ -57,30 +82,7 @@ async function createServer(serverOptions = {}) {
     ]
   })
 
-  server.auth.scheme('custom-grants-ui-jwt', () => ({
-    authenticate: async (request, h) => {
-      const { agreementId } = request.params
-      const agreementData = await getAgreementDataById(agreementId)
-
-      if (
-        !validateJwtAuthentication(
-          request.headers['x-encrypted-auth'],
-          agreementData,
-          request.logger
-        )
-      ) {
-        throw Boom.unauthorized(
-          'Not authorized to accept offer agreement document'
-        )
-      }
-
-      return h.authenticated({
-        credentials: {
-          agreementData
-        }
-      })
-    }
-  }))
+  server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
   server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
 
   const options = {
