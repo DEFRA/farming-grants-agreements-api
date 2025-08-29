@@ -29,7 +29,7 @@ describe('unacceptOfferController', () => {
 
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: `/unaccept-offer/${agreementId}`
+      url: `/api/test/unaccept-offer/${agreementId}`
     })
 
     // Assert
@@ -49,16 +49,12 @@ describe('unacceptOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: `/unaccept-offer/${agreementId}`
+      url: `/api/test/unaccept-offer/${agreementId}`
     })
 
     // Assert
     expect(statusCode).toBe(statusCodes.notFound)
-    expect(result).toEqual({
-      message: 'Offer not found',
-      error: 'Not Found',
-      statusCode: statusCodes.notFound
-    })
+    expect(result).toContain('Page not found')
   })
 
   test('should handle database errors from acceptAgreement', async () => {
@@ -69,7 +65,7 @@ describe('unacceptOfferController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: `/unaccept-offer/valid-agreement-id`
+      url: `/api/test/unaccept-offer/valid-agreement-id`
     })
 
     // Assert

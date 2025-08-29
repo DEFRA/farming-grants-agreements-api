@@ -53,7 +53,7 @@ describe('#context', () => {
         serviceTitle: config.get('serviceTitle'),
         auth: {
           isAuthenticated: false,
-          name: undefined,
+          name: 'Unauthenticated user',
           role: undefined,
           organisationId: undefined,
           sbi: 106284736
@@ -133,7 +133,7 @@ describe('#context cache', () => {
         serviceTitle: config.get('serviceTitle'),
         auth: {
           isAuthenticated: false,
-          name: undefined,
+          name: 'Unauthenticated user',
           organisationId: undefined,
           role: undefined,
           sbi: 106284736

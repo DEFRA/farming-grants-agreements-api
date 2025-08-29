@@ -103,6 +103,9 @@ describe('errorHandlerPlugin', () => {
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
       expect(response.headers['surrogate-control']).toBe('no-store')
+      expect(response.payload).toContain(
+        'Sorry, there is a problem with the service'
+      )
     })
 
     test('should add cache control headers to generic errors converted to Boom', async () => {
@@ -116,6 +119,9 @@ describe('errorHandlerPlugin', () => {
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
       expect(response.headers['surrogate-control']).toBe('no-store')
+      expect(response.payload).toContain(
+        'Sorry, there is a problem with the service'
+      )
     })
 
     test('should not modify successful responses', async () => {
@@ -129,6 +135,7 @@ describe('errorHandlerPlugin', () => {
       expect(response.headers.pragma).toBeUndefined()
       expect(response.headers.expires).toBeUndefined()
       expect(response.headers['surrogate-control']).toBeUndefined()
+      expect(response.payload).toContain('Success')
     })
 
     test('should handle different Boom error types', async () => {
@@ -182,9 +189,35 @@ describe('errorHandlerPlugin', () => {
       expect(response.headers.expires).toBe('0')
       expect(response.headers['surrogate-control']).toBe('no-store')
     })
+
+    test('should render not found template for 404 errors', async () => {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/test-404'
+      })
+
+      expect(response.statusCode).toBe(404)
+      expect(response.headers['content-type']).toContain('text/html')
+      expect(response.payload).toContain('Page not found')
+      expect(response.headers['cache-control']).toContain('no-cache')
+      expect(response.headers.pragma).toBe('no-cache')
+      expect(response.headers.expires).toBe('0')
+      expect(response.headers['surrogate-control']).toBe('no-store')
+    })
   })
 
-  describe('extension handler', () => {
+  describe('onPreResponse extension continue to next handler', () => {
+    const view = jest.fn().mockReturnThis()
+    const code = jest.fn().mockReturnThis()
+    const header = jest.fn().mockReturnThis()
+
+    const mockH = {
+      continue: Symbol('continue'),
+      view,
+      code,
+      header
+    }
+
     test('should continue processing when response is not a Boom error', async () => {
       const mockRequest = {
         response: {
@@ -206,69 +239,6 @@ describe('errorHandlerPlugin', () => {
       expect(result).toBe(mockH.continue)
     })
 
-    test('should set cache headers and continue when response is a Boom error', async () => {
-      const mockResponse = {
-        isBoom: true,
-        output: {
-          headers: {}
-        }
-      }
-      const mockRequest = {
-        response: mockResponse
-      }
-      const mockH = {
-        continue: Symbol('continue')
-      }
-
-      const mockServer = {
-        ext: jest.fn()
-      }
-      errorHandlerPlugin.register(mockServer)
-      const extensionHandler = mockServer.ext.mock.calls[0][1]
-
-      const result = await extensionHandler(mockRequest, mockH)
-
-      expect(result).toBe(mockH.continue)
-      expect(mockResponse.output.headers['Cache-Control']).toBe(
-        'no-store, no-cache, must-revalidate, proxy-revalidate'
-      )
-      expect(mockResponse.output.headers.Pragma).toBe('no-cache')
-      expect(mockResponse.output.headers.Expires).toBe('0')
-      expect(mockResponse.output.headers['Surrogate-Control']).toBe('no-store')
-    })
-
-    test('should handle response with existing headers', async () => {
-      const mockResponse = {
-        isBoom: true,
-        output: {
-          headers: {
-            'existing-header': 'existing-value'
-          }
-        }
-      }
-      const mockRequest = {
-        response: mockResponse
-      }
-      const mockH = {
-        continue: Symbol('continue')
-      }
-
-      const mockServer = {
-        ext: jest.fn()
-      }
-      errorHandlerPlugin.register(mockServer)
-      const extensionHandler = mockServer.ext.mock.calls[0][1]
-
-      await extensionHandler(mockRequest, mockH)
-
-      expect(mockResponse.output.headers['existing-header']).toBe(
-        'existing-value'
-      )
-      expect(mockResponse.output.headers['Cache-Control']).toBe(
-        'no-store, no-cache, must-revalidate, proxy-revalidate'
-      )
-    })
-
     test('should continue when unauthorized template rendering fails', async () => {
       const mockRequest = {
         response: {
@@ -281,12 +251,11 @@ describe('errorHandlerPlugin', () => {
         },
         server: { logger: { info: jest.fn(), error: jest.fn() } }
       }
-      const mockH = {
-        continue: Symbol('continue'),
-        view: jest.fn(() => {
-          throw new Error('Render failed')
-        })
-      }
+
+      const error = new Error('Render failed')
+      view.mockImplementation(() => {
+        throw error
+      })
 
       const mockServer = { ext: jest.fn() }
       errorHandlerPlugin.register(mockServer)
@@ -295,7 +264,10 @@ describe('errorHandlerPlugin', () => {
       const result = await extensionHandler(mockRequest, mockH)
 
       expect(result).toBe(mockH.continue)
-      expect(mockRequest.server.logger.error).toHaveBeenCalled()
+      expect(mockRequest.server.logger.error).toHaveBeenCalledWith(
+        error,
+        'Failed to render error template:'
+      )
     })
   })
 })

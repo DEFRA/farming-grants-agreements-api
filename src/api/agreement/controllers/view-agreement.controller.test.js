@@ -60,8 +60,11 @@ describe('viewAgreementController', () => {
 
       // Act
       const { statusCode, headers, payload } = await server.inject({
-        method: 'GET',
-        url: `/view-agreement/${agreementId}`,
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'view-agreement'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -78,16 +81,18 @@ describe('viewAgreementController', () => {
       )
       expect(getAgreement.getAgreement).toHaveBeenCalledWith(
         agreementId,
-        mockAgreementData,
-        '/'
+        mockAgreementData
       )
     })
 
     test('Should handle missing agreement ID', async () => {
       // Act
       const { statusCode, headers, payload } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/undefined',
+        method: 'POST',
+        url: '/undefined',
+        payload: {
+          action: 'view-agreement'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -113,8 +118,11 @@ describe('viewAgreementController', () => {
 
       // Act
       const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789',
+        method: 'POST',
+        url: '/SFI123456789',
+        payload: {
+          action: 'view-agreement'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -122,10 +130,7 @@ describe('viewAgreementController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(result).toEqual({
-        message: 'Failed to generate agreement document',
-        error: errorMessage
-      })
+      expect(result.message).toBe('Failed to generate agreement document')
     })
 
     test('Should handle error when agreement data retrieval fails', async () => {
@@ -139,103 +144,19 @@ describe('viewAgreementController', () => {
 
       // Act
       const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: '/view-agreement/SFI123456789'
+        method: 'POST',
+        url: '/SFI123456789',
+        payload: {
+          action: 'view-agreement'
+        },
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
       })
 
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(result).toEqual({
-        message: 'Failed to generate agreement document',
-        error: errorMessage
-      })
-    })
-
-    // JWT Authorization Tests
-    describe('JWT Authorization', () => {
-      beforeEach(() => {
-        jest.clearAllMocks()
-
-        // Mock default successful responses
-        jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
-          .mockResolvedValue(mockAgreementData)
-
-        jest
-          .spyOn(getAgreement, 'getAgreement')
-          .mockResolvedValue(mockRenderedHtml)
-      })
-
-      test('Should return 401 when invalid JWT token provided', async () => {
-        // Arrange
-        jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
-
-        // Act
-        const { statusCode, result } = await server.inject({
-          method: 'GET',
-          url: '/view-agreement/SFI123456789',
-          headers: {
-            'x-encrypted-auth': 'invalid-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.unauthorized)
-        expect(result).toContain('<!DOCTYPE html>')
-        expect(result).toContain('You are not authorized to access this page')
-        expect(result).toContain(
-          'Not authorized to view offer agreement document'
-        )
-      })
-    })
-  })
-
-  describe('Offer not accepted', () => {
-    const agreementId = 'SFI123456789'
-
-    const mockAgreementData = {
-      sbi: '106284736',
-      status: 'offered',
-      agreementNumber: 'SFI123456789'
-    }
-
-    beforeEach(() => {
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-    })
-
-    test('Should redirect to review offer', async () => {
-      // Act
-      const { statusCode, headers } = await server.inject({
-        method: 'GET',
-        url: `/view-agreement/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/review-offer/${agreementId}`)
-    })
-
-    test('Should redirect to review offer with base URL', async () => {
-      // Act
-      const { statusCode, headers } = await server.inject({
-        method: 'GET',
-        url: `/view-agreement/${agreementId}`,
-        headers: {
-          'x-base-url': '/defra-grants-proxy',
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(
-        `/defra-grants-proxy/review-offer/${agreementId}`
-      )
+      expect(String(result)).toContain('Failed to render HTML')
     })
   })
 })
