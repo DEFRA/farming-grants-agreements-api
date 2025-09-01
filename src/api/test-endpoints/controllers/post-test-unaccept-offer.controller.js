@@ -7,7 +7,7 @@ import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
  * Renders a Nunjucks template with agreement data
  * @satisfies {Partial<ServerRoute>}
  */
-const unacceptOfferController = {
+const postTestUnacceptOfferController = {
   handler: async (request, h) => {
     try {
       const { agreementId } = request.params
@@ -37,7 +37,7 @@ const unacceptOfferController = {
   }
 }
 
-export { unacceptOfferController }
+export { postTestUnacceptOfferController }
 
 /**
  * @import { ServerRoute } from '@hapi/hapi'

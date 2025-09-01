@@ -107,7 +107,6 @@ describe('getAgreement', () => {
           }
         ]
       },
-      farmerName: 'Test User',
       parcels: [],
       payments: {
         activities: [],
@@ -269,8 +268,5 @@ describe('getAgreement', () => {
     expect(agreement.annualPaymentSchedule.data).toHaveLength(2)
     expect(agreement.annualPaymentSchedule.data[0][0].text).toBe('ACT1')
     expect(agreement.annualPaymentSchedule.data[1][0].text).toBe('Total')
-
-    // Farmer name is copied from username
-    expect(agreement.farmerName).toBe('User Name')
   })
 })

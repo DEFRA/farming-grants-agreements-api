@@ -3,7 +3,7 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
-{% set pageTitle =  company ~ " agreement" %}
+{% set pageTitle =  agreement.company ~ " agreement" %}
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
@@ -12,11 +12,11 @@
                 <dd>
                     Agreement holder:
                 </dd>
-                <dt>{{ company }}</dt>
+                <dt>{{ agreement.company }}</dt>
                 <dd>
                     SBI:
                 </dd>
-                <dt>{{ sbi }}</dt>
+                <dt>{{ agreement.sbi }}</dt>
                 <dd>
                     Address:
                 </dd>
@@ -28,11 +28,11 @@
                 <dd>
                     Agreement number:
                 </dd>
-                <dt>{{ agreementNumber }}</dt>
+                <dt>{{ agreement.agreementNumber }}</dt>
                 <dd>
                     Start date:
                 </dd>
-                <dt>{{ agreementStartDate | formatDate("d MMMM yyyy") }}</dt>
+                <dt>{{ agreement.agreementStartDate | formatDate("d MMMM yyyy") }}</dt>
             </dl>
         </div>
     </div>
@@ -95,7 +95,7 @@
             </p>
             <h2 id="parties" class="govuk-heading-l">2. Parties to the agreement</h2>
             <p class="govuk-body">This Agreement is between:</p>
-            <p class="govuk-body">You, {{ company }}, of {{ address }}, {{ postcode }}
+            <p class="govuk-body">You, {{ agreement.company }}, of {{ address }}, {{ postcode }}
                 and the Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and
                 Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").
             </p>

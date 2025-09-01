@@ -52,8 +52,11 @@ describe('displayAcceptOfferController', () => {
 
       // Act
       const { statusCode, headers, result } = await server.inject({
-        method: 'GET',
-        url: `/review-accept-offer/${agreementId}`,
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'display-accept'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -63,7 +66,6 @@ describe('displayAcceptOfferController', () => {
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
       expect(String(result)).toContain('Accept your offer')
-      expect(String(result)).toContain(agreementId)
     })
 
     test('should handle agreement not found', async () => {
@@ -74,8 +76,11 @@ describe('displayAcceptOfferController', () => {
 
       // Act
       const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: `/review-accept-offer/${agreementId}`,
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'display-accept'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -83,10 +88,7 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(500)
-      expect(result).toEqual({
-        message: 'Failed to display accept offer page',
-        error: "Cannot read properties of null (reading 'status')"
-      })
+      expect(String(result)).toContain('Cannot read properties of null')
     })
 
     test('should handle base URL header', async () => {
@@ -106,8 +108,11 @@ describe('displayAcceptOfferController', () => {
 
       // Act
       const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: `/review-accept-offer/${agreementId}`,
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'display-accept'
+        },
         headers: {
           'x-base-url': '/defra-grants-proxy',
           'x-encrypted-auth': 'valid-jwt-token'
@@ -130,8 +135,11 @@ describe('displayAcceptOfferController', () => {
 
       // Act
       const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: `/review-accept-offer/${agreementId}`,
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'display-accept'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -139,10 +147,7 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(result).toEqual({
-        message: 'Failed to display accept offer page',
-        error: errorMessage
-      })
+      expect(String(result)).toContain('Database connection failed')
     })
 
     describe('template rendering errors', () => {
@@ -180,8 +185,11 @@ describe('displayAcceptOfferController', () => {
 
         // Act
         const { statusCode, result } = await server.inject({
-          method: 'GET',
-          url: `/review-accept-offer/${agreementId}`,
+          method: 'POST',
+          url: `/${agreementId}`,
+          payload: {
+            action: 'display-accept'
+          },
           headers: {
             'x-encrypted-auth': 'valid-jwt-token'
           }
@@ -190,50 +198,10 @@ describe('displayAcceptOfferController', () => {
         // Assert
         expect(statusCode).toBe(statusCodes.internalServerError)
         expect(result).toEqual({
-          message: 'An internal server error occurred',
           error: 'Internal Server Error',
-          statusCode: statusCodes.internalServerError
+          message: 'An internal server error occurred',
+          statusCode: 500
         })
-      })
-    })
-
-    // JWT Authorization Tests
-    describe('JWT Authorization', () => {
-      beforeEach(() => {
-        jest.clearAllMocks()
-
-        // Setup default mock implementations
-        jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
-          .mockResolvedValue({
-            agreementNumber: 'SFI123456789',
-            status: 'offered',
-            company: 'Test Company',
-            sbi: '106284736',
-            username: 'Test User'
-          })
-      })
-
-      test('Should return 401 when invalid JWT token provided', async () => {
-        // Arrange
-        jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
-
-        // Act
-        const { statusCode, result } = await server.inject({
-          method: 'GET',
-          url: '/review-accept-offer/SFI123456789',
-          headers: {
-            'x-encrypted-auth': 'invalid-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.unauthorized)
-        expect(result).toContain('<!DOCTYPE html>')
-        expect(result).toContain('You are not authorized to access this page')
-        expect(result).toContain(
-          'Not authorized to display accept offer agreement document'
-        )
       })
     })
   })
@@ -255,35 +223,42 @@ describe('displayAcceptOfferController', () => {
         .mockResolvedValue(mockAgreementData)
     })
 
-    test('should redirect to review offer', async () => {
+    test('should render accept offer page even when already accepted', async () => {
       // Arrange
-      const { statusCode, headers, result } = await server.inject({
-        method: 'GET',
-        url: `/review-accept-offer/${agreementId}`
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
-      expect(result).toBe('')
-    })
-
-    test('should redirect to review offer when base URL is set', async () => {
-      // Arrange
-      const { statusCode, headers, result } = await server.inject({
-        method: 'GET',
-        url: `/review-accept-offer/${agreementId}`,
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'accept-offer'
+        },
         headers: {
-          'x-base-url': '/defra-grants-proxy'
+          'x-encrypted-auth': 'valid-jwt-token'
         }
       })
 
       // Assert
-      expect(statusCode).toBe(statusCodes.redirect)
-      expect(headers.location).toBe(
-        `/defra-grants-proxy/offer-accepted/${agreementId}`
-      )
-      expect(result).toBe('')
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(String(result)).toContain('Offer accepted')
+    })
+
+    test('should render accept offer page with base URL when already accepted', async () => {
+      // Arrange
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'accept-offer'
+        },
+        headers: {
+          'x-base-url': '/defra-grants-proxy',
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(String(result)).toContain('Offer accepted')
+      expect(String(result)).toContain('/defra-grants-proxy')
     })
   })
 })

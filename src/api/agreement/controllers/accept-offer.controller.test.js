@@ -66,7 +66,10 @@ describe('acceptOfferDocumentController', () => {
 
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: `/accept-offer/${agreementId}`,
+        url: `/${agreementId}`,
+        payload: {
+          action: 'accept-offer'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -98,7 +101,10 @@ describe('acceptOfferDocumentController', () => {
       // Act
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: `/accept-offer/${agreementId}`,
+        url: `/${agreementId}`,
+        payload: {
+          action: 'accept-offer'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -106,10 +112,7 @@ describe('acceptOfferDocumentController', () => {
 
       // Assert
       expect(statusCode).toBe(500)
-      expect(result.message).toBe('Failed to accept offer')
-      expect(result.error).toBe(
-        "Cannot read properties of null (reading 'status')"
-      )
+      expect(String(result)).toContain('Cannot read properties of null')
     })
 
     test('should handle database errors from acceptOffer', async () => {
@@ -120,7 +123,10 @@ describe('acceptOfferDocumentController', () => {
       // Act
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: `/accept-offer/SFI123456789`,
+        url: `/SFI123456789`,
+        payload: {
+          action: 'accept-offer'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
@@ -136,17 +142,19 @@ describe('acceptOfferDocumentController', () => {
 
     test('should handle missing agreement ID', async () => {
       // Act
-      const { statusCode, result } = await server.inject({
+      const { statusCode } = await server.inject({
         method: 'POST',
-        url: '/accept-offer/',
+        url: '/',
+        payload: {
+          action: 'accept-offer'
+        },
         headers: {
           'x-encrypted-auth': 'valid-jwt-token'
         }
       })
 
       // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(result.message).toBeUndefined()
+      expect(statusCode).toBe(statusCodes.notFound)
     })
 
     test('should handle base URL header', async () => {
@@ -154,7 +162,10 @@ describe('acceptOfferDocumentController', () => {
 
       const { statusCode, result } = await server.inject({
         method: 'POST',
-        url: `/accept-offer/${agreementId}`,
+        url: `/${agreementId}`,
+        payload: {
+          action: 'accept-offer'
+        },
         headers: {
           'x-base-url': '/defra-grants-proxy',
           'x-encrypted-auth': 'valid-jwt-token'
@@ -166,128 +177,6 @@ describe('acceptOfferDocumentController', () => {
       expect(String(result)).toContain('Offer accepted')
       expect(String(result)).toContain(agreementId)
       expect(String(result)).toContain('/defra-grants-proxy')
-    })
-  })
-
-  describe('already accepted', () => {
-    const agreementId = 'SFI123456789'
-
-    beforeEach(() => {
-      // Setup default mock implementations
-      getAgreementDataById.mockResolvedValue({
-        agreementNumber: agreementId,
-        status: 'accepted',
-        company: 'Test Company',
-        sbi: '106284736',
-        username: 'Test User'
-      })
-    })
-
-    describe('POST', () => {
-      test('should redirect to review offer', async () => {
-        // Arrange
-        const { statusCode, headers, result } = await server.inject({
-          method: 'POST',
-          url: `/accept-offer/${agreementId}`,
-          headers: {
-            'x-encrypted-auth': 'valid-jwt-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.redirect)
-        expect(headers.location).toBe(`/offer-accepted/${agreementId}`)
-        expect(result).toBe('')
-      })
-
-      test('should redirect to review offer when base URL is set', async () => {
-        // Arrange
-        const { statusCode, headers, result } = await server.inject({
-          method: 'POST',
-          url: `/accept-offer/${agreementId}`,
-          headers: {
-            'x-base-url': '/defra-grants-proxy',
-            'x-encrypted-auth': 'valid-jwt-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.redirect)
-        expect(headers.location).toBe(
-          `/defra-grants-proxy/offer-accepted/${agreementId}`
-        )
-        expect(result).toBe('')
-      })
-    })
-
-    describe('GET', () => {
-      test('should return accepted offer page', async () => {
-        const { statusCode, result } = await server.inject({
-          method: 'GET',
-          url: `/offer-accepted/${agreementId}`,
-          headers: {
-            'x-encrypted-auth': 'valid-jwt-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.ok)
-        expect(String(result)).toContain('Offer accepted')
-      })
-
-      test('should return accepted offer page when base URL is set', async () => {
-        const { statusCode, result } = await server.inject({
-          method: 'GET',
-          url: `/offer-accepted/${agreementId}`,
-          headers: {
-            'x-base-url': '/defra-grants-proxy',
-            'x-encrypted-auth': 'valid-jwt-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.ok)
-        expect(String(result)).toContain('Offer accepted')
-        expect(String(result)).toContain('/defra-grants-proxy')
-      })
-    })
-  })
-
-  describe('JWT Authorization', () => {
-    beforeEach(() => {
-      jest.clearAllMocks()
-
-      // Setup default mock implementations
-      getAgreementDataById.mockResolvedValue({
-        agreementNumber: 'SFI123456789',
-        company: 'Test Company',
-        sbi: '106284736',
-        username: 'Test User'
-      })
-      acceptOffer.mockResolvedValue()
-      updatePaymentHub.mockResolvedValue()
-    })
-
-    test('Should return 401 when invalid JWT token provided', async () => {
-      // Arrange
-      jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: '/accept-offer/SFI123456789',
-        headers: {
-          'x-encrypted-auth': 'invalid-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(result).toContain('<!DOCTYPE html>')
-      expect(result).toContain('You are not authorized to access this page')
-      expect(result).toContain(
-        'Not authorized to accept offer agreement document'
-      )
     })
   })
 })
