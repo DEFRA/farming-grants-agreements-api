@@ -1,0 +1,32 @@
+.link-button {
+  // Reset button styles
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+
+  // Link styles
+  color: #1d70b8;
+  text-decoration: underline;
+  text-decoration-thickness: max(1px, 0.0625rem);
+  text-underline-offset: 0.1em;
+  text-decoration-skip-ink: auto;
+
+  // Remove default button focus style
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  // Hover state
+  &:hover {
+    color: #003078;
+    text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+    text-decoration-skip-ink: none;
+  }
+
+  // Active state
+  &:active {
+    background-color: #fd0;
+  }
+}

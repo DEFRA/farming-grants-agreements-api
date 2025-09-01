@@ -1,0 +1,22 @@
+{% extends 'layouts/page.njk' %}
+
+{% set pageTitle = 'Error' %}
+
+{% set mainClasses = "govuk-main-wrapper--l" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Sorry, there is a problem with the service</h1>
+      <p class="govuk-body">Try again later.</p>
+      {% if errorMessage %}
+        <div class="govuk-inset-text">
+            <p class="govuk-body">
+                <strong>Error details:</strong> {{ errorMessage }}
+            </p>
+        </div>
+      {% endif %}
+      {% include "partials/help/help.njk" %}
+    </div>
+  </div>
+{% endblock %}

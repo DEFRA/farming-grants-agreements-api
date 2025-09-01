@@ -33,15 +33,13 @@
       </ul>
 
       <!-- Accept Button -->
-      {% if status === 'offered' %}
-      <form method="post" action="{{ buildUrl(baseUrl, 'accept-offer') }}" id="accept-offer-form">
-        <input type="hidden" name="agreementId" value="{{ agreementNumber }}">
-        <p id="accept-agreement-error" class="govuk-error-message"></p>
+      <form method="post" id="accept-offer-form">
         {{ govukButton({
-          text: "Accept offer"
+          text: "Accept offer",
+          name: "action",
+          value: "accept-offer"
         }) }}
       </form>
-      {% endif %}
 
       {% include "partials/help/update.njk" %}
     </div>

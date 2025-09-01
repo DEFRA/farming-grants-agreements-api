@@ -71,12 +71,13 @@
     </tfoot>
   </table>
 
-  {% if agreementStatus === 'offered' %}
+  <form method="POST">
     {{ govukButton({
       text: "Continue",
-      href: buildUrl(baseUrl, 'review-accept-offer', agreementNumber)
+      name: "action",
+      value: "display-accept"
     }) }}
-  {% endif %}
+  </form>
 
   {% include "partials/help/update.njk" %}
 {% endblock %}
