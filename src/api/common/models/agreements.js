@@ -123,11 +123,8 @@ schema.statics.createAgreementWithVersions = async function ({
 
 schema.statics.updateOneAgreementVersion = async function (
   agreementFilter,
-  update,
-  opts = {}
+  update
 ) {
-  const { which = 'first', agreementId } = opts
-
   // 1) find the parent agreement and get its child ids
   const agreement = await this.findOne(agreementFilter)
     .select('versions')
@@ -146,29 +143,17 @@ schema.statics.updateOneAgreementVersion = async function (
     throw Boom.notFound('Agreement has no child versions to update')
   }
 
-  // 2) decide which child to update
-  let targetId
-  if (which === 'first') {
-    targetId = agreement.versions[0]
-  } else if (which === 'byId') {
-    if (!agreementId) {
-      throw Boom.badRequest('agreementId is required when opts.which is "byId"')
-    }
-    // ensure the requested id actually belongs to the agreement
-    const found = agreement.versions.find(
-      (id) => id.toString() === String(agreementId)
-    )
-    if (!found) {
-      throw Boom.notFound(
-        'Requested agreementId does not belong to the specified agreement'
-      )
-    }
-    targetId = found
-  }
+  const agreementVersion = await versionsModel
+    .findOne({ agreement: agreement._id })
+    .sort({ createdAt: -1, _id: -1 })
+    .lean()
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
 
   // 3) update the child agreement
   const updated = await versionsModel
-    .findOneAndUpdate({ _id: targetId }, update, {
+    .findOneAndUpdate({ _id: agreementVersion._id }, update, {
       new: true,
       runValidators: true,
       lean: true

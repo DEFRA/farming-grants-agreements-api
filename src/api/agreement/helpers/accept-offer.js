@@ -38,7 +38,7 @@ async function acceptOffer(agreementNumber, agreementData, logger) {
   const agreement = await agreementsModel
     .updateOneAgreementVersion(
       {
-        agreementNumber: agreementNumber
+        agreementNumber
       },
       {
         $set: {

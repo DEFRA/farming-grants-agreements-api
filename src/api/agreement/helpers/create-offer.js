@@ -206,7 +206,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
 
   const agreement = await agreementsModel.createAgreementWithVersions({
     agreement: {
-      agreementNumber: agreementNumber,
+      agreementNumber,
       frn: identifiers.frn,
       sbi: identifiers.sbi,
       agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
