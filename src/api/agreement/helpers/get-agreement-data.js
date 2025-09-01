@@ -54,7 +54,7 @@ export const getAgreementData = async (searchTerms) => {
 
   if (!agreementVersion) {
     throw Boom.notFound(
-      `Agreement not found with the group Id ${agreementVersion._id.toString()}`
+      `Agreement version not found associated with the agreement Id ${agreementsData._id.toString()}`
     )
   }
   agreementVersion.agreementNumber = agreementsData.agreementNumber

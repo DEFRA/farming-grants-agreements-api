@@ -21,10 +21,7 @@ schema.index({ sbi: 1 })
 schema.index({ agreementNumber: 1 }, { unique: true })
 schema.index({ createdAt: 1 })
 
-schema.statics.createAgreementWithVersions = async function ({
-  agreement,
-  versions
-}) {
+function assertValidCreateArgs(agreement, versions) {
   if (!agreement?.agreementNumber || !agreement?.agreementName) {
     throw new Error(
       'agreement.agreementNumber and agreement.agreementName are required'
@@ -35,6 +32,13 @@ schema.statics.createAgreementWithVersions = async function ({
       'versions must be a non-empty array of agreement version payloads'
     )
   }
+}
+
+schema.statics.createAgreementWithVersions = async function ({
+  agreement,
+  versions
+}) {
+  assertValidCreateArgs(agreement, versions)
 
   const createdversions = []
   let agreementId = null
