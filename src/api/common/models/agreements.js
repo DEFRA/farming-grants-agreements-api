@@ -42,7 +42,6 @@ schema.statics.createAgreementWithVersions = async function ({
 
   const createdversions = []
   let agreementId = null
-  let createdNewParent = false
 
   try {
     // A) see if parent exists (by unique agreementNumber)
@@ -66,7 +65,6 @@ schema.statics.createAgreementWithVersions = async function ({
         versions: []
       })
       agreementId = newParent._id
-      createdNewParent = true
     }
 
     // B) insert child docs
@@ -105,7 +103,7 @@ schema.statics.createAgreementWithVersions = async function ({
   } catch (err) {
     // best-effort cleanup: if we created a brand new parent this call and then failed, remove it
     try {
-      if (createdNewParent && agreementId) {
+      if (agreementId) {
         await this.deleteOne({ _id: agreementId })
       }
       if (createdversions.length) {
