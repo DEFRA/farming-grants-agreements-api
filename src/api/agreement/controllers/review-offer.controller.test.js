@@ -97,7 +97,7 @@ describe('reviewOfferController', () => {
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
       expect(String(result)).toContain('Review your funding offer')
-      expect(String(result)).toContain('£73.50')
+      expect(String(result)).toContain('£294.00')
       expect(String(result)).toContain('Arable and Horticultural Soils')
       expect(String(result)).toContain('SFI1')
     })
