@@ -16,10 +16,11 @@ const mockSelectLean = (value) => ({
   }))
 })
 
-// findOne(...).select(...).lean() -> rejects `err`
 const mockSelectLeanReject = (err) => ({
   select: jest.fn(() => ({
-    lean: jest.fn(() => Promise.reject(err))
+    lean: jest.fn(() => {
+      throw err
+    })
   }))
 })
 
@@ -33,7 +34,9 @@ const mockSortLean = (value, sortSpy = jest.fn()) => ({
 // versions.findOne(...).sort(...).lean() -> rejects `err`
 const mockSortLeanReject = (err, sortSpy = jest.fn()) => ({
   sort: sortSpy.mockImplementation(() => ({
-    lean: jest.fn(() => Promise.reject(err))
+    lean: jest.fn(() => {
+      throw err
+    })
   }))
 })
 
