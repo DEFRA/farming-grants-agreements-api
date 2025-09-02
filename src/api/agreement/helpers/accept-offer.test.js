@@ -32,15 +32,29 @@ describe('acceptOffer', () => {
   })
 
   test('throws Boom.badRequest if agreementNumber is missing', async () => {
-    await expect(acceptOffer({}, mockLogger)).rejects.toThrow(
-      Boom.badRequest('Agreement data is required')
+    await expect(acceptOffer(undefined, {}, mockLogger)).rejects.toThrow(
+      'Agreement data is required'
     )
-    await expect(acceptOffer(undefined, mockLogger)).rejects.toThrow(
-      Boom.badRequest('Agreement data is required')
+
+    await expect(acceptOffer('', {}, mockLogger)).rejects.toThrow(
+      'Agreement data is required'
     )
+
+    await expect(acceptOffer(null, {}, mockLogger)).rejects.toThrow(
+      'Agreement data is required'
+    )
+
     await expect(
-      acceptOffer({ agreementNumber: undefined }, mockLogger)
-    ).rejects.toThrow(Boom.badRequest('Agreement data is required'))
+      acceptOffer('SFI123456789', undefined, mockLogger)
+    ).rejects.toThrow('Agreement data is required')
+
+    await expect(acceptOffer('SFI123456789', null, mockLogger)).rejects.toThrow(
+      'Agreement data is required'
+    )
+
+    await expect(acceptOffer(undefined, undefined, mockLogger)).rejects.toThrow(
+      'Agreement data is required'
+    )
   })
 
   test('should successfully accept an agreement', async () => {
@@ -53,12 +67,14 @@ describe('acceptOffer', () => {
     }
     // Arrange
     const agreementId = 'SFI123456789'
-    agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
+    agreementsModel.updateOneAgreementVersion.mockResolvedValue(
+      mockUpdateResult
+    )
     const mockEventResult = Promise.resolve()
     snsPublisher.publishEvent.mockReturnValue(mockEventResult)
 
     // Act
-    const result = await acceptOffer(agreementData, mockLogger)
+    const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
@@ -76,7 +92,7 @@ describe('acceptOffer', () => {
       },
       mockLogger
     )
-    expect(agreementsModel.updateOne).toHaveBeenCalledWith(
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
@@ -93,16 +109,19 @@ describe('acceptOffer', () => {
     const originalNodeEnv = process.env.NODE_ENV
     process.env.NODE_ENV = 'production'
     const agreementId = 'sample'
-    agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
+    agreementsModel.updateOneAgreementVersion.mockResolvedValue(
+      mockUpdateResult
+    )
 
     // Act
     const result = await acceptOffer(
+      agreementId,
       { agreementNumber: agreementId },
       mockLogger
     )
 
     // Assert
-    expect(agreementsModel.updateOne).toHaveBeenCalledWith(
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
@@ -120,11 +139,11 @@ describe('acceptOffer', () => {
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
     const agreementId = 'SFI999999999'
-    agreementsModel.updateOne.mockResolvedValue(null)
+    agreementsModel.updateOneAgreementVersion.mockResolvedValue(null)
 
     // Act & Assert
     await expect(
-      acceptOffer({ agreementNumber: agreementId }, mockLogger)
+      acceptOffer(agreementId, { agreementNumber: agreementId }, mockLogger)
     ).rejects.toThrow(Boom.notFound('Offer not found with ID SFI999999999'))
   })
 
@@ -132,7 +151,7 @@ describe('acceptOffer', () => {
     // Arrange
     const agreementId = 'SFI123456789'
     const dbError = Boom.internal('Database connection failed')
-    agreementsModel.updateOne.mockRejectedValue(dbError)
+    agreementsModel.updateOneAgreementVersion.mockRejectedValue(dbError)
 
     // Act & Assert
     await expect(
@@ -144,7 +163,7 @@ describe('acceptOffer', () => {
     // Arrange
     const agreementId = 'SFI123456789'
     const boomError = Boom.badImplementation('Database error')
-    agreementsModel.updateOne.mockRejectedValue(boomError)
+    agreementsModel.updateOneAgreementVersion.mockRejectedValue(boomError)
 
     // Act & Assert
     await expect(

@@ -13,13 +13,15 @@ import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub
 const acceptOfferController = {
   handler: async (request, h) => {
     try {
+      const agreementId = request.params?.agreementId
+
       // Get the agreement data before accepting
       const { agreementData } = request.auth.credentials
       const { agreementNumber, status } = agreementData
 
       if (status === 'offered') {
         // Accept the agreement
-        await acceptOffer(agreementData, request.logger)
+        await acceptOffer(agreementId, agreementData, request.logger)
 
         // Update the payment hub
         await updatePaymentHub(request, agreementNumber)

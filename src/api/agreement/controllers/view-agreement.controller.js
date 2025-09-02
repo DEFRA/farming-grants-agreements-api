@@ -23,7 +23,10 @@ const viewAgreementController = {
 
       // Return the HTML response
       return h
-        .view('views/sfi-agreement.njk', fullAgreementData)
+        .view('views/sfi-agreement.njk', {
+          ...fullAgreementData,
+          agreement: fullAgreementData
+        })
         .type('text/html')
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
