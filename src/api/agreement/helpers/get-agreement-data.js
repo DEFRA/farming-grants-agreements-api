@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom'
+import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 
 /**
@@ -25,21 +26,36 @@ const searchForAgreement = (searchTerms) =>
       throw Boom.internal(error)
     })
 
-/**
- * Get agreement data for rendering templates
- * @param {object} searchTerms - The search terms to use to find the agreement
- * @returns {Promise<Agreement>} The agreement data
- */
-const getAgreementData = async (searchTerms) => {
-  const agreement = await searchForAgreement(searchTerms)
+export const getAgreementData = async (searchTerms) => {
+  const agreementsData = await agreementsModel
+    .findOne(searchTerms)
+    .select('_id agreementNumber agreementName')
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
 
-  if (!agreement?.[0]) {
+  if (!agreementsData) {
     throw Boom.notFound(
       `Agreement not found using search terms: ${JSON.stringify(searchTerms)}`
     )
   }
 
-  return Promise.resolve(agreement[0])
+  const agreementVersion = await versionsModel
+    .findOne({ agreement: agreementsData._id })
+    .sort({ createdAt: -1, _id: -1 })
+    .lean()
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
+
+  if (!agreementVersion) {
+    throw Boom.notFound(
+      `Agreement version not found associated with the agreement Id ${agreementsData._id.toString()}`
+    )
+  }
+  agreementVersion.agreementNumber = agreementsData.agreementNumber
+
+  return Promise.resolve(agreementVersion)
 }
 
 /**
@@ -74,10 +90,10 @@ const getAgreementDataById = async (agreementId) => {
  * @returns {Promise<boolean>} Whether the agreement exists
  */
 const doesAgreementExist = async (searchTerms) => {
-  const agreement = await searchForAgreement(searchTerms)
-  return agreement.length > 0
+  const agreements = await searchForAgreement(searchTerms)
+  return agreements.length > 0
 }
 
-export { getAgreementDataById, getAgreementData, doesAgreementExist }
+export { getAgreementDataById, doesAgreementExist }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */

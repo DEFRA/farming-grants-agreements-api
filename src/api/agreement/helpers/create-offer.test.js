@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
+import mongoose from 'mongoose'
 import {
   createOffer,
   calculateYearlyPayments,
@@ -8,11 +9,32 @@ import {
   groupActivitiesByParcelId,
   generateAgreementNumber
 } from './create-offer.js'
+import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
-jest.mock('~/src/api/common/models/agreements.js')
+jest.mock('~/src/api/common/models/versions.js')
+jest.mock('~/src/api/common/models/agreements.js', () => {
+  let populatedAgreement = null
+
+  const api = {
+    create: jest.fn(() => ({ _id: 'mockG1' })),
+    findById: jest.fn(() => ({
+      populate: () => ({
+        lean: () => Promise.resolve(populatedAgreement)
+      })
+    })),
+    createAgreementWithVersions: jest.fn(() => populatedAgreement),
+
+    // helper exposed to tests:
+    __setPopulatedAgreement: (g) => {
+      populatedAgreement = g
+    }
+  }
+
+  return { __esModule: true, default: api }
+})
 jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: jest.fn().mockResolvedValue(true)
 }))
@@ -21,7 +43,7 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
 }))
 
 const targetDataStructure = {
-  agreementNumber: 'SFI987654321',
+  notificationMessageId: 'aws-message-id',
   agreementName: 'Sample Agreement',
   correlationId: '1234545918345918475',
   frn: '1234567890',
@@ -119,6 +141,12 @@ const targetDataStructure = {
   }
 }
 
+const targetGroupDataStructure = {
+  agreementNumber: 'SFI987654321',
+  agreementName: 'Sample Agreement',
+  agreements: [targetDataStructure]
+}
+
 const agreementData = {
   clientRef: 'ref-1234',
   code: 'frps-private-beta',
@@ -177,8 +205,36 @@ describe('createOffer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    agreementsModel.create.mockImplementation((data) => Promise.resolve(data))
-    mockLogger = { info: jest.fn(), error: jest.fn() }
+
+    // Make insertMany return a real-looking agreement (matching targetDataStructure)
+    versionsModel.insertMany = jest.fn(() => [
+      { ...targetDataStructure, _id: new mongoose.Types.ObjectId() }
+    ])
+    versionsModel.updateMany = jest.fn(() => ({
+      matchedCount: 1,
+      modifiedCount: 1
+    }))
+    versionsModel.deleteMany = jest.fn(() => ({ deletedCount: 0 }))
+
+    // Return EXACT group the test asserts against
+    const populated = {
+      ...targetGroupDataStructure,
+      sbi: '106284736',
+      frn: '1234567890',
+      agreementNumber: 'SFI999999999', // test uses expect.any(String)
+      correlationId: 'abc-def' // test uses expect.any(String)
+    }
+    populated.agreements = [{ ...targetDataStructure }]
+
+    agreementsModel.__setPopulatedAgreement(populated)
+
+    if (!jest.isMockFunction(agreementsModel.createAgreementWithVersions)) {
+      jest.spyOn(agreementsModel, 'createAgreementWithVersions')
+    }
+    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
+
+    publishEvent.mockResolvedValue(true)
+
     jest.setSystemTime(new Date('2025-01-01'))
   })
 
@@ -202,8 +258,8 @@ describe('createOffer', () => {
 
     // Check if the result matches the target data structure
     expect(result).toMatchObject({
-      ...targetDataStructure,
-      notificationMessageId: 'aws-message-id',
+      ...targetGroupDataStructure,
+      // notificationMessageId: 'aws-message-id',
       // These fields are dynamic, so we check for their types
       agreementNumber: expect.any(String),
       correlationId: expect.any(String)
@@ -627,6 +683,10 @@ describe('createOffer', () => {
   })
 
   describe('Error Handling', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
     it('should handle missing agreement data', async () => {
       let error
       try {
@@ -639,10 +699,8 @@ describe('createOffer', () => {
     })
 
     it('should handle database errors gracefully', async () => {
-      // Mock doesAgreementExist to return false so the function continues to the database call
-      doesAgreementExist.mockResolvedValueOnce(false)
-      agreementsModel.create.mockImplementation(() =>
-        Promise.reject(new Error('Database connection error'))
+      agreementsModel.createAgreementWithVersions.mockRejectedValue(
+        new Error('Database connection error')
       )
 
       await expect(
@@ -651,10 +709,8 @@ describe('createOffer', () => {
     })
 
     it('should handle generic errors when creating an agreement', async () => {
-      // Mock doesAgreementExist to return false so the function continues to the database call
-      doesAgreementExist.mockResolvedValueOnce(false)
-      agreementsModel.create.mockImplementation(() =>
-        Promise.reject(new Error('Generic error'))
+      agreementsModel.createAgreementWithVersions.mockRejectedValue(
+        new Error('Generic error')
       )
 
       await expect(

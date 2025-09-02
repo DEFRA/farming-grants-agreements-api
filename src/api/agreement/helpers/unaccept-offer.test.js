@@ -1,9 +1,9 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import versionsModel from '~/src/api/common/models/versions.js'
 import { unacceptOffer } from './unaccept-offer.js'
 
-jest.mock('~/src/api/common/models/agreements.js')
+jest.mock('~/src/api/common/models/versions.js')
 
 describe('unacceptOffer', () => {
   const mockUpdateResult = {
@@ -30,13 +30,13 @@ describe('unacceptOffer', () => {
   test('should successfully unaccept an agreement', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
-    agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
+    versionsModel.updateOne.mockResolvedValue(mockUpdateResult)
 
     // Act
     const result = await unacceptOffer(agreementId)
 
     // Assert
-    expect(agreementsModel.updateOne).toHaveBeenCalledWith(
+    expect(versionsModel.updateOne).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
@@ -53,13 +53,13 @@ describe('unacceptOffer', () => {
     const originalNodeEnv = process.env.NODE_ENV
     process.env.NODE_ENV = 'production'
     const agreementId = 'sample'
-    agreementsModel.updateOne.mockResolvedValue(mockUpdateResult)
+    versionsModel.updateOne.mockResolvedValue(mockUpdateResult)
 
     // Act
     const result = await unacceptOffer(agreementId)
 
     // Assert
-    expect(agreementsModel.updateOne).toHaveBeenCalledWith(
+    expect(versionsModel.updateOne).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
@@ -77,7 +77,7 @@ describe('unacceptOffer', () => {
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
     const agreementId = 'SFI999999999'
-    agreementsModel.updateOne.mockResolvedValue(null)
+    versionsModel.updateOne.mockResolvedValue(null)
 
     // Act & Assert
     await expect(unacceptOffer(agreementId)).rejects.toThrow(
@@ -89,7 +89,7 @@ describe('unacceptOffer', () => {
     // Arrange
     const agreementId = 'SFI123456789'
     const dbError = Boom.internal('Database connection failed')
-    agreementsModel.updateOne.mockRejectedValue(dbError)
+    versionsModel.updateOne.mockRejectedValue(dbError)
 
     // Act & Assert
     await expect(unacceptOffer(agreementId)).rejects.toThrow(
@@ -101,7 +101,7 @@ describe('unacceptOffer', () => {
     // Arrange
     const agreementId = 'SFI123456789'
     const boomError = Boom.badImplementation('Database error')
-    agreementsModel.updateOne.mockRejectedValue(boomError)
+    versionsModel.updateOne.mockRejectedValue(boomError)
 
     // Act & Assert
     await expect(unacceptOffer(agreementId)).rejects.toEqual(boomError)
