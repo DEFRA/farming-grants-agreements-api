@@ -27,10 +27,6 @@ const searchForAgreement = (searchTerms) =>
     })
 
 export const getAgreementData = async (searchTerms) => {
-  if (!searchTerms || typeof searchTerms !== 'object') {
-    throw Boom.badRequest('searchTerms must be an object')
-  }
-
   const agreementsData = await agreementsModel
     .findOne(searchTerms)
     .select('_id agreementNumber agreementName')
