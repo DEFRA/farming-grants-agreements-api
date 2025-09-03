@@ -32,29 +32,29 @@ describe('acceptOffer', () => {
   })
 
   test('throws Boom.badRequest if agreementNumber is missing', async () => {
-    await expect(acceptOffer(undefined, {}, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
-
-    await expect(acceptOffer('', {}, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
-
-    await expect(acceptOffer(null, {}, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
-
     await expect(
-      acceptOffer('SFI123456789', undefined, mockLogger)
+      acceptOffer(undefined, {}, '<html>test</html>', mockLogger)
     ).rejects.toThrow('Agreement data is required')
 
-    await expect(acceptOffer('SFI123456789', null, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
+    await expect(
+      acceptOffer('', {}, '<html>test</html>', mockLogger)
+    ).rejects.toThrow('Agreement data is required')
 
-    await expect(acceptOffer(undefined, undefined, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
+    await expect(
+      acceptOffer(null, {}, '<html>test</html>', mockLogger)
+    ).rejects.toThrow('Agreement data is required')
+
+    await expect(
+      acceptOffer('SFI123456789', undefined, '<html>test</html>', mockLogger)
+    ).rejects.toThrow('Agreement data is required')
+
+    await expect(
+      acceptOffer('SFI123456789', null, '<html>test</html>', mockLogger)
+    ).rejects.toThrow('Agreement data is required')
+
+    await expect(
+      acceptOffer(undefined, undefined, '<html>test</html>', mockLogger)
+    ).rejects.toThrow('Agreement data is required')
   })
 
   test('should successfully accept an agreement', async () => {
@@ -65,6 +65,8 @@ describe('acceptOffer', () => {
       frn: 'test-frn',
       sbi: 'test-sbi'
     }
+    const htmlPage = '<html><body>Test Agreement</body></html>'
+
     // Arrange
     const agreementId = 'SFI123456789'
     agreementsModel.updateOneAgreementVersion.mockResolvedValue(
@@ -74,7 +76,12 @@ describe('acceptOffer', () => {
     snsPublisher.publishEvent.mockReturnValue(mockEventResult)
 
     // Act
-    const result = await acceptOffer(agreementId, agreementData, mockLogger)
+    const result = await acceptOffer(
+      agreementId,
+      agreementData,
+      htmlPage,
+      mockLogger
+    )
 
     // Assert
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
@@ -83,11 +90,13 @@ describe('acceptOffer', () => {
         topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
         type: 'io.onsite.agreement.offer.accepted',
         data: {
+          agreementNumber: 'SFI123456789',
           clientRef: 'test-client-ref',
           correlationId: 'test-correlation-id',
           offerId: 'SFI123456789',
           frn: 'test-frn',
-          sbi: 'test-sbi'
+          sbi: 'test-sbi',
+          htmlPage: '<html><body>Test Agreement</body></html>'
         }
       },
       mockLogger
@@ -109,6 +118,7 @@ describe('acceptOffer', () => {
     const originalNodeEnv = process.env.NODE_ENV
     process.env.NODE_ENV = 'production'
     const agreementId = 'sample'
+    const htmlPage = '<html><body>Test Agreement</body></html>'
     agreementsModel.updateOneAgreementVersion.mockResolvedValue(
       mockUpdateResult
     )
@@ -117,6 +127,7 @@ describe('acceptOffer', () => {
     const result = await acceptOffer(
       agreementId,
       { agreementNumber: agreementId },
+      htmlPage,
       mockLogger
     )
 
@@ -139,35 +150,53 @@ describe('acceptOffer', () => {
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
     const agreementId = 'SFI999999999'
+    const htmlPage = '<html><body>Test Agreement</body></html>'
     agreementsModel.updateOneAgreementVersion.mockResolvedValue(null)
 
     // Act & Assert
     await expect(
-      acceptOffer(agreementId, { agreementNumber: agreementId }, mockLogger)
+      acceptOffer(
+        agreementId,
+        { agreementNumber: agreementId },
+        htmlPage,
+        mockLogger
+      )
     ).rejects.toThrow(Boom.notFound('Offer not found with ID SFI999999999'))
   })
 
   test('should handle database errors and log them', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
+    const htmlPage = '<html><body>Test Agreement</body></html>'
     const dbError = Boom.internal('Database connection failed')
     agreementsModel.updateOneAgreementVersion.mockRejectedValue(dbError)
 
     // Act & Assert
     await expect(
-      acceptOffer({ agreementNumber: agreementId }, mockLogger)
+      acceptOffer(
+        agreementId,
+        { agreementNumber: agreementId },
+        htmlPage,
+        mockLogger
+      )
     ).rejects.toThrow(Boom.internal('Database connection failed'))
   })
 
   test('should rethrow Boom errors without wrapping', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
+    const htmlPage = '<html><body>Test Agreement</body></html>'
     const boomError = Boom.badImplementation('Database error')
     agreementsModel.updateOneAgreementVersion.mockRejectedValue(boomError)
 
     // Act & Assert
     await expect(
-      acceptOffer({ agreementNumber: agreementId }, mockLogger)
+      acceptOffer(
+        agreementId,
+        { agreementNumber: agreementId },
+        htmlPage,
+        mockLogger
+      )
     ).rejects.toEqual(boomError)
   })
 })
