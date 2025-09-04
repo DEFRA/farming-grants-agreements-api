@@ -104,8 +104,8 @@
             {{ govukTable({
                         captionClasses: "govuk-table__caption--m",
                         classes: "govuk-table--small-text-until-tablet",
-                        head: agreementLand.headings,
-                        rows: agreementLand.data
+                        head: agreement.agreementLand.headings,
+                        rows: agreement.agreementLand.data
                         }) }}
             <p class="govuk-body">
                 Please note that the Terms and Conditions contain separate obligations in relation to the "Agreement Land".
@@ -118,8 +118,8 @@
                 {{ govukTable({
                                 captionClasses: "govuk-table__caption--m",
                                 classes: "govuk-table--small-text-until-tablet",
-                                head: summaryOfActions.headings,
-                                rows: summaryOfActions.data
+                                head: agreement.summaryOfActions.headings,
+                                rows: agreement.summaryOfActions.data
                                 })
                 }}
             </table>
@@ -140,8 +140,8 @@
                 {{ govukTable({
                                 captionClasses: "govuk-table__caption--m",
                                 classes: "govuk-table--small-text-until-tablet",
-                                head: summaryOfPayments.headings,
-                                rows: summaryOfPayments.data
+                                head: agreement.summaryOfPayments.headings,
+                                rows: agreement.summaryOfPayments.data
                                 })
                 }}
             </table>
@@ -164,8 +164,8 @@
                 {{ govukTable({
                                 captionClasses: "govuk-table__caption--m",
                                 classes: "govuk-table--small-text-until-tablet",
-                                head: annualPaymentSchedule.headings,
-                                rows: annualPaymentSchedule.data
+                                head: agreement.annualPaymentSchedule.headings,
+                                rows: agreement.annualPaymentSchedule.data
                                 })
                 }}
             </table>

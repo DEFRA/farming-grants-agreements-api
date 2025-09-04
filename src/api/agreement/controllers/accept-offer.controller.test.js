@@ -250,11 +250,11 @@ describe('acceptOfferDocumentController', () => {
     })
 
     expect(nunjucksEnvironment.render).toHaveBeenCalledWith(
-      'views/sfi-agreement.njk',
+      'views/sfi-agreement-pdf.njk',
       expect.objectContaining({
-        ...mockAgreementData,
         baseUrl: '/',
-        serviceName: 'farming-grants-agreements-api'
+        serviceName: 'farming-grants-agreements-api',
+        agreement: mockAgreementData
       })
     )
 

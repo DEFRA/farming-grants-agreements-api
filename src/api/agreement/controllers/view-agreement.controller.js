@@ -24,7 +24,6 @@ const viewAgreementController = {
       // Return the HTML response
       return h
         .view('views/sfi-agreement.njk', {
-          ...fullAgreementData,
           agreement: fullAgreementData
         })
         .type('text/html')
