@@ -68,9 +68,9 @@ async function getAgreementHtml(agreementData, request) {
     agreementData
   )
 
-  return nunjucksEnvironment.render('views/sfi-agreement.njk', {
+  return nunjucksEnvironment.render('views/sfi-agreement-pdf.njk', {
     ...context(request),
-    ...agreement
+    agreement
   })
 }
 
