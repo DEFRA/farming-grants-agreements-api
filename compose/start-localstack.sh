@@ -9,16 +9,21 @@ export AWS_SECRET_ACCESS_KEY=test
 
 echo "🚀 Initializing SNS + SQS in LocalStack..."
 
+# Define S3 bucket for generated PDFs
+declare S3_BUCKET="s3://farming-grants-agreements-pdf-bucket"
+
 # Define associative arrays for topics and queues
 declare -A TOPICS=(
   [application_approved]="grant_application_approved" # ↓ Grants UI has approved an application
   [offer_created]="offer_created"                     # ↓ We have created the offer (based on Grants UI)
   [offer_accepted]="agreement_accepted"               # - User has accepted the offer
+  [create_agreement_pdf]="agreement_accepted"               # - User has accepted the offer
 )
 declare -A QUEUES=(
   [application_approved]="create_agreement" # We need to create the agreement in response to the application being approved
   [offer_created]="record_offer"
   [offer_accepted]="record_agreement_acceptance"
+  [create_agreement_pdf]="create_agreement_pdf" # We need to create the agreement PDF in response to the offer being accepted
 )
 
 # Associative arrays for ARNs and URLs
@@ -75,8 +80,8 @@ for key in "${!TOPICS[@]}"; do
   echo "🔗 Subscribed queue to topic: ${QUEUE_ARNS[$key]}"
 done
 
-# Optional extras
-# awslocal s3 mb s3://my-bucket
-# awslocal sqs create-queue --queue-name my-queue
+# Create S3 bucket
+awslocal --endpoint-url=http://localhost:4566 s3 mb ${S3_BUCKET}
+echo "✅ Created S3 bucket: ${S3_BUCKET}"
 
 echo "✅ SNS and SQS setup complete."
