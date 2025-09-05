@@ -300,6 +300,35 @@ const config = convict({
       env: 'NUNJUCKS_NO_CACHE'
     }
   },
+  files: {
+    s3: {
+      bucket: {
+        doc: 'S3 bucket where agreement PDFs are stored (created by CDP Platform team, see #cdp-support)',
+        format: String,
+        default: '',
+        env: 'FILES_S3_BUCKET'
+      },
+      region: {
+        doc: 'AWS region for the S3 bucket (CDP uses eu-west-2)',
+        format: String,
+        default: 'eu-west-2',
+        env: 'FILES_S3_REGION'
+      },
+      prefix: {
+        doc: 'Optional key prefix for PDFs, e.g. "agreements/" or per-env nesting',
+        format: String,
+        default: '',
+        env: 'FILES_S3_PREFIX'
+      },
+      endpoint: {
+        doc: 'Optional custom S3 endpoint (LocalStack or custom gateway); leave empty in CDP',
+        format: String,
+        nullable: true,
+        default: null,
+        env: 'AWS_S3_ENDPOINT'
+      }
+    }
+  },
   featureFlags: {
     seedDb: {
       doc: 'Seed the database',
