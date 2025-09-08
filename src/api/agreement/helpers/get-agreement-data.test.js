@@ -55,6 +55,15 @@ describe('getAgreementDataById', () => {
     agreementName: 'Test Agreement'
   }
 
+  const expectedLookup = {
+    $lookup: {
+      from: 'invoices',
+      localField: 'agreementNumber',
+      foreignField: 'agreementNumber',
+      as: 'invoice'
+    }
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -68,9 +77,8 @@ describe('getAgreementDataById', () => {
   test('should throw Boom.notFound when agreement group is not found', async () => {
     const agreementId = 'SFI999999999'
 
-    // No group found
-    agreementsModel.findOne.mockReturnValue({
-      select: () => Promise.resolve(null)
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([])
     })
 
     await expect(getAgreementDataById(agreementId)).rejects.toThrow(
@@ -79,6 +87,11 @@ describe('getAgreementDataById', () => {
       })}`
     )
 
+    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
+      { $match: { agreementNumber: agreementId } },
+      expectedLookup,
+      { $limit: 1 }
+    ])
     expect(versionsModel.findOne).not.toHaveBeenCalled()
   })
 
@@ -86,17 +99,15 @@ describe('getAgreementDataById', () => {
     // Arrange
     const agreementId = 'SFI123456789'
 
-    // group lookup
-    // agreementsModel.findOne.mockResolvedValue(mockGroup)
-    agreementsModel.findOne.mockReturnValue({
-      select: () => Promise.resolve(mockGroup) // Promise has .catch, so your .catch(...) works
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest
+        .fn()
+        .mockResolvedValue([{ ...mockGroup, invoice: [{ test: 'invoice' }] }])
     })
 
-    // child agreement: newest by createdAt (your code uses findOne().sort().limit(1))
-    // mock the chain by returning an object with .sort() and .limit() that still resolves to the agreement
     versionsModel.findOne.mockReturnValue({
       sort: () => ({
-        lean: () => Promise.resolve(mockAgreement)
+        lean: () => Promise.resolve({ ...mockAgreement })
       })
     })
 
@@ -104,15 +115,18 @@ describe('getAgreementDataById', () => {
     const result = await getAgreementDataById(agreementId)
 
     // Assert
-    expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: agreementId
-    })
+    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
+      { $match: { agreementNumber: agreementId } },
+      expectedLookup,
+      { $limit: 1 }
+    ])
     expect(versionsModel.findOne).toHaveBeenCalledWith({
       agreement: mockGroup._id
     })
     expect(result).toEqual({
       ...mockAgreement,
-      agreementNumber: mockGroup.agreementNumber
+      agreementNumber: mockGroup.agreementNumber,
+      invoice: [{ test: 'invoice' }]
     })
   })
 
@@ -120,8 +134,8 @@ describe('getAgreementDataById', () => {
     // Arrange
     const agreementId = 'SFI999999999'
 
-    agreementsModel.findOne.mockReturnValue({
-      select: () => Promise.resolve(null) // Promise has .catch, so your .catch(...) works
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([])
     })
 
     // Act & Assert
@@ -136,15 +150,25 @@ describe('getAgreementDataById', () => {
     // Arrange
     const agreementId = 'SFI123456789'
 
-    agreementsModel.findOne.mockReturnValue({
-      select: () => Promise.resolve(mockAgreement) // Promise has .catch, so your .catch(...) works
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
+    })
+
+    versionsModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => Promise.resolve({ ...mockAgreement })
+      })
     })
 
     // Act
     const result = await getAgreementDataById(agreementId)
 
     // Assert
-    expect(result).toEqual(mockAgreement)
+    expect(result).toEqual({
+      ...mockAgreement,
+      agreementNumber: mockGroup.agreementNumber,
+      invoice: []
+    })
   })
 })
 
@@ -175,7 +199,8 @@ describe('doesAgreementExist', () => {
     // Assert
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: searchTerms },
-      mockLookup
+      mockLookup,
+      { $limit: 1 }
     ])
     expect(result).toBe(true)
   })
@@ -193,7 +218,8 @@ describe('doesAgreementExist', () => {
     // Assert
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: searchTerms },
-      mockLookup
+      mockLookup,
+      { $limit: 1 }
     ])
     expect(result).toBe(false)
   })
@@ -240,7 +266,8 @@ describe('doesAgreementExist', () => {
     // Assert
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: searchTerms },
-      mockLookup
+      mockLookup,
+      { $limit: 1 }
     ])
     expect(result).toBe(true)
   })
