@@ -3,8 +3,8 @@ import { config } from '~/src/config/index.js'
 import { getPdfStream } from '~/src/api/common/helpers/s3-client.js'
 
 export const downloadController = async (request, h) => {
-  const { agreementNumber: agreementId } =
-    request.auth.credentials?.agreementData
+  const agreementData = request.auth.credentials?.agreementData
+  const { agreementNumber: agreementId } = agreementData || {}
   const { version } = request.params
 
   if (!agreementId) {
