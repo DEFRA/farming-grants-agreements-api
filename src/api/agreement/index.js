@@ -1,5 +1,6 @@
 import { Boom } from '@hapi/boom'
 import { getControllerByAction } from '~/src/api/agreement/controllers/index.js'
+import { downloadController } from './controllers/download.controller.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
@@ -33,6 +34,19 @@ const agreement = {
           // Delegate to chosen controller handler
           return controller.handler(request, h)
         }
+      })
+
+      server.route({
+        method: 'GET',
+        path: '/{agreementId}/{version}/download',
+        options: {
+          auth: 'grants-ui-jwt'
+        },
+        /**
+         * @param {import('@hapi/hapi').Request} request
+         * @param {import('@hapi/hapi').ResponseToolkit} h
+         */
+        handler: downloadController
       })
     }
   }
