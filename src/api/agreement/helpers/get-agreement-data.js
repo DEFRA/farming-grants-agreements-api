@@ -7,8 +7,8 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
  * @param {object} searchTerms - The search terms to use to find the agreement
  * @returns {Promise<Agreement>} The agreement data
  */
-const searchForAgreement = (searchTerms) =>
-  agreementsModel
+const searchForAgreement = async (searchTerms) => {
+  const agreement = await agreementsModel
     .aggregate([
       {
         $match: searchTerms
@@ -20,19 +20,18 @@ const searchForAgreement = (searchTerms) =>
           foreignField: 'agreementNumber',
           as: 'invoice'
         }
-      }
+      },
+      { $limit: 1 }
     ])
     .catch((error) => {
       throw Boom.internal(error)
     })
 
+  return agreement?.[0]
+}
+
 export const getAgreementData = async (searchTerms) => {
-  const agreementsData = await agreementsModel
-    .findOne(searchTerms)
-    .select('_id agreementNumber agreementName')
-    .catch((err) => {
-      throw Boom.internal(err)
-    })
+  const agreementsData = await searchForAgreement(searchTerms)
 
   if (!agreementsData) {
     throw Boom.notFound(
@@ -54,8 +53,9 @@ export const getAgreementData = async (searchTerms) => {
     )
   }
   agreementVersion.agreementNumber = agreementsData.agreementNumber
+  agreementVersion.invoice = agreementsData.invoice
 
-  return Promise.resolve(agreementVersion)
+  return agreementVersion
 }
 
 /**
@@ -91,7 +91,7 @@ const getAgreementDataById = async (agreementId) => {
  */
 const doesAgreementExist = async (searchTerms) => {
   const agreements = await searchForAgreement(searchTerms)
-  return agreements.length > 0
+  return Boolean(agreements)
 }
 
 export { getAgreementDataById, doesAgreementExist }

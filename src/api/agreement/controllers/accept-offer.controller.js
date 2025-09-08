@@ -16,8 +16,6 @@ import { context } from '~/src/config/nunjucks/context/context.js'
 const acceptOfferController = {
   handler: async (request, h) => {
     try {
-      const agreementId = request.params?.agreementId
-
       // Get the agreement data before accepting
       const { agreementData } = request.auth.credentials
       const { agreementNumber, status } = agreementData
@@ -25,7 +23,12 @@ const acceptOfferController = {
       if (status === 'offered') {
         // Accept the agreement
         const htmlPage = await getAgreementHtml(agreementData, request)
-        await acceptOffer(agreementId, agreementData, htmlPage, request.logger)
+        await acceptOffer(
+          agreementNumber,
+          agreementData,
+          htmlPage,
+          request.logger
+        )
 
         // Update the payment hub
         await updatePaymentHub(request, agreementNumber)
