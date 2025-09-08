@@ -49,7 +49,10 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     const res = await server.inject({
       method: 'GET',
-      url: '/AGR-123/1/download'
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
     })
 
     expect(res.statusCode).toBe(statusCodes.ok)
@@ -65,7 +68,10 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     const res = await server.inject({
       method: 'GET',
-      url: '/AGR-123/1/download'
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
     })
 
     expect(res.statusCode).toBe(statusCodes.notFound)
@@ -76,7 +82,10 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     const res = await server.inject({
       method: 'GET',
-      url: '/AGR-123/1/download'
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
     })
 
     expect(res.statusCode).toBe(statusCodes.serviceUnavailable)
@@ -87,11 +96,61 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     const res = await server.inject({
       method: 'GET',
-      url: '/AGR-123/1/download'
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
     })
 
     expect(res.statusCode).toBe(statusCodes.internalServerError)
     // Check that we get a proper error response structure
     expect(res.result).toBeDefined()
+  })
+
+  test('401 when no agreement data in credentials', async () => {
+    // Mock getAgreementDataById to return null/undefined to simulate no agreement data
+    jest
+      .spyOn(agreementDataHelper, 'getAgreementDataById')
+      .mockResolvedValue(null)
+    // Mock JWT validation to return false when agreementData is null
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(false)
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
+    })
+
+    expect(res.statusCode).toBe(statusCodes.unauthorized)
+    // Check for the error message in the response
+    expect(res.result).toBeDefined()
+    expect(res.result.message || res.result.error || res.result).toContain(
+      'Not authorized'
+    )
+  })
+
+  test('security: uses agreementId from authenticated credentials, not URL parameter', async () => {
+    s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
+
+    // Mock agreement data with a different agreement number than the URL parameter
+    jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
+      agreementNumber: 'AGR-999', // Different from URL parameter AGR-123
+      sbi: '123456789',
+      status: 'offered'
+    })
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/AGR-123/1/download', // URL has AGR-123
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
+    })
+
+    expect(res.statusCode).toBe(statusCodes.ok)
+    // The filename should use the agreement number from credentials (AGR-999), not URL (AGR-123)
+    expect(res.headers['content-disposition']).toContain('AGR-999-1.pdf')
   })
 })

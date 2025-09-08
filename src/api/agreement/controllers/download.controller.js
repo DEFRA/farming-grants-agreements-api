@@ -3,7 +3,16 @@ import { config } from '~/src/config/index.js'
 import { getPdfStream } from '~/src/api/common/helpers/s3-client.js'
 
 export const downloadController = async (request, h) => {
-  const { agreementId, version } = request.params
+  const { agreementNumber: agreementId } =
+    request.auth.credentials?.agreementData
+  const { version } = request.params
+
+  if (!agreementId) {
+    request.logger?.error(
+      'No agreement data found in authenticated credentials'
+    )
+    throw Boom.unauthorized('No agreement data available for download')
+  }
 
   const bucket = config.get('files.s3.bucket')
   if (!bucket) {
