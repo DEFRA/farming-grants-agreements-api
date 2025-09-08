@@ -1,5 +1,6 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import { config } from '~/src/config/index.js'
+import { statusCodes } from '~/.server/api/common/constants/status-codes.js'
 
 const endpoint = config.get('files.s3.endpoint') ?? undefined
 
@@ -16,7 +17,10 @@ export const getPdfStream = async ({ bucket, key }) => {
     )
     return res.Body
   } catch (err) {
-    if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
+    if (
+      err?.name === 'NoSuchKey' ||
+      err?.$metadata?.httpStatusCode === statusCodes.notFound
+    ) {
       return null
     }
     throw err
