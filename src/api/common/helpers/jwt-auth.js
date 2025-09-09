@@ -14,10 +14,13 @@ const extractJwtPayload = (authToken, logger) => {
     return null
   }
 
-  logger.info('Attempting to decode JWT token:', {
-    tokenLength: authToken.length,
-    isJwtFormat: authToken.startsWith('eyJ') && authToken.includes('.')
-  })
+  logger.info(
+    {
+      tokenLength: authToken.length,
+      isJwtFormat: authToken.startsWith('eyJ') && authToken.includes('.')
+    },
+    'Attempting to decode JWT token:'
+  )
 
   try {
     const decoded = Jwt.token.decode(authToken)
@@ -33,11 +36,14 @@ const extractJwtPayload = (authToken, logger) => {
     const payload = decoded?.decoded?.payload || null
 
     if (payload) {
-      logger.info('JWT payload extracted:', {
-        hasSbi: !!payload.sbi,
-        hasSource: !!payload.source,
-        source: payload.source
-      })
+      logger.info(
+        {
+          hasSbi: !!payload.sbi,
+          hasSource: !!payload.source,
+          source: payload.source
+        },
+        'JWT payload extracted:'
+      )
     }
 
     return payload
@@ -79,13 +85,16 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
 const validateJwtAuthentication = (authToken, agreementData, logger) => {
   const isJwtEnabled = config.get('featureFlags.isJwtEnabled')
 
-  logger.info('JWT Authentication Validation Start:', {
-    isJwtEnabled,
-    hasAuthToken: !!authToken,
-    authTokenLength: authToken ? authToken.length : 0,
-    agreementSbi: agreementData?.sbi,
-    agreementNumber: agreementData?.agreementNumber
-  })
+  logger.info(
+    {
+      isJwtEnabled,
+      hasAuthToken: !!authToken,
+      authTokenLength: authToken ? authToken.length : 0,
+      agreementSbi: agreementData?.sbi,
+      agreementNumber: agreementData?.agreementNumber
+    },
+    'JWT Authentication Validation Start:'
+  )
 
   if (!isJwtEnabled) {
     logger.info('JWT authentication is disabled via feature flag')
@@ -100,14 +109,17 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
     return false
   }
 
-  logger.info('JWT payload extracted successfully:', {
-    payloadSbi: jwtPayload.sbi,
-    payloadSource: jwtPayload.source,
-    agreementSbi: agreementData?.sbi
-  })
+  logger.info(
+    {
+      payloadSbi: jwtPayload.sbi,
+      payloadSource: jwtPayload.source,
+      agreementSbi: agreementData?.sbi
+    },
+    'JWT payload extracted successfully:'
+  )
 
   const validationResult = verifyJwtPayload(jwtPayload, agreementData)
-  logger.info('JWT payload verification result:', validationResult)
+  logger.info(validationResult, 'JWT payload verification result:')
 
   return validationResult
 }
