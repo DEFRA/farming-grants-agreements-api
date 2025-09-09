@@ -49,3 +49,50 @@ a:link,
 .dwp-timeline__link:link {
   color: #1d70b8;
 }
+
+.t-and-c-print-only {
+  display: none;
+}
+
+@media print {
+  .govuk-header,
+  .govuk-footer,
+  .govuk-phase-banner,
+  .toc,
+  .gem-c-print-link,
+  nav[role='navigation'] {
+    display: none !important;
+  }
+
+  .govuk-grid-column-two-thirds,
+  .govuk-grid-column-three-quarters,
+  .govuk-grid-column-one-quarter {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .t-and-c-print-only {
+    display: block;
+  }
+
+  /* Force the account bar to remain two columns in print */
+  .defra-account-bar__row {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  /* Override your earlier 'grid columns = 100%' rule just for this row */
+  .defra-account-bar__row .defra-account-bar__left {
+    width: 66.666% !important;
+    max-width: none !important;
+    text-align: left;
+    break-inside: avoid;
+  }
+  .defra-account-bar__row .defra-account-bar__right {
+    width: 33.333% !important;
+    max-width: none !important;
+    text-align: right;
+  }
+}

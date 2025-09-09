@@ -1,18 +1,20 @@
-{% if params is defined and params.userName != null and params.userName | length > 0 and params.businessName != null and params.businessName | length > 0 %}
+{% if params is defined and params.userName and params.userName | length > 0 and params.businessName and params.businessName | length > 0 %}
   <div class="govuk-width-container">
     <div class="defra-account-bar">
-      <div class="govuk-grid-row govuk-!-padding-top-3">
-        <div class="govuk-grid-column-two-thirds-from-desktop defra-account-bar__headings govuk-!-margin-bottom-2">
-            <span class="govuk-visually-hidden">Acting on behalf of </span>
-            <span id="farmName">{{ params.businessName }}</span>
-            <div class="govuk-!-font-size-16 govuk-!-font-weight-regular govuk-!-margin-top-1">Single business identifier (SBI): <span id="sbi">{{ params.sbi }}</span> </div>
+      <div class="govuk-grid-row govuk-!-padding-top-3 defra-account-bar__row">
+        <div class="govuk-grid-column-two-thirds-from-desktop defra-account-bar__headings defra-account-bar__left">
+          <span class="govuk-visually-hidden">Acting on behalf of </span>
+          <span id="farmName">{{ params.businessName }}</span>
+          <div class="govuk-!-font-size-16 govuk-!-font-weight-regular govuk-!-margin-top-1">
+            Single business identifier (SBI): <span id="sbi">{{ params.sbi }}</span>
+          </div>
         </div>
-
-        <div class="govuk-grid-column-one-third-from-desktop govuk-!-margin-bottom-2 defra-account-bar__headings defra-account-bar__headings--right-aligned">
+        <div class="govuk-grid-column-one-third-from-desktop defra-account-bar__headings defra-account-bar__right">
           <span class="govuk-visually-hidden">Signed in as </span>
           <span id="farmerName">{{ params.userName }}</span>
-        </div>
       </div>
     </div>
+</div>
+
   </div>
 {% endif %}
