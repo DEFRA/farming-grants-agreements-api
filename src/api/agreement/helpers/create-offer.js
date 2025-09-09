@@ -182,7 +182,6 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
 
   const data = {
     notificationMessageId,
-    agreementNumber,
     agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
     correlationId: uuidv4(),
     frn: identifiers.frn,
@@ -205,8 +204,16 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     }
   }
 
-  // Create the new agreement
-  const createdAgreement = await agreementsModel.create(data)
+  const agreement = await agreementsModel.createAgreementWithVersions({
+    agreement: {
+      agreementNumber,
+      frn: identifiers.frn,
+      sbi: identifiers.sbi,
+      agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
+      createdBy: 'system'
+    },
+    versions: [data] // can pass multiple payloads
+  })
 
   // Publish event to SNS
   await publishEvent(
@@ -217,15 +224,15 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
       data: {
         correlationId: data?.correlationId,
         clientRef: data?.clientRef,
-        offerId: data?.agreementNumber,
-        frn: data?.frn,
-        sbi: data?.sbi
+        offerId: agreement.agreementNumber,
+        frn: agreement.frn,
+        sbi: agreement.sbi
       }
     },
     logger
   )
 
-  return createdAgreement
+  return agreement
 }
 
 export { createOffer }

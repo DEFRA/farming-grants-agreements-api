@@ -1,3 +1,5 @@
+import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+
 /**
  * Hapi plugin for registering the default error handler
  */
@@ -7,39 +9,35 @@ export const errorHandlerPlugin = {
     server.ext('onPreResponse', (request, h) => {
       const response = request.response
       if (response.isBoom) {
-        // Prevent all forms of caching in the browser and proxies
-        response.output.headers['Cache-Control'] =
-          'no-store, no-cache, must-revalidate, proxy-revalidate'
-        response.output.headers.Pragma = 'no-cache'
-        response.output.headers.Expires = '0'
-        response.output.headers['Surrogate-Control'] = 'no-store'
+        request.server.logger.info(response)
 
-        if (response.output.statusCode === 401) {
-          request.server.logger.info(
-            'Handling 401 error with unauthorized template'
-          )
+        let template = 'views/error/error.njk'
+        const templateData = {
+          errorMessage: response.message
+        }
 
-          try {
-            return h
-              .view('views/unauthorized.njk', {
-                errorMessage: response.message
-              })
-              .code(401)
-              .type('text/html')
-              .header(
-                'Cache-Control',
-                'no-store, no-cache, must-revalidate, proxy-revalidate'
-              )
-              .header('Pragma', 'no-cache')
-              .header('Expires', '0')
-              .header('Surrogate-Control', 'no-store')
-          } catch (error) {
-            request.server.logger.error(
-              error,
-              'Failed to render unauthorized template:'
+        if (response.output.statusCode === statusCodes.unauthorized) {
+          template = 'views/error/unauthorized.njk'
+        }
+
+        if (response.output.statusCode === statusCodes.notFound) {
+          template = 'views/error/not-found.njk'
+        }
+
+        try {
+          return h
+            .view(template, templateData)
+            .code(response.output.statusCode)
+            .header(
+              'Cache-Control',
+              'no-store, no-cache, must-revalidate, proxy-revalidate'
             )
-            return h.continue
-          }
+            .header('Pragma', 'no-cache')
+            .header('Expires', '0')
+            .header('Surrogate-Control', 'no-store')
+        } catch (error) {
+          request.server.logger.error(error, 'Failed to render error template:')
+          return h.continue
         }
       }
       return h.continue

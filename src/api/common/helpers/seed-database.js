@@ -46,20 +46,16 @@ export async function seedDatabase(logger) {
 
   for (const [name, model] of Object.entries(models)) {
     try {
-      await model.db
-        .dropCollection(name)
-        .catch((error) =>
-          logger.warn(`Error dropping collection '${name}': ${error.message}`)
-        )
-
+      await model.db.dropCollection(name)
       logger.info(`Dropped collection '${name}'`)
-
-      const tableData = sampleData[name]
-      if (tableData?.length && name === 'agreements') {
-        await publishSampleAgreementEvents(tableData, logger)
-      }
     } catch (e) {
-      logger.error(e)
+      logger.warn(`Error dropping collection '${name}': ${e.message}`)
     }
+  }
+
+  try {
+    await publishSampleAgreementEvents(sampleData.agreements, logger)
+  } catch (e) {
+    logger.error(e)
   }
 }

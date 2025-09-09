@@ -62,8 +62,9 @@ export const sqsClientPlugin = {
       app.on('error', (err) => {
         server.logger.error(
           {
-            error: err.message,
-            stack: err.stack
+            error: err.message || err.toString(),
+            stack: err.stack,
+            fullError: err
           },
           'SQS Consumer error:'
         )

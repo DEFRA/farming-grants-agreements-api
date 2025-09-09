@@ -3,7 +3,7 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
-{% set pageTitle =  company ~ " agreement" %}
+{% set pageTitle =  agreement.company ~ " agreement" %}
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
@@ -12,27 +12,27 @@
                 <dd>
                     Agreement holder:
                 </dd>
-                <dt>{{ company }}</dt>
+                <dt>{{ agreement.company }}</dt>
                 <dd>
                     SBI:
                 </dd>
-                <dt>{{ sbi }}</dt>
+                <dt>{{ agreement.sbi }}</dt>
                 <dd>
                     Address:
                 </dd>
-                <dt>{{ address }}</dt>
+                <dt>{{ agreement.address }}</dt>
                 <dd>
                     Agreement name:
                 </dd>
-                <dt>{{ agreementName }}</dt>
+                <dt>{{ agreement.agreementName }}</dt>
                 <dd>
                     Agreement number:
                 </dd>
-                <dt>{{ agreementNumber }}</dt>
+                <dt>{{ agreement.agreementNumber }}</dt>
                 <dd>
                     Start date:
                 </dd>
-                <dt>{{ agreementStartDate | formatDate("d MMMM yyyy") }}</dt>
+                <dt>{{ agreement.agreementStartDate | formatDate("d MMMM yyyy") }}</dt>
             </dl>
         </div>
     </div>
@@ -66,7 +66,7 @@
                         </li>
                     </ul>
                 </div>
-                <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6">
+                <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6 print-btn">
                     <button
                       class="govuk-link govuk-body-s gem-c-print-link__button"
                       data-module="print-link"
@@ -77,6 +77,11 @@
                 </div>
             </nav>
         </div>
+        <noscript>
+            <style>
+                .print-btn { display: none !important; }
+            </style>
+        </noscript>
         <div class="govuk-grid-column-three-quarters">
             <h2 id="intro" class="govuk-heading-l">1. Introduction and overview</h2>
             <p class="govuk-body">
@@ -95,7 +100,7 @@
             </p>
             <h2 id="parties" class="govuk-heading-l">2. Parties to the agreement</h2>
             <p class="govuk-body">This Agreement is between:</p>
-            <p class="govuk-body">You, {{ company }}, of {{ address }}, {{ postcode }}
+            <p class="govuk-body">You, {{ agreement.company }}, of {{ agreement.address }}, {{ agreement.postcode }}
                 and the Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and
                 Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").
             </p>
@@ -104,8 +109,8 @@
             {{ govukTable({
                         captionClasses: "govuk-table__caption--m",
                         classes: "govuk-table--small-text-until-tablet",
-                        head: agreementLand.headings,
-                        rows: agreementLand.data
+                        head: agreement.agreementLand.headings,
+                        rows: agreement.agreementLand.data
                         }) }}
             <p class="govuk-body">
                 Please note that the Terms and Conditions contain separate obligations in relation to the "Agreement Land".
@@ -118,8 +123,8 @@
                 {{ govukTable({
                                 captionClasses: "govuk-table__caption--m",
                                 classes: "govuk-table--small-text-until-tablet",
-                                head: summaryOfActions.headings,
-                                rows: summaryOfActions.data
+                                head: agreement.summaryOfActions.headings,
+                                rows: agreement.summaryOfActions.data
                                 })
                 }}
             </table>
@@ -140,8 +145,8 @@
                 {{ govukTable({
                                 captionClasses: "govuk-table__caption--m",
                                 classes: "govuk-table--small-text-until-tablet",
-                                head: summaryOfPayments.headings,
-                                rows: summaryOfPayments.data
+                                head: agreement.summaryOfPayments.headings,
+                                rows: agreement.summaryOfPayments.data
                                 })
                 }}
             </table>
@@ -164,8 +169,8 @@
                 {{ govukTable({
                                 captionClasses: "govuk-table__caption--m",
                                 classes: "govuk-table--small-text-until-tablet",
-                                head: annualPaymentSchedule.headings,
-                                rows: annualPaymentSchedule.data
+                                head: agreement.annualPaymentSchedule.headings,
+                                rows: agreement.annualPaymentSchedule.data
                                 })
                 }}
             </table>
@@ -177,5 +182,10 @@
                 The Department for Environment, Food and Rural Affairs (Defra) is the data controller for personal data you give to Rural Payments Agency (RPA). For information on how we handle personal data go to www.gov.uk and search 'Rural Payments Agency personal information charter'.
             </p>
         </div>
+        <div class="t-and-c-print-only">
+            {# Rendered only in print — hidden in browser view #}
+            <!-- T&Cs text will be placed here -->
+        </div>
+
     </div>
 {% endblock %}
