@@ -66,7 +66,7 @@
                         </li>
                     </ul>
                 </div>
-                <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6">
+                <div class="gem-c-print-link govuk-!-display-none-print govuk-!-margin-bottom-6 print-btn">
                     <button
                       class="govuk-link govuk-body-s gem-c-print-link__button"
                       data-module="print-link"
@@ -77,6 +77,11 @@
                 </div>
             </nav>
         </div>
+        <noscript>
+            <style>
+                .print-btn { display: none !important; }
+            </style>
+        </noscript>
         <div class="govuk-grid-column-three-quarters">
             <h2 id="intro" class="govuk-heading-l">1. Introduction and overview</h2>
             <p class="govuk-body">
@@ -177,5 +182,10 @@
                 The Department for Environment, Food and Rural Affairs (Defra) is the data controller for personal data you give to Rural Payments Agency (RPA). For information on how we handle personal data go to www.gov.uk and search 'Rural Payments Agency personal information charter'.
             </p>
         </div>
+        <div class="t-and-c-print-only">
+            {# Rendered only in print — hidden in browser view #}
+            <!-- T&Cs text will be placed here -->
+        </div>
+
     </div>
 {% endblock %}
