@@ -32,29 +32,44 @@ describe('acceptOffer', () => {
   })
 
   test('throws Boom.badRequest if agreementNumber is missing', async () => {
-    await expect(acceptOffer(undefined, {}, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
-
-    await expect(acceptOffer('', {}, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
-
-    await expect(acceptOffer(null, {}, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
-
     await expect(
-      acceptOffer('SFI123456789', undefined, mockLogger)
+      acceptOffer(undefined, {}, 'http://localhost:3555/undefined', mockLogger)
     ).rejects.toThrow('Agreement data is required')
 
-    await expect(acceptOffer('SFI123456789', null, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
+    await expect(
+      acceptOffer('', {}, 'http://localhost:3555/', mockLogger)
+    ).rejects.toThrow('Agreement data is required')
 
-    await expect(acceptOffer(undefined, undefined, mockLogger)).rejects.toThrow(
-      'Agreement data is required'
-    )
+    await expect(
+      acceptOffer(null, {}, 'http://localhost:3555/null', mockLogger)
+    ).rejects.toThrow('Agreement data is required')
+
+    await expect(
+      acceptOffer(
+        'SFI123456789',
+        undefined,
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
+    ).rejects.toThrow('Agreement data is required')
+
+    await expect(
+      acceptOffer(
+        'SFI123456789',
+        null,
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
+    ).rejects.toThrow('Agreement data is required')
+
+    await expect(
+      acceptOffer(
+        undefined,
+        undefined,
+        'http://localhost:3555/undefined',
+        mockLogger
+      )
+    ).rejects.toThrow('Agreement data is required')
   })
 
   test('should successfully accept an agreement', async () => {
@@ -73,9 +88,13 @@ describe('acceptOffer', () => {
     )
     const mockEventResult = Promise.resolve()
     snsPublisher.publishEvent.mockReturnValue(mockEventResult)
-
     // Act
-    const result = await acceptOffer(agreementId, agreementData, mockLogger)
+    const result = await acceptOffer(
+      agreementId,
+      agreementData,
+      'http://localhost:3555/SFI123456789',
+      mockLogger
+    )
 
     // Assert
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
@@ -89,7 +108,8 @@ describe('acceptOffer', () => {
           correlationId: 'test-correlation-id',
           offerId: 'SFI123456789',
           frn: 'test-frn',
-          sbi: 'test-sbi'
+          sbi: 'test-sbi',
+          agreementUrl: 'http://localhost:3555/SFI123456789'
         }
       },
       mockLogger
@@ -119,6 +139,7 @@ describe('acceptOffer', () => {
     const result = await acceptOffer(
       agreementId,
       { agreementNumber: agreementId },
+      'http://localhost:3555/sample',
       mockLogger
     )
 
@@ -145,7 +166,12 @@ describe('acceptOffer', () => {
 
     // Act & Assert
     await expect(
-      acceptOffer(agreementId, { agreementNumber: agreementId }, mockLogger)
+      acceptOffer(
+        agreementId,
+        { agreementNumber: agreementId },
+        'http://localhost:3555/SFI999999999',
+        mockLogger
+      )
     ).rejects.toThrow(Boom.notFound('Offer not found with ID SFI999999999'))
   })
 
@@ -157,7 +183,12 @@ describe('acceptOffer', () => {
 
     // Act & Assert
     await expect(
-      acceptOffer(agreementId, { agreementNumber: agreementId }, mockLogger)
+      acceptOffer(
+        agreementId,
+        { agreementNumber: agreementId },
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
     ).rejects.toThrow(Boom.internal('Database connection failed'))
   })
 
@@ -169,7 +200,12 @@ describe('acceptOffer', () => {
 
     // Act & Assert
     await expect(
-      acceptOffer(agreementId, { agreementNumber: agreementId }, mockLogger)
+      acceptOffer(
+        agreementId,
+        { agreementNumber: agreementId },
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
     ).rejects.toEqual(boomError)
   })
 })

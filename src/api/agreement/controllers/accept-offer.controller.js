@@ -4,6 +4,7 @@ import {
   getFirstPaymentDate
 } from '~/src/api/agreement/helpers/accept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -19,7 +20,13 @@ const acceptOfferController = {
 
       if (status === 'offered') {
         // Accept the agreement
-        await acceptOffer(agreementNumber, agreementData, request.logger)
+        const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
+        await acceptOffer(
+          agreementNumber,
+          agreementData,
+          agreementUrl,
+          request.logger
+        )
 
         // Update the payment hub
         await updatePaymentHub(request, agreementNumber)

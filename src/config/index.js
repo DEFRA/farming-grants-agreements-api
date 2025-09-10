@@ -329,6 +329,12 @@ const config = convict({
       }
     }
   },
+  viewAgreementURI: {
+    doc: 'PDF URI to be used to print the agreement',
+    format: String,
+    default: 'http://localhost:3555',
+    env: 'VIEW_AGREEMENT_URI'
+  },
   featureFlags: {
     seedDb: {
       doc: 'Seed the database',

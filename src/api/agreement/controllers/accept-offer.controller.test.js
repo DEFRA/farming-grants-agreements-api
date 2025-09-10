@@ -16,11 +16,6 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: jest.fn()
 }))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
-jest.mock('~/src/config/nunjucks/nunjucks.js', () => ({
-  __esModule: true,
-  ...jest.requireActual('~/src/config/nunjucks/nunjucks.js'),
-  nunjucksEnvironment: { render: jest.fn(() => '<html>Test Agreement</html>') }
-}))
 
 describe('acceptOfferDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -145,6 +140,7 @@ describe('acceptOfferDocumentController', () => {
         status: 'offered',
         username: 'Test User'
       }),
+      expect.stringContaining('http://localhost:3555/SFI123456789'),
       mockLogger
     )
     expect(updatePaymentHub).toHaveBeenCalled()
