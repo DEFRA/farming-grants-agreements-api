@@ -147,6 +147,7 @@ describe('acceptOfferDocumentController', () => {
         username: 'Test User'
       }),
       expect.any(String),
+      expect.stringContaining('http://localhost:3555/SFI123456789'),
       mockLogger
     )
     expect(updatePaymentHub).toHaveBeenCalled()
@@ -262,6 +263,7 @@ describe('acceptOfferDocumentController', () => {
       agreementId,
       mockAgreementData,
       '<html>Test Agreement</html>',
+      expect.stringContaining('http://localhost:3555/SFI123456789'),
       mockLogger
     )
   })

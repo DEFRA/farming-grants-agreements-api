@@ -8,10 +8,17 @@ import { config } from '~/src/config/index.js'
  * @param {agreementNumber} agreementNumber - The agreement Id
  * @param {Agreement} agreementData - The agreement data
  * @param {string} htmlPage - A HTML string of the accepted agreement
+ * @param {string} agreementUrl - The Agreement URL to generate the agreement PDF
  * @param {Request<ReqRefDefaults>['logger']} logger - The logger object
  * @returns {Promise<Agreement>} The agreement data
  */
-async function acceptOffer(agreementNumber, agreementData, htmlPage, logger) {
+async function acceptOffer(
+  agreementNumber,
+  agreementData,
+  htmlPage,
+  agreementUrl,
+  logger
+) {
   if (!agreementNumber || !agreementData) {
     throw Boom.badRequest('Agreement data is required')
   }
@@ -31,7 +38,8 @@ async function acceptOffer(agreementNumber, agreementData, htmlPage, logger) {
         offerId: agreementNumber,
         frn: agreementData?.frn,
         sbi: agreementData?.sbi,
-        htmlPage
+        htmlPage,
+        agreementUrl
       }
     },
     logger

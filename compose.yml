@@ -93,6 +93,7 @@ services:
       QUEUE_NAME: ${QUEUE_NAME:-create_agreement}
       ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-true}
       JWT_ENABLED: ${JWT_ENABLED:-false}
+      VIEW_AGREEMENT_URI: ${VIEW_AGREEMENT_URI:-http://localhost:3555}
     networks:
       - cdp-tenant
 

@@ -7,6 +7,7 @@ import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub
 import { getAgreement } from '~/src/api/agreement/helpers/get-agreement.js'
 import { nunjucksEnvironment } from '~/src/config/nunjucks/nunjucks.js'
 import { context } from '~/src/config/nunjucks/context/context.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -23,10 +24,12 @@ const acceptOfferController = {
       if (status === 'offered') {
         // Accept the agreement
         const htmlPage = await getAgreementHtml(agreementData, request)
+        const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
         await acceptOffer(
           agreementNumber,
           agreementData,
           htmlPage,
+          agreementUrl,
           request.logger
         )
 
