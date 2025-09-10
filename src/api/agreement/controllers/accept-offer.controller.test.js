@@ -7,7 +7,6 @@ import {
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { nunjucksEnvironment } from '~/src/config/nunjucks/nunjucks.js'
 
 jest.mock('~/src/api/agreement/helpers/accept-offer.js')
 jest.mock('~/src/api/agreement/helpers/update-payment-hub.js')
@@ -17,11 +16,6 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: jest.fn()
 }))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
-jest.mock('~/src/config/nunjucks/nunjucks.js', () => ({
-  __esModule: true,
-  ...jest.requireActual('~/src/config/nunjucks/nunjucks.js'),
-  nunjucksEnvironment: { render: jest.fn(() => '<html>Test Agreement</html>') }
-}))
 
 describe('acceptOfferDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -146,7 +140,6 @@ describe('acceptOfferDocumentController', () => {
         status: 'offered',
         username: 'Test User'
       }),
-      expect.any(String),
       expect.stringContaining('http://localhost:3555/SFI123456789'),
       mockLogger
     )
@@ -240,32 +233,6 @@ describe('acceptOfferDocumentController', () => {
     expect(String(result)).toContain('Offer accepted')
     expect(String(result)).toContain(agreementId)
     expect(String(result)).toContain('/defra-grants-proxy')
-  })
-
-  test('should render the agreement document as HTML for PDF service', async () => {
-    const agreementId = 'SFI123456789'
-    await server.inject({
-      method: 'POST',
-      url: `/${agreementId}`,
-      payload: { action: 'accept-offer' }
-    })
-
-    expect(nunjucksEnvironment.render).toHaveBeenCalledWith(
-      'views/sfi-agreement-pdf.njk',
-      expect.objectContaining({
-        baseUrl: '/',
-        serviceName: 'farming-grants-agreements-api',
-        agreement: mockAgreementData
-      })
-    )
-
-    expect(acceptOffer).toHaveBeenCalledWith(
-      agreementId,
-      mockAgreementData,
-      '<html>Test Agreement</html>',
-      expect.stringContaining('http://localhost:3555/SFI123456789'),
-      mockLogger
-    )
   })
 
   test('should handle GET method when agreement is accepted', async () => {
