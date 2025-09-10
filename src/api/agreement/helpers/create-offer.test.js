@@ -330,7 +330,7 @@ describe('createOffer', () => {
           code: 'CSAM1',
           appliedFor: {
             unit: 'ha',
-            quantity: 20.23
+            quantity: 20.2312345
           }
         },
         {
@@ -339,7 +339,7 @@ describe('createOffer', () => {
           code: 'CSAM3',
           appliedFor: {
             unit: 'ha',
-            quantity: 42.23
+            quantity: 42.234321
           }
         },
         {
@@ -359,19 +359,19 @@ describe('createOffer', () => {
         {
           parcelNumber: 'SX06799238',
           parcelName: '',
-          totalArea: 62.46,
+          totalArea: 62.4655,
           activities: [
             {
               code: 'CSAM1',
               description: '',
-              area: 20.23,
+              area: 20.2312345,
               startDate: '2025-05-13',
               endDate: '2028-05-13'
             },
             {
               code: 'CSAM3',
               description: '',
-              area: 42.23,
+              area: 42.234321,
               startDate: '2025-05-13',
               endDate: '2028-05-13'
             }
