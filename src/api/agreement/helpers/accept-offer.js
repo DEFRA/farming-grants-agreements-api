@@ -7,7 +7,6 @@ import { config } from '~/src/config/index.js'
  * Get agreement data for rendering templates
  * @param {agreementNumber} agreementNumber - The agreement Id
  * @param {Agreement} agreementData - The agreement data
- * @param {string} htmlPage - A HTML string of the accepted agreement
  * @param {string} agreementUrl - The Agreement URL to generate the agreement PDF
  * @param {Request<ReqRefDefaults>['logger']} logger - The logger object
  * @returns {Promise<Agreement>} The agreement data
@@ -15,7 +14,6 @@ import { config } from '~/src/config/index.js'
 async function acceptOffer(
   agreementNumber,
   agreementData,
-  htmlPage,
   agreementUrl,
   logger
 ) {
@@ -38,7 +36,6 @@ async function acceptOffer(
         offerId: agreementNumber,
         frn: agreementData?.frn,
         sbi: agreementData?.sbi,
-        htmlPage,
         agreementUrl
       }
     },
