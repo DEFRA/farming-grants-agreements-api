@@ -333,7 +333,7 @@ const config = convict({
     doc: 'PDF URI to be used to print the agreement',
     format: String,
     default: 'http://localhost:3555',
-    env: 'ENABLE_SECURE_CONTEXT'
+    env: 'VIEW_AGREEMENT_URI'
   },
   featureFlags: {
     seedDb: {
