@@ -33,27 +33,63 @@ describe('acceptOffer', () => {
 
   test('throws Boom.badRequest if agreementNumber is missing', async () => {
     await expect(
-      acceptOffer(undefined, {}, '<html>test</html>', mockLogger)
+      acceptOffer(
+        undefined,
+        {},
+        '<html>test</html>',
+        'http://localhost:3555/undefined',
+        mockLogger
+      )
     ).rejects.toThrow('Agreement data is required')
 
     await expect(
-      acceptOffer('', {}, '<html>test</html>', mockLogger)
+      acceptOffer(
+        '',
+        {},
+        '<html>test</html>',
+        'http://localhost:3555/',
+        mockLogger
+      )
     ).rejects.toThrow('Agreement data is required')
 
     await expect(
-      acceptOffer(null, {}, '<html>test</html>', mockLogger)
+      acceptOffer(
+        null,
+        {},
+        '<html>test</html>',
+        'http://localhost:3555/null',
+        mockLogger
+      )
     ).rejects.toThrow('Agreement data is required')
 
     await expect(
-      acceptOffer('SFI123456789', undefined, '<html>test</html>', mockLogger)
+      acceptOffer(
+        'SFI123456789',
+        undefined,
+        '<html>test</html>',
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
     ).rejects.toThrow('Agreement data is required')
 
     await expect(
-      acceptOffer('SFI123456789', null, '<html>test</html>', mockLogger)
+      acceptOffer(
+        'SFI123456789',
+        null,
+        '<html>test</html>',
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
     ).rejects.toThrow('Agreement data is required')
 
     await expect(
-      acceptOffer(undefined, undefined, '<html>test</html>', mockLogger)
+      acceptOffer(
+        undefined,
+        undefined,
+        '<html>test</html>',
+        'http://localhost:3555/undefined',
+        mockLogger
+      )
     ).rejects.toThrow('Agreement data is required')
   })
 
@@ -80,6 +116,7 @@ describe('acceptOffer', () => {
       agreementId,
       agreementData,
       htmlPage,
+      'http://localhost:3555/SFI123456789',
       mockLogger
     )
 
@@ -96,7 +133,8 @@ describe('acceptOffer', () => {
           offerId: 'SFI123456789',
           frn: 'test-frn',
           sbi: 'test-sbi',
-          htmlPage: '<html><body>Test Agreement</body></html>'
+          htmlPage: '<html><body>Test Agreement</body></html>',
+          agreementUrl: 'http://localhost:3555/SFI123456789'
         }
       },
       mockLogger
@@ -128,6 +166,7 @@ describe('acceptOffer', () => {
       agreementId,
       { agreementNumber: agreementId },
       htmlPage,
+      'http://localhost:3555/sample',
       mockLogger
     )
 
@@ -159,6 +198,7 @@ describe('acceptOffer', () => {
         agreementId,
         { agreementNumber: agreementId },
         htmlPage,
+        'http://localhost:3555/SFI999999999',
         mockLogger
       )
     ).rejects.toThrow(Boom.notFound('Offer not found with ID SFI999999999'))
@@ -177,6 +217,7 @@ describe('acceptOffer', () => {
         agreementId,
         { agreementNumber: agreementId },
         htmlPage,
+        'http://localhost:3555/SFI123456789',
         mockLogger
       )
     ).rejects.toThrow(Boom.internal('Database connection failed'))
@@ -195,6 +236,7 @@ describe('acceptOffer', () => {
         agreementId,
         { agreementNumber: agreementId },
         htmlPage,
+        'http://localhost:3555/SFI123456789',
         mockLogger
       )
     ).rejects.toEqual(boomError)
