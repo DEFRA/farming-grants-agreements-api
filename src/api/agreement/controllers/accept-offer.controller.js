@@ -4,9 +4,6 @@ import {
   getFirstPaymentDate
 } from '~/src/api/agreement/helpers/accept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import { getAgreement } from '~/src/api/agreement/helpers/get-agreement.js'
-import { nunjucksEnvironment } from '~/src/config/nunjucks/nunjucks.js'
-import { context } from '~/src/config/nunjucks/context/context.js'
 
 /**
  * Controller to serve HTML agreement document
@@ -22,13 +19,7 @@ const acceptOfferController = {
 
       if (status === 'offered') {
         // Accept the agreement
-        const htmlPage = await getAgreementHtml(agreementData, request)
-        await acceptOffer(
-          agreementNumber,
-          agreementData,
-          htmlPage,
-          request.logger
-        )
+        await acceptOffer(agreementNumber, agreementData, request.logger)
 
         // Update the payment hub
         await updatePaymentHub(request, agreementNumber)
@@ -57,24 +48,6 @@ const acceptOfferController = {
         .code(statusCodes.internalServerError)
     }
   }
-}
-
-/**
- * Renders a Nunjucks template with agreement data
- * @param {Agreement} agreementData - The agreement data object
- * @param {Request} request - The request object
- * @returns {Promise<string>} The rendered HTML string
- */
-async function getAgreementHtml(agreementData, request) {
-  const agreement = await getAgreement(
-    agreementData.agreementNumber,
-    agreementData
-  )
-
-  return nunjucksEnvironment.render('views/sfi-agreement-pdf.njk', {
-    ...context(request),
-    agreement
-  })
 }
 
 export { acceptOfferController }

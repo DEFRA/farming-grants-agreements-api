@@ -186,7 +186,8 @@ const config = convict({
     queueUrl: {
       doc: 'Queue URL',
       format: String,
-      default: 'http://localhost:4566/000000000000/create_agreement',
+      default:
+        'http://sqs.eu-west-2.127.0.0.1:4566/000000000000/create_agreement',
       env: 'QUEUE_URL'
     },
     interval: {
