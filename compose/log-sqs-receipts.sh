@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Logs SQS messages to LocalStack logs, with continuous queue discovery (no jq needed).
+# Logs SQS messages to LocalStack logs, with continuous queue discovery.
 set -euo pipefail
 
 : "${ENABLE_SQS_LOGGER:=1}"                 # 1=on, 0=off
-: "${SQS_LOGGER_DELETE:=1}"                 # 1=delete after printing
+: "${SQS_LOGGER_DELETE:=0}"                 # 1=delete after printing (safer default: 0)
 : "${SQS_LOGGER_SHOW_FULL_BODY:=0}"         # 1=print full JSON payload
 : "${SQS_LOGGER_QUEUE_FILTER:=}"            # regex: include only matching queue names
 : "${SQS_LOGGER_EXPECT_TYPES:=}"            # comma list of CloudEvent types to show
@@ -17,16 +17,23 @@ export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-eu-west-2}"
 export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
 
-if [[ "$ENABLE_SQS_LOGGER" != "1" ]]; then
-  echo "ℹ️  SQS logger disabled (ENABLE_SQS_LOGGER=$ENABLE_SQS_LOGGER)"
-  exit 0
-fi
+[[ "$ENABLE_SQS_LOGGER" != "1" ]] && { echo "ℹ️  SQS logger disabled"; exit 0; }
 
 echo "🛰️  Starting SQS receipt logger (delete=${SQS_LOGGER_DELETE}, show_full_body=${SQS_LOGGER_SHOW_FULL_BODY})..."
 
+normalize_qurl() {
+  # Rebuild to localhost:4566 while preserving /{account}/{queue}
+  # Works for weird hosts like sqs.eu-west-2.127.0.0.1:4566
+  local in="$1"
+  local acct name
+  acct="$(echo "$in" | awk -F/ '{print $(NF-1)}')"
+  name="$(echo "$in" | awk -F/ '{print $NF}')"
+  echo "http://localhost:4566/${acct}/${name}"
+}
+
 to_regex() {
   local list="${1:-}"
-  if [[ -z "$list" ]]; then echo ""; return; fi
+  [[ -z "$list" ]] && { echo ""; return; }
   local IFS=','; read -ra arr <<<"$list"
   local out=""
   for v in "${arr[@]}"; do
@@ -38,24 +45,17 @@ to_regex() {
 TYPES_RX="$(to_regex "$SQS_LOGGER_EXPECT_TYPES")"
 TOPICS_RX="$(to_regex "$SQS_LOGGER_ACCEPT_TOPIC_ARNS")"
 
-# Track attached queues (space-separated names)
 ATTACHED_NAMES=""
 
-is_attached() {
-  local name="$1"
-  [[ " $ATTACHED_NAMES " == *" $name "* ]]
-}
-mark_attached() {
-  local name="$1"
-  ATTACHED_NAMES="$ATTACHED_NAMES $name"
-}
+is_attached() { [[ " $ATTACHED_NAMES " == *" $1 "* ]]; }
+mark_attached() { ATTACHED_NAMES="$ATTACHED_NAMES $1"; }
 
-have_python=0
-if command -v python3 >/dev/null 2>&1; then have_python=1; fi
+have_python=0; command -v python3 >/dev/null 2>&1 && have_python=1
 
 poll_queue() {
   local qurl="$1"
   local qname; qname="$(basename "$qurl")"
+  local qurl_norm; qurl_norm="$(normalize_qurl "$qurl")"
 
   # Optional filter by name
   if [[ -n "$SQS_LOGGER_QUEUE_FILTER" ]] && ! [[ "$qname" =~ $SQS_LOGGER_QUEUE_FILTER ]]; then
@@ -64,20 +64,24 @@ poll_queue() {
   fi
 
   mark_attached "$qname"
-
   (
     echo "📡 Logger attached to queue: $qname ($qurl)"
     while true; do
       resp="$(awslocal sqs receive-message \
-        --queue-url "$qurl" \
+        --queue-url "$qurl_norm" \
         --wait-time-seconds "${SQS_LOGGER_WAIT_TIME}" \
         --max-number-of-messages "${SQS_LOGGER_MAX_MSGS}" \
         --message-attribute-names All \
         --attribute-names All \
-        --output json || echo '{}')"
+        --output json 2>/_tmp_err || true)"
+
+      if [[ -s /_tmp_err ]]; then
+        echo "⚠️  receive-message error on $qname: $(cat /_tmp_err)"
+        : > /_tmp_err
+      fi
 
       if [[ "$have_python" -eq 1 ]]; then
-        out="$(python3 - "$qurl" "$qname" "$SQS_LOGGER_SHOW_FULL_BODY" "$SQS_LOGGER_DELETE" "$TYPES_RX" "$TOPICS_RX" <<'PY' || true
+        out="$(python3 - "$qurl_norm" "$qname" "$SQS_LOGGER_SHOW_FULL_BODY" "$SQS_LOGGER_DELETE" "$TYPES_RX" "$TOPICS_RX" <<'PY' || true
 import sys, json, datetime, re
 qurl, qname, show_full_body, do_delete, types_rx, topics_rx = sys.argv[1:7]
 show_full_body = (show_full_body == "1")
@@ -135,24 +139,20 @@ for rh in to_delete:
 PY
 )"
       else
-        # Fallback: no python -> just dump raw body & delete
         out="$(echo "$resp" | awk '
           /"MessageId":/ { mid=$0; gsub(/.*"MessageId": *"|".*/, "", mid); }
           /"Body":/      { body=$0; sub(/.*"Body": *"/,"",body); sub(/",?$/,"",body); print "[SQS] RECEIVED on '"$qname"' id=" mid "\n" body }
         ')"
-        # Emit fake ::DELETE:: lines by pulling receipt handles
         dels="$(echo "$resp" | sed -n 's/.*"ReceiptHandle": *"\([^"]*\)".*/::DELETE::\1/p')"
         out="$out"$'\n'"$dels"
       fi
 
-      # Delete any receipts that were marked
       while IFS= read -r line; do
         [[ "$line" == ::DELETE::* ]] || continue
         rh="${line#::DELETE::}"
-        awslocal sqs delete-message --queue-url "$qurl" --receipt-handle "$rh" >/dev/null 2>&1 || true
+        awslocal sqs delete-message --queue-url "$qurl_norm" --receipt-handle "$rh" >/dev/null 2>&1 || true
       done <<< "$out"
 
-      # Print the message logs (without the ::DELETE:: lines)
       while IFS= read -r line; do
         [[ "$line" == ::DELETE::* ]] && continue
         [[ -n "$line" ]] && echo "$line"
@@ -164,23 +164,18 @@ PY
 discover_and_attach() {
   local first=1
   while true; do
-    # Use JMESPath to avoid Python/jq
     urls_line="$(awslocal sqs list-queues --query 'QueueUrls' --output text 2>/dev/null || true)"
-    # "text" output is either empty, or a space-separated list of URLs
     if [[ -n "$urls_line" ]]; then
       # shellcheck disable=SC2206
       urls=($urls_line)
       echo "🔎 Discovery: found ${#urls[@]} queue(s)."
       for url in "${urls[@]}"; do
         qname="$(basename "$url")"
-        if ! is_attached "$qname"; then
-          poll_queue "$url"
-        fi
+        is_attached "$qname" || poll_queue "$url"
       done
     else
       echo "🔎 Discovery: found 0 queues."
     fi
-
     if [[ $first -eq 1 && -z "$urls_line" ]]; then
       echo "⏳ Waiting for SQS queues to appear (scanning every ${SQS_LOGGER_DISCOVERY_INTERVAL}s)..."
     fi
@@ -189,6 +184,5 @@ discover_and_attach() {
   done
 }
 
-# Run discovery in background and free the init hook
 discover_and_attach &
 echo "✅ SQS receipt logger running."

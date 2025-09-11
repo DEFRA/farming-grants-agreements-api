@@ -18,10 +18,10 @@ declare -A TOPICS=(
   # [offer_created]="offer_created"                     # ↓ We have created the offer (based on Grants UI)
   # [offer_accepted]="agreement_accepted"               # - User has accepted the offer
   [agreement_status_updated]="agreement_status_updated" # - Agreement status got updated i.e offered/accepted/withdrawn
-  [create_agreement_pdf]="agreement_accepted"               # - User has accepted the offer
+  [create_agreement_pdf]="create_agreement_pdf"               # - User has accepted the offer
 )
 declare -A QUEUES=(
-  # [application_approved]="create_agreement" # We need to create the agreement in response to the application being approved
+  [application_approved]="create_agreement" # We need to create the agreement in response to the application being approved
   # [offer_created]="record_offer"
   # [offer_accepted]="record_agreement_acceptance"
   [agreement_status_updated]="record_agreement_status_update"
