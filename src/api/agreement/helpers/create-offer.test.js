@@ -268,14 +268,17 @@ describe('createOffer', () => {
     expect(publishEvent).toHaveBeenCalledWith(
       {
         time: '2025-01-01T00:00:00.000Z',
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:offer_created',
-        type: 'io.onsite.agreement.offer.created',
-        data: {
-          correlationId: expect.any(String),
-          offerId: expect.any(String),
-          frn: '1234567890',
-          sbi: '106284736'
-        }
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        type: 'io.onsite.agreement.status.updated',
+        data: expect.objectContaining({
+          agreementNumber: 'SFI999999999',
+          correlationId: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+          ),
+          clientRef: 'ref-1234',
+          status: 'offered',
+          date: '2025-01-01T00:00:00.000Z'
+        })
       },
       mockLogger
     )

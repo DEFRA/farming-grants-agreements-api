@@ -2,28 +2,30 @@
 
 Core delivery platform Node.js Backend Template.
 
-- [Requirements](#requirements)
-  - [Node.js](#nodejs)
-- [Local development](#local-development)
-  - [Setup](#setup)
-  - [Development](#development)
-  - [Testing](#testing)
-  - [Production](#production)
-  - [Npm scripts](#npm-scripts)
-  - [Update dependencies](#update-dependencies)
-  - [Formatting](#formatting)
-    - [Windows prettier issue](#windows-prettier-issue)
-- [API endpoints](#api-endpoints)
-- [Development helpers](#development-helpers)
-  - [MongoDB Locks](#mongodb-locks)
-- [Docker](#docker)
-  - [Development image](#development-image)
-  - [Production image](#production-image)
-  - [Docker Compose](#docker-compose)
-  - [Dependabot](#dependabot)
-  - [SonarCloud](#sonarcloud)
-- [Licence](#licence)
-  - [About the licence](#about-the-licence)
+- [farming-grants-agreements-api](#farming-grants-agreements-api)
+  - [Requirements](#requirements)
+    - [Node.js](#nodejs)
+  - [Local development](#local-development)
+    - [Setup](#setup)
+    - [Development](#development)
+    - [Testing](#testing)
+  - [Testing the SQS queue](#testing-the-sqs-queue)
+    - [Production](#production)
+    - [Npm scripts](#npm-scripts)
+    - [Update dependencies](#update-dependencies)
+    - [Formatting](#formatting)
+      - [Windows prettier issue](#windows-prettier-issue)
+  - [API endpoints](#api-endpoints)
+    - [Proxy](#proxy)
+  - [Docker](#docker)
+    - [Development image](#development-image)
+    - [Production image](#production-image)
+    - [Docker Compose](#docker-compose)
+    - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
+    - [Dependabot](#dependabot)
+    - [SonarCloud](#sonarcloud)
+  - [Licence](#licence)
+    - [About the licence](#about-the-licence)
 
 ## Requirements
 
@@ -199,6 +201,27 @@ A local environment with:
 docker compose up --build -d
 ```
 
+### Viewing messages in LocalStack SQS
+
+By default, our LocalStack monitor only shows **message counts** (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue.  
+This is intentional so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
+
+If you want to **peek at the actual messages** (for debugging or development only), you can run:
+
+```bash
+docker exec -it localstack sh -lc '
+  QURL=$(awslocal sqs get-queue-url \
+    --queue-name record_agreement_status_update \
+    --query QueueUrl --output text)
+
+  awslocal sqs receive-message \
+    --queue-url "$QURL" \
+    --max-number-of-messages 10 \
+    --wait-time-seconds 1 \
+    --message-attribute-names All \
+    --attribute-names All
+'
+
 ### Dependabot
 
 We have added an example dependabot configuration file to the repository. You can enable it by renaming
@@ -225,3 +248,4 @@ information providers in the public sector to license the use and re-use of thei
 licence.
 
 It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions.
+```
