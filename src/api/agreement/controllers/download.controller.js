@@ -33,9 +33,9 @@ export const downloadController = async (request, h) => {
     const stream = await getPdfStream({ bucket, key })
 
     if (!stream) {
-      request.logger?.info(
-        { agreementId, version, key },
-        'Agreement PDF not found in S3'
+      request.logger?.error(
+        { agreementId, version, key, bucket },
+        'Agreement PDF not found in S3 - Key: ' + key
       )
       throw Boom.notFound('Agreement PDF not found')
     }
