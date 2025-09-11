@@ -16,6 +16,7 @@ services:
     volumes:
       - '${TMPDIR:-/tmp}/localstack:/var/lib/localstack'
       - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+      - ./compose/log-sqs-receipts.sh:/etc/localstack/init/ready.d/30-log-sqs-receipts.sh
     healthcheck:
       test: ['CMD', 'curl', 'localhost:4566']
       interval: 5s
