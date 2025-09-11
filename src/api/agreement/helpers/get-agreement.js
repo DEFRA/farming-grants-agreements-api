@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom'
+import round from 'lodash/round.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 const dateOptions = {
@@ -108,7 +109,7 @@ const getSummaryOfPayments = (agreementData) => {
     data: agreementData.payments.activities.map((payment) => [
       { text: payment.code },
       { text: payment.description },
-      { text: payment.measurement },
+      { text: round(payment.measurement, 4) },
       { text: formatCurrency(payment.rate) + ' per ha' },
       { text: formatCurrency(payment.annualPayment) }
     ])

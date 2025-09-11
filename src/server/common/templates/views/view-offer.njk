@@ -23,7 +23,7 @@
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableActionRow{{ loop.index }}">{{ action.name }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.landParcel }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity }}&nbsp;ha</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.quantity | round(4) }}&nbsp;ha</td>
       </tr>
       {% endfor %}
     </tbody>

@@ -1,6 +1,7 @@
 import crypto from 'crypto'
-import agreementsModel from '~/src/api/common/models/agreements.js'
 import { v4 as uuidv4 } from 'uuid'
+import round from 'lodash/round.js'
+import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
@@ -24,14 +25,15 @@ export const groupParcelsById = (actionApplications) => {
     const parcelNumber = `${parcel.sheetId}${parcel.parcelId}`
     if (groupedParcels.has(parcelNumber)) {
       const existing = groupedParcels.get(parcelNumber)
-      existing.totalArea =
-        Math.round((existing.totalArea + parcel.appliedFor.quantity) * 100) /
-        100
+      existing.totalArea = round(
+        existing.totalArea + parcel.appliedFor.quantity,
+        4
+      )
     } else {
       groupedParcels.set(parcelNumber, {
         parcelNumber,
         parcelName: parcel.parcelName || '',
-        totalArea: Math.round(parcel.appliedFor.quantity * 100) / 100,
+        totalArea: round(parcel.appliedFor.quantity, 4),
         activities: groupActivitiesByParcelId(actionApplications, parcelNumber)
       })
     }
