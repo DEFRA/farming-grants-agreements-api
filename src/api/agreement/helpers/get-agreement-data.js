@@ -54,6 +54,7 @@ export const getAgreementData = async (searchTerms) => {
   }
   agreementVersion.agreementNumber = agreementsData.agreementNumber
   agreementVersion.invoice = agreementsData.invoice
+  agreementVersion.version = agreementsData.versions?.length ?? 1
 
   return agreementVersion
 }
