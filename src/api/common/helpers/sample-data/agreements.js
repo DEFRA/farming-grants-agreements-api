@@ -1,45 +1,279 @@
 const startDate = '2024-11-01'
 const endDate = '2027-10-31'
-const assessHedgerowDescription = 'Assess and record hedgerow condition'
+const assessHedgerowDescription = 'CHRW1: Assess and record hedgerow condition'
 const assessSoilDescription =
-  'Assess soil, produce a soil management plan and test soil organic matter'
+  'CSAM1: Assess soil, produce a soil management plan and test soil organic matter'
 const manageGrasslandDescription =
-  'Manage grassland with very low nutrient inputs - outside SDAs or within SDAs'
-const earthBanksDescription = 'Maintain earth banks or stone-faced hedgebanks'
-const manageHedgerowDescription = 'Manage hedgerows'
-const manageHedgerowTreesDescription = 'Maintain or establish hedgerow trees'
+  'CLIG3: Manage grassland with very low nutrient inputs - outside SDAs or within SDAs'
+const earthBanksDescription =
+  'BND2: Maintain earth banks or stone-faced hedgebanks'
+const manageHedgerowDescription = 'CHRW2: Manage hedgerows'
+const manageHedgerowTreesDescription =
+  'CHRW3: Maintain or establish hedgerow trees'
 
 export default [
   {
-    notificationMessageId: 'sample-notification-1',
-    agreementNumber: 'SFI987654321',
+    notificationMessageId: 'f000000000000000000003e8',
+    agreementNumber: 'SFI123456789',
+    clientRef: 'example-app-303',
+    code: 'frps-private-beta',
+    createdAt: '2025-08-19T09:36:45.131Z',
+    submittedAt: '2025-08-19T09:36:44.509Z',
     identifiers: {
-      frn: '9876543210',
-      sbi: '900000304'
+      sbi: '900000005',
+      frn: 'frn',
+      crn: 'crn',
+      defraId: 'defraId'
     },
     answers: {
-      agreementName: 'Sample Agreement',
+      hasCheckedLandIsUpToDate: true,
+      agreementName: 'NO_LONGER_REQUIRED',
+      scheme: 'SFI',
+      year: 2025,
       actionApplications: [
         {
-          sheetId: 'AA0303',
-          parcelId: '38',
-          parcelName: '',
-          code: 'CSAM1',
-          description: assessSoilDescription,
+          code: 'CMOR1',
+          sheetId: 'AA0006',
+          parcelId: '0006',
           appliedFor: {
-            quantity: 10.73,
-            unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+            unit: 'ha',
+            quantity: 4.53411078
+          }
         }
-      ]
+      ],
+      payment: {
+        agreementStartDate: '2025-09-01',
+        agreementEndDate: '2028-09-01',
+        frequency: 'Quarterly',
+        agreementTotalPence: 96018,
+        annualTotalPence: 32006,
+        parcelItems: {
+          1: {
+            code: 'CMOR1',
+            description: 'CMOR1: Assess moorland and produce a written record',
+            version: 1,
+            unit: 'ha',
+            quantity: 4.53411078,
+            rateInPence: 1060,
+            annualPaymentPence: 4806,
+            sheetId: 'AA0006',
+            parcelId: '0006'
+          }
+        },
+        agreementLevelItems: {
+          1: {
+            code: 'CMOR1',
+            description: 'CMOR1: Assess moorland and produce a written record',
+            version: 1,
+            annualPaymentPence: 27200
+          }
+        },
+        payments: [
+          {
+            totalPaymentPence: 8007,
+            paymentDate: '2025-12-05',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2026-03-05',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2026-06-05',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2026-09-07',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2026-12-07',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2027-03-05',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2027-06-07',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2027-09-06',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2027-12-06',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2028-03-06',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2028-06-05',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 8001,
+            paymentDate: '2028-09-05',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              }
+            ]
+          }
+        ]
+      },
+      applicant: {
+        business: {
+          name: 'Example Ridge Farm Ltd',
+          email: {
+            address:
+              'meadow@example.test'
+          },
+          phone: {
+            mobile: '02079460901'
+          },
+          address: {
+            line1: '3 Example Lane',
+            line2: 'Example Village',
+            line3: null,
+            line4: null,
+            line5: null,
+            street: 'Example Lane',
+            city: 'Exampleton',
+            postalCode: 'ZZ99 3ZZ'
+          }
+        },
+        customer: {
+          name: {
+            title: 'Mr.',
+            first: 'Jamie',
+            middle: 'Test',
+            last: 'Sample'
+          }
+        }
+      }
     }
   },
   {
     notificationMessageId: 'sample-notification-2',
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'SFI987654321',
     identifiers: {
       frn: '1234567890',
       sbi: '900000005'
@@ -50,594 +284,498 @@ export default [
         {
           sheetId: 'AA0304',
           parcelId: '44',
-          parcelName: '',
           code: 'BND1',
-          description: 'Maintain dry stone walls',
           appliedFor: {
-            quantity: 95.0,
+            quantity: 95,
             unit: 'Metres'
-          },
-          rate: 25.65,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0304',
           parcelId: '44',
-          parcelName: '',
           code: 'CHRW1',
-          description: assessHedgerowDescription,
           appliedFor: {
-            quantity: 207.0,
+            quantity: 207,
             unit: 'Metres'
-          },
-          rate: 5.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0304',
           parcelId: '44',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 0.7287,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0304',
           parcelId: '44',
-          parcelName: '',
           code: 'CLIG3',
-          description: manageGrasslandDescription,
           appliedFor: {
             quantity: 0.7287,
             unit: 'HA'
-          },
-          rate: 151.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0304',
           parcelId: '44',
-          parcelName: '',
           code: 'BND2',
-          description: earthBanksDescription,
           appliedFor: {
-            quantity: 234.0,
+            quantity: 234,
             unit: 'Metres'
-          },
-          rate: 11.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0304',
           parcelId: '44',
-          parcelName: '',
           code: 'CHRW2',
-          description: manageHedgerowDescription,
           appliedFor: {
-            quantity: 207.0,
+            quantity: 207,
             unit: 'Metres'
-          },
-          rate: 13.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0304',
           parcelId: '44',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 0.7287,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0305',
           parcelId: '73',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 0.7287,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0305',
           parcelId: '73',
-          parcelName: '',
           code: 'CHRW2',
-          description: manageHedgerowDescription,
           appliedFor: {
-            quantity: 265.0,
+            quantity: 265,
             unit: 'Metres'
-          },
-          rate: 13.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0305',
           parcelId: '73',
-          parcelName: '',
           code: 'CHRW1',
-          description: assessHedgerowDescription,
           appliedFor: {
-            quantity: 265.0,
+            quantity: 265,
             unit: 'Metres'
-          },
-          rate: 5.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0305',
           parcelId: '73',
-          parcelName: '',
           code: 'BND2',
-          description: earthBanksDescription,
           appliedFor: {
-            quantity: 265.0,
+            quantity: 265,
             unit: 'Metres'
-          },
-          rate: 11.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0306',
           parcelId: '555',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 1.6108,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0306',
           parcelId: '555',
-          parcelName: '',
           code: 'CLIG3',
-          description: manageGrasslandDescription,
           appliedFor: {
             quantity: 1.6108,
             unit: 'HA'
-          },
-          rate: 151.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0306',
           parcelId: '555',
-          parcelName: '',
           code: 'CHRW3',
-          description: manageHedgerowTreesDescription,
           appliedFor: {
-            quantity: 337.0,
+            quantity: 337,
             unit: 'Metres'
-          },
-          rate: 10.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0306',
           parcelId: '555',
-          parcelName: '',
           code: 'CHRW2',
-          description: manageHedgerowDescription,
           appliedFor: {
-            quantity: 337.0,
+            quantity: 337,
             unit: 'Metres'
-          },
-          rate: 13.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0306',
           parcelId: '555',
-          parcelName: '',
           code: 'CHRW1',
-          description: assessHedgerowDescription,
           appliedFor: {
-            quantity: 337.0,
+            quantity: 337,
             unit: 'Metres'
-          },
-          rate: 5.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0306',
           parcelId: '555',
-          parcelName: '',
           code: 'BND2',
-          description: earthBanksDescription,
           appliedFor: {
-            quantity: 374.0,
+            quantity: 374,
             unit: 'Metres'
-          },
-          rate: 11.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0307',
           parcelId: '58',
-          parcelName: '',
           code: 'CHRW2',
-          description: manageHedgerowDescription,
           appliedFor: {
-            quantity: 640.0,
+            quantity: 640,
             unit: 'Metres'
-          },
-          rate: 13.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0307',
           parcelId: '58',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 3.1213,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0307',
           parcelId: '58',
-          parcelName: '',
           code: 'CLIG3',
-          description: manageGrasslandDescription,
           appliedFor: {
             quantity: 3.1213,
             unit: 'HA'
-          },
-          rate: 151.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0307',
           parcelId: '58',
-          parcelName: '',
           code: 'BND2',
-          description: earthBanksDescription,
           appliedFor: {
-            quantity: 430.0,
+            quantity: 430,
             unit: 'Metres'
-          },
-          rate: 11.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0307',
           parcelId: '58',
-          parcelName: '',
           code: 'CHRW3',
-          description: manageHedgerowTreesDescription,
           appliedFor: {
-            quantity: 230.0,
+            quantity: 230,
             unit: 'Metres'
-          },
-          rate: 10.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0307',
           parcelId: '58',
-          parcelName: '',
           code: 'CHRW1',
-          description: assessHedgerowDescription,
           appliedFor: {
-            quantity: 640.0,
+            quantity: 640,
             unit: 'Metres'
-          },
-          rate: 5.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0308',
           parcelId: '81',
-          parcelName: '',
           code: 'CHRW2',
-          description: manageHedgerowDescription,
           appliedFor: {
-            quantity: 50.0,
+            quantity: 50,
             unit: 'Metres'
-          },
-          rate: 13.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0308',
           parcelId: '81',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 0.8291,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0308',
           parcelId: '81',
-          parcelName: '',
           code: 'CHRW1',
-          description: assessHedgerowDescription,
           appliedFor: {
-            quantity: 150.0,
+            quantity: 150,
             unit: 'Metres'
-          },
-          rate: 5.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0308',
           parcelId: '81',
-          parcelName: '',
           code: 'BND2',
-          description: earthBanksDescription,
           appliedFor: {
-            quantity: 210.0,
+            quantity: 210,
             unit: 'Metres'
-          },
-          rate: 11.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0309',
           parcelId: '69',
-          parcelName: '',
           code: 'BND2',
-          description: earthBanksDescription,
           appliedFor: {
-            quantity: 165.0,
+            quantity: 165,
             unit: 'Metres'
-          },
-          rate: 11.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0309',
           parcelId: '69',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 0.4016,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0309',
           parcelId: '69',
-          parcelName: '',
           code: 'CLIG3',
-          description: manageGrasslandDescription,
           appliedFor: {
             quantity: 0.4016,
             unit: 'HA'
-          },
-          rate: 151.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0310',
           parcelId: '61',
-          parcelName: '',
           code: 'CHRW3',
-          description: manageHedgerowTreesDescription,
           appliedFor: {
-            quantity: 150.0,
+            quantity: 150,
             unit: 'Metres'
-          },
-          rate: 10.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0310',
           parcelId: '61',
-          parcelName: '',
           code: 'CHRW1',
-          description: assessHedgerowDescription,
           appliedFor: {
-            quantity: 300.0,
+            quantity: 300,
             unit: 'Metres'
-          },
-          rate: 5.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0310',
           parcelId: '61',
-          parcelName: '',
           code: 'CHRW2',
-          description: manageHedgerowDescription,
           appliedFor: {
-            quantity: 300.0,
+            quantity: 300,
             unit: 'Metres'
-          },
-          rate: 13.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0310',
           parcelId: '61',
-          parcelName: '',
           code: 'CSAM1',
-          description: assessSoilDescription,
           appliedFor: {
             quantity: 2.7771,
             unit: 'HA'
-          },
-          rate: 6.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0310',
           parcelId: '61',
-          parcelName: '',
           code: 'CLIG3',
-          description: manageGrasslandDescription,
           appliedFor: {
             quantity: 2.7771,
             unit: 'HA'
-          },
-          rate: 151.0,
-          startDate,
-          endDate
+          }
         },
         {
           sheetId: 'AA0310',
           parcelId: '61',
-          parcelName: '',
           code: 'GRH8',
-          description: 'Supplement: Haymaking (late cut)',
           appliedFor: {
             quantity: 9.7091,
             unit: 'HA'
-          },
-          rate: 187.0,
-          startDate,
-          endDate
+          }
         }
-      ]
-    }
-  },
-  {
-    notificationMessageId: 'sample-notification-3',
-    agreementNumber: 'SFI999999999',
-    identifiers: {
-      frn: '9999999990',
-      sbi: '999999999'
+      ],
+      payment: {
+        agreementStartDate: startDate,
+        agreementEndDate: endDate,
+        frequency: 'Quarterly',
+        agreementTotalPence: 6413247,
+        annualTotalPence: 19239741,
+        parcelItems: {
+          1: {
+            code: 'BND1',
+            description: 'Maintain dry stone walls',
+            unit: 'Metres',
+            quantity: 95,
+            rateInPence: 2565,
+            annualPaymentPence: 243675,
+            sheetId: 'AA0304',
+            parcelId: '44'
+          },
+          2: {
+            code: 'CHRW1',
+            description: assessHedgerowDescription,
+            unit: 'Metres',
+            quantity: 207,
+            rateInPence: 500,
+            annualPaymentPence: 949500,
+            sheetId: 'AA0304',
+            parcelId: '44'
+          },
+          3: {
+            code: 'CSAM1',
+            description: assessSoilDescription,
+            unit: 'HA',
+            quantity: 0.7287,
+            rateInPence: 600,
+            annualPaymentPence: 6556,
+            sheetId: 'AA0304',
+            parcelId: '44'
+          },
+          4: {
+            code: 'CLIG3',
+            description: manageGrasslandDescription,
+            unit: 'HA',
+            quantity: 0.7287,
+            rateInPence: 15100,
+            annualPaymentPence: 130456,
+            sheetId: 'AA0304',
+            parcelId: '44'
+          },
+          5: {
+            code: 'BND2',
+            description: earthBanksDescription,
+            unit: 'Metres',
+            quantity: 234,
+            rateInPence: 1100,
+            annualPaymentPence: 1845800,
+            sheetId: 'AA0304',
+            parcelId: '44'
+          },
+          6: {
+            code: 'CHRW2',
+            description: manageHedgerowDescription,
+            unit: 'Metres',
+            quantity: 207,
+            rateInPence: 1300,
+            annualPaymentPence: 2338700,
+            sheetId: 'AA0304',
+            parcelId: '44'
+          },
+          7: {
+            code: 'CHRW3',
+            description: manageHedgerowTreesDescription,
+            unit: 'Metres',
+            quantity: 337,
+            rateInPence: 1000,
+            annualPaymentPence: 717000,
+            sheetId: 'AA0306',
+            parcelId: '555'
+          },
+          8: {
+            code: 'GRH8',
+            description: 'Supplement: Haymaking (late cut)',
+            unit: 'HA',
+            quantity: 9.7091,
+            rateInPence: 18700,
+            annualPaymentPence: 181560,
+            sheetId: 'AA0310',
+            parcelId: '61'
+          }
+        },
+        agreementLevelItems: {
+          1: {
+            code: 'CMOR1',
+            description: 'CMOR1: Assess moorland and produce a written record',
+            version: 1,
+            annualPaymentPence: 27200
+          }
+        },
+        payments: [
+          {
+            totalPaymentPence: 1603312,
+            paymentDate: '2025-12-05',
+            lineItems: [
+              {
+                parcelItemId: 1,
+                paymentPence: 1201
+              },
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 60919
+              },
+              {
+                agreementLevelItemId: 2,
+                paymentPence: 237375
+              },
+              {
+                agreementLevelItemId: 3,
+                paymentPence: 1639
+              },
+              {
+                agreementLevelItemId: 4,
+                paymentPence: 32614
+              },
+              {
+                agreementLevelItemId: 5,
+                paymentPence: 461450
+              },
+              {
+                agreementLevelItemId: 6,
+                paymentPence: 584675
+              },
+              {
+                agreementLevelItemId: 7,
+                paymentPence: 179250
+              },
+              {
+                agreementLevelItemId: 8,
+                paymentPence: 45390
+              }
+            ]
+          }
+        ]
+      }
     },
-    answers: {
-      agreementName: 'Sample Agreement',
-      actionApplications: [
-        {
-          sheetId: 'AA0311',
-          parcelId: '0304',
-          parcelName: '',
-          code: 'CMOR1',
-          description: 'Assess moorland and produce a written record',
-          appliedFor: {
-            quantity: 4.5123,
-            unit: 'HA'
-          },
-          rate: 10.6,
-          startDate,
-          endDate
+    applicant: {
+      business: {
+        name: 'Example Ridge Farm Ltd',
+        email: {
+          address: 'meadow@example.test'
         },
-        {
-          sheetId: 'AA0311',
-          parcelId: '0304',
-          parcelName: '',
-          code: 'UPL3',
-          description: 'Limited livestock grazing on moorland',
-          appliedFor: {
-            quantity: 3.5125,
-            unit: 'HA'
-          },
-          rate: 66.0,
-          startDate,
-          endDate
+        phone: {
+          mobile: '02079460901'
         },
-        {
-          sheetId: 'AA0311',
-          parcelId: '0304',
-          parcelName: '',
-          code: 'UPL4',
-          description:
-            'Keep cattle and ponies on moorland supplement (minimum 30% GLU)',
-          appliedFor: {
-            quantity: 3.5125,
-            unit: 'HA'
-          },
-          rate: 7.0,
-          startDate,
-          endDate
-        },
-        {
-          sheetId: 'AA0311',
-          parcelId: '0304',
-          parcelName: '',
-          code: 'SPM5',
-          description:
-            'Keep native breeds on extensively managed habitats supplement (more than 80%)',
-          appliedFor: {
-            quantity: 3.5125,
-            unit: 'HA'
-          },
-          rate: 11.0,
-          startDate,
-          endDate
-        },
-        {
-          sheetId: 'AA0311',
-          parcelId: '0304',
-          parcelName: '',
-          code: 'UPL10',
-          description:
-            'Shepherding livestock on moorland (remove stock for at least 8 months)',
-          appliedFor: {
-            quantity: 8.3405,
-            unit: 'HA'
-          },
-          rate: 48.0,
-          startDate,
-          endDate
+        address: {
+          line1: '3 Example Lane',
+          line2: 'Example Village',
+          line3: null,
+          line4: null,
+          line5: null,
+          street: 'Example Lane',
+          city: 'Exampleton',
+          postalCode: 'ZZ99 3ZZ'
         }
-      ]
+      },
+      customer: {
+        name: {
+          title: 'Mr.',
+          first: 'Jamie',
+          middle: 'Test',
+          last: 'Sample'
+        }
+      }
     }
   }
 ]
