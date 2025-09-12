@@ -170,7 +170,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     throw new Error('Agreement has already been created')
   }
 
-  const { identifiers, answers } = agreementData
+  const { identifiers, answers, clientRef } = agreementData
 
   const parcels = groupParcelsById(answers.actionApplications)
   const paymentActivities = createPaymentActivities(answers.actionApplications)
@@ -184,6 +184,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     notificationMessageId,
     agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
     correlationId: uuidv4(),
+    clientRef,
     frn: identifiers.frn,
     sbi: identifiers.sbi,
     company: 'Sample Farm Ltd',
@@ -209,19 +210,12 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
       agreementNumber,
       frn: identifiers.frn,
       sbi: identifiers.sbi,
-      agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
+      agreementName: answers.agreementName || 'Unnamed Agreement',
       createdBy: 'system'
     },
     versions: [data] // can pass multiple payloads
   })
 
-  //   {
-  // 	agreementNumber: 'SFI123456789',
-  // 	correlationId: 'f81e7af3-fcf4-4cdd-b3a3-14a8087aa191',
-  // 	clientRef: 'some-client-ref',
-  // 	status: 'accepted',
-  // 	date: '10-07-2025'
-  // }
   // Publish event to SNS
   await publishEvent(
     {
@@ -231,34 +225,15 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
       data: {
         agreementNumber: agreement.agreementNumber,
         correlationId: data?.correlationId,
-        clientRef: `client-ref-${agreement.agreementNumber}`,
+        clientRef,
         status: 'offered',
         date: new Date().toISOString()
       }
     },
     logger
   )
-  // await publishEvent(
-  //   {
-  //     topicArn: config.get('aws.sns.topic.offerCreated.arn'),
-  //     type: config.get('aws.sns.topic.offerCreated.type'),
-  //     time: new Date().toISOString(),
-  //     data: {
-  //       correlationId: data?.correlationId,
-  //       clientRef: data?.clientRef,
-  //       offerId: agreement.agreementNumber,
-  //       frn: agreement.frn,
-  //       sbi: agreement.sbi,
-  //       status: 'offered',
-  //     }
-  //   },
-  //   logger
-  // )
 
   return agreement
 }
 
 export { createOffer }
-
-/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
-/** @import { Request } from '@hapi/hapi' */

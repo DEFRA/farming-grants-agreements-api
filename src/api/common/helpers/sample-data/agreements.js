@@ -13,6 +13,7 @@ export default [
   {
     notificationMessageId: 'sample-notification-1',
     agreementNumber: 'SFI987654321',
+    clientRef: 'client-ref-001',
     identifiers: {
       frn: '9876543210',
       sbi: '117235001'
@@ -40,6 +41,7 @@ export default [
   {
     notificationMessageId: 'sample-notification-2',
     agreementNumber: 'SFI123456789',
+    clientRef: 'client-ref-002',
     identifiers: {
       frn: '1234567890',
       sbi: '106284736'
@@ -557,6 +559,7 @@ export default [
   {
     notificationMessageId: 'sample-notification-3',
     agreementNumber: 'SFI999999999',
+    clientRef: 'client-ref-003',
     identifiers: {
       frn: '9999999990',
       sbi: '999999999'

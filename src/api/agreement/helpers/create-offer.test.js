@@ -275,7 +275,7 @@ describe('createOffer', () => {
           correlationId: expect.stringMatching(
             /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
           ),
-          clientRef: `client-ref-SFI999999999`,
+          clientRef: 'ref-1234',
           status: 'offered',
           date: '2025-01-01T00:00:00.000Z'
         })

@@ -24,24 +24,6 @@ async function acceptOffer(
   const acceptanceTime = new Date().toISOString()
   const acceptedStatus = 'accepted'
 
-  // Publish event to SNS
-  await publishEvent(
-    {
-      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
-      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
-      time: acceptanceTime,
-      data: {
-        agreementNumber,
-        correlationId: agreementData?.correlationId,
-        clientRef: agreementData?.clientRef,
-        agreementUrl,
-        status: acceptedStatus,
-        date: acceptanceTime
-      }
-    },
-    logger
-  )
-
   // Update the agreement in the database
   const agreement = await agreementsModel
     .updateOneAgreementVersion(
@@ -62,6 +44,24 @@ async function acceptOffer(
   if (!agreement) {
     throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
   }
+
+  // Publish event to SNS
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+      time: acceptanceTime,
+      data: {
+        agreementNumber,
+        correlationId: agreementData?.correlationId,
+        clientRef: agreementData?.clientRef,
+        agreementUrl,
+        status: acceptedStatus,
+        date: acceptanceTime
+      }
+    },
+    logger
+  )
 
   return agreement
 }

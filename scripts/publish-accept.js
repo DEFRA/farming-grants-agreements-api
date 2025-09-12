@@ -61,5 +61,3 @@ async function publishTestEvent() {
 }
 
 publishTestEvent().catch((err) => logger.error(err))
-
-// Add another script next to this one, to receive the SNS message
