@@ -218,21 +218,38 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
   })
 
   // Publish event to SNS
+  // await publishEvent(
+  //   {
+  //     topicArn: config.get('aws.sns.topic.offerCreated.arn'),
+  //     type: config.get('aws.sns.topic.offerCreated.type'),
+  //     time: new Date().toISOString(),
+  //     data: {
+  //       correlationId: data?.correlationId,
+  //       clientRef: data?.clientRef,
+  //       offerId: agreement.agreementNumber,
+  //       frn: agreement.frn,
+  //       sbi: agreement.sbi
+  //     }
+  //   },
+  //   logger
+  // )
+   // Publish event to SNS
   await publishEvent(
     {
-      topicArn: config.get('aws.sns.topic.offerCreated.arn'),
-      type: config.get('aws.sns.topic.offerCreated.type'),
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
       time: new Date().toISOString(),
       data: {
+        agreementNumber: agreementNumber,
         correlationId: data?.correlationId,
         clientRef: data?.clientRef,
-        offerId: agreement.agreementNumber,
-        frn: agreement.frn,
-        sbi: agreement.sbi
+        status: 'offered',
+        date: new Date().toISOString()
       }
     },
     logger
   )
+  
 
   return agreement
 }

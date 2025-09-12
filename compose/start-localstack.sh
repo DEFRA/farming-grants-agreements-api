@@ -15,15 +15,17 @@ declare S3_BUCKET="s3://farming-grants-agreements-pdf-bucket"
 # Define associative arrays for topics and queues
 declare -A TOPICS=(
   [application_approved]="grant_application_approved" # ↓ Grants UI has approved an application
-  [offer_created]="offer_created"                     # ↓ We have created the offer (based on Grants UI)
-  [offer_accepted]="agreement_accepted"               # - User has accepted the offer
+  # [offer_created]="offer_created"                     # ↓ We have created the offer (based on Grants UI)
+  # [offer_accepted]="agreement_accepted"               # - User has accepted the offer
   [create_agreement_pdf]="agreement_accepted"               # - User has accepted the offer
+  [agreement_status_updated]="agreement_status_updated" # - Agreement status got updated i.e offered/accepted/withdrawn
 )
 declare -A QUEUES=(
   [application_approved]="create_agreement" # We need to create the agreement in response to the application being approved
-  [offer_created]="record_offer"
-  [offer_accepted]="record_agreement_acceptance"
+  # [offer_created]="record_offer"
+  # [offer_accepted]="record_agreement_acceptance"
   [create_agreement_pdf]="create_agreement_pdf" # We need to create the agreement PDF in response to the offer being accepted
+  [agreement_status_updated]="record_agreement_status_update"
 )
 
 # Associative arrays for ARNs and URLs
