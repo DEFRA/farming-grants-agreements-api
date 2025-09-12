@@ -2,8 +2,8 @@ import { jest } from '@jest/globals'
 import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import {
-  getAgreementDataById,
-  doesAgreementExist
+  doesAgreementExist,
+  getAgreementDataById
 } from './get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/versions.js')
@@ -100,9 +100,13 @@ describe('getAgreementDataById', () => {
     const agreementId = 'SFI123456789'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest
-        .fn()
-        .mockResolvedValue([{ ...mockGroup, invoice: [{ test: 'invoice' }] }])
+      catch: jest.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [{ test: 'invoice' }],
+          versions: [{ version: '1123' }]
+        }
+      ])
     })
 
     versionsModel.findOne.mockReturnValue({
@@ -126,7 +130,8 @@ describe('getAgreementDataById', () => {
     expect(result).toEqual({
       ...mockAgreement,
       agreementNumber: mockGroup.agreementNumber,
-      invoice: [{ test: 'invoice' }]
+      invoice: [{ test: 'invoice' }],
+      version: 1
     })
   })
 
@@ -167,7 +172,8 @@ describe('getAgreementDataById', () => {
     expect(result).toEqual({
       ...mockAgreement,
       agreementNumber: mockGroup.agreementNumber,
-      invoice: []
+      invoice: [],
+      version: 1
     })
   })
 })

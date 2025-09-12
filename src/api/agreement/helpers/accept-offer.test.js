@@ -78,7 +78,8 @@ describe('acceptOffer', () => {
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
       frn: 'test-frn',
-      sbi: 'test-sbi'
+      sbi: 'test-sbi',
+      version: 1
     }
 
     // Arrange
@@ -109,6 +110,7 @@ describe('acceptOffer', () => {
           offerId: 'SFI123456789',
           frn: 'test-frn',
           sbi: 'test-sbi',
+          version: 1,
           agreementUrl: 'http://localhost:3555/SFI123456789'
         }
       },
