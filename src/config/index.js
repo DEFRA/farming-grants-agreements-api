@@ -160,35 +160,6 @@ const config = convict({
             env: 'SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED'
           }
         }
-        // ,
-        // offerCreated: {
-        //   arn: {
-        //     doc: 'AWS SNS Topic ARN for Offer Created events',
-        //     format: String,
-        //     default: 'arn:aws:sns:eu-west-2:000000000000:offer_created',
-        //     env: 'SNS_TOPIC_ARN_OFFER_CREATED'
-        //   },
-        //   type: {
-        //     doc: 'AWS SNS Topic type for Offer Created events',
-        //     format: String,
-        //     default: 'io.onsite.agreement.offer.created',
-        //     env: 'SNS_TOPIC_TYPE_OFFER_CREATED'
-        //   }
-        // },
-        // offerAccepted: {
-        //   arn: {
-        //     doc: 'AWS SNS Topic ARN for Offer Accepted events',
-        //     format: String,
-        //     default: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
-        //     env: 'SNS_TOPIC_ARN_OFFER_ACCEPTED'
-        //   },
-        //   type: {
-        //     doc: 'AWS SNS Topic type for Offer Accepted events',
-        //     format: String,
-        //     default: 'io.onsite.agreement.offer.accepted',
-        //     env: 'SNS_TOPIC_TYPE_OFFER_ACCEPTED'
-        //   }
-        // }
       }
     }
   },
@@ -196,13 +167,13 @@ const config = convict({
     endpoint: {
       doc: 'AWS SQS endpoint',
       format: String,
-      default: 'http://localstack:4566',
+      default: 'http://localhost:4566',
       env: 'SQS_ENDPOINT'
     },
     queueUrl: {
       doc: 'Queue URL',
       format: String,
-      default: 'http://localstack:4566/000000000000/create_agreement',
+      default: 'http://localhost:4566/000000000000/create_agreement',
       env: 'QUEUE_URL'
     },
     interval: {
