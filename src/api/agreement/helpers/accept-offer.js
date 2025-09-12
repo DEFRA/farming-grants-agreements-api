@@ -36,6 +36,7 @@ async function acceptOffer(
         offerId: agreementNumber,
         frn: agreementData?.frn,
         sbi: agreementData?.sbi,
+        version: agreementData?.version,
         agreementUrl
       }
     },
