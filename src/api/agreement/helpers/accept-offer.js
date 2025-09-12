@@ -22,21 +22,21 @@ async function acceptOffer(
   }
 
   const acceptanceTime = new Date().toISOString()
+  const acceptedStatus = 'accepted'
 
   // Publish event to SNS
   await publishEvent(
     {
-      topicArn: config.get('aws.sns.topic.offerAccepted.arn'),
-      type: config.get('aws.sns.topic.offerAccepted.type'),
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
       time: acceptanceTime,
       data: {
         agreementNumber,
         correlationId: agreementData?.correlationId,
         clientRef: agreementData?.clientRef,
-        offerId: agreementNumber,
-        frn: agreementData?.frn,
-        sbi: agreementData?.sbi,
-        agreementUrl
+        agreementUrl,
+        status: acceptedStatus,
+        date: acceptanceTime
       }
     },
     logger
@@ -50,7 +50,7 @@ async function acceptOffer(
       },
       {
         $set: {
-          status: 'accepted',
+          status: acceptedStatus,
           signatureDate: acceptanceTime
         }
       }

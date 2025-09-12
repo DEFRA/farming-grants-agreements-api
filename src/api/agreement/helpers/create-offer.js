@@ -217,22 +217,45 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     versions: [data] // can pass multiple payloads
   })
 
+  //   {
+  // 	agreementNumber: 'SFI123456789',
+  // 	correlationId: 'f81e7af3-fcf4-4cdd-b3a3-14a8087aa191',
+  // 	clientRef: 'some-client-ref',
+  // 	status: 'accepted',
+  // 	date: '10-07-2025'
+  // }
   // Publish event to SNS
   await publishEvent(
     {
-      topicArn: config.get('aws.sns.topic.offerCreated.arn'),
-      type: config.get('aws.sns.topic.offerCreated.type'),
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
       time: new Date().toISOString(),
       data: {
+        agreementNumber: agreement.agreementNumber,
         correlationId: data?.correlationId,
-        clientRef: data?.clientRef,
-        offerId: agreement.agreementNumber,
-        frn: agreement.frn,
-        sbi: agreement.sbi
+        clientRef: `client-ref-${agreement.agreementNumber}`,
+        status: 'offered',
+        date: new Date().toISOString()
       }
     },
     logger
   )
+  // await publishEvent(
+  //   {
+  //     topicArn: config.get('aws.sns.topic.offerCreated.arn'),
+  //     type: config.get('aws.sns.topic.offerCreated.type'),
+  //     time: new Date().toISOString(),
+  //     data: {
+  //       correlationId: data?.correlationId,
+  //       clientRef: data?.clientRef,
+  //       offerId: agreement.agreementNumber,
+  //       frn: agreement.frn,
+  //       sbi: agreement.sbi,
+  //       status: 'offered',
+  //     }
+  //   },
+  //   logger
+  // )
 
   return agreement
 }
