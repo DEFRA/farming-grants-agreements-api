@@ -708,8 +708,8 @@ export default [
         },
         agreementLevelItems: {
           1: {
-            code: 'CMOR1',
-            description: 'CMOR1: Assess moorland and produce a written record',
+            code: 'CSAM1',
+            description: assessSoilDescription,
             version: 1,
             annualPaymentPence: 27200
           }
@@ -758,34 +758,35 @@ export default [
             ]
           }
         ]
-      }
-    },
-    applicant: {
-      business: {
-        name: 'J&S Hartley',
-        email: {
-          address: 'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
-        },
-        phone: {
-          mobile: '01234031670'
-        },
-        address: {
-          line1: 'Mason House Farm Clitheroe Rd',
-          line2: 'Bashall Eaves',
-          line3: null,
-          line4: null,
-          line5: null,
-          street: 'Bartindale Road',
-          city: 'Clitheroe',
-          postalCode: 'BB7 3DD'
-        }
       },
-      customer: {
-        name: {
-          title: 'Mr.',
-          first: 'Edward',
-          middle: 'Paul',
-          last: 'Jones'
+      applicant: {
+        business: {
+          name: 'J&S Hartley',
+          email: {
+            address:
+              'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
+          },
+          phone: {
+            mobile: '01234031670'
+          },
+          address: {
+            line1: 'Mason House Farm Clitheroe Rd',
+            line2: 'Bashall Eaves',
+            line3: null,
+            line4: null,
+            line5: null,
+            street: 'Bartindale Road',
+            city: 'Clitheroe',
+            postalCode: 'BB7 3DD'
+          }
+        },
+        customer: {
+          name: {
+            title: 'Mr.',
+            first: 'Edward',
+            middle: 'Paul',
+            last: 'Jones'
+          }
         }
       }
     }

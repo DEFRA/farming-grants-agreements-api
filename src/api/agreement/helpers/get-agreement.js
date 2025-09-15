@@ -13,7 +13,7 @@ const formatCurrency = (value) => {
     return ''
   }
   if (typeof value === 'number') {
-    return value.toLocaleString('en-GB', {
+    return (value / 100).toLocaleString('en-GB', {
       style: 'currency',
       currency: 'GBP'
     })
