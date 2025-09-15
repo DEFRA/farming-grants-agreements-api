@@ -308,6 +308,125 @@ describe('createOffer', () => {
     config.set('featureFlags.seedDb', previous)
   })
 
+  it('uses provided agreementNumber when seedDb is true and agreementNumber is present', async () => {
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', true)
+
+    const provided = 'SFI123456789'
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const populated = {
+      ...targetGroupDataStructure,
+      sbi: '106284736',
+      frn: '1234567890',
+      agreementName: 'Unnamed Agreement',
+      agreementNumber: provided,
+      correlationId: 'abc-def'
+    }
+    populated.agreements = [{ ...targetDataStructure }]
+
+    agreementsModel.__setPopulatedAgreement(populated)
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
+
+    const data = { ...agreementData, agreementNumber: provided }
+    const result = await createOffer(uuidv4(), data, mockLogger)
+
+    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agreement: expect.objectContaining({
+          agreementNumber: provided
+        })
+      })
+    )
+
+    expect(result.agreementNumber).toBe(provided)
+
+    config.set('featureFlags.seedDb', previous)
+  })
+
+  it('ignores provided agreementNumber when seedDb is false (uses generated)', async () => {
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', false)
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const provided = 'SFI888888888'
+    const data = { ...agreementData, agreementNumber: provided }
+
+    const result = await createOffer(uuidv4(), data, mockLogger)
+
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).not.toBe(provided)
+
+    config.set('featureFlags.seedDb', previous)
+  })
+
+  it('should generate an agreement name when answers.agreementName is not provided', async () => {
+    const emptyAgreementName = {
+      identifiers: { frn: '1234567890', sbi: '106284736' },
+      clientRef: 'ref-abc',
+      answers: {
+        // note: no agreementName here
+        actionApplications: []
+      }
+    }
+
+    const populated = {
+      ...targetGroupDataStructure,
+      sbi: '106284736',
+      frn: '1234567890',
+      agreementName: 'Unnamed Agreement',
+      agreementNumber: 'SFI999999999',
+      correlationId: 'abc-def'
+    }
+    populated.agreements = [{ ...targetDataStructure }]
+
+    agreementsModel.__setPopulatedAgreement(populated)
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
+
+    // Ensure the notification id hasn't been used
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const result = await createOffer(uuidv4(), emptyAgreementName, mockLogger)
+
+    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        agreement: expect.objectContaining({
+          agreementName: 'Unnamed Agreement'
+        }),
+        versions: expect.arrayContaining([
+          expect.objectContaining({ agreementName: 'Unnamed Agreement' })
+        ])
+      })
+    )
+
+    // Should fall back to a generated SFI number
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).not.toBe('')
+    expect(result.agreementName).not.toBe('')
+    expect(result.agreementName).toBe('Unnamed Agreement')
+  })
+
+  it('generates an agreement number when seedDb is false and agreementNumber is empty', async () => {
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', false)
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const data = { ...agreementData, agreementNumber: '' }
+    const result = await createOffer(uuidv4(), data, mockLogger)
+
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).not.toBe('')
+
+    config.set('featureFlags.seedDb', previous)
+  })
+
   describe('when notificationMessageId already exists', () => {
     it('should throw an error', async () => {
       const notificationMessageId = 'test-message-id'
