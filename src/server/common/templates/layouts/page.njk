@@ -105,5 +105,5 @@
 
 {% block bodyEnd %}
   <script type="module" src="{{ getAssetPath(baseUrl, 'application.js') }}" 
-  nonce="{{cspNonce}}"></script>
+  nonce="{{contentSecurityPolicyNonce}}"></script>
 {% endblock %}
