@@ -101,17 +101,16 @@ describe('acceptOffer', () => {
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
       {
         time: '2024-01-01T00:00:00.000Z',
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
-        type: 'io.onsite.agreement.offer.accepted',
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        type: 'io.onsite.agreement.status.updated',
         data: {
           agreementNumber: 'SFI123456789',
-          clientRef: 'test-client-ref',
           correlationId: 'test-correlation-id',
-          offerId: 'SFI123456789',
-          frn: 'test-frn',
-          sbi: 'test-sbi',
           version: 1,
-          agreementUrl: 'http://localhost:3555/SFI123456789'
+          agreementUrl: 'http://localhost:3555/SFI123456789',
+          clientRef: 'test-client-ref',
+          status: 'accepted',
+          date: '2024-01-01T00:00:00.000Z'
         }
       },
       mockLogger
