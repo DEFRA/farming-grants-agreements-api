@@ -21,10 +21,12 @@
                     Address:
                 </dd>
                 <dt>{{ agreement.address }}</dt>
-                <dd>
-                    Agreement name:
-                </dd>
-                <dt>{{ agreement.agreementName }}</dt>
+                {% if agreement.agreementName %}
+                  <dd>
+                      Agreement name:
+                  </dd>
+                  <dt>{{ agreement.agreementName }}</dt>
+                {% endif %}
                 <dd>
                     Agreement number:
                 </dd>

@@ -39,12 +39,15 @@ export const sqsClientPlugin = {
               `Successfully processed message: ${message.MessageId}`
             )
           } catch (error) {
-            server.logger.error('Failed to process message:', {
-              messageId: message.MessageId,
-              error: error.message,
-              stack: error.stack,
-              data: error.data
-            })
+            server.logger.error(
+              {
+                messageId: message.MessageId,
+                error: error.message,
+                stack: error.stack,
+                data: error.data
+              },
+              'Failed to process message:'
+            )
           }
         },
         sqs: sqsClient,
@@ -57,18 +60,24 @@ export const sqsClientPlugin = {
       })
 
       app.on('error', (err) => {
-        server.logger.error('SQS Consumer error:', {
-          error: err.message || err.toString(),
-          stack: err.stack,
-          fullError: err
-        })
+        server.logger.error(
+          {
+            error: err.message || err.toString(),
+            stack: err.stack,
+            fullError: err
+          },
+          'SQS Consumer error:'
+        )
       })
 
       app.on('processing_error', (err) => {
-        server.logger.error('SQS Message processing error:', {
-          error: err.message,
-          stack: err.stack
-        })
+        server.logger.error(
+          {
+            error: err.message,
+            stack: err.stack
+          },
+          'SQS Message processing error:'
+        )
       })
 
       app.on('started', () => {
@@ -79,10 +88,13 @@ export const sqsClientPlugin = {
           server.logger.info('Seeding database')
 
           seedDatabase(server.logger).catch((err) => {
-            server.logger.error('Error seeding database failed:', {
-              error: err.message,
-              stack: err.stack
-            })
+            server.logger.error(
+              {
+                error: err.message,
+                stack: err.stack
+              },
+              'Error seeding database failed:'
+            )
           })
         }
       })
