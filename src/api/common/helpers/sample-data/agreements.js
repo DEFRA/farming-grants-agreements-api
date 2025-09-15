@@ -708,8 +708,8 @@ export default [
         },
         agreementLevelItems: {
           1: {
-            code: 'CMOR1',
-            description: 'CMOR1: Assess moorland and produce a written record',
+            code: 'CSAM1',
+            description: assessSoilDescription,
             version: 1,
             annualPaymentPence: 27200
           }
@@ -758,34 +758,35 @@ export default [
             ]
           }
         ]
-      }
-    },
-    applicant: {
-      business: {
-        name: 'Example Ridge Farm Ltd',
-        email: {
-          address: 'meadow@example.test'
-        },
-        phone: {
-          mobile: '02079460901'
-        },
-        address: {
-          line1: '3 Example Lane',
-          line2: 'Example Village',
-          line3: null,
-          line4: null,
-          line5: null,
-          street: 'Example Lane',
-          city: 'Exampleton',
-          postalCode: 'ZZ99 3ZZ'
-        }
       },
-      customer: {
-        name: {
-          title: 'Mr.',
-          first: 'Jamie',
-          middle: 'Test',
-          last: 'Sample'
+      applicant: {
+        business: {
+          name: 'Example Ridge Farm Ltd',
+          email: {
+            address:
+              'meadow@example.test'
+          },
+          phone: {
+            mobile: '02079460901'
+          },
+          address: {
+            line1: '3 Example Lane',
+            line2: 'Example Village',
+            line3: null,
+            line4: null,
+            line5: null,
+            street: 'Example Lane',
+            city: 'Exampleton',
+            postalCode: 'ZZ99 3ZZ'
+          }
+        },
+        customer: {
+          name: {
+            title: 'Mr.',
+            first: 'Jamie',
+            middle: 'Test',
+            last: 'Sample'
+          }
         }
       }
     }
