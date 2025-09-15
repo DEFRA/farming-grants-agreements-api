@@ -239,3 +239,6 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
 }
 
 export { createOffer }
+
+/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Request } from '@hapi/hapi' */
