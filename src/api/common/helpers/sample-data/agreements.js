@@ -13,9 +13,9 @@ const manageHedgerowTreesDescription =
 
 export default [
   {
-    notificationMessageId: '68a445adcb6b82727c6d7432',
+    notificationMessageId: 'sample-notification-1',
     agreementNumber: 'SFI123456789',
-    clientRef: '79c-7c5-69d',
+    clientRef: 'client-ref-001',
     code: 'frps-private-beta',
     createdAt: '2025-08-19T09:36:45.131Z',
     submittedAt: '2025-08-19T09:36:44.509Z',
@@ -274,7 +274,7 @@ export default [
   {
     notificationMessageId: 'sample-notification-2',
     agreementNumber: 'SFI987654321',
-    clientRef: '79c-7c5-69d',
+    clientRef: 'client-ref-002',
     code: 'frps-private-beta',
     identifiers: {
       frn: '1234567890',
