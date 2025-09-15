@@ -172,7 +172,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     throw new Error('Agreement has already been created')
   }
 
-  const { identifiers, answers } = agreementData
+  const { identifiers, answers, clientRef } = agreementData
 
   const parcels = groupParcelsById(answers.actionApplications)
   const paymentActivities = createPaymentActivities(answers.actionApplications)
@@ -186,6 +186,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     notificationMessageId,
     agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
     correlationId: uuidv4(),
+    clientRef,
     frn: identifiers.frn,
     sbi: identifiers.sbi,
     company: 'Sample Farm Ltd',
@@ -211,7 +212,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
       agreementNumber,
       frn: identifiers.frn,
       sbi: identifiers.sbi,
-      agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
+      agreementName: answers.agreementName || 'Unnamed Agreement',
       createdBy: 'system'
     },
     versions: [data] // can pass multiple payloads
@@ -220,15 +221,15 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
   // Publish event to SNS
   await publishEvent(
     {
-      topicArn: config.get('aws.sns.topic.offerCreated.arn'),
-      type: config.get('aws.sns.topic.offerCreated.type'),
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
       time: new Date().toISOString(),
       data: {
+        agreementNumber: agreement.agreementNumber,
         correlationId: data?.correlationId,
-        clientRef: data?.clientRef,
-        offerId: agreement.agreementNumber,
-        frn: agreement.frn,
-        sbi: agreement.sbi
+        clientRef,
+        status: 'offered',
+        date: new Date().toISOString()
       }
     },
     logger
