@@ -10,7 +10,7 @@ const displayAcceptOfferController = {
     try {
       // Render the accept offer template with agreement data
       return h
-        .view('views/accept-offer.njk')
+        .view('views/accept-offer.njk', { currentPath: request.path })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {
