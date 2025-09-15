@@ -9,7 +9,6 @@ const schema = new mongoose.Schema(
     agreementNumber: { type: String, required: true },
     frn: { type: String, required: true },
     sbi: { type: String, required: true },
-    agreementName: { type: String, required: true },
     versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }],
     createdBy: { type: String }
   },
@@ -22,10 +21,8 @@ schema.index({ agreementNumber: 1 }, { unique: true })
 schema.index({ createdAt: 1 })
 
 function assertValidCreateArgs(agreement, versions) {
-  if (!agreement?.agreementNumber || !agreement?.agreementName) {
-    throw new Error(
-      'agreement.agreementNumber and agreement.agreementName are required'
-    )
+  if (!agreement?.agreementNumber) {
+    throw new Error('agreement.agreementNumber is required')
   }
   if (!Array.isArray(versions) || versions.length === 0) {
     throw new Error(
@@ -60,7 +57,6 @@ schema.statics.createAgreementWithVersions = async function ({
         agreementNumber: agreement.agreementNumber,
         frn: agreement.frn,
         sbi: agreement.sbi,
-        agreementName: agreement.agreementName,
         createdBy: agreement.createdBy,
         versions: []
       })

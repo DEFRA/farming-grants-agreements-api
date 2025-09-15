@@ -274,9 +274,13 @@ export default [
   {
     notificationMessageId: 'sample-notification-2',
     agreementNumber: 'SFI987654321',
+    clientRef: '79c-7c5-69d',
+    code: 'frps-private-beta',
     identifiers: {
       frn: '1234567890',
-      sbi: '106284736'
+      sbi: '106284736',
+      crn: 'crn',
+      defraId: 'defraId'
     },
     answers: {
       agreementName: 'Sample Agreement',
@@ -616,6 +620,7 @@ export default [
           1: {
             code: 'BND1',
             description: 'Maintain dry stone walls',
+            version: 1,
             unit: 'Metres',
             quantity: 95,
             rateInPence: 2565,
@@ -626,6 +631,7 @@ export default [
           2: {
             code: 'CHRW1',
             description: assessHedgerowDescription,
+            version: 1,
             unit: 'Metres',
             quantity: 207,
             rateInPence: 500,
@@ -636,6 +642,7 @@ export default [
           3: {
             code: 'CSAM1',
             description: assessSoilDescription,
+            version: 1,
             unit: 'HA',
             quantity: 0.7287,
             rateInPence: 600,
@@ -646,6 +653,7 @@ export default [
           4: {
             code: 'CLIG3',
             description: manageGrasslandDescription,
+            version: 1,
             unit: 'HA',
             quantity: 0.7287,
             rateInPence: 15100,
@@ -656,6 +664,7 @@ export default [
           5: {
             code: 'BND2',
             description: earthBanksDescription,
+            version: 1,
             unit: 'Metres',
             quantity: 234,
             rateInPence: 1100,
@@ -666,6 +675,7 @@ export default [
           6: {
             code: 'CHRW2',
             description: manageHedgerowDescription,
+            version: 1,
             unit: 'Metres',
             quantity: 207,
             rateInPence: 1300,
@@ -676,6 +686,7 @@ export default [
           7: {
             code: 'CHRW3',
             description: manageHedgerowTreesDescription,
+            version: 1,
             unit: 'Metres',
             quantity: 337,
             rateInPence: 1000,
@@ -686,6 +697,7 @@ export default [
           8: {
             code: 'GRH8',
             description: 'Supplement: Haymaking (late cut)',
+            version: 1,
             unit: 'HA',
             quantity: 9.7091,
             rateInPence: 18700,
