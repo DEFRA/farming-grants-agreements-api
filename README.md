@@ -221,6 +221,7 @@ docker exec -it localstack sh -lc '
     --message-attribute-names All \
     --attribute-names All
 '
+```
 
 ### Dependabot
 
