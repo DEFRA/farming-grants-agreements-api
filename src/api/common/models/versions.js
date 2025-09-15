@@ -56,6 +56,7 @@ const schema = new mongoose.Schema(
     notificationMessageId: { type: String, required: true },
     agreementName: { type: String, required: true },
     correlationId: { type: String, required: true },
+    clientRef: { type: String, required: true },
     frn: { type: String, required: true },
     sbi: { type: String, required: true },
     company: { type: String, required: true },
