@@ -21,30 +21,43 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
 
     const marketingYear = new Date().getFullYear()
 
-    const { activities, yearlyBreakdown } = agreementData.payments
+    const invoiceLines = agreementData.payment.payments.map((payment) =>
+      payment.lineItems.map((line) => {
+        let description, schemeCode
+        if (line.parcelItemId) {
+          const lineDetails =
+            agreementData.payment.parcelItems[line.parcelItemId]
+          description = `${payment.paymentDate}: Parcel: ${lineDetails.parcelId}: ${lineDetails.description}`
+          schemeCode = lineDetails.code
+        } else if (line.agreementLevelItemId) {
+          const lineDetails =
+            agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
+          description = `${payment.paymentDate}: One-off payment per agreement per year for ${lineDetails.description}`
+          schemeCode = lineDetails.code
+        }
 
-    const invoiceLines = activities.map((activity) => ({
-      value: yearlyBreakdown.details.find(
-        (detail) => detail.code === activity.code
-      ).totalPayment,
-      description: activity.description,
-      schemeCode: activity.code
-    }))
+        return {
+          value: line.paymentPence,
+          description,
+          schemeCode
+        }
+      })
+    )
 
     // Construct the request payload based on the agreement data
     /** @type {PaymentHubRequest} */
     const paymentHubRequest = {
       sourceSystem: 'AHWR',
-      frn: agreementData.frn,
-      sbi: agreementData.sbi,
+      frn: agreementData.identifiers.frn,
+      sbi: agreementData.identifiers.sbi,
       marketingYear,
       paymentRequestNumber: 1,
       correlationId: agreementData.correlationId,
       invoiceNumber: invoice.invoiceNumber,
       agreementNumber: agreementData.agreementNumber,
-      schedule: 'T4',
-      dueDate: '2022-11-09',
-      value: yearlyBreakdown.totalAgreementPayment,
+      schedule: agreementData.frequency === 'Quarterly' ? 'T4' : undefined,
+      dueDate: agreementData.payment.payments[0].paymentDate,
+      value: agreementData.payment.agreementTotalPence,
       invoiceLines
     }
 

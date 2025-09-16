@@ -291,7 +291,7 @@ export default [
           code: 'BND1',
           appliedFor: {
             quantity: 95,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -300,7 +300,7 @@ export default [
           code: 'CHRW1',
           appliedFor: {
             quantity: 207,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -309,7 +309,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 0.7287,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -318,7 +318,7 @@ export default [
           code: 'CLIG3',
           appliedFor: {
             quantity: 0.7287,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -327,7 +327,7 @@ export default [
           code: 'BND2',
           appliedFor: {
             quantity: 234,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -336,7 +336,7 @@ export default [
           code: 'CHRW2',
           appliedFor: {
             quantity: 207,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -345,7 +345,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 0.7287,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -354,7 +354,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 0.7287,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -363,7 +363,7 @@ export default [
           code: 'CHRW2',
           appliedFor: {
             quantity: 265,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -372,7 +372,7 @@ export default [
           code: 'CHRW1',
           appliedFor: {
             quantity: 265,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -381,7 +381,7 @@ export default [
           code: 'BND2',
           appliedFor: {
             quantity: 265,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -390,7 +390,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 1.6108,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -399,7 +399,7 @@ export default [
           code: 'CLIG3',
           appliedFor: {
             quantity: 1.6108,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -408,7 +408,7 @@ export default [
           code: 'CHRW3',
           appliedFor: {
             quantity: 337,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -417,7 +417,7 @@ export default [
           code: 'CHRW2',
           appliedFor: {
             quantity: 337,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -426,7 +426,7 @@ export default [
           code: 'CHRW1',
           appliedFor: {
             quantity: 337,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -435,7 +435,7 @@ export default [
           code: 'BND2',
           appliedFor: {
             quantity: 374,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -444,7 +444,7 @@ export default [
           code: 'CHRW2',
           appliedFor: {
             quantity: 640,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -453,7 +453,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 3.1213,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -462,7 +462,7 @@ export default [
           code: 'CLIG3',
           appliedFor: {
             quantity: 3.1213,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -471,7 +471,7 @@ export default [
           code: 'BND2',
           appliedFor: {
             quantity: 430,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -480,7 +480,7 @@ export default [
           code: 'CHRW3',
           appliedFor: {
             quantity: 230,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -489,7 +489,7 @@ export default [
           code: 'CHRW1',
           appliedFor: {
             quantity: 640,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -498,7 +498,7 @@ export default [
           code: 'CHRW2',
           appliedFor: {
             quantity: 50,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -507,7 +507,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 0.8291,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -516,7 +516,7 @@ export default [
           code: 'CHRW1',
           appliedFor: {
             quantity: 150,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -525,7 +525,7 @@ export default [
           code: 'BND2',
           appliedFor: {
             quantity: 210,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -534,7 +534,7 @@ export default [
           code: 'BND2',
           appliedFor: {
             quantity: 165,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -543,7 +543,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 0.4016,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -552,7 +552,7 @@ export default [
           code: 'CLIG3',
           appliedFor: {
             quantity: 0.4016,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -561,7 +561,7 @@ export default [
           code: 'CHRW3',
           appliedFor: {
             quantity: 150,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -570,7 +570,7 @@ export default [
           code: 'CHRW1',
           appliedFor: {
             quantity: 300,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -579,7 +579,7 @@ export default [
           code: 'CHRW2',
           appliedFor: {
             quantity: 300,
-            unit: 'Metres'
+            unit: 'metres'
           }
         },
         {
@@ -588,7 +588,7 @@ export default [
           code: 'CSAM1',
           appliedFor: {
             quantity: 2.7771,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -597,7 +597,7 @@ export default [
           code: 'CLIG3',
           appliedFor: {
             quantity: 2.7771,
-            unit: 'HA'
+            unit: 'ha'
           }
         },
         {
@@ -606,7 +606,7 @@ export default [
           code: 'GRH8',
           appliedFor: {
             quantity: 9.7091,
-            unit: 'HA'
+            unit: 'ha'
           }
         }
       ],
@@ -621,7 +621,7 @@ export default [
             code: 'BND1',
             description: 'Maintain dry stone walls',
             version: 1,
-            unit: 'Metres',
+            unit: 'metres',
             quantity: 95,
             rateInPence: 2565,
             annualPaymentPence: 243675,
@@ -632,7 +632,7 @@ export default [
             code: 'CHRW1',
             description: assessHedgerowDescription,
             version: 1,
-            unit: 'Metres',
+            unit: 'metres',
             quantity: 207,
             rateInPence: 500,
             annualPaymentPence: 949500,
@@ -643,7 +643,7 @@ export default [
             code: 'CSAM1',
             description: assessSoilDescription,
             version: 1,
-            unit: 'HA',
+            unit: 'ha',
             quantity: 0.7287,
             rateInPence: 600,
             annualPaymentPence: 6556,
@@ -654,7 +654,7 @@ export default [
             code: 'CLIG3',
             description: manageGrasslandDescription,
             version: 1,
-            unit: 'HA',
+            unit: 'ha',
             quantity: 0.7287,
             rateInPence: 15100,
             annualPaymentPence: 130456,
@@ -665,7 +665,7 @@ export default [
             code: 'BND2',
             description: earthBanksDescription,
             version: 1,
-            unit: 'Metres',
+            unit: 'metres',
             quantity: 234,
             rateInPence: 1100,
             annualPaymentPence: 1845800,
@@ -676,7 +676,7 @@ export default [
             code: 'CHRW2',
             description: manageHedgerowDescription,
             version: 1,
-            unit: 'Metres',
+            unit: 'metres',
             quantity: 207,
             rateInPence: 1300,
             annualPaymentPence: 2338700,
@@ -687,7 +687,7 @@ export default [
             code: 'CHRW3',
             description: manageHedgerowTreesDescription,
             version: 1,
-            unit: 'Metres',
+            unit: 'metres',
             quantity: 337,
             rateInPence: 1000,
             annualPaymentPence: 717000,
@@ -698,7 +698,7 @@ export default [
             code: 'GRH8',
             description: 'Supplement: Haymaking (late cut)',
             version: 1,
-            unit: 'HA',
+            unit: 'ha',
             quantity: 9.7091,
             rateInPence: 18700,
             annualPaymentPence: 181560,
@@ -720,39 +720,39 @@ export default [
             paymentDate: '2025-12-05',
             lineItems: [
               {
-                parcelItemId: 1,
-                paymentPence: 1201
+                agreementLevelItems: 1,
+                paymentPence: 6800
               },
               {
-                agreementLevelItemId: 1,
+                parcelItemId: 1,
                 paymentPence: 60919
               },
               {
-                agreementLevelItemId: 2,
+                parcelItemId: 2,
                 paymentPence: 237375
               },
               {
-                agreementLevelItemId: 3,
+                parcelItemId: 3,
                 paymentPence: 1639
               },
               {
-                agreementLevelItemId: 4,
+                parcelItemId: 4,
                 paymentPence: 32614
               },
               {
-                agreementLevelItemId: 5,
+                parcelItemId: 5,
                 paymentPence: 461450
               },
               {
-                agreementLevelItemId: 6,
+                parcelItemId: 6,
                 paymentPence: 584675
               },
               {
-                agreementLevelItemId: 7,
+                parcelItemId: 7,
                 paymentPence: 179250
               },
               {
-                agreementLevelItemId: 8,
+                parcelItemId: 8,
                 paymentPence: 45390
               }
             ]

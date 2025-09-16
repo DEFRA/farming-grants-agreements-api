@@ -36,7 +36,7 @@ const acceptOfferController = {
       return h
         .view('views/offer-accepted.njk', {
           nearestQuarterlyPaymentDate: getFirstPaymentDate(
-            agreementData.agreementStartDate
+            agreementData.payment.agreementStartDate
           )
         })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
