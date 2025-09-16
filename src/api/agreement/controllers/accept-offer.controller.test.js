@@ -223,7 +223,7 @@ describe('acceptOfferDocumentController', () => {
         action: 'accept-offer'
       },
       headers: {
-        'x-base-url': '/defra-grants-proxy',
+        'x-base-url': '/agreement',
         'x-encrypted-auth': 'valid-jwt-token'
       }
     })
@@ -232,7 +232,7 @@ describe('acceptOfferDocumentController', () => {
     expect(statusCode).toBe(statusCodes.ok)
     expect(String(result)).toContain('Offer accepted')
     expect(String(result)).toContain(agreementId)
-    expect(String(result)).toContain('/defra-grants-proxy')
+    expect(String(result)).toContain('/agreement')
   })
 
   test('should handle GET method when agreement is accepted', async () => {

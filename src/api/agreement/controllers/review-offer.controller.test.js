@@ -376,7 +376,7 @@ describe('reviewOfferController', () => {
           action: 'review-offer'
         },
         headers: {
-          'x-base-url': '/defra-grants-proxy',
+          'x-base-url': '/agreement',
           'x-encrypted-auth': 'valid-jwt-token'
         }
       })
@@ -384,7 +384,7 @@ describe('reviewOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(String(result)).toContain('Review your funding offer')
-      expect(String(result)).toContain('/defra-grants-proxy')
+      expect(String(result)).toContain('/agreement')
     })
 
     test('should handle base URL header as false', async () => {
@@ -526,7 +526,7 @@ describe('reviewOfferController', () => {
           action: 'review-offer'
         },
         headers: {
-          'x-base-url': '/defra-grants-proxy',
+          'x-base-url': '/agreement',
           'x-encrypted-auth': 'valid-jwt-token'
         }
       })
@@ -534,7 +534,7 @@ describe('reviewOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(String(result)).toContain('Offer accepted')
-      expect(String(result)).toContain('/defra-grants-proxy')
+      expect(String(result)).toContain('/agreement')
     })
   })
 
