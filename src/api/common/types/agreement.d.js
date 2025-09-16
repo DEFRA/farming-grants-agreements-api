@@ -58,7 +58,6 @@
  * @property {Date} agreementEndDate - End date of the agreement
  * @property {('offered'|'accepted')} status - Current status of the agreement
  * @property {Date} [signatureDate] - Date when agreement was signed
- * @property {Date} [terminationDate] - Date when agreement was terminated
  * @property {Action[]} actions - Array of actions associated with the agreement
  * @property {Parcel[]} parcels - Array of parcels associated with the agreement
  * @property {Payments} payments - Payment information for the agreement
