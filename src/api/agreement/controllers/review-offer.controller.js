@@ -30,7 +30,7 @@ const reviewOfferController = {
           description: `One-off payment per agreement per year for ${codeDescriptions[i.code]}`,
           rateInPence: i.annualPaymentPence
         })) || [])
-      ].sort((a, b) => b.code.localeCompare(a.code))
+      ].sort((a, b) => a.code.localeCompare(b.code))
 
       // Render the page with base context automatically applied
       return h
