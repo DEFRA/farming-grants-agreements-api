@@ -37,7 +37,7 @@ const getAgreementLand = (agreementData) => {
 
   const data = []
   for (const [key, value] of parcels) {
-    data.push([{ text: key }, { text: value }])
+    data.push([{ text: key }, { text: round(value, 4) }])
   }
 
   return {
