@@ -22,32 +22,43 @@ describe('updatePaymentHub', () => {
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
     correlationId: 'test-correlation-id',
-    frn: '1234567890',
-    sbi: '106284736',
-    payments: {
-      activities: [
-        {
+    identifiers: {
+      frn: '1234567890',
+      sbi: '106284736'
+    },
+    frequency: 'Quarterly',
+    payment: {
+      parcelItems: {
+        'parcel-item-1': {
+          parcelId: 'PARCEL001',
           code: 'ACT001',
-          description: 'Test Activity 1'
+          description: 'ACT001: Test Activity 1',
+          quantity: 10
         },
-        {
+        'parcel-item-2': {
+          parcelId: 'PARCEL002',
           code: 'ACT002',
-          description: 'Test Activity 2'
+          description: 'ACT002: Test Activity 2',
+          quantity: 15
+        }
+      },
+      agreementLevelItems: {},
+      payments: [
+        {
+          paymentDate: '2022-11-09',
+          lineItems: [
+            {
+              parcelItemId: 'parcel-item-1',
+              paymentPence: 200000
+            },
+            {
+              parcelItemId: 'parcel-item-2',
+              paymentPence: 300000
+            }
+          ]
         }
       ],
-      yearlyBreakdown: {
-        totalAgreementPayment: 5000,
-        details: [
-          {
-            code: 'ACT001',
-            totalPayment: 2000
-          },
-          {
-            code: 'ACT002',
-            totalPayment: 3000
-          }
-        ]
-      }
+      agreementTotalPence: 500000
     }
   }
 
@@ -100,18 +111,22 @@ describe('updatePaymentHub', () => {
           agreementNumber: 'SFI123456789',
           schedule: 'T4',
           dueDate: '2022-11-09',
-          value: 5000,
+          value: 500000,
           invoiceLines: [
-            {
-              value: 2000,
-              description: 'Test Activity 1',
-              schemeCode: 'ACT001'
-            },
-            {
-              value: 3000,
-              description: 'Test Activity 2',
-              schemeCode: 'ACT002'
-            }
+            [
+              {
+                value: 200000,
+                description:
+                  '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
+                schemeCode: 'ACT001'
+              },
+              {
+                value: 300000,
+                description:
+                  '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
+                schemeCode: 'ACT002'
+              }
+            ]
           ]
         })
       })
@@ -134,12 +149,16 @@ describe('updatePaymentHub', () => {
     it('should handle agreement with no activities', async () => {
       const agreementWithNoActivities = {
         ...mockAgreementData,
-        payments: {
-          activities: [],
-          yearlyBreakdown: {
-            totalAgreementPayment: 0,
-            details: []
-          }
+        payment: {
+          parcelItems: {},
+          agreementLevelItems: {},
+          payments: [
+            {
+              paymentDate: '2022-11-09',
+              lineItems: []
+            }
+          ],
+          agreementTotalPence: 0
         }
       }
 
@@ -150,7 +169,7 @@ describe('updatePaymentHub', () => {
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
           value: 0,
-          invoiceLines: []
+          invoiceLines: [[]]
         })
       })
 
@@ -233,18 +252,22 @@ describe('updatePaymentHub', () => {
         agreementNumber: 'SFI123456789',
         schedule: 'T4',
         dueDate: '2022-11-09',
-        value: 5000,
+        value: 500000,
         invoiceLines: [
-          {
-            value: 2000,
-            description: 'Test Activity 1',
-            schemeCode: 'ACT001'
-          },
-          {
-            value: 3000,
-            description: 'Test Activity 2',
-            schemeCode: 'ACT002'
-          }
+          [
+            {
+              value: 200000,
+              description:
+                '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
+              schemeCode: 'ACT001'
+            },
+            {
+              value: 300000,
+              description:
+                '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
+              schemeCode: 'ACT002'
+            }
+          ]
         ]
       }
 
@@ -258,21 +281,35 @@ describe('updatePaymentHub', () => {
     it('should handle missing activity details gracefully', async () => {
       const agreementWithMissingDetails = {
         ...mockAgreementData,
-        payments: {
-          activities: [{ code: 'ACT001', description: 'Test Activity' }],
-          yearlyBreakdown: {
-            totalAgreementPayment: 1000,
-            details: [] // Missing details
-          }
+        payment: {
+          parcelItems: {
+            'parcel-item-1': {
+              parcelId: 'PARCEL001',
+              code: 'ACT001',
+              description: 'ACT001: Test Activity',
+              quantity: 10
+            }
+          },
+          agreementLevelItems: {},
+          payments: [
+            {
+              paymentDate: '2022-11-09',
+              lineItems: [
+                {
+                  parcelItemId: 'parcel-item-1',
+                  paymentPence: 100000
+                }
+              ]
+            }
+          ],
+          agreementTotalPence: 100000
         }
       }
 
       getAgreementDataById.mockResolvedValue(agreementWithMissingDetails)
 
-      // This should throw an error when trying to find the detail
-      await expect(
-        updatePaymentHub(mockContext, 'SFI123456789')
-      ).rejects.toThrow()
+      const result = await updatePaymentHub(mockContext, 'SFI123456789')
+      expect(result.status).toBe('success')
     })
   })
 

@@ -12,19 +12,84 @@ describe('getAgreement', () => {
 
   test('should return rendered HTML', async () => {
     const mockAgreement = {
+      agreementNumber: 'SFI123456789',
       status: 'offered',
-      username: 'Test User',
-      parcels: [],
-      actions: [],
-      payments: {
-        activities: [],
-        yearlyBreakdown: {
-          details: [],
-          annualTotals: {},
-          totalAgreementPayment: 0
+      actionApplications: [
+        {
+          sheetId: 'SX635990',
+          parcelId: '44',
+          code: 'BND1',
+          appliedFor: {
+            quantity: 95,
+            unit: 'metres'
+          }
+        },
+        {
+          sheetId: 'SX635990',
+          parcelId: '44',
+          code: 'CHRW1',
+          appliedFor: {
+            quantity: 207,
+            unit: 'metres'
+          }
         }
-      },
-      agreementNumber: 'SFI123456789'
+      ],
+      payment: {
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-12-31',
+        frequency: 'Quarterly',
+        agreementTotalPence: 6413247,
+        annualTotalPence: 6440447,
+        parcelItems: {
+          1: {
+            code: 'BND1',
+            description: 'Maintain dry stone walls',
+            version: 1,
+            unit: 'metres',
+            quantity: 95,
+            rateInPence: 2565,
+            annualPaymentPence: 243675,
+            sheetId: 'SX635990',
+            parcelId: '44'
+          },
+          2: {
+            code: 'CHRW1',
+            description: 'CHRW1: Assess and record hedgerow condition',
+            version: 1,
+            unit: 'metres',
+            quantity: 207,
+            rateInPence: 500,
+            annualPaymentPence: 949500,
+            sheetId: 'SX635990',
+            parcelId: '44'
+          }
+        },
+        agreementLevelItems: {
+          1: {
+            code: 'CSAM1',
+            description:
+              'CSAM1: Assess soil, produce a soil management plan and test soil organic matter',
+            version: 1,
+            annualPaymentPence: 27200
+          }
+        },
+        payments: [
+          {
+            totalPaymentPence: 1610112,
+            paymentDate: '2025-12-05',
+            lineItems: [
+              {
+                agreementLevelItems: 1,
+                paymentPence: 6800
+              },
+              {
+                parcelItemId: 1,
+                paymentPence: 60919
+              }
+            ]
+          }
+        ]
+      }
     }
     getAgreementDataModule.getAgreementDataById.mockResolvedValueOnce(
       mockAgreement
@@ -36,56 +101,29 @@ describe('getAgreement', () => {
       'SFI123456789'
     )
     expect(agreement).toEqual({
-      actions: [],
-      agreementLand: {
-        data: [],
-        headings: [
-          {
-            text: 'Parcel'
-          },
-          {
-            text: 'Total parcel area (ha)'
-          }
-        ]
-      },
-      agreementLevelActions: {
-        data: [],
-        headings: [
-          {
-            text: 'Action code'
-          },
-          {
-            text: 'Title'
-          },
-          {
-            text: 'Action End date'
-          },
-          {
-            text: 'Action Start date'
-          },
-          {
-            text: 'Action duration'
-          }
-        ]
-      },
-      agreementNumber: 'SFI123456789',
+      ...mockAgreement,
       annualPaymentSchedule: {
         data: [
+          [
+            {
+              text: 'BND1'
+            },
+            {
+              text: '£609.19'
+            },
+            {
+              text: '£609.19'
+            }
+          ],
           [
             {
               text: 'Total'
             },
             {
-              text: ''
+              text: '£609.19'
             },
             {
-              text: ''
-            },
-            {
-              text: ''
-            },
-            {
-              text: '£0.00'
+              text: '£609.19'
             }
           ]
         ],
@@ -94,31 +132,57 @@ describe('getAgreement', () => {
             text: 'Code'
           },
           {
-            text: 'Year 1'
-          },
-          {
-            text: 'Year 2'
-          },
-          {
-            text: 'Year 3'
+            text: 2025
           },
           {
             text: 'Total payment'
           }
         ]
       },
-      parcels: [],
-      payments: {
-        activities: [],
-        yearlyBreakdown: {
-          annualTotals: {},
-          details: [],
-          totalAgreementPayment: 0
-        }
-      },
       status: 'offered',
       summaryOfActions: {
-        data: [],
+        data: [
+          [
+            {
+              text: '44'
+            },
+            {
+              text: 'BND1'
+            },
+            {
+              text: 'Maintain dry stone walls'
+            },
+            {
+              text: 95
+            },
+            {
+              text: '01/01/2024'
+            },
+            {
+              text: '31/12/2024'
+            }
+          ],
+          [
+            {
+              text: '44'
+            },
+            {
+              text: 'CHRW1'
+            },
+            {
+              text: 'Assess and record hedgerow condition'
+            },
+            {
+              text: 207
+            },
+            {
+              text: '01/01/2024'
+            },
+            {
+              text: '31/12/2024'
+            }
+          ]
+        ],
         headings: [
           {
             text: 'Parcel'
@@ -141,7 +205,59 @@ describe('getAgreement', () => {
         ]
       },
       summaryOfPayments: {
-        data: [],
+        data: [
+          [
+            {
+              text: 'BND1'
+            },
+            {
+              text: 'Maintain dry stone walls'
+            },
+            {
+              text: 95
+            },
+            {
+              text: '£25.65 per metre'
+            },
+            {
+              text: '£2,436.75'
+            }
+          ],
+          [
+            {
+              text: 'CHRW1'
+            },
+            {
+              text: 'CHRW1: Assess and record hedgerow condition'
+            },
+            {
+              text: 207
+            },
+            {
+              text: '£5.00 per metre'
+            },
+            {
+              text: '£9,495.00'
+            }
+          ],
+          [
+            {
+              text: 'CSAM1'
+            },
+            {
+              text: 'One-off payment per agreement per year for Assess soil, produce a soil management plan and test soil organic matter'
+            },
+            {
+              text: ''
+            },
+            {
+              text: ''
+            },
+            {
+              text: '£272.00'
+            }
+          ]
+        ],
         headings: [
           {
             text: 'Code'
@@ -159,8 +275,7 @@ describe('getAgreement', () => {
             text: 'Total yearly payment'
           }
         ]
-      },
-      username: 'Test User'
+      }
     })
   })
 
@@ -192,80 +307,61 @@ describe('getAgreement', () => {
       status: 'offered',
       username: 'User Name',
       agreementNumber: 'SFI000000001',
-      parcels: [
-        {
-          parcelNumber: 'ABC123',
-          totalArea: 2.5,
-          activities: [
-            {
-              code: 'ACT1',
-              description: 'Action One',
-              startDate: new Date('2024-01-01T00:00:00Z'),
-              endDate: new Date('2024-12-31T00:00:00Z'),
-              area: 1.25
-            }
-          ]
-        }
-      ],
-      actions: [
-        {
-          code: 'ACT1',
-          title: 'Action One Title',
-          startDate: new Date('2024-01-01T00:00:00Z'),
-          endDate: new Date('2024-12-31T00:00:00Z'),
-          duration: '1 year'
-        }
-      ],
-      payments: {
-        activities: [
-          {
+      payment: {
+        parcelItems: {
+          'parcel-item-1': {
+            parcelId: 'ABC123',
             code: 'ACT1',
-            description: 'Action One',
-            measurement: 2.5,
-            rate: 123,
-            annualPayment: 456
+            description: 'ACT1: Action One',
+            quantity: 2.5,
+            rateInPence: 12300,
+            unit: 'hectares',
+            annualPaymentPence: 45600
+          }
+        },
+        agreementLevelItems: {},
+        payments: [
+          {
+            paymentDate: '2024-01-01',
+            lineItems: [
+              {
+                parcelItemId: 'parcel-item-1',
+                paymentPence: 45600
+              }
+            ]
           }
         ],
-        yearlyBreakdown: {
-          details: [
-            {
-              code: 'ACT1',
-              year1: 100,
-              year2: 200,
-              year3: 300,
-              totalPayment: 600
-            }
-          ],
-          annualTotals: { year1: 100, year2: 200, year3: 300 },
-          totalAgreementPayment: 600
-        }
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-12-31'
       }
     }
 
     const agreement = await getAgreement('SFI000000001', agreementData)
 
-    // Agreement land table should have one row with parcel info
+    // Agreement land table should now have data
     expect(agreement.agreementLand.data).toHaveLength(1)
-    expect(agreement.agreementLand.data[0][0].text).toBe('ABC123')
-    expect(agreement.agreementLand.data[0][1].text).toBe(2.5)
+    expect(agreement.agreementLand.data[0]).toEqual([
+      { text: 'ABC123' },
+      { text: 2.5 }
+    ])
 
-    // Summary of actions should reflect activity mapping
+    // Summary of actions should now have data
     expect(agreement.summaryOfActions.data).toHaveLength(1)
-    expect(agreement.summaryOfActions.data[0][1].text).toBe('ACT1')
-    expect(agreement.summaryOfActions.data[0][2].text).toBe('Action One')
+    expect(agreement.summaryOfActions.data[0]).toEqual([
+      { text: 'ABC123' },
+      { text: 'ACT1' },
+      { text: 'Action One' },
+      { text: 2.5 },
+      { text: '01/01/2024' },
+      { text: '31/12/2024' }
+    ])
 
-    // Agreement level actions should include formatted dates and duration
-    expect(agreement.agreementLevelActions.data).toHaveLength(1)
-    expect(agreement.agreementLevelActions.data[0][0].text).toBe('ACT1')
-    expect(agreement.agreementLevelActions.data[0][4].text).toBe('1 year')
-
-    // Summary of payments should include currency formatting
+    // Summary of payments should now have data
     expect(agreement.summaryOfPayments.data).toHaveLength(1)
-    expect(agreement.summaryOfPayments.data[0][3].text).toContain('per ha')
-    expect(agreement.summaryOfPayments.data[0][4].text).toMatch(/£\d/)
+    expect(agreement.summaryOfPayments.data[0][0].text).toBe('ACT1')
 
-    // Annual payment schedule should include row for detail and a Total row
-    expect(agreement.annualPaymentSchedule.data).toHaveLength(2)
+    // Annual payment schedule should now have data
+    expect(agreement.annualPaymentSchedule.data).toHaveLength(2) // ACT1 + Total
     expect(agreement.annualPaymentSchedule.data[0][0].text).toBe('ACT1')
     expect(agreement.annualPaymentSchedule.data[1][0].text).toBe('Total')
   })

@@ -81,40 +81,6 @@ const getSummaryOfActions = (agreementData) => {
 }
 
 /**
- * Creates a table of actions for the agreement
- * @param {object} agreementData - The agreement data object
- * @returns Object containing headings and data for the agreement level actions table
- */
-const getAgreementLevelActions = (agreementData) => {
-  return {
-    headings: [
-      { text: 'Action code' },
-      { text: 'Title' },
-      { text: 'Action End date' },
-      { text: 'Action Start date' },
-      { text: 'Action duration' }
-    ],
-    data: Object.values(agreementData.payment.agreementLevelItems).map(
-      (action) => [
-        { text: action.code },
-        { text: action.description?.replace(`${action.code}: `, '') },
-        {
-          text: new Date(
-            agreementData.payment.agreementEndDate
-          ).toLocaleDateString('en-GB', dateOptions)
-        },
-        {
-          text: new Date(
-            agreementData.payment.agreementEndDate
-          ).toLocaleDateString('en-GB', dateOptions)
-        },
-        { text: action.duration }
-      ]
-    )
-  }
-}
-
-/**
  * Creates a summary of payments for the agreement
  * @param {object} agreementData - The agreement data object
  * @returns Object containing headings and data for the summary of payments table
@@ -166,11 +132,11 @@ const getAnnualPaymentSchedule = (agreementData) => {
     payment.lineItems.forEach((line) => {
       let code
       if (line.parcelItemId) {
-        code = agreementData.payment.parcelItems[line.parcelItemId].code
+        code = agreementData.payment.parcelItems[line.parcelItemId]?.code
       } else if (line.agreementLevelItemId) {
         code =
           agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
-            .code
+            ?.code
       }
 
       if (code) {
@@ -271,7 +237,6 @@ const getAgreement = async (agreementId, data) => {
 
   agreement.agreementLand = getAgreementLand(agreement)
   agreement.summaryOfActions = getSummaryOfActions(agreement)
-  agreement.agreementLevelActions = getAgreementLevelActions(agreement)
   agreement.summaryOfPayments = getSummaryOfPayments(agreement)
   agreement.annualPaymentSchedule = getAnnualPaymentSchedule(agreement)
   agreement.agreementNumber = agreementId

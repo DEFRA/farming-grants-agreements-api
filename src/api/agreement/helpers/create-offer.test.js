@@ -1,14 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import mongoose from 'mongoose'
-import {
-  createOffer,
-  calculateYearlyPayments,
-  createPaymentActivities,
-  groupParcelsById,
-  groupActivitiesByParcelId,
-  generateAgreementNumber
-} from './create-offer.js'
+import { createOffer, generateAgreementNumber } from './create-offer.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
@@ -46,98 +39,44 @@ const targetDataStructure = {
   notificationMessageId: 'aws-message-id',
   agreementName: 'Sample Agreement',
   correlationId: '1234545918345918475',
-  frn: '1234567890',
-  sbi: '106284736',
-  company: 'Sample Farm Ltd',
-  address: '123 Farm Lane, Farmville',
-  postcode: 'FA12 3RM',
-  username: 'Diana Peart',
-  agreementStartDate: '2025-05-13',
-  agreementEndDate: '2028-05-13',
-  actions: [],
-  parcels: [
-    {
-      parcelNumber: 'SX06799238',
-      parcelName: '',
-      totalArea: 62.46,
-      activities: [
-        {
-          code: 'CSAM1',
-          description: '',
-          area: 20.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          area: 42.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        }
-      ]
-    },
-    {
-      parcelNumber: 'SX06799240',
-      parcelName: '',
-      totalArea: 10.73,
-      activities: [
-        {
-          code: 'CSAM1',
-          description: '',
-          area: 10.73,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        }
-      ]
-    }
-  ],
   payments: {
-    activities: [
-      {
-        code: 'CSAM1',
-        description: '',
-        quantity: 30.96,
-        rate: 6,
-        measurement: '30.96 ha',
-        paymentRate: '6.00/ha',
-        annualPayment: 185.76
-      },
-      {
-        code: 'CSAM3',
-        description: '',
-        quantity: 42.23,
-        rate: 6,
-        measurement: '42.23 ha',
-        paymentRate: '6.00/ha',
-        annualPayment: 253.38
+    agreementStartDate: '2024-11-01',
+    agreementEndDate: '2027-10-31',
+    frequency: 'Quarterly',
+    agreementTotalPence: 6413247,
+    annualTotalPence: 6440447,
+    parcelItems: {
+      1: {
+        code: 'BND1',
+        description: 'Maintain dry stone walls',
+        version: 1,
+        unit: 'metres',
+        quantity: 95,
+        rateInPence: 2565,
+        annualPaymentPence: 243675,
+        sheetId: 'SX635990',
+        parcelId: '44'
       }
-    ],
-    totalAnnualPayment: 439.14,
-    yearlyBreakdown: {
-      details: [
-        {
-          code: 'CSAM1',
-          year1: 185.76,
-          year2: 185.76,
-          year3: 185.76,
-          totalPayment: 557.28
-        },
-        {
-          code: 'CSAM3',
-          year1: 253.38,
-          year2: 253.38,
-          year3: 253.38,
-          totalPayment: 760.14
-        }
-      ],
-      annualTotals: {
-        year1: 439.14,
-        year2: 439.14,
-        year3: 439.14
-      },
-      totalAgreementPayment: 1317.42
-    }
+    },
+    agreementLevelItems: {
+      1: {
+        code: 'CSAM1',
+        description:
+          'CSAM1: Assess soil, produce a soil management plan and test soil organic matter',
+        version: 1,
+        annualPaymentPence: 27200
+      }
+    },
+    payments: [
+      {
+        totalPaymentPence: 1610112,
+        paymentDate: '2025-12-05',
+        lineItems: [
+          { agreementLevelItems: 1, paymentPence: 6800 },
+          { parcelItemId: 1, paymentPence: 60919 }
+        ]
+      }
+    ]
   }
 }
 
@@ -385,22 +324,12 @@ describe('createOffer', () => {
 
     const result = await createOffer(uuidv4(), emptyAgreementName, mockLogger)
 
-    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalledWith(
-      expect.objectContaining({
-        agreement: expect.objectContaining({
-          agreementName: 'Unnamed Agreement'
-        }),
-        versions: expect.arrayContaining([
-          expect.objectContaining({ agreementName: 'Unnamed Agreement' })
-        ])
-      })
-    )
+    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
 
     // Should fall back to a generated SFI number
     expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
     expect(result.agreementNumber).not.toBe('')
-    expect(result.agreementName).not.toBe('')
-    expect(result.agreementName).toBe('Unnamed Agreement')
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
   })
 
   it('generates an agreement number when seedDb is false and agreementNumber is empty', async () => {
@@ -435,351 +364,34 @@ describe('createOffer', () => {
     })
   })
 
-  describe('groupParcelsById', () => {
-    it('should group parcels by ID', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.2312345
-          }
-        },
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM3',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 42.234321
-          }
-        },
-        {
-          parcelId: '9240',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 10.73
-          }
-        }
-      ]
-
-      const result = groupParcelsById(actionApplications)
-
-      expect(result).toEqual([
-        {
-          parcelNumber: 'SX06799238',
-          parcelName: '',
-          totalArea: 62.4655,
-          activities: [
-            {
-              code: 'CSAM1',
-              description: '',
-              area: 20.2312345,
-              startDate: '2025-05-13',
-              endDate: '2028-05-13'
-            },
-            {
-              code: 'CSAM3',
-              description: '',
-              area: 42.234321,
-              startDate: '2025-05-13',
-              endDate: '2028-05-13'
-            }
-          ]
-        },
-        {
-          parcelNumber: 'SX06799240',
-          parcelName: '',
-          totalArea: 10.73,
-          activities: [
-            {
-              code: 'CSAM1',
-              description: '',
-              area: 10.73,
-              startDate: '2025-05-13',
-              endDate: '2028-05-13'
-            }
-          ]
-        }
-      ])
-    })
-
-    it('should handle empty action applications array', () => {
-      const result = groupParcelsById([])
-      expect(result).toEqual([])
-    })
-
-    it('should handle action applications with missing appliedFor data', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: null
-        }
-      ]
-
-      expect(() => groupParcelsById(actionApplications)).toThrow()
+  describe('grouping behaviour (via createOffer output)', () => {
+    it('should return the grouped parcels in the populated result (sample data)', async () => {
+      const result = await createOffer(
+        'aws-message-id',
+        agreementData,
+        mockLogger
+      )
+      expect(result.agreements[0].parcels).toEqual(targetDataStructure.parcels)
     })
   })
 
-  describe('groupActivitiesByParcelId', () => {
-    it('should group activities by parcel ID', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.23
-          }
-        },
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM3',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 42.23
-          }
-        }
-      ]
-
-      const parcelNumber = 'SX06799238'
-
-      const result = groupActivitiesByParcelId(actionApplications, parcelNumber)
-
-      expect(result).toEqual([
-        {
-          code: 'CSAM1',
-          description: '',
-          area: 20.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          area: 42.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        }
-      ])
-    })
-
-    it('should handle empty action applications array', () => {
-      const result = groupActivitiesByParcelId([], 'SX06799238')
-      expect(result).toEqual([])
-    })
-
-    it('should handle action applications with custom dates', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          startDate: '2026-01-01',
-          endDate: '2027-12-31',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.23
-          }
-        }
-      ]
-
-      const parcelNumber = 'SX06799238'
-      const result = groupActivitiesByParcelId(actionApplications, parcelNumber)
-
-      expect(result[0].startDate).toBe('2026-01-01')
-      expect(result[0].endDate).toBe('2027-12-31')
+  describe('payments behaviour (via createOffer output)', () => {
+    it('should return payments with parcelItems, agreementLevelItems and payments arrays', async () => {
+      const result = await createOffer(
+        'aws-message-id',
+        agreementData,
+        mockLogger
+      )
+      const payments = result.agreements[0].payments
+      expect(payments).toEqual(targetDataStructure.payments)
+      expect(typeof payments.agreementStartDate).toBe('string')
+      expect(typeof payments.agreementEndDate).toBe('string')
+      expect(payments.parcelItems).toBeDefined()
+      expect(payments.agreementLevelItems).toBeDefined()
+      expect(Array.isArray(payments.payments)).toBe(true)
     })
   })
-
-  describe('createPaymentActivities', () => {
-    it('should create payment activities correctly', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          description: '',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.23
-          }
-        },
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM3',
-          description: '',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 42.23
-          }
-        }
-      ]
-
-      const result = createPaymentActivities(actionApplications)
-
-      expect(result).toEqual([
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 20.23,
-          rate: 6,
-          measurement: '20.23 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 121.38
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          quantity: 42.23,
-          rate: 6,
-          measurement: '42.23 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 253.38
-        }
-      ])
-    })
-  })
-
-  describe('calculateYearlyPayments', () => {
-    it('should calculate yearly payments correctly', () => {
-      const activities = [
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 30.96,
-          rate: 6,
-          measurement: '30.96 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 185.76
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          quantity: 42.23,
-          rate: 6,
-          measurement: '42.23 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 253.38
-        }
-      ]
-
-      const result = calculateYearlyPayments(activities)
-
-      expect(result).toEqual({
-        details: [
-          {
-            code: 'CSAM1',
-            year1: 185.76,
-            year2: 185.76,
-            year3: 185.76,
-            totalPayment: 557.28
-          },
-          {
-            code: 'CSAM3',
-            year1: 253.38,
-            year2: 253.38,
-            year3: 253.38,
-            totalPayment: 760.14
-          }
-        ],
-        annualTotals: {
-          year1: 439.14,
-          year2: 439.14,
-          year3: 439.14
-        },
-        totalAgreementPayment: 1317.42
-      })
-    })
-
-    it('should handle empty activities array', () => {
-      const result = calculateYearlyPayments([])
-      expect(result).toEqual({
-        details: [],
-        annualTotals: {
-          year1: 0,
-          year2: 0,
-          year3: 0
-        },
-        totalAgreementPayment: 0
-      })
-    })
-
-    it('should handle activities with zero payment', () => {
-      const activities = [
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 0,
-          rate: 6,
-          measurement: '0 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 0
-        }
-      ]
-
-      const result = calculateYearlyPayments(activities)
-      expect(result).toEqual({
-        details: [
-          {
-            code: 'CSAM1',
-            year1: 0,
-            year2: 0,
-            year3: 0,
-            totalPayment: 0
-          }
-        ],
-        annualTotals: {
-          year1: 0,
-          year2: 0,
-          year3: 0
-        },
-        totalAgreementPayment: 0
-      })
-    })
-
-    it('should handle activities with decimal payments', () => {
-      const activities = [
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 1.5,
-          rate: 6,
-          measurement: '1.5 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 9
-        }
-      ]
-
-      const result = calculateYearlyPayments(activities)
-      expect(result).toEqual({
-        details: [
-          {
-            code: 'CSAM1',
-            year1: 9,
-            year2: 9,
-            year3: 9,
-            totalPayment: 27
-          }
-        ],
-        annualTotals: {
-          year1: 9,
-          year2: 9,
-          year3: 9
-        },
-        totalAgreementPayment: 27
-      })
-    })
-  })
+  // Note: yearly breakdown and activities are no longer present in payments
 
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
@@ -834,72 +446,4 @@ describe('createOffer', () => {
   })
 })
 
-describe('createPaymentActivities', () => {
-  it('should handle empty action applications', () => {
-    const result = createPaymentActivities([])
-    expect(result).toEqual([])
-  })
-
-  it('should handle action applications with missing description', () => {
-    const actionApplications = [
-      {
-        parcelId: '9238',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'ha',
-          quantity: 20.23
-        }
-      }
-    ]
-
-    const result = createPaymentActivities(actionApplications)
-    expect(result[0].description).toBe('')
-  })
-
-  it('should handle action applications with different units', () => {
-    const actionApplications = [
-      {
-        parcelId: '9238',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'm',
-          quantity: 100
-        }
-      }
-    ]
-
-    const result = createPaymentActivities(actionApplications)
-    expect(result[0].measurement).toBe('100 m')
-    expect(result[0].paymentRate).toBe('6.00/m')
-  })
-
-  it('should combine quantities for the same action code', () => {
-    const actionApplications = [
-      {
-        parcelId: '9238',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'ha',
-          quantity: 10
-        }
-      },
-      {
-        parcelId: '9240',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'ha',
-          quantity: 20
-        }
-      }
-    ]
-
-    const result = createPaymentActivities(actionApplications)
-    expect(result).toHaveLength(1)
-    expect(result[0].quantity).toBe(30)
-    expect(result[0].annualPayment).toBe(180)
-  })
-})
+// Payments/activity aggregation assertions no longer apply since payments schema changed

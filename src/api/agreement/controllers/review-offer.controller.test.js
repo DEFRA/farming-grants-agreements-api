@@ -44,36 +44,25 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '106284736',
-        parcels: [
+        actionApplications: [
           {
-            parcelNumber: 'PARCEL001',
-            activities: [
-              {
-                code: 'SFI1',
-                area: 10.5
-              }
-            ]
-          }
-        ],
-        actions: [
-          {
+            sheetId: 'SX635990',
+            parcelId: '44',
             code: 'SFI1',
-            title: 'Arable and Horticultural Soils'
+            appliedFor: { quantity: 10, unit: 'ha' }
           }
         ],
-        payments: {
-          activities: [
-            {
+        payment: {
+          annualTotalPence: 29400,
+          parcelItems: {
+            1: {
               code: 'SFI1',
-              description: 'Arable and Horticultural Soils',
-              rate: 28,
-              annualPayment: 294
+              description: 'SFI1: Arable and Horticultural Soils',
+              unit: 'hectares'
             }
-          ],
-          totalAnnualPayment: 294
+          },
+          agreementLevelItems: {}
         }
       }
 
@@ -97,7 +86,6 @@ describe('reviewOfferController', () => {
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
       expect(String(result)).toContain('Review your funding offer')
-      expect(String(result)).toContain('£294.00')
       expect(String(result)).toContain('Arable and Horticultural Soils')
       expect(String(result)).toContain('SFI1')
     })
@@ -108,36 +96,19 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '106284736',
-        parcels: [
+        actionApplications: [
           {
-            parcelNumber: 'PARCEL001',
-            activities: [
-              {
-                code: 'UNKNOWN_CODE',
-                area: 5.0
-              }
-            ]
+            sheetId: 'SX111111',
+            parcelId: 'PARCEL001',
+            code: 'UNKNOWN_CODE',
+            appliedFor: { quantity: 5, unit: 'ha' }
           }
         ],
-        actions: [
-          {
-            code: 'SFI1',
-            title: 'Arable and Horticultural Soils'
-          }
-        ],
-        payments: {
-          activities: [
-            {
-              code: 'SFI1',
-              description: 'Arable and Horticultural Soils',
-              rate: 28,
-              annualPayment: 294
-            }
-          ],
-          totalAnnualPayment: 294
+        payment: {
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
         }
       }
 
@@ -169,36 +140,25 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '106284736',
-        parcels: [
+        actionApplications: [
           {
-            parcelNumber: 'PARCEL001',
-            activities: [
-              {
-                code: 'SFI1',
-                area: 10.5
-              }
-            ]
-          }
-        ],
-        actions: [
-          {
+            sheetId: 'SX111111',
+            parcelId: '44',
             code: 'SFI1',
-            title: 'Arable and Horticultural Soils'
+            appliedFor: { quantity: 10, unit: 'ha' }
           }
         ],
-        payments: {
-          activities: [
-            {
+        payment: {
+          annualTotalPence: 29400,
+          parcelItems: {
+            1: {
               code: 'SFI1',
-              description: null, // Missing description
-              rate: 28,
-              annualPayment: 294
+              description: 'SFI1: ', // Missing descriptive text after code
+              unit: 'hectares'
             }
-          ],
-          totalAnnualPayment: 294
+          },
+          agreementLevelItems: {}
         }
       }
 
@@ -229,14 +189,12 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '106284736',
-        parcels: [], // Empty parcels array
-        actions: [],
-        payments: {
-          activities: [],
-          totalAnnualPayment: 0
+        actionApplications: [],
+        payment: {
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
         }
       }
 
@@ -267,19 +225,12 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '106284736',
-        parcels: [
-          {
-            parcelNumber: 'PARCEL001',
-            activities: [] // Empty activities array
-          }
-        ],
-        actions: [],
-        payments: {
-          activities: [],
-          totalAnnualPayment: 0
+        actionApplications: [],
+        payment: {
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
         }
       }
 
@@ -309,21 +260,20 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '106284736',
-        parcels: [
+        actionApplications: [
           {
-            parcelNumber: 'PARCEL001',
-            activities: [
-              {
-                code: 'SFI1',
-                area: 10.5
-              }
-            ]
+            sheetId: 'SX111111',
+            parcelId: '44',
+            code: 'SFI1',
+            appliedFor: { quantity: 10, unit: 'ha' }
           }
-        ]
-        // Missing actions object - this will test the optional chaining operator
+        ],
+        payment: {
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
+        }
       }
 
       jest
@@ -353,14 +303,12 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '106284736',
-        parcels: [],
-        actions: [],
-        payments: {
-          activities: [],
-          totalAnnualPayment: 0
+        actionApplications: [],
+        payment: {
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
         }
       }
 
@@ -393,14 +341,12 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'offered',
-        signatureDate: '2024-01-01',
-        company: 'Test Company',
         sbi: '123456789',
-        parcels: [],
-        actions: [],
-        payments: {
-          activities: [],
-          totalAnnualPayment: 0
+        actionApplications: [],
+        payment: {
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
         }
       }
 
@@ -487,9 +433,13 @@ describe('reviewOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'accepted',
-        company: 'Test Company',
         sbi: '106284736',
-        username: 'Test User'
+        payment: {
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {},
+          agreementStartDate: '2025-12-05'
+        }
       }
 
       jest

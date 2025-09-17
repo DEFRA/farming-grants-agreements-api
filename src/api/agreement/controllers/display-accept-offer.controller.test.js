@@ -213,9 +213,13 @@ describe('displayAcceptOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'accepted',
-        company: 'Test Company',
         sbi: '106284736',
-        username: 'Test User'
+        payment: {
+          agreementStartDate: '2025-12-05',
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
+        }
       }
 
       jest

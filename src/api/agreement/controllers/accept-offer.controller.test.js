@@ -52,60 +52,8 @@ describe('acceptOfferDocumentController', () => {
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
     status: 'offered',
-    company: 'Test Company',
-    sbi: '106284736',
-    username: 'Test User',
-    agreementStartDate: '2024-01-01',
-    parcels: [
-      {
-        parcelNumber: 'PARCEL001',
-        totalArea: 10.5,
-        activities: [
-          {
-            code: 'ACT001',
-            description: 'Test Activity',
-            startDate: new Date('2024-01-01'),
-            endDate: new Date('2024-12-31')
-          }
-        ]
-      }
-    ],
-    actions: [
-      {
-        code: 'ACT001',
-        title: 'Test Action',
-        startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31'),
-        duration: '1 year'
-      }
-    ],
-    payments: {
-      activities: [
-        {
-          code: 'ACT001',
-          description: 'Test Activity',
-          measurement: 10.5,
-          rate: 100,
-          annualPayment: 1050
-        }
-      ],
-      yearlyBreakdown: {
-        details: [
-          {
-            code: 'ACT001',
-            year1: 1050,
-            year2: 1050,
-            year3: 1050,
-            totalPayment: 3150
-          }
-        ],
-        annualTotals: {
-          year1: 1050,
-          year2: 1050,
-          year3: 1050
-        },
-        totalAgreementPayment: 3150
-      }
+    payment: {
+      agreementStartDate: '2024-01-01'
     }
   }
 
@@ -135,10 +83,7 @@ describe('acceptOfferDocumentController', () => {
       agreementId,
       expect.objectContaining({
         agreementNumber: agreementId,
-        company: 'Test Company',
-        sbi: '106284736',
-        status: 'offered',
-        username: 'Test User'
+        status: 'offered'
       }),
       expect.stringContaining('http://localhost:3555/SFI123456789'),
       mockLogger
@@ -241,7 +186,10 @@ describe('acceptOfferDocumentController', () => {
     const acceptedAgreementData = {
       ...mockAgreementData,
       status: 'accepted',
-      agreementStartDate: '2024-01-01'
+      payment: {
+        ...mockAgreementData.payment,
+        agreementStartDate: '2024-01-01'
+      }
     }
     getAgreementDataById.mockResolvedValue(acceptedAgreementData)
     getFirstPaymentDate.mockReturnValue('March 2025')
