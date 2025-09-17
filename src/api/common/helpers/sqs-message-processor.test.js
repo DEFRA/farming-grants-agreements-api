@@ -44,11 +44,11 @@ describe('SQS message processor', () => {
         'Invalid message format'
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
         expect.objectContaining({
           message,
           error: expect.any(String)
-        })
+        }),
+        expect.stringContaining('Error processing message')
       )
     })
 
@@ -63,11 +63,11 @@ describe('SQS message processor', () => {
         'Error processing SQS message'
       )
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
         expect.objectContaining({
           message,
           error: expect.any(String)
-        })
+        }),
+        expect.stringContaining('Error processing message')
       )
     })
   })
