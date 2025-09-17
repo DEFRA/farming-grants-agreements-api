@@ -105,15 +105,21 @@ const getSummaryOfPayments = (agreementData) => {
         { text: formatCurrency(payment.annualPaymentPence) }
       ]),
       ...Object.values(agreementData.payment.agreementLevelItems).map(
-        (payment) => [
-          { text: payment.code },
-          {
-            text: `One-off payment per agreement per year for ${payment.description?.replace(`${payment.code}: `, '')}`
-          },
-          { text: '' },
-          { text: '' },
-          { text: formatCurrency(payment.annualPaymentPence) }
-        ]
+        (payment) => {
+          const description = payment.description?.replace(
+            `${payment.code}: `,
+            ''
+          )
+          return [
+            { text: payment.code },
+            {
+              text: `One-off payment per agreement per year for ${description}`
+            },
+            { text: '' },
+            { text: '' },
+            { text: formatCurrency(payment.annualPaymentPence) }
+          ]
+        }
       )
     ].sort((a, b) => a[0].text.localeCompare(b[0].text))
   }
@@ -133,7 +139,8 @@ const getAnnualPaymentSchedule = (agreementData) => {
       let code
       if (line.parcelItemId) {
         code = agreementData.payment.parcelItems[line.parcelItemId]?.code
-      } else if (line.agreementLevelItemId) {
+      }
+      if (line.agreementLevelItemId) {
         code =
           agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
             ?.code
@@ -156,17 +163,19 @@ const getAnnualPaymentSchedule = (agreementData) => {
   // Get all unique years from the data
   const allYears = new Set()
   dataByCode.forEach((years) => {
-    years.forEach((value, year) => {
+    years.forEach((_value, year) => {
       if (year !== 'total') {
         allYears.add(year)
       }
     })
   })
 
-  const sortedYears = Array.from(allYears).sort()
+  const sortedYears = Array.from(allYears).sort((a, b) => a - b)
 
   // Sort dataByCode by code keys
-  const sortedCodes = Array.from(dataByCode.keys()).sort()
+  const sortedCodes = Array.from(dataByCode.keys()).sort((a, b) =>
+    a.localeCompare(b, 'en-GB', { numeric: true, sensitivity: 'base' })
+  )
 
   // Build table data
   const tableData = []
