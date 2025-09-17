@@ -79,7 +79,7 @@ describe('jwt-auth', () => {
 
   describe('verifyJwtPayload', () => {
     const mockAgreementData = {
-      sbi: '123456',
+      identifiers: { sbi: '123456' },
       agreementNumber: 'SFI123456789'
     }
 
@@ -180,7 +180,7 @@ describe('jwt-auth', () => {
         return 'mock-jwt-secret'
       })
 
-      const mockPayload = { sbi: '123456', source: 'defra' }
+      const mockPayload = { identifiers: { sbi: '123456' }, source: 'defra' }
       const mockDecoded = {
         decoded: {
           payload: mockPayload
