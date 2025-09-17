@@ -24,6 +24,7 @@ export const sqsClientPlugin = {
      */
     register: function (server, options) {
       server.logger.info('Setting up SQS client')
+
       const sqsClient = new SQSClient({
         region: options.awsRegion,
         endpoint: options.sqsEndpoint
@@ -62,7 +63,6 @@ export const sqsClientPlugin = {
         server.logger.error(
           {
             error: err.message || err.toString(),
-            stack: err.stack,
             fullError: err
           },
           'SQS Consumer error:'

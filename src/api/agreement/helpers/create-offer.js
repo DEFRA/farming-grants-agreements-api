@@ -37,7 +37,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     answers: { scheme, actionApplications, payment, applicant } = {}
   } = agreementData
 
-  if (!payment | !applicant) {
+  if (!payment || !applicant) {
     throw new Boom('Offer data is missing payment and applicant')
   }
 
