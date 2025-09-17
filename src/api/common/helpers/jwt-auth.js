@@ -64,7 +64,8 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
   }
 
   const result =
-    jwtPayload.source === 'defra' && jwtPayload.sbi === agreementData.sbi
+    jwtPayload.source === 'defra' &&
+    jwtPayload.sbi === agreementData?.identifiers?.sbi
 
   return result
 }
@@ -83,7 +84,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
     isJwtEnabled,
     hasAuthToken: !!authToken,
     authTokenLength: authToken ? authToken.length : 0,
-    agreementSbi: agreementData?.sbi,
+    agreementSbi: agreementData?.identifiers?.sbi,
     agreementNumber: agreementData?.agreementNumber
   })
 
@@ -103,7 +104,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
   logger.info('JWT payload extracted successfully:', {
     payloadSbi: jwtPayload.sbi,
     payloadSource: jwtPayload.source,
-    agreementSbi: agreementData?.sbi
+    agreementSbi: agreementData?.identifiers?.sbi
   })
 
   const validationResult = verifyJwtPayload(jwtPayload, agreementData)
