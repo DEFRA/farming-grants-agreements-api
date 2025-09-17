@@ -365,4 +365,113 @@ describe('getAgreement', () => {
     expect(agreement.annualPaymentSchedule.data[0][0].text).toBe('ACT1')
     expect(agreement.annualPaymentSchedule.data[1][0].text).toBe('Total')
   })
+
+  test('should handle string rate and null currency formatting', async () => {
+    const agreementData = {
+      status: 'offered',
+      agreementNumber: 'SFI-STR-NLL',
+      payment: {
+        parcelItems: {
+          'parcel-item-x': {
+            parcelId: 'XYZ789',
+            code: 'STR1',
+            description: 'STR1: String rate formatting',
+            quantity: 1,
+            rateInPence: '£1,234', // triggers string branch in formatCurrency
+            unit: 'metres',
+            annualPaymentPence: null // triggers null branch in formatCurrency
+          }
+        },
+        agreementLevelItems: {},
+        payments: [],
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-12-31'
+      }
+    }
+
+    const agreement = await getAgreement('SFI-STR-NLL', agreementData)
+
+    expect(agreement.summaryOfPayments.data).toHaveLength(1)
+    const [codeCell, actionCell, areaCell, rateCell, totalCell] =
+      agreement.summaryOfPayments.data[0]
+    expect(codeCell.text).toBe('STR1')
+    expect(actionCell.text).toBe('STR1: String rate formatting')
+    expect(areaCell.text).toBe(1)
+    // String branch strips non-numerics → "1234 per metre"
+    expect(rateCell.text).toBe('1234 per metre')
+    // Null branch returns empty string
+    expect(totalCell.text).toBe('')
+  })
+
+  test('should build schedule using agreementLevelItemId and sort codes numerically', async () => {
+    const agreementData = {
+      status: 'offered',
+      agreementNumber: 'SFI-SCH-AL',
+      payment: {
+        parcelItems: {
+          p1: {
+            parcelId: 'AAA111',
+            code: 'A2',
+            description: 'A2: Parcel action',
+            quantity: 1,
+            rateInPence: 100,
+            unit: 'hectares',
+            annualPaymentPence: 200
+          }
+        },
+        agreementLevelItems: {
+          al1: {
+            code: 'A10',
+            description: 'A10: Agreement-level item',
+            annualPaymentPence: 300
+          }
+        },
+        payments: [
+          {
+            paymentDate: '2023-06-01',
+            lineItems: [{ parcelItemId: 'p1', paymentPence: 1000 }]
+          },
+          {
+            paymentDate: '2024-06-01',
+            lineItems: [
+              { agreementLevelItemId: 'al1', paymentPence: 2000 } // triggers agreementLevelItemId branch
+            ]
+          }
+        ],
+        agreementStartDate: '2023-01-01',
+        agreementEndDate: '2024-12-31'
+      }
+    }
+
+    const agreement = await getAgreement('SFI-SCH-AL', agreementData)
+
+    // Expect two year headings (2023, 2024) and a Total column
+    const headingsText = agreement.annualPaymentSchedule.headings.map(
+      (h) => h.text
+    )
+    expect(headingsText).toEqual(['Code', 2023, 2024, 'Total payment'])
+
+    // Expect rows sorted numerically by code: A2 before A10
+    const rows = agreement.annualPaymentSchedule.data
+    expect(rows).toHaveLength(3) // A2, A10, Total
+    expect(rows[0][0].text).toBe('A2')
+    expect(rows[1][0].text).toBe('A10')
+
+    // Values formatted as currency strings
+    // A2 has value in 2023 only
+    expect(rows[0][1].text).toBe('£10.00') // 1000 pence
+    expect(rows[0][2].text).toBe('£0.00')
+    expect(rows[0][3].text).toBe('£10.00')
+
+    // A10 has value in 2024 only (from agreementLevelItemId)
+    expect(rows[1][1].text).toBe('£0.00')
+    expect(rows[1][2].text).toBe('£20.00') // 2000 pence
+    expect(rows[1][3].text).toBe('£20.00')
+
+    // Totals row
+    expect(rows[2][0].text).toBe('Total')
+    expect(rows[2][1].text).toBe('£10.00')
+    expect(rows[2][2].text).toBe('£20.00')
+    expect(rows[2][3].text).toBe('£30.00')
+  })
 })

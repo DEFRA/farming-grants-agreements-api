@@ -29,7 +29,8 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
             agreementData.payment.parcelItems[line.parcelItemId]
           description = `${payment.paymentDate}: Parcel: ${lineDetails.parcelId}: ${lineDetails.description}`
           schemeCode = lineDetails.code
-        } else if (line.agreementLevelItemId) {
+        }
+        if (line.agreementLevelItemId) {
           const lineDetails =
             agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
           description = `${payment.paymentDate}: One-off payment per agreement per year for ${lineDetails.description}`

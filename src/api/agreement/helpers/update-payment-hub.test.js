@@ -238,6 +238,56 @@ describe('updatePaymentHub', () => {
   })
 
   describe('Data Mapping', () => {
+    it('should map agreement level items and omit schedule for non-quarterly', async () => {
+      const agreementWithAgreementLevelItem = {
+        ...mockAgreementData,
+        frequency: 'Annually',
+        payment: {
+          parcelItems: {},
+          agreementLevelItems: {
+            'agreement-level-1': {
+              code: 'AL001',
+              description: 'Annual management payment'
+            }
+          },
+          payments: [
+            {
+              paymentDate: '2023-02-01',
+              lineItems: [
+                {
+                  agreementLevelItemId: 'agreement-level-1',
+                  paymentPence: 12345
+                }
+              ]
+            }
+          ],
+          agreementTotalPence: 12345
+        }
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithAgreementLevelItem)
+
+      await updatePaymentHub(mockContext, 'SFI123456789')
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining({
+          schedule: undefined,
+          dueDate: '2023-02-01',
+          value: 12345,
+          invoiceLines: [
+            [
+              {
+                value: 12345,
+                description:
+                  '2023-02-01: One-off payment per agreement per year for Annual management payment',
+                schemeCode: 'AL001'
+              }
+            ]
+          ]
+        })
+      })
+    })
+
     it('should correctly map agreement data to payment hub request', async () => {
       await updatePaymentHub(mockContext, 'SFI123456789')
 

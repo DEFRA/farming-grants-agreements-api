@@ -131,7 +131,17 @@ const agreementData = {
           quantity: 10.73
         }
       }
-    ]
+    ],
+    payment: {},
+    applicant: {
+      customer: {
+        name: {
+          title: 'Mr',
+          first: 'Joe',
+          last: 'Bloggs'
+        }
+      }
+    }
   }
 }
 
@@ -295,43 +305,6 @@ describe('createOffer', () => {
     config.set('featureFlags.seedDb', previous)
   })
 
-  it('should generate an agreement name when answers.agreementName is not provided', async () => {
-    const emptyAgreementName = {
-      identifiers: { frn: '1234567890', sbi: '106284736' },
-      clientRef: 'ref-abc',
-      answers: {
-        // note: no agreementName here
-        actionApplications: []
-      }
-    }
-
-    const populated = {
-      ...targetGroupDataStructure,
-      sbi: '106284736',
-      frn: '1234567890',
-      agreementName: 'Unnamed Agreement',
-      agreementNumber: 'SFI999999999',
-      correlationId: 'abc-def'
-    }
-    populated.agreements = [{ ...targetDataStructure }]
-
-    agreementsModel.__setPopulatedAgreement(populated)
-
-    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
-
-    // Ensure the notification id hasn't been used
-    doesAgreementExist.mockResolvedValueOnce(false)
-
-    const result = await createOffer(uuidv4(), emptyAgreementName, mockLogger)
-
-    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
-
-    // Should fall back to a generated SFI number
-    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
-    expect(result.agreementNumber).not.toBe('')
-    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
-  })
-
   it('generates an agreement number when seedDb is false and agreementNumber is empty', async () => {
     const { config } = await import('~/src/config/index.js')
     const previous = config.get('featureFlags.seedDb')
@@ -406,6 +379,26 @@ describe('createOffer', () => {
       }
       expect(numbers.size).toBe(100)
     })
+  })
+
+  it('should handle missing answers object (uses defaults)', async () => {
+    const missingAnswers = {
+      clientRef: 'ref-missing-answers',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {}
+    }
+
+    // Ensure the notification id hasn't been used
+    doesAgreementExist.mockResolvedValueOnce(false)
+    let error
+    try {
+      await createOffer('aws-message-id', missingAnswers)
+    } catch (e) {
+      error = e
+    }
+    expect(error).toBeDefined()
+    expect(error.message).toBe('Offer data is missing payment and applicant')
   })
 
   describe('Error Handling', () => {

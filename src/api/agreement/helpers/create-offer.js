@@ -1,5 +1,7 @@
 import crypto from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
+import { Boom } from '@hapi/boom'
+
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
@@ -34,6 +36,10 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     identifiers,
     answers: { scheme, actionApplications, payment, applicant } = {}
   } = agreementData
+
+  if (!payment | !applicant) {
+    throw new Boom('Offer data is missing payment and applicant')
+  }
 
   let agreementNumber = generateAgreementNumber()
   if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {

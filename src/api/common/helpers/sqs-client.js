@@ -24,7 +24,6 @@ export const sqsClientPlugin = {
      */
     register: function (server, options) {
       server.logger.info('Setting up SQS client')
-
       const sqsClient = new SQSClient({
         region: options.awsRegion,
         endpoint: options.sqsEndpoint

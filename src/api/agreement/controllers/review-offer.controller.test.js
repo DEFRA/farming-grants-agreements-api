@@ -1,5 +1,6 @@
 import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { reviewOfferController } from '~/src/api/agreement/controllers/review-offer.controller.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 
@@ -519,6 +520,175 @@ describe('reviewOfferController', () => {
       expect(String(result)).toContain('<!DOCTYPE html>')
       expect(String(result)).toContain(
         'You are not authorized to access this page'
+      )
+    })
+  })
+
+  describe('reviewOfferController.handler (unit)', () => {
+    /** Simple chainable h toolkit mocks */
+    const createHToolkit = () => {
+      const calls = {
+        view: null,
+        header: null,
+        code: null,
+        response: null
+      }
+
+      const chain = {
+        header: (key, value) => {
+          calls.header = [key, value]
+          return chain
+        },
+        code: (status) => {
+          calls.code = status
+          return { statusCode: status, calls }
+        }
+      }
+
+      const h = {
+        view: (template, context) => {
+          calls.view = [template, context]
+          return chain
+        },
+        response: (payload) => {
+          calls.response = payload
+          return {
+            code: (status) => ({ statusCode: status, result: payload, calls })
+          }
+        }
+      }
+
+      return { h, calls, chain }
+    }
+
+    test('renders view with transformed payments, totals and headers', () => {
+      const request = {
+        auth: {
+          credentials: {
+            agreementData: {
+              actionApplications: [{ code: 'A1' }],
+              payment: {
+                annualTotalPence: 123400,
+                parcelItems: {
+                  1: {
+                    code: 'B02',
+                    description: 'B02: Thing Bravo',
+                    unit: 'units'
+                  },
+                  2: {
+                    code: 'A01',
+                    description: 'A01: Thing Alpha',
+                    unit: 'hours'
+                  }
+                },
+                agreementLevelItems: {
+                  1: { code: 'C99', annualPaymentPence: 2500 }
+                }
+              }
+            }
+          }
+        },
+        logger: { error: jest.fn() }
+      }
+
+      const { h, calls } = createHToolkit()
+
+      const res = reviewOfferController.handler(request, h)
+
+      // Status
+      expect(res.statusCode).toBe(statusCodes.ok)
+
+      // Header set
+      expect(calls.header).toEqual([
+        'Cache-Control',
+        'no-cache, no-store, must-revalidate'
+      ])
+
+      // View called with expected template
+      expect(calls.view[0]).toBe('views/view-offer.njk')
+
+      const context = calls.view[1]
+
+      // actionApplications passed through
+      expect(context.actionApplications).toEqual([{ code: 'A1' }])
+
+      // codeDescriptions built from parcel descriptions (without the leading "CODE: ")
+      expect(context.codeDescriptions).toEqual({
+        A01: 'Thing Alpha',
+        B02: 'Thing Bravo',
+        C99: undefined // not present in parcelItems, so undefined
+      })
+
+      // payments merged and sorted by code, with transformations applied
+      const codes = context.payments.map((p) => p.code)
+      expect(codes).toEqual(['A01', 'B02', 'C99'])
+
+      const a01 = context.payments.find((p) => p.code === 'A01')
+      expect(a01.description).toBe('Thing Alpha')
+      expect(a01.unit).toBe('hour') // singularized
+
+      const b02 = context.payments.find((p) => p.code === 'B02')
+      expect(b02.description).toBe('Thing Bravo')
+      expect(b02.unit).toBe('unit') // singularized
+
+      const c99 = context.payments.find((p) => p.code === 'C99')
+      expect(c99.description).toBe(
+        'One-off payment per agreement per year for undefined'
+      )
+      expect(c99.rateInPence).toBe(2500)
+
+      // totals
+      expect(context.totalYearly).toBe(123400)
+      expect(context.totalQuarterly).toBe(123400 / 4)
+    })
+
+    test('throws Boom errors (from h.view) through to error handler', () => {
+      const request = {
+        auth: {
+          credentials: {
+            agreementData: {
+              actionApplications: [],
+              payment: {
+                annualTotalPence: 0,
+                parcelItems: {},
+                agreementLevelItems: {}
+              }
+            }
+          }
+        },
+        logger: { error: jest.fn() }
+      }
+
+      const error = new Error('Boom-like error')
+      error.isBoom = true
+
+      const h = {
+        view: () => {
+          throw error
+        }
+      }
+
+      expect(() => reviewOfferController.handler(request, h)).toThrow(error)
+    })
+
+    test('handles non-Boom errors and returns 500 response with message', () => {
+      // Cause an error early in the try block (missing credentials)
+      const request = {
+        auth: {},
+        logger: { error: jest.fn() }
+      }
+
+      const createHToolkitLocal = createHToolkit
+      const { h } = createHToolkitLocal()
+
+      const res = reviewOfferController.handler(request, h)
+
+      expect(res.statusCode).toBe(statusCodes.internalServerError)
+      expect(res.result).toEqual(
+        expect.objectContaining({ message: 'Failed to fetch offer' })
+      )
+      expect(request.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error fetching offer:')
       )
     })
   })
