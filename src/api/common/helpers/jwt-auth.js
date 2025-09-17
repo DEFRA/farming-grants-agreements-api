@@ -83,7 +83,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
     isJwtEnabled,
     hasAuthToken: !!authToken,
     authTokenLength: authToken ? authToken.length : 0,
-    agreementSbi: agreementData?.sbi,
+    agreementSbi: agreementData?.identifiers?.sbi,
     agreementNumber: agreementData?.agreementNumber
   })
 
