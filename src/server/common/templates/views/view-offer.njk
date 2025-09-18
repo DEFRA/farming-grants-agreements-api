@@ -56,7 +56,7 @@
         <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;"  id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rateInPence | formatCurrency }}{% if payment.unit %}&nbsp;per&nbsp;{{ payment.unit }}{% endif %}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">
-          {{ (payment.annualPaymentPence / 4) | formatCurrency }}
+          {{ (payment.quarterlyPayment) | formatCurrency }}
         </td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.annualPaymentPence | formatCurrency }}</td>
       </tr>

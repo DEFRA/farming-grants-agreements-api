@@ -355,8 +355,8 @@ export default [
         agreementStartDate: startDate,
         agreementEndDate: endDate,
         frequency: 'Quarterly',
-        agreementTotalPence: 6413247,
-        annualTotalPence: 6440447,
+        agreementTotalPence: 11270784,
+        annualTotalPence: 6440448,
         parcelItems: {
           1: {
             code: 'BND1',
@@ -461,7 +461,7 @@ export default [
             paymentDate: '2025-12-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {
@@ -503,7 +503,7 @@ export default [
             paymentDate: '2026-03-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {
@@ -545,7 +545,7 @@ export default [
             paymentDate: '2026-06-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {
@@ -587,7 +587,7 @@ export default [
             paymentDate: '2026-09-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {
@@ -629,7 +629,7 @@ export default [
             paymentDate: '2026-12-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {
@@ -671,7 +671,7 @@ export default [
             paymentDate: '2027-03-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {
@@ -713,7 +713,7 @@ export default [
             paymentDate: '2027-06-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {

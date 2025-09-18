@@ -572,18 +572,38 @@ describe('reviewOfferController', () => {
                 parcelItems: {
                   1: {
                     code: 'B02',
-                    description: 'B02: Thing Bravo',
+                    description: 'B02: Bravo',
                     unit: 'units'
                   },
                   2: {
                     code: 'A01',
-                    description: 'A01: Thing Alpha',
+                    description: 'A01: Alpha',
                     unit: 'hours'
                   }
                 },
                 agreementLevelItems: {
                   1: { code: 'C99', annualPaymentPence: 2500 }
-                }
+                },
+                payments: [
+                  {
+                    totalPaymentPence: 6800,
+                    paymentDate: '2025-12-05',
+                    lineItems: [
+                      {
+                        agreementLevelItemId: 1,
+                        paymentPence: 1
+                      },
+                      {
+                        parcelItemId: 1,
+                        paymentPence: 2
+                      },
+                      {
+                        parcelItemId: 2,
+                        paymentPence: 3
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -614,8 +634,8 @@ describe('reviewOfferController', () => {
 
       // codeDescriptions built from parcel descriptions (without the leading "CODE: ")
       expect(context.codeDescriptions).toEqual({
-        A01: 'Thing Alpha',
-        B02: 'Thing Bravo',
+        A01: 'Alpha',
+        B02: 'Bravo',
         C99: undefined // not present in parcelItems, so undefined
       })
 
@@ -624,22 +644,26 @@ describe('reviewOfferController', () => {
       expect(codes).toEqual(['A01', 'B02', 'C99'])
 
       const a01 = context.payments.find((p) => p.code === 'A01')
-      expect(a01.description).toBe('Thing Alpha')
+      expect(a01.description).toBe('Alpha')
       expect(a01.unit).toBe('hour') // singularized
+      expect(a01.quarterlyPayment).toBe(3)
 
       const b02 = context.payments.find((p) => p.code === 'B02')
-      expect(b02.description).toBe('Thing Bravo')
+
+      expect(b02.description).toBe('Bravo')
       expect(b02.unit).toBe('unit') // singularized
+      expect(b02.quarterlyPayment).toBe(2)
 
       const c99 = context.payments.find((p) => p.code === 'C99')
       expect(c99.description).toBe(
         'One-off payment per agreement per year for undefined'
       )
       expect(c99.rateInPence).toBe(2500)
+      expect(c99.quarterlyPayment).toBe(1)
 
       // totals
       expect(context.totalYearly).toBe(123400)
-      expect(context.totalQuarterly).toBe(123400 / 4)
+      expect(context.totalQuarterly).toBe(6800)
     })
 
     test('throws Boom errors (from h.view) through to error handler', () => {
