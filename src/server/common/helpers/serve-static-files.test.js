@@ -37,16 +37,6 @@ describe('#serveStaticFiles', () => {
       expect(statusCode).toBe(statusCodes.noContent)
     })
 
-    test('Should serve assets as expected', async () => {
-      // Note npm run build is ran in the postinstall hook in package.json to make sure there is always a file
-      // available for this test. Remove as you see fit
-      const { statusCode } = await server.inject({
-        method: 'GET',
-        url: '/public/assets/images/govuk-crest.svg'
-      })
-      expect(statusCode).toBe(statusCodes.ok)
-    })
-
     test('Should serve image from /public/assets/images as expected', async () => {
       const filePath = path.resolve(
         '.public/assets/images/govuk-icon-print.png'
