@@ -44,8 +44,7 @@ const config = convict({
   serviceTitle: {
     doc: 'Service Title',
     format: String,
-    // Pending sign off on "Manage land-based actions"
-    default: ''
+    default: 'Sustainable Farming Incentive agreement'
   },
   root: {
     doc: 'Project root',
