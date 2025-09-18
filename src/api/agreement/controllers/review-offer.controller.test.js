@@ -298,6 +298,245 @@ describe('reviewOfferController', () => {
       expect(String(result)).toContain('Review your funding offer')
     })
 
+    test('should display first payment and subsequent payments from payment structure', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'offered',
+        sbi: '106284736',
+        actionApplications: [
+          {
+            sheetId: 'SX635990',
+            parcelId: '44',
+            code: 'SFI1',
+            appliedFor: { quantity: 10, unit: 'ha' }
+          }
+        ],
+        payment: {
+          annualTotalPence: 4783,
+          parcelItems: {
+            1: {
+              code: 'SFI1',
+              description: 'SFI1: Arable and Horticultural Soils',
+              unit: 'hectares',
+              annualPaymentPence: 4783
+            }
+          },
+          agreementLevelItems: {},
+          payments: [
+            {
+              totalPaymentPence: 1183,
+              paymentDate: '2025-12-05',
+              lineItems: [
+                {
+                  parcelItemId: 1,
+                  paymentPence: 1183
+                }
+              ]
+            },
+            {
+              totalPaymentPence: 1200,
+              paymentDate: '2026-03-05',
+              lineItems: [
+                {
+                  parcelItemId: 1,
+                  paymentPence: 1200
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
+        .mockResolvedValue(mockAgreementData)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'review-offer'
+        },
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(String(result)).toContain('£11.83') // First payment from payments[0]
+      expect(String(result)).toContain('£12.00') // Subsequent payment from payments[1]
+    })
+
+    test('should handle payments with integer division correctly', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'offered',
+        sbi: '106284736',
+        actionApplications: [
+          {
+            sheetId: 'SX635990',
+            parcelId: '44',
+            code: 'SFI1',
+            appliedFor: { quantity: 10, unit: 'ha' }
+          }
+        ],
+        payment: {
+          annualTotalPence: 10000,
+          parcelItems: {
+            1: {
+              code: 'SFI1',
+              description: 'SFI1: Arable and Horticultural Soils',
+              unit: 'hectares',
+              annualPaymentPence: 10000
+            }
+          },
+          agreementLevelItems: {},
+          payments: [
+            {
+              totalPaymentPence: 2500,
+              paymentDate: '2025-12-05',
+              lineItems: [
+                {
+                  parcelItemId: 1,
+                  paymentPence: 2500
+                }
+              ]
+            },
+            {
+              totalPaymentPence: 2500,
+              paymentDate: '2026-03-05',
+              lineItems: [
+                {
+                  parcelItemId: 1,
+                  paymentPence: 2500
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
+        .mockResolvedValue(mockAgreementData)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'review-offer'
+        },
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(String(result)).toContain('£25.00') // Both first and subsequent should be £25.00
+    })
+
+    test('should calculate total first payment and total subsequent payment correctly with multiple payments', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'offered',
+        sbi: '106284736',
+        actionApplications: [
+          {
+            sheetId: 'SX635990',
+            parcelId: '44',
+            code: 'SFI1',
+            appliedFor: { quantity: 10, unit: 'ha' }
+          },
+          {
+            sheetId: 'SX635991',
+            parcelId: '45',
+            code: 'SFI2',
+            appliedFor: { quantity: 5, unit: 'ha' }
+          }
+        ],
+        payment: {
+          annualTotalPence: 9783,
+          parcelItems: {
+            1: {
+              code: 'SFI1',
+              description: 'SFI1: Payment 1',
+              unit: 'hectares',
+              annualPaymentPence: 4783
+            },
+            2: {
+              code: 'SFI2',
+              description: 'SFI2: Payment 2',
+              unit: 'hectares',
+              annualPaymentPence: 5000
+            }
+          },
+          agreementLevelItems: {},
+          payments: [
+            {
+              totalPaymentPence: 2283,
+              paymentDate: '2025-12-05',
+              lineItems: [
+                {
+                  parcelItemId: 1,
+                  paymentPence: 1183
+                },
+                {
+                  parcelItemId: 2,
+                  paymentPence: 1100
+                }
+              ]
+            },
+            {
+              totalPaymentPence: 2500,
+              paymentDate: '2026-03-05',
+              lineItems: [
+                {
+                  parcelItemId: 1,
+                  paymentPence: 1200
+                },
+                {
+                  parcelItemId: 2,
+                  paymentPence: 1300
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
+        .mockResolvedValue(mockAgreementData)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'review-offer'
+        },
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(String(result)).toContain('£22.83')
+      expect(String(result)).toContain('£25.00')
+      expect(String(result)).toContain('£97.83')
+    })
+
     test('should handle base URL header', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
