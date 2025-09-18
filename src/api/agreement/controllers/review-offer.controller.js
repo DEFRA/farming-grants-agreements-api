@@ -19,17 +19,27 @@ const reviewOfferController = {
         {}
       )
 
+      const quarterlyPayment = payment.payments?.[payment.payments?.length - 1]
+
       const payments = [
-        ...(Object.values(payment?.parcelItems, {}).map((i) => ({
+        ...(Object.entries(payment?.parcelItems || {}).map(([key, i]) => ({
           ...i,
           description: codeDescriptions[i.code],
-          unit: i.unit.replace(/s$/, '')
+          unit: i.unit.replace(/s$/, ''),
+          quarterlyPayment: quarterlyPayment?.lineItems.find(
+            (li) => li.parcelItemId === Number(key)
+          )?.paymentPence
         })) || []),
-        ...(Object.values(payment?.agreementLevelItems, {}).map((i) => ({
-          ...i,
-          description: `One-off payment per agreement per year for ${codeDescriptions[i.code]}`,
-          rateInPence: i.annualPaymentPence
-        })) || [])
+        ...(Object.entries(payment?.agreementLevelItems || {}).map(
+          ([key, i]) => ({
+            ...i,
+            description: `One-off payment per agreement per year for ${codeDescriptions[i.code]}`,
+            rateInPence: i.annualPaymentPence,
+            quarterlyPayment: quarterlyPayment?.lineItems.find(
+              (li) => li.agreementLevelItemId === Number(key)
+            )?.paymentPence
+          })
+        ) || [])
       ].sort((a, b) => a.code.localeCompare(b.code))
 
       // Render the page with base context automatically applied
@@ -38,7 +48,7 @@ const reviewOfferController = {
           actionApplications,
           codeDescriptions,
           payments,
-          totalQuarterly: payment.annualTotalPence / 4,
+          totalQuarterly: quarterlyPayment?.totalPaymentPence,
           totalYearly: payment.annualTotalPence
         })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
