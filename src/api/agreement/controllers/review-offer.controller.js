@@ -36,12 +36,22 @@ const reviewOfferController = {
 
       // Map payments
       const payments = (agreementData.payments?.activities || []).map(
-        (payment) => ({
-          name: payment.description || payment.code,
-          code: payment.code,
-          rate: payment.rate,
-          yearly: payment.annualPayment
-        })
+        (payment) => {
+          const yearly = payment.annualPayment
+          const numberOfQuarters = 4
+          const remainingQuarters = numberOfQuarters - 1
+          const subsequentPayment = Math.round(yearly / numberOfQuarters)
+          const firstPayment = yearly - subsequentPayment * remainingQuarters
+
+          return {
+            name: payment.description || payment.code,
+            code: payment.code,
+            rate: payment.rate,
+            yearly,
+            firstPayment,
+            subsequentPayment
+          }
+        }
       )
 
       // Calculate totalYearly as the sum of the displayed payments
@@ -50,9 +60,14 @@ const reviewOfferController = {
         0
       )
 
-      // Calculate totalQuarterly as the sum of the displayed quarterly payments
-      const totalQuarterly = payments.reduce(
-        (sum, payment) => sum + (payment.yearly || 0) / 4,
+      // Calculate total first payment and total subsequent payments
+      const totalFirstPayment = payments.reduce(
+        (sum, payment) => sum + payment.firstPayment,
+        0
+      )
+
+      const totalSubsequentPayment = payments.reduce(
+        (sum, payment) => sum + payment.subsequentPayment,
         0
       )
 
@@ -62,7 +77,8 @@ const reviewOfferController = {
           actions,
           payments,
           totalYearly,
-          totalQuarterly
+          totalFirstPayment,
+          totalSubsequentPayment
         })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)

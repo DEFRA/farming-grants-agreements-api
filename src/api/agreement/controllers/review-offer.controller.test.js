@@ -347,6 +347,127 @@ describe('reviewOfferController', () => {
       expect(String(result)).toContain('Review your funding offer')
     })
 
+    test('should calculate first payment and subsequent payments correctly for £47.83 yearly', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'offered',
+        signatureDate: '2024-01-01',
+        company: 'Test Company',
+        sbi: '106284736',
+        parcels: [
+          {
+            parcelNumber: 'PARCEL001',
+            activities: [
+              {
+                code: 'SFI1',
+                area: 10.5
+              }
+            ]
+          }
+        ],
+        actions: [
+          {
+            code: 'SFI1',
+            title: 'Arable and Horticultural Soils'
+          }
+        ],
+        payments: {
+          activities: [
+            {
+              code: 'SFI1',
+              description: 'Arable and Horticultural Soils',
+              rate: 4.55,
+              annualPayment: 47.83
+            }
+          ],
+          totalAnnualPayment: 47.83
+        }
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
+        .mockResolvedValue(mockAgreementData)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'review-offer'
+        },
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(String(result)).toContain('£11.83') // First payment: 47.83 - (12 * 3) = 11.83
+      expect(String(result)).toContain('£12.00') // Subsequent payment: Math.round(47.83 / 4) = 12
+    })
+
+    test('should handle payments with integer division correctly', async () => {
+      // Arrange
+      const agreementId = 'SFI123456789'
+      const mockAgreementData = {
+        agreementNumber: agreementId,
+        status: 'offered',
+        signatureDate: '2024-01-01',
+        company: 'Test Company',
+        sbi: '106284736',
+        parcels: [
+          {
+            parcelNumber: 'PARCEL001',
+            activities: [
+              {
+                code: 'SFI1',
+                area: 10.5
+              }
+            ]
+          }
+        ],
+        actions: [
+          {
+            code: 'SFI1',
+            title: 'Arable and Horticultural Soils'
+          }
+        ],
+        payments: {
+          activities: [
+            {
+              code: 'SFI1',
+              description: 'Arable and Horticultural Soils',
+              rate: 25,
+              annualPayment: 100
+            }
+          ],
+          totalAnnualPayment: 100
+        }
+      }
+
+      jest
+        .spyOn(agreementDataHelper, 'getAgreementDataById')
+        .mockResolvedValue(mockAgreementData)
+
+      // Act
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: `/${agreementId}`,
+        payload: {
+          action: 'review-offer'
+        },
+        headers: {
+          'x-encrypted-auth': 'valid-jwt-token'
+        }
+      })
+
+      // Assert
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(String(result)).toContain('£25.00') // Both first and subsequent should be £25.00
+    })
+
     test('should handle base URL header', async () => {
       // Arrange
       const agreementId = 'SFI123456789'
