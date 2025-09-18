@@ -79,7 +79,7 @@ describe('jwt-auth', () => {
 
   describe('verifyJwtPayload', () => {
     const mockAgreementData = {
-      sbi: '123456',
+      identifiers: { sbi: '123456' },
       agreementNumber: 'SFI123456789'
     }
 
@@ -136,7 +136,7 @@ describe('jwt-auth', () => {
 
   describe('validateJwtAuthentication', () => {
     const mockAgreementData = {
-      sbi: '123456',
+      identifiers: { sbi: '123456' },
       agreementNumber: 'SFI123456789'
     }
 

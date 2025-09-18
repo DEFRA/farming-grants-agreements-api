@@ -19,5 +19,5 @@ export function formatCurrency(
     options.currency = currency
   }
 
-  return new Intl.NumberFormat(locale, options).format(value)
+  return new Intl.NumberFormat(locale, options).format(value / 100)
 }

@@ -13,40 +13,7 @@ describe('getAgreementDataById', () => {
   const mockAgreement = {
     agreementNumber: 'SFI123456789',
     agreementName: 'Test Agreement',
-    sbi: '106284736',
-    company: 'Test Farm Ltd',
-    address: '123 Test Lane',
-    postcode: 'TE1 1ST',
-    username: 'Test User',
-    agreementStartDate: '1/1/2024',
-    agreementEndDate: '31/12/2026',
-    signatureDate: '1/1/2024',
-    actions: [
-      {
-        code: 'TEST1',
-        title: 'Test Action',
-        startDate: '1/1/2024',
-        endDate: '31/12/2026',
-        duration: '3 years'
-      }
-    ],
-    parcels: [
-      {
-        parcelNumber: 'TEST123',
-        parcelName: 'Test Parcel',
-        totalArea: 1.0,
-        activities: []
-      }
-    ],
-    payments: {
-      activities: [],
-      totalAnnualPayment: 1000,
-      yearlyBreakdown: {
-        details: [],
-        annualTotals: { year1: 1000, year2: 1000, year3: 1000 },
-        totalAgreementPayment: 3000
-      }
-    }
+    signatureDate: '1/1/2024'
   }
 
   const mockGroup = {

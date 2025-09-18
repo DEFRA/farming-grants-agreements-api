@@ -21,10 +21,30 @@ const viewAgreementController = {
         agreementData
       )
 
+      const {
+        applicant: {
+          business: {
+            address: {
+              line1,
+              line2,
+              line3,
+              line4,
+              line5,
+              street,
+              city,
+              postalCode
+            } = {}
+          } = {}
+        } = {}
+      } = agreementData
+
       // Return the HTML response
       return h
         .view('views/sfi-agreement.njk', {
-          agreement: fullAgreementData
+          agreement: fullAgreementData,
+          address: [line1, line2, line3, line4, line5, street, city, postalCode]
+            .filter(Boolean)
+            .join(', ')
         })
         .type('text/html')
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
