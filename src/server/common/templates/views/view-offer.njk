@@ -45,7 +45,8 @@
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Action</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Code</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">Payment rate for each year</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Quarterly payment</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px;">First Payment</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Subsequent payments</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align: right;">Yearly payment</th>
       </tr>
     </thead>
@@ -55,8 +56,9 @@
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableActionRow{{ loop.index }}">{{ payment.name }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px;" id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rate | formatCurrency }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">
-          {{ (payment.yearly / 4) | formatCurrency }}
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableFirstPaymentRow{{ loop.index }}">{{ payment.firstPayment | formatCurrency }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableSubsequentPaymentRow{{ loop.index }}">
+          {{ payment.subsequentPayment | formatCurrency }}
         </td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="line-height:25px; white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.yearly | formatCurrency }}</td>
       </tr>
@@ -67,8 +69,11 @@
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
         <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; border-bottom: none;">Total payment</td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalQuarterlyPayment">
-          {{ totalQuarterly | formatCurrency }}
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalFirstPayment">
+          {{ totalFirstPayment | formatCurrency }}
+        </td>
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalSubsequentPayment">
+          {{ totalSubsequentPayment | formatCurrency }}
         </td>
         <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="line-height:25px; text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly | formatCurrency }}</td>
       </tr>
