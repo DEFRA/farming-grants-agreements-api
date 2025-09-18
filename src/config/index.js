@@ -44,7 +44,7 @@ const config = convict({
   serviceTitle: {
     doc: 'Service Title',
     format: String,
-    default: 'Farming grants'
+    default: 'Sustainable Farming Incentive agreement'
   },
   root: {
     doc: 'Project root',
