@@ -72,9 +72,9 @@
   {% endif %}
 
   {{ defraAccountBar({
-    businessName: agreement.company,
-    sbi: auth.sbi | default(sbi),
-    userName: agreement.username
+    businessName: agreement.applicant.business.name,
+    sbi: auth.sbi,
+    userName: agreement.applicant.customer.name.first + ' ' + agreement.applicant.customer.name.last
   }) }}
 {% endblock %}
 
@@ -104,6 +104,6 @@
 {% endblock %}
 
 {% block bodyEnd %}
-  <script type="module" src="{{ getAssetPath(baseUrl, 'application.js') }}" 
+  <script type="module" src="{{ getAssetPath(baseUrl, 'application.js') }}"
   nonce="{{contentSecurityPolicyNonce}}"></script>
 {% endblock %}
