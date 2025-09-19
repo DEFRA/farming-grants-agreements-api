@@ -29,9 +29,9 @@ const formatCurrency = (value) => {
 const getAgreementLand = (agreementData) => {
   const parcels = new Map()
   Object.values(agreementData.payment.parcelItems).forEach(
-    ({ parcelId, quantity: area }) => {
+    ({ sheetId, parcelId, quantity: area }) => {
       const currentArea = parcels.has(parcelId) ? parcels.get(parcelId) : 0
-      parcels.set(parcelId, Number(currentArea) + Number(area))
+      parcels.set(`${sheetId} ${parcelId}`, Number(currentArea) + Number(area))
     }
   )
 
@@ -62,7 +62,7 @@ const getSummaryOfActions = (agreementData) => {
       { text: 'End date' }
     ],
     data: Object.values(agreementData.payment.parcelItems).map((parcel) => [
-      { text: parcel.parcelId },
+      { text: `${parcel.sheetId} ${parcel.parcelId}` },
       { text: parcel.code },
       { text: parcel.description?.replace(`${parcel.code}: `, '') },
       { text: parcel.quantity },

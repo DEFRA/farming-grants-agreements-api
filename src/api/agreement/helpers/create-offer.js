@@ -34,7 +34,13 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     clientRef,
     code,
     identifiers,
-    answers: { scheme, actionApplications, payment, applicant } = {}
+    answers: {
+      scheme,
+      agreementName,
+      actionApplications,
+      payment,
+      applicant
+    } = {}
   } = agreementData
 
   if (!payment || !applicant) {
@@ -53,6 +59,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     code,
     identifiers,
     scheme,
+    agreementName,
     actionApplications,
     payment,
     applicant

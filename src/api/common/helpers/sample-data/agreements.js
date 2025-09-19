@@ -24,7 +24,7 @@ export default [
       defraId: 'defraId'
     },
     answers: {
-      agreementName: 'Sample Agreement',
+      agreementName: 'Example agreement 1',
       actionApplications: [
         {
           sheetId: 'SX635990',
@@ -799,7 +799,7 @@ export default [
     },
     answers: {
       hasCheckedLandIsUpToDate: true,
-      agreementName: 'NO_LONGER_REQUIRED',
+      agreementName: 'Example agreement 2',
       scheme: 'SFI',
       year: 2025,
       actionApplications: [
