@@ -121,7 +121,7 @@ describe('#context', () => {
           organisationId: undefined,
           sbi: 900000005
         },
-        contentSecurityPolicyNonce: ''
+        contentSecurityPolicyNonce: 'EDNnf03nceIOfn39fn3e9h3sdfa'
       })
     })
   })
@@ -211,7 +211,7 @@ describe('#context', () => {
             sbi: 900000005
           },
           agreement: { agreementNumber: 'test' },
-          contentSecurityPolicyNonce: ''
+          contentSecurityPolicyNonce: 'EDNnf03nceIOfn39fn3e9h3sdfa'
         })
       })
     })

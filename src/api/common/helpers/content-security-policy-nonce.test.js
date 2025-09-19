@@ -11,23 +11,27 @@ describe('getContentSecurityPolicyNonce', () => {
     expect(getContentSecurityPolicyNonce(request)).toBe('abc123')
   })
 
-  it('returns undefined when x-csp-nonce header is missing', () => {
+  it('returns default when x-csp-nonce header is missing', () => {
     const request = {
       headers: {
         'content-type': 'application/json'
       }
     }
 
-    expect(getContentSecurityPolicyNonce(request)).toBe('')
+    expect(getContentSecurityPolicyNonce(request)).toBe(
+      'EDNnf03nceIOfn39fn3e9h3sdfa'
+    )
   })
 
-  it('returns undefined when headers object is missing', () => {
+  it('returns default when headers object is missing', () => {
     const request = {}
-    expect(getContentSecurityPolicyNonce(request)).toBe('')
+    expect(getContentSecurityPolicyNonce(request)).toBe(
+      'EDNnf03nceIOfn39fn3e9h3sdfa'
+    )
   })
 
-  it('returns undefined when no request is passed', () => {
-    expect(getContentSecurityPolicyNonce()).toBe('')
+  it('returns default when no request is passed', () => {
+    expect(getContentSecurityPolicyNonce()).toBe('EDNnf03nceIOfn39fn3e9h3sdfa')
   })
 
   it('is case sensitive and does not match capitalized header names', () => {
@@ -37,6 +41,8 @@ describe('getContentSecurityPolicyNonce', () => {
       }
     }
 
-    expect(getContentSecurityPolicyNonce(request)).toBe('')
+    expect(getContentSecurityPolicyNonce(request)).toBe(
+      'EDNnf03nceIOfn39fn3e9h3sdfa'
+    )
   })
 })
