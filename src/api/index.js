@@ -15,7 +15,6 @@ import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
 import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
 import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
-import { contentSecurityPolicyHandlerPlugin } from '~/src/api/common/helpers/content-security-policy-handler.js'
 import { nunjucksConfig } from '~/src/config/nunjucks/nunjucks.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
@@ -111,7 +110,6 @@ async function createServer(serverOptions = {}) {
       nunjucksConfig,
       options.disableSQS ? null : sqsClientPlugin,
       errorHandlerPlugin,
-      contentSecurityPolicyHandlerPlugin,
       router
     ].filter(Boolean)
   )

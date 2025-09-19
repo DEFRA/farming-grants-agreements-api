@@ -5,6 +5,7 @@ import { config } from '~/src/config/index.js'
 import { buildNavigation } from '~/src/config/nunjucks/context/build-navigation.js'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 import { getBaseUrl } from '~/src/api/common/helpers/base-url.js'
+import { getContentSecurityPolicyNonce } from '~/src/api/common/helpers/content-security-policy-nonce.js'
 
 const logger = createLogger()
 const assetPath = config.get('assetPath')
@@ -49,7 +50,8 @@ export function context(request) {
     auth,
     breadcrumbs: [],
     navigation: buildNavigation(request),
-    agreement: request?.auth?.credentials?.agreementData
+    agreement: request?.auth?.credentials?.agreementData,
+    contentSecurityPolicyNonce: getContentSecurityPolicyNonce(request)
   }
 }
 
