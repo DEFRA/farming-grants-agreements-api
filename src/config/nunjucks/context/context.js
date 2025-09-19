@@ -21,8 +21,6 @@ let webpackManifest
  * @param {Request | null} request
  */
 export function context(request) {
-  const tempSbi = 106284736 // Temporary SBI for unauthenticated users
-
   if (!webpackManifest) {
     try {
       webpackManifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
@@ -31,13 +29,12 @@ export function context(request) {
     }
   }
 
+  const isJwtEnabled = config.get('featureFlags.isJwtEnabled')
   const session = request?.auth?.isAuthenticated ? request.auth.credentials : {}
   const auth = {
     isAuthenticated: request?.auth?.isAuthenticated ?? false,
-    sbi: session.sbi || tempSbi,
-    name: config.get('featureFlags.isJwtEnabled')
-      ? session.name
-      : 'Unauthenticated user',
+    sbi: isJwtEnabled ? session.sbi : '0000000000',
+    name: isJwtEnabled ? session.name : 'Unauthenticated user',
     organisationId: session.organisationId,
     role: session.role
   }

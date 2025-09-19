@@ -144,7 +144,10 @@ describe('getAgreement', () => {
         data: [
           [
             {
-              text: '44'
+              text: 'SX635990 44',
+              attributes: {
+                style: 'white-space: nowrap'
+              }
             },
             {
               text: 'BND1'
@@ -164,7 +167,10 @@ describe('getAgreement', () => {
           ],
           [
             {
-              text: '44'
+              text: 'SX635990 44',
+              attributes: {
+                style: 'white-space: nowrap'
+              }
             },
             {
               text: 'CHRW1'
@@ -310,6 +316,7 @@ describe('getAgreement', () => {
       payment: {
         parcelItems: {
           'parcel-item-1': {
+            sheetId: 'SX635990',
             parcelId: 'ABC123',
             code: 'ACT1',
             description: 'ACT1: Action One',
@@ -341,14 +348,19 @@ describe('getAgreement', () => {
     // Agreement land table should now have data
     expect(agreement.agreementLand.data).toHaveLength(1)
     expect(agreement.agreementLand.data[0]).toEqual([
-      { text: 'ABC123' },
+      { text: 'SX635990 ABC123' },
       { text: 2.5 }
     ])
 
     // Summary of actions should now have data
     expect(agreement.summaryOfActions.data).toHaveLength(1)
     expect(agreement.summaryOfActions.data[0]).toEqual([
-      { text: 'ABC123' },
+      {
+        text: 'SX635990 ABC123',
+        attributes: {
+          style: 'white-space: nowrap'
+        }
+      },
       { text: 'ACT1' },
       { text: 'Action One' },
       { text: 2.5 },
@@ -373,6 +385,7 @@ describe('getAgreement', () => {
       payment: {
         parcelItems: {
           'parcel-item-x': {
+            sheetId: 'SX635990',
             parcelId: 'XYZ789',
             code: 'STR1',
             description: 'STR1: String rate formatting',
@@ -410,6 +423,7 @@ describe('getAgreement', () => {
       payment: {
         parcelItems: {
           p1: {
+            sheetId: 'SX635990',
             parcelId: 'AAA111',
             code: 'A2',
             description: 'A2: Parcel action',

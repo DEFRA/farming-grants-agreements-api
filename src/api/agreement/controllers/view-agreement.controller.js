@@ -42,6 +42,9 @@ const viewAgreementController = {
       return h
         .view('views/sfi-agreement.njk', {
           agreement: fullAgreementData,
+          agreementName:
+            fullAgreementData.agreementName ||
+            'Sustainable Farming Incentive agreement',
           address: [line1, line2, line3, line4, line5, street, city, postalCode]
             .filter(Boolean)
             .join(', ')

@@ -11,6 +11,7 @@ const Identifiers = new mongoose.Schema({
 
 const ActionApplications = new mongoose.Schema({
   code: { type: String, required: true },
+  sheetId: { type: String, required: true },
   parcelId: { type: String, required: true },
   appliedFor: {
     type: new mongoose.Schema({

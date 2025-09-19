@@ -19,7 +19,12 @@ describe('viewAgreementController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
-  const mockRenderedHtml = `<html><body>Test HTML with SFI123456789</body></html>`
+  const mockAgreementData = {
+    sbi: '106284736',
+    status: 'accepted',
+    agreementNumber: 'SFI123456789',
+    agreementName: 'Test agreement'
+  }
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
@@ -35,19 +40,15 @@ describe('viewAgreementController', () => {
     jest.clearAllMocks()
 
     // Mock default successful responses for all tests
-    jest.spyOn(getAgreement, 'getAgreement').mockResolvedValue(mockRenderedHtml)
+    jest
+      .spyOn(getAgreement, 'getAgreement')
+      .mockResolvedValue(mockAgreementData)
 
     // Mock JWT auth functions
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
   describe('Offer accepted', () => {
-    const mockAgreementData = {
-      sbi: '106284736',
-      status: 'accepted',
-      agreementNumber: 'SFI123456789'
-    }
-
     beforeEach(() => {
       jest
         .spyOn(agreementDataHelper, 'getAgreementDataById')
@@ -73,7 +74,7 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(payload).toContain('Agile Farm agreement')
+      expect(payload).toContain('Test agreement')
 
       // Verify mocks were called correctly
       expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
@@ -101,7 +102,7 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(payload).toContain('Agile Farm agreement')
+      expect(payload).toContain('Sustainable Farming Incentive agreement')
 
       // Verify the function defaulted to a reasonable value when ID was missing
       expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(

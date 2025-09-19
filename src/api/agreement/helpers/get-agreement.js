@@ -8,6 +8,8 @@ const dateOptions = {
   day: 'numeric'
 }
 
+const noWrap = { attributes: { style: 'white-space: nowrap' } }
+
 const formatCurrency = (value) => {
   if (value === null || value === undefined) {
     return ''
@@ -29,9 +31,9 @@ const formatCurrency = (value) => {
 const getAgreementLand = (agreementData) => {
   const parcels = new Map()
   Object.values(agreementData.payment.parcelItems).forEach(
-    ({ parcelId, quantity: area }) => {
+    ({ sheetId, parcelId, quantity: area }) => {
       const currentArea = parcels.has(parcelId) ? parcels.get(parcelId) : 0
-      parcels.set(parcelId, Number(currentArea) + Number(area))
+      parcels.set(`${sheetId} ${parcelId}`, Number(currentArea) + Number(area))
     }
   )
 
@@ -41,7 +43,10 @@ const getAgreementLand = (agreementData) => {
   }
 
   return {
-    headings: [{ text: 'Parcel' }, { text: 'Total parcel area (ha)' }],
+    headings: [
+      { text: 'Parcel', ...noWrap },
+      { text: 'Total parcel area (ha)' }
+    ],
     data
   }
 }
@@ -62,7 +67,7 @@ const getSummaryOfActions = (agreementData) => {
       { text: 'End date' }
     ],
     data: Object.values(agreementData.payment.parcelItems).map((parcel) => [
-      { text: parcel.parcelId },
+      { text: `${parcel.sheetId} ${parcel.parcelId}`, ...noWrap },
       { text: parcel.code },
       { text: parcel.description?.replace(`${parcel.code}: `, '') },
       { text: parcel.quantity },
