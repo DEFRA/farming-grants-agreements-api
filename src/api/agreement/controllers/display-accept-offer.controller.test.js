@@ -114,7 +114,7 @@ describe('displayAcceptOfferController', () => {
           action: 'display-accept'
         },
         headers: {
-          'x-base-url': '/defra-grants-proxy',
+          'x-base-url': '/agreement',
           'x-encrypted-auth': 'valid-jwt-token'
         }
       })
@@ -122,7 +122,7 @@ describe('displayAcceptOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(String(result)).toContain('Accept your offer')
-      expect(String(result)).toContain('/defra-grants-proxy')
+      expect(String(result)).toContain('/agreement')
     })
 
     test('should handle database errors', async () => {
@@ -254,7 +254,7 @@ describe('displayAcceptOfferController', () => {
           action: 'accept-offer'
         },
         headers: {
-          'x-base-url': '/defra-grants-proxy',
+          'x-base-url': '/agreement',
           'x-encrypted-auth': 'valid-jwt-token'
         }
       })
@@ -262,7 +262,7 @@ describe('displayAcceptOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(String(result)).toContain('Offer accepted')
-      expect(String(result)).toContain('/defra-grants-proxy')
+      expect(String(result)).toContain('/agreement')
     })
   })
 })
