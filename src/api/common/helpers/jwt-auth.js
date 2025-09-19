@@ -32,14 +32,17 @@ const extractJwtPayload = (authToken, logger) => {
     logger.info('JWT token verified successfully')
     const payload = decoded?.decoded?.payload || null
 
-    logger.info(`>>> JWT ${btoa(JSON.stringify(payload))}`)
+    logger.info(`>>> JWT ${JSON.stringify(payload)}`)
 
     if (payload) {
-      logger.info('JWT payload extracted:', {
-        hasSbi: !!payload.sbi,
-        hasSource: !!payload.source,
-        source: payload.source
-      })
+      logger.info(
+        {
+          hasSbi: !!payload.sbi,
+          hasSource: !!payload.source,
+          source: payload.source
+        },
+        'JWT payload extracted:'
+      )
     }
 
     return payload
