@@ -31,7 +31,7 @@ export function context(request) {
 
   const isJwtEnabled = config.get('featureFlags.isJwtEnabled')
   const session = request?.auth?.isAuthenticated ? request.auth.credentials : {}
-  request.logger.info(`>>>> context session ${btoa(JSON.stringify(session))}`)
+  request.logger.info(`>>>> context session ${JSON.stringify(session)}`)
   const auth = {
     isAuthenticated: request?.auth?.isAuthenticated ?? false,
     sbi: isJwtEnabled ? session.sbi : '0000000000',
@@ -39,6 +39,7 @@ export function context(request) {
     organisationId: session.organisationId,
     role: session.role
   }
+  request.logger.info(`>>>> context auth ${JSON.stringify(auth)}`)
 
   return {
     baseUrl: getBaseUrl(request),
