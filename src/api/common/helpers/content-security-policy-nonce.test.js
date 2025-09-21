@@ -18,20 +18,16 @@ describe('getContentSecurityPolicyNonce', () => {
       }
     }
 
-    expect(getContentSecurityPolicyNonce(request)).toBe(
-      'EDNnf03nceIOfn39fn3e9h3sdfa'
-    )
+    expect(getContentSecurityPolicyNonce(request)).toBe('')
   })
 
   it('returns default when headers object is missing', () => {
     const request = {}
-    expect(getContentSecurityPolicyNonce(request)).toBe(
-      'EDNnf03nceIOfn39fn3e9h3sdfa'
-    )
+    expect(getContentSecurityPolicyNonce(request)).toBe('')
   })
 
   it('returns default when no request is passed', () => {
-    expect(getContentSecurityPolicyNonce()).toBe('EDNnf03nceIOfn39fn3e9h3sdfa')
+    expect(getContentSecurityPolicyNonce()).toBe('')
   })
 
   it('is case sensitive and does not match capitalized header names', () => {
@@ -41,8 +37,6 @@ describe('getContentSecurityPolicyNonce', () => {
       }
     }
 
-    expect(getContentSecurityPolicyNonce(request)).toBe(
-      'EDNnf03nceIOfn39fn3e9h3sdfa'
-    )
+    expect(getContentSecurityPolicyNonce(request)).toBe('')
   })
 })
