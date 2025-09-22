@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import path from 'path'
+import path from 'node:path'
 import { readFileSync } from 'node:fs'
 import nunjucks from 'nunjucks'
 import hapiVision from '@hapi/vision'
