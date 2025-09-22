@@ -11,7 +11,7 @@ describe('getContentSecurityPolicyNonce', () => {
     expect(getContentSecurityPolicyNonce(request)).toBe('abc123')
   })
 
-  it('returns undefined when x-csp-nonce header is missing', () => {
+  it('returns default when x-csp-nonce header is missing', () => {
     const request = {
       headers: {
         'content-type': 'application/json'
@@ -21,12 +21,12 @@ describe('getContentSecurityPolicyNonce', () => {
     expect(getContentSecurityPolicyNonce(request)).toBe('')
   })
 
-  it('returns undefined when headers object is missing', () => {
+  it('returns default when headers object is missing', () => {
     const request = {}
     expect(getContentSecurityPolicyNonce(request)).toBe('')
   })
 
-  it('returns undefined when no request is passed', () => {
+  it('returns default when no request is passed', () => {
     expect(getContentSecurityPolicyNonce()).toBe('')
   })
 
