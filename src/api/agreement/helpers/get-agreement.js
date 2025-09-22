@@ -1,6 +1,12 @@
 import Boom from '@hapi/boom'
 import round from 'lodash/round.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import {
+  calculateFirstPaymentForParcelItem,
+  calculateSubsequentPaymentForParcelItem,
+  calculateFirstPaymentForAgreementLevelItem,
+  calculateSubsequentPaymentForAgreementLevelItem
+} from '~/src/api/agreement/helpers/payment-calculations.js'
 
 const dateOptions = {
   year: 'numeric',
@@ -83,63 +89,6 @@ const getSummaryOfActions = (agreementData) => {
       }
     ])
   }
-}
-
-/**
- * Calculate first payment amount for a parcel item
- * @param {object} firstPayment - The first payment object
- * @param {string} key - The parcel item key
- * @returns {number} First payment amount in pence
- */
-const calculateFirstPaymentForParcelItem = (firstPayment, key) => {
-  return (
-    firstPayment?.lineItems.find((li) => li.parcelItemId === Number(key))
-      ?.paymentPence || 0
-  )
-}
-
-/**
- * Calculate subsequent payment amount for a parcel item
- * @param {object} subsequentPayment - The subsequent payment object
- * @param {string} key - The parcel item key
- * @returns {number} Subsequent payment amount in pence
- */
-const calculateSubsequentPaymentForParcelItem = (subsequentPayment, key) => {
-  return (
-    subsequentPayment?.lineItems.find((li) => li.parcelItemId === Number(key))
-      ?.paymentPence || 0
-  )
-}
-
-/**
- * Calculate first payment amount for an agreement level item
- * @param {object} firstPayment - The first payment object
- * @param {string} key - The agreement level item key
- * @returns {number} First payment amount in pence
- */
-const calculateFirstPaymentForAgreementLevelItem = (firstPayment, key) => {
-  return (
-    firstPayment?.lineItems.find(
-      (li) => li.agreementLevelItemId === Number(key)
-    )?.paymentPence || 0
-  )
-}
-
-/**
- * Calculate subsequent payment amount for an agreement level item
- * @param {object} subsequentPayment - The subsequent payment object
- * @param {string} key - The agreement level item key
- * @returns {number} Subsequent payment amount in pence
- */
-const calculateSubsequentPaymentForAgreementLevelItem = (
-  subsequentPayment,
-  key
-) => {
-  return (
-    subsequentPayment?.lineItems.find(
-      (li) => li.agreementLevelItemId === Number(key)
-    )?.paymentPence || 0
-  )
 }
 
 /**
