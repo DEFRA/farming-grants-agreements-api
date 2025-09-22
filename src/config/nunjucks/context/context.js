@@ -48,7 +48,7 @@ export function context(request) {
     breadcrumbs: [],
     navigation: buildNavigation(request),
     agreement: request?.auth?.credentials?.agreementData,
-    contentSecurityPolicyNonce: getContentSecurityPolicyNonce(request)
+    cspNonce: getContentSecurityPolicyNonce(request)
   }
 }
 
