@@ -45,7 +45,8 @@
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Action</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Code</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold">Payment rate for each year</th>
-        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align: right;">Quarterly payment</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align: right;">First Payment</th>
+        <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align: right;">Subsequent payments</th>
         <th scope="col" class="govuk-table__header govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align: right;">Yearly payment</th>
       </tr>
     </thead>
@@ -55,9 +56,8 @@
         <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableActionRow{{ loop.index }}">{{ payment.description }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" id="paymentsTableCodeRow{{ loop.index }}">{{ payment.code }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;"  id="paymentsTablePaymentRateForEachYearRow{{ loop.index }}">{{ payment.rateInPence | formatCurrency }}{% if payment.unit %}&nbsp;per&nbsp;{{ payment.unit }}{% endif %}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableQuarterlyPaymentRow{{ loop.index }}">
-          {{ (payment.quarterlyPayment) | formatCurrency }}
-        </td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableFirstPaymentRow{{ loop.index }}">{{ payment.firstPaymentPence | formatCurrency }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableSubsequentPaymentRow{{ loop.index }}">{{ payment.subsequentPaymentPence | formatCurrency }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap; text-align: right;" id="paymentsTableYearlyPaymentRow{{ loop.index }}">{{ payment.annualPaymentPence | formatCurrency }}</td>
       </tr>
       {% endfor %}
@@ -67,8 +67,11 @@
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
         <td class="govuk-table__cell" style="border-bottom: none;"></td>
         <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="border-bottom: none;">Total payment</td>
-        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalQuarterlyPayment">
-          {{ totalQuarterly | formatCurrency }}
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalFirstPayment">
+          {{ totalFirstPayment | formatCurrency }}
+        </td>
+        <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalSubsequentPayment">
+          {{ totalSubsequentPayment | formatCurrency }}
         </td>
         <td class="govuk-table__cell govuk-!-font-size-19 govuk-!-font-weight-bold" style="text-align:right; border-bottom: none;" id="paymentsTableTotalYearlyPayment">{{ totalYearly | formatCurrency }}</td>
       </tr>

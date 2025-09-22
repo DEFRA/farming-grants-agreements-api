@@ -79,12 +79,34 @@ describe('getAgreement', () => {
             paymentDate: '2025-12-05',
             lineItems: [
               {
-                agreementLevelItems: 1,
+                agreementLevelItemId: 1,
                 paymentPence: 6800
               },
               {
                 parcelItemId: 1,
                 paymentPence: 60919
+              },
+              {
+                parcelItemId: 2,
+                paymentPence: 237375
+              }
+            ]
+          },
+          {
+            totalPaymentPence: 1610112,
+            paymentDate: '2025-12-05',
+            lineItems: [
+              {
+                agreementLevelItemId: 1,
+                paymentPence: 6800
+              },
+              {
+                parcelItemId: 1,
+                paymentPence: 60919
+              },
+              {
+                parcelItemId: 2,
+                paymentPence: 237375
               }
             ]
           }
@@ -109,10 +131,32 @@ describe('getAgreement', () => {
               text: 'BND1'
             },
             {
-              text: '£609.19'
+              text: '£1,218.38'
             },
             {
-              text: '£609.19'
+              text: '£1,218.38'
+            }
+          ],
+          [
+            {
+              text: 'CHRW1'
+            },
+            {
+              text: '£4,747.50'
+            },
+            {
+              text: '£4,747.50'
+            }
+          ],
+          [
+            {
+              text: 'CSAM1'
+            },
+            {
+              text: '£136.00'
+            },
+            {
+              text: '£136.00'
             }
           ],
           [
@@ -120,10 +164,10 @@ describe('getAgreement', () => {
               text: 'Total'
             },
             {
-              text: '£609.19'
+              text: '£6,101.88'
             },
             {
-              text: '£609.19'
+              text: '£6,101.88'
             }
           ]
         ],
@@ -226,6 +270,12 @@ describe('getAgreement', () => {
               text: '£25.65 per metre'
             },
             {
+              text: '£609.19'
+            },
+            {
+              text: '£609.19'
+            },
+            {
               text: '£2,436.75'
             }
           ],
@@ -241,6 +291,12 @@ describe('getAgreement', () => {
             },
             {
               text: '£5.00 per metre'
+            },
+            {
+              text: '£2,373.75'
+            },
+            {
+              text: '£2,373.75'
             },
             {
               text: '£9,495.00'
@@ -260,6 +316,12 @@ describe('getAgreement', () => {
               text: ''
             },
             {
+              text: '£68.00'
+            },
+            {
+              text: '£68.00'
+            },
+            {
               text: '£272.00'
             }
           ]
@@ -276,6 +338,12 @@ describe('getAgreement', () => {
           },
           {
             text: 'Payment rate'
+          },
+          {
+            text: 'First Payment'
+          },
+          {
+            text: 'Subsequent payments'
           },
           {
             text: 'Total yearly payment'
@@ -405,14 +473,23 @@ describe('getAgreement', () => {
     const agreement = await getAgreement('SFI-STR-NLL', agreementData)
 
     expect(agreement.summaryOfPayments.data).toHaveLength(1)
-    const [codeCell, actionCell, areaCell, rateCell, totalCell] =
-      agreement.summaryOfPayments.data[0]
+    const [
+      codeCell,
+      actionCell,
+      areaCell,
+      rateCell,
+      firstPaymentCell,
+      subsequentPaymentCell,
+      totalCell
+    ] = agreement.summaryOfPayments.data[0]
     expect(codeCell.text).toBe('STR1')
     expect(actionCell.text).toBe('STR1: String rate formatting')
     expect(areaCell.text).toBe(1)
     // String branch strips non-numerics → "1234 per metre"
     expect(rateCell.text).toBe('1234 per metre')
     // Null branch returns empty string
+    expect(firstPaymentCell.text).toBe('£0.00')
+    expect(subsequentPaymentCell.text).toBe('£0.00')
     expect(totalCell.text).toBe('')
   })
 
@@ -487,5 +564,129 @@ describe('getAgreement', () => {
     expect(rows[2][1].text).toBe('£10.00')
     expect(rows[2][2].text).toBe('£20.00')
     expect(rows[2][3].text).toBe('£30.00')
+  })
+
+  test('should include first payment and subsequent payment columns in summary of payments', async () => {
+    const agreementData = {
+      status: 'offered',
+      agreementNumber: 'SFI-FIRST-SUB',
+      payment: {
+        parcelItems: {
+          1: {
+            code: 'ACT1',
+            description: 'ACT1: Test Action One',
+            quantity: 10,
+            rateInPence: 5000,
+            unit: 'hectares',
+            annualPaymentPence: 50000
+          },
+          2: {
+            code: 'ACT2',
+            description: 'ACT2: Test Action Two',
+            quantity: 5,
+            rateInPence: 3000,
+            unit: 'hectares',
+            annualPaymentPence: 15000
+          }
+        },
+        agreementLevelItems: {
+          1: {
+            code: 'MGMT1',
+            description: 'MGMT1: Management Payment',
+            annualPaymentPence: 20000
+          }
+        },
+        payments: [
+          {
+            paymentDate: '2024-04-01',
+            lineItems: [
+              { parcelItemId: 1, paymentPence: 12500 },
+              { parcelItemId: 2, paymentPence: 3750 },
+              { agreementLevelItemId: 1, paymentPence: 5000 }
+            ]
+          },
+          {
+            paymentDate: '2024-07-01',
+            lineItems: [
+              { parcelItemId: 1, paymentPence: 12500 },
+              { parcelItemId: 2, paymentPence: 3750 },
+              { agreementLevelItemId: 1, paymentPence: 5000 }
+            ]
+          }
+        ],
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-12-31'
+      }
+    }
+
+    const agreement = await getAgreement('SFI-FIRST-SUB', agreementData)
+
+    // Check that headings include first payment and subsequent payment columns
+    const headings = agreement.summaryOfPayments.headings.map((h) => h.text)
+    expect(headings).toEqual([
+      'Code',
+      'Action',
+      'Total area (ha)',
+      'Payment rate',
+      'First Payment',
+      'Subsequent payments',
+      'Total yearly payment'
+    ])
+
+    // Check that data includes the payment amounts
+    const data = agreement.summaryOfPayments.data
+    expect(data).toHaveLength(3) // 2 parcel items + 1 agreement level item
+
+    // Find ACT1 row
+    const act1Row = data.find((row) => row[0].text === 'ACT1')
+    expect(act1Row).toBeDefined()
+    expect(act1Row[4].text).toBe('£125.00') // First payment
+    expect(act1Row[5].text).toBe('£125.00') // Subsequent payment
+
+    // Find ACT2 row
+    const act2Row = data.find((row) => row[0].text === 'ACT2')
+    expect(act2Row).toBeDefined()
+    expect(act2Row[4].text).toBe('£37.50') // First payment
+    expect(act2Row[5].text).toBe('£37.50') // Subsequent payment
+
+    // Find MGMT1 row
+    const mgmt1Row = data.find((row) => row[0].text === 'MGMT1')
+    expect(mgmt1Row).toBeDefined()
+    expect(mgmt1Row[4].text).toBe('£50.00') // First payment
+    expect(mgmt1Row[5].text).toBe('£50.00') // Subsequent payment
+  })
+
+  test('should handle missing payment data gracefully', async () => {
+    const agreementData = {
+      status: 'offered',
+      agreementNumber: 'SFI-NO-PAYMENTS',
+      payment: {
+        parcelItems: {
+          1: {
+            code: 'ACT1',
+            description: 'ACT1: Test Action',
+            quantity: 10,
+            rateInPence: 5000,
+            unit: 'hectares',
+            annualPaymentPence: 50000
+          }
+        },
+        agreementLevelItems: {},
+        payments: [], // No payments array
+        agreementStartDate: '2024-01-01',
+        agreementEndDate: '2024-12-31'
+      }
+    }
+
+    const agreement = await getAgreement('SFI-NO-PAYMENTS', agreementData)
+
+    // Check that first payment and subsequent payment columns show £0.00
+    const data = agreement.summaryOfPayments.data
+    expect(data).toHaveLength(1)
+
+    const act1Row = data[0]
+    expect(act1Row[0].text).toBe('ACT1')
+    expect(act1Row[4].text).toBe('£0.00') // First payment
+    expect(act1Row[5].text).toBe('£0.00') // Subsequent payment
   })
 })
