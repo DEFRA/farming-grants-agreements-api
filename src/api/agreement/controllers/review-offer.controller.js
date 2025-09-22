@@ -1,4 +1,12 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import {
+  calculateFirstPaymentForParcelItem,
+  calculateSubsequentPaymentForParcelItem,
+  calculateFirstPaymentForAgreementLevelItem,
+  calculateSubsequentPaymentForAgreementLevelItem,
+  calculateTotalFirstPayment,
+  calculateTotalSubsequentPayment
+} from '~/src/api/agreement/helpers/payment-calculations.js'
 
 /**
  * Controller to serve the View Offer page
@@ -28,7 +36,15 @@ const reviewOfferController = {
           unit: i.unit.replace(/s$/, ''),
           quarterlyPayment: quarterlyPayment?.lineItems.find(
             (li) => li.parcelItemId === Number(key)
-          )?.paymentPence
+          )?.paymentPence,
+          firstPaymentPence: calculateFirstPaymentForParcelItem(
+            payment.payments?.[0], // first payment
+            key
+          ),
+          subsequentPaymentPence: calculateSubsequentPaymentForParcelItem(
+            payment.payments?.[1], // subsequent payments
+            key
+          )
         })) || []),
         ...(Object.entries(payment?.agreementLevelItems || {}).map(
           ([key, i]) => ({
@@ -37,11 +53,19 @@ const reviewOfferController = {
             rateInPence: i.annualPaymentPence,
             quarterlyPayment: quarterlyPayment?.lineItems.find(
               (li) => li.agreementLevelItemId === Number(key)
-            )?.paymentPence
+            )?.paymentPence,
+            firstPaymentPence: calculateFirstPaymentForAgreementLevelItem(
+              payment.payments?.[0], // first payment
+              key
+            ),
+            subsequentPaymentPence:
+              calculateSubsequentPaymentForAgreementLevelItem(
+                payment.payments?.[1], // subsequent payments
+                key
+              )
           })
         ) || [])
       ].sort((a, b) => a.code.localeCompare(b.code))
-
       // Render the page with base context automatically applied
       return h
         .view('views/view-offer.njk', {
@@ -49,7 +73,9 @@ const reviewOfferController = {
           codeDescriptions,
           payments,
           totalQuarterly: quarterlyPayment?.totalPaymentPence,
-          totalYearly: payment.annualTotalPence
+          totalYearly: payment.annualTotalPence,
+          totalFirstPayment: calculateTotalFirstPayment(payments),
+          totalSubsequentPayment: calculateTotalSubsequentPayment(payments)
         })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
@@ -58,7 +84,6 @@ const reviewOfferController = {
       if (error.isBoom) {
         throw error
       }
-
       request.logger.error(`Error fetching offer: ${error.message}`)
       return h
         .response({
