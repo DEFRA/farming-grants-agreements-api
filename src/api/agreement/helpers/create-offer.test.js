@@ -436,6 +436,18 @@ describe('createOffer', () => {
         createOffer(uuidv4(), agreementData, mockLogger)
       ).rejects.toThrow('Generic error')
     })
+
+    it('should propagate Boom error when payment/applicant missing', async () => {
+      const bad = {
+        clientRef: 'ref',
+        code: 'frps-private-beta',
+        identifiers: { sbi: '1', frn: '2' },
+        answers: { scheme: 'SFI' }
+      }
+      await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
+        'Offer data is missing payment and applicant'
+      )
+    })
   })
 })
 

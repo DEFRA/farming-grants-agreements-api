@@ -22,7 +22,7 @@
       <tr class="govuk-table__row" id="actionRow{{ loop.index }}">
         <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableActionRow{{ loop.index }}">{{ codeDescriptions[action.code] }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" id="actionTableCodeRow{{ loop.index }}">{{ action.code }}</td>
-        <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.parcelId }}</td>
+        <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableLandParcelRow{{ loop.index }}">{{ action.sheetId }} {{ action.parcelId }}</td>
         <td class="govuk-table__cell govuk-!-font-size-19" style="white-space: nowrap;" id="actionTableQuantityRow{{ loop.index }}">{{ action.appliedFor.quantity | round(4) }}&nbsp;{{ action.appliedFor.unit }}</td>
       </tr>
       {% endfor %}

@@ -19,7 +19,12 @@ describe('viewAgreementController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
-  const mockRenderedHtml = `<html><body>Test HTML with SFI123456789</body></html>`
+  const mockAgreementData = {
+    sbi: '106284736',
+    status: 'accepted',
+    agreementNumber: 'SFI123456789',
+    agreementName: 'Test agreement'
+  }
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
@@ -35,19 +40,15 @@ describe('viewAgreementController', () => {
     jest.clearAllMocks()
 
     // Mock default successful responses for all tests
-    jest.spyOn(getAgreement, 'getAgreement').mockResolvedValue(mockRenderedHtml)
+    jest
+      .spyOn(getAgreement, 'getAgreement')
+      .mockResolvedValue(mockAgreementData)
 
     // Mock JWT auth functions
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
   })
 
   describe('Offer accepted', () => {
-    const mockAgreementData = {
-      sbi: '106284736',
-      status: 'accepted',
-      agreementNumber: 'SFI123456789'
-    }
-
     beforeEach(() => {
       jest
         .spyOn(agreementDataHelper, 'getAgreementDataById')
@@ -73,7 +74,7 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(payload).toContain('Agile Farm agreement')
+      expect(payload).toContain('Test agreement')
 
       // Verify mocks were called correctly
       expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
@@ -101,7 +102,7 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(payload).toContain('Agile Farm agreement')
+      expect(payload).toContain('Sustainable Farming Incentive agreement')
 
       // Verify the function defaulted to a reasonable value when ID was missing
       expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
@@ -157,6 +158,26 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
       expect(String(result)).toContain('Failed to render HTML')
+    })
+
+    test('Should rethrow Boom errors from getAgreement (Boom passthrough)', async () => {
+      // Arrange
+      const Boom = await import('@hapi/boom')
+      jest
+        .spyOn(getAgreement, 'getAgreement')
+        .mockRejectedValue(Boom.unauthorized('No token'))
+
+      // Act
+      const { statusCode } = await server.inject({
+        method: 'POST',
+        url: '/SFI123456789',
+        payload: { action: 'view-agreement' },
+        headers: { 'x-encrypted-auth': 'valid-jwt-token' }
+      })
+
+      // Assert
+      expect(statusCode).toBe(401)
+      // Error body rendering is handled by error handler; status code is sufficient here
     })
   })
 })
