@@ -159,6 +159,26 @@ describe('viewAgreementController', () => {
       expect(statusCode).toBe(statusCodes.internalServerError)
       expect(String(result)).toContain('Failed to render HTML')
     })
+
+    test('Should rethrow Boom errors from getAgreement (Boom passthrough)', async () => {
+      // Arrange
+      const Boom = await import('@hapi/boom')
+      jest
+        .spyOn(getAgreement, 'getAgreement')
+        .mockRejectedValue(Boom.unauthorized('No token'))
+
+      // Act
+      const { statusCode } = await server.inject({
+        method: 'POST',
+        url: '/SFI123456789',
+        payload: { action: 'view-agreement' },
+        headers: { 'x-encrypted-auth': 'valid-jwt-token' }
+      })
+
+      // Assert
+      expect(statusCode).toBe(401)
+      // Error body rendering is handled by error handler; status code is sufficient here
+    })
   })
 })
 
