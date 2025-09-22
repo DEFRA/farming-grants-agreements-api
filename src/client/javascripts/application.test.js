@@ -1,5 +1,5 @@
 /* @jest-environment jsdom */
-jest.mock('govuk-frontend', () => ({
+jest.mock('@defra/forms-engine-plugin/shared.js', () => ({
   initAll: jest.fn()
 }))
 
@@ -18,7 +18,7 @@ describe('#application', () => {
   test('calls initAll on all components', async () => {
     await importFreshApp()
 
-    const { initAll } = await import('govuk-frontend')
+    const { initAll } = await import('@defra/forms-engine-plugin/shared.js')
     expect(initAll).toHaveBeenCalledTimes(1)
   })
 
@@ -27,7 +27,7 @@ describe('#application', () => {
 
     document.dispatchEvent(new Event('DOMContentLoaded'))
 
-    const { initAll } = await import('govuk-frontend')
+    const { initAll } = await import('@defra/forms-engine-plugin/shared.js')
     expect(initAll).toHaveBeenCalledTimes(1)
     expect(window.print).not.toHaveBeenCalled()
   })

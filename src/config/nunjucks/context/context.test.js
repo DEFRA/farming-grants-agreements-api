@@ -73,7 +73,7 @@ describe('#context', () => {
       }
 
       const result = await contextImport.context(mockRequest)
-      expect(result.contentSecurityPolicyNonce).toBe('test-nonce')
+      expect(result.cspNonce).toBe('test-nonce')
     })
 
     afterAll(async () => {
@@ -121,7 +121,7 @@ describe('#context', () => {
           organisationId: undefined,
           sbi: '0000000000'
         },
-        contentSecurityPolicyNonce: ''
+        cspNonce: ''
       })
     })
   })
@@ -211,7 +211,7 @@ describe('#context', () => {
             sbi: '0000000000'
           },
           agreement: { agreementNumber: 'test' },
-          contentSecurityPolicyNonce: ''
+          cspNonce: ''
         })
       })
     })
