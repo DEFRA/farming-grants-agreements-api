@@ -86,31 +86,105 @@ const getSummaryOfActions = (agreementData) => {
 }
 
 /**
+ * Calculate first payment amount for a parcel item
+ * @param {object} firstPayment - The first payment object
+ * @param {string} key - The parcel item key
+ * @returns {number} First payment amount in pence
+ */
+const calculateFirstPaymentForParcelItem = (firstPayment, key) => {
+  return (
+    firstPayment?.lineItems.find((li) => li.parcelItemId === Number(key))
+      ?.paymentPence || 0
+  )
+}
+
+/**
+ * Calculate subsequent payment amount for a parcel item
+ * @param {object} subsequentPayment - The subsequent payment object
+ * @param {string} key - The parcel item key
+ * @returns {number} Subsequent payment amount in pence
+ */
+const calculateSubsequentPaymentForParcelItem = (subsequentPayment, key) => {
+  return (
+    subsequentPayment?.lineItems.find((li) => li.parcelItemId === Number(key))
+      ?.paymentPence || 0
+  )
+}
+
+/**
+ * Calculate first payment amount for an agreement level item
+ * @param {object} firstPayment - The first payment object
+ * @param {string} key - The agreement level item key
+ * @returns {number} First payment amount in pence
+ */
+const calculateFirstPaymentForAgreementLevelItem = (firstPayment, key) => {
+  return (
+    firstPayment?.lineItems.find(
+      (li) => li.agreementLevelItemId === Number(key)
+    )?.paymentPence || 0
+  )
+}
+
+/**
+ * Calculate subsequent payment amount for an agreement level item
+ * @param {object} subsequentPayment - The subsequent payment object
+ * @param {string} key - The agreement level item key
+ * @returns {number} Subsequent payment amount in pence
+ */
+const calculateSubsequentPaymentForAgreementLevelItem = (
+  subsequentPayment,
+  key
+) => {
+  return (
+    subsequentPayment?.lineItems.find(
+      (li) => li.agreementLevelItemId === Number(key)
+    )?.paymentPence || 0
+  )
+}
+
+/**
  * Creates a summary of payments for the agreement
  * @param {object} agreementData - The agreement data object
  * @returns Object containing headings and data for the summary of payments table
  */
 const getSummaryOfPayments = (agreementData) => {
+  const firstPayment = agreementData.payment?.payments?.[0]
+  const subsequentPayment = agreementData.payment?.payments?.[1]
+
   return {
     headings: [
       { text: 'Code' },
       { text: 'Action' },
       { text: 'Total area (ha)' },
       { text: 'Payment rate' },
+      { text: 'First Payment' },
+      { text: 'Subsequent payments' },
       { text: 'Total yearly payment' }
     ],
     data: [
-      ...Object.values(agreementData.payment.parcelItems).map((payment) => [
-        { text: payment.code },
-        { text: payment.description },
-        { text: round(payment.quantity, 4) },
-        {
-          text: `${formatCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`
-        },
-        { text: formatCurrency(payment.annualPaymentPence) }
-      ]),
-      ...Object.values(agreementData.payment.agreementLevelItems).map(
-        (payment) => {
+      ...Object.entries(agreementData.payment.parcelItems).map(
+        ([key, payment]) => [
+          { text: payment.code },
+          { text: payment.description },
+          { text: round(payment.quantity, 4) },
+          {
+            text: `${formatCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`
+          },
+          {
+            text: formatCurrency(
+              calculateFirstPaymentForParcelItem(firstPayment, key)
+            )
+          },
+          {
+            text: formatCurrency(
+              calculateSubsequentPaymentForParcelItem(subsequentPayment, key)
+            )
+          },
+          { text: formatCurrency(payment.annualPaymentPence) }
+        ]
+      ),
+      ...Object.entries(agreementData.payment.agreementLevelItems).map(
+        ([key, payment]) => {
           const description = payment.description?.replace(
             `${payment.code}: `,
             ''
@@ -122,6 +196,19 @@ const getSummaryOfPayments = (agreementData) => {
             },
             { text: '' },
             { text: '' },
+            {
+              text: formatCurrency(
+                calculateFirstPaymentForAgreementLevelItem(firstPayment, key)
+              )
+            },
+            {
+              text: formatCurrency(
+                calculateSubsequentPaymentForAgreementLevelItem(
+                  subsequentPayment,
+                  key
+                )
+              )
+            },
             { text: formatCurrency(payment.annualPaymentPence) }
           ]
         }
