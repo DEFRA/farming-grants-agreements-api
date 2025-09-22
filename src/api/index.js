@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
 import inert from '@hapi/inert'
