@@ -3,11 +3,11 @@
 {% extends 'layouts/page.njk' %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
-{% set pageTitle =  agreement.applicant.business.name ~ " agreement" %}
+{% set pageTitle = agreementName %}
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-xl">Agile Farm agreement</h1>
+            <h1 class="govuk-heading-xl">{{ agreementName }}</h1>
             <dl class="govuk-body dataset-info">
                 <dd>
                     Agreement holder:
@@ -21,12 +21,10 @@
                     Address:
                 </dd>
                 <dt>{{ address }}</dt>
-                {% if agreement.agreementName %}
-                  <dd>
-                      Agreement name:
-                  </dd>
-                  <dt>{{ agreement.agreementName }}</dt>
-                {% endif %}
+                <dd>
+                    Agreement name:
+                </dd>
+                <dt>{{ agreementName }}</dt>
                 <dd>
                     Agreement number:
                 </dd>
@@ -102,7 +100,7 @@
             </p>
             <h2 id="parties" class="govuk-heading-l">2. Parties to the agreement</h2>
             <p class="govuk-body">This Agreement is between:</p>
-            <p class="govuk-body">You, {{ agreement.company }}, of {{ agreement.address }}, {{ agreement.postcode }}
+            <p class="govuk-body">You, {{ agreement.applicant.business.name }}, of {{ address }}
                 and the Rural Payments Agency (acting as a delivery body on behalf of the Department for Environment, Food and
                 Rural Affairs), PO Box 324, Worksop, S95 1DF ("us", "we", "our").
             </p>

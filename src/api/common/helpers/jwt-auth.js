@@ -33,11 +33,14 @@ const extractJwtPayload = (authToken, logger) => {
     const payload = decoded?.decoded?.payload || null
 
     if (payload) {
-      logger.info('JWT payload extracted:', {
-        hasSbi: !!payload.sbi,
-        hasSource: !!payload.source,
-        source: payload.source
-      })
+      logger.info(
+        {
+          hasSbi: !!payload.sbi,
+          hasSource: !!payload.source,
+          source: payload.source
+        },
+        'JWT payload extracted:'
+      )
     }
 
     return payload

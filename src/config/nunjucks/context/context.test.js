@@ -119,7 +119,7 @@ describe('#context', () => {
           name: 'Unauthenticated user',
           role: undefined,
           organisationId: undefined,
-          sbi: 900000005
+          sbi: '0000000000'
         },
         contentSecurityPolicyNonce: ''
       })
@@ -208,7 +208,7 @@ describe('#context', () => {
             name: 'Unauthenticated user',
             organisationId: undefined,
             role: undefined,
-            sbi: 900000005
+            sbi: '0000000000'
           },
           agreement: { agreementNumber: 'test' },
           contentSecurityPolicyNonce: ''
