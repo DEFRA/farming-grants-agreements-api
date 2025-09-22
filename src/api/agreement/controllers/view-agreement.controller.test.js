@@ -102,7 +102,7 @@ describe('viewAgreementController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(headers['content-type']).toContain('text/html')
-      expect(payload).toContain('Sustainable Farming Incentive agreement')
+      expect(payload).toContain('Farm payments service')
 
       // Verify the function defaulted to a reasonable value when ID was missing
       expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
