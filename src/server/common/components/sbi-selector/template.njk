@@ -1,14 +1,5 @@
 {% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
 
-{% block bodyStart %}
-  <script nonce="{{ contentSecurityPolicyNonce }}">
-    document.body.className += ' js-enabled' +
-      ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');
-  </script>
-  {{ super() | safe }}
-{% endblock %}
-
-
 {{ govukPhaseBanner({
   tag: {
     text: "Development",
