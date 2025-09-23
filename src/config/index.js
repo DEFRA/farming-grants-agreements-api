@@ -44,8 +44,7 @@ const config = convict({
   serviceTitle: {
     doc: 'Service Title',
     format: String,
-    // Pending sign off on "Manage land-based actions"
-    default: ''
+    default: 'Farm payments service'
   },
   root: {
     doc: 'Project root',
@@ -145,32 +144,19 @@ const config = convict({
         env: 'SNS_EVENT_SOURCE'
       },
       topic: {
-        offerCreated: {
+        agreementStatusUpdate: {
           arn: {
-            doc: 'AWS SNS Topic ARN for Offer Created events',
+            doc: 'AWS SNS Topic ARN for Agreement status update events',
             format: String,
-            default: 'arn:aws:sns:eu-west-2:000000000000:offer_created',
-            env: 'SNS_TOPIC_ARN_OFFER_CREATED'
+            default:
+              'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+            env: 'SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED'
           },
           type: {
-            doc: 'AWS SNS Topic type for Offer Created events',
+            doc: 'AWS SNS Topic type for Agreement status update events',
             format: String,
-            default: 'io.onsite.agreement.offer.created',
-            env: 'SNS_TOPIC_TYPE_OFFER_CREATED'
-          }
-        },
-        offerAccepted: {
-          arn: {
-            doc: 'AWS SNS Topic ARN for Offer Accepted events',
-            format: String,
-            default: 'arn:aws:sns:eu-west-2:000000000000:agreement_accepted',
-            env: 'SNS_TOPIC_ARN_OFFER_ACCEPTED'
-          },
-          type: {
-            doc: 'AWS SNS Topic type for Offer Accepted events',
-            format: String,
-            default: 'io.onsite.agreement.offer.accepted',
-            env: 'SNS_TOPIC_TYPE_OFFER_ACCEPTED'
+            default: 'io.onsite.agreement.status.updated',
+            env: 'SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED'
           }
         }
       }
@@ -328,6 +314,12 @@ const config = convict({
         env: 'AWS_S3_ENDPOINT'
       }
     }
+  },
+  viewAgreementURI: {
+    doc: 'PDF URI to be used to print the agreement',
+    format: String,
+    default: 'http://localhost:3555',
+    env: 'VIEW_AGREEMENT_URI'
   },
   featureFlags: {
     seedDb: {

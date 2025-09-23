@@ -1,5 +1,12 @@
 import Boom from '@hapi/boom'
+import round from 'lodash/round.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import {
+  calculateFirstPaymentForParcelItem,
+  calculateSubsequentPaymentForParcelItem,
+  calculateFirstPaymentForAgreementLevelItem,
+  calculateSubsequentPaymentForAgreementLevelItem
+} from '~/src/api/agreement/helpers/payment-calculations.js'
 
 const dateOptions = {
   year: 'numeric',
@@ -7,12 +14,14 @@ const dateOptions = {
   day: 'numeric'
 }
 
+const noWrap = { attributes: { style: 'white-space: nowrap' } }
+
 const formatCurrency = (value) => {
   if (value === null || value === undefined) {
     return ''
   }
   if (typeof value === 'number') {
-    return value.toLocaleString('en-GB', {
+    return (value / 100).toLocaleString('en-GB', {
       style: 'currency',
       currency: 'GBP'
     })
@@ -26,12 +35,25 @@ const formatCurrency = (value) => {
  * @returns Object containing headings and data for the land table
  */
 const getAgreementLand = (agreementData) => {
+  const parcels = new Map()
+  Object.values(agreementData.payment.parcelItems).forEach(
+    ({ sheetId, parcelId, quantity: area }) => {
+      const currentArea = parcels.has(parcelId) ? parcels.get(parcelId) : 0
+      parcels.set(`${sheetId} ${parcelId}`, Number(currentArea) + Number(area))
+    }
+  )
+
+  const data = []
+  for (const [key, value] of parcels) {
+    data.push([{ text: key }, { text: round(value, 4) }])
+  }
+
   return {
-    headings: [{ text: 'Parcel' }, { text: 'Total parcel area (ha)' }],
-    data: agreementData.parcels.map((parcel) => [
-      { text: parcel.parcelNumber },
-      { text: parcel.totalArea }
-    ])
+    headings: [
+      { text: 'Parcel', ...noWrap },
+      { text: 'Total parcel area (ha)' }
+    ],
+    data
   }
 }
 
@@ -50,43 +72,21 @@ const getSummaryOfActions = (agreementData) => {
       { text: 'Start date' },
       { text: 'End date' }
     ],
-    data: agreementData.parcels.flatMap((parcel) =>
-      parcel.activities.map((activity) => [
-        { text: parcel.parcelNumber },
-        { text: activity.code },
-        { text: activity.description },
-        { text: parcel.totalArea },
-        {
-          text: activity.startDate.toLocaleDateString('en-GB', dateOptions)
-        },
-        {
-          text: activity.endDate.toLocaleDateString('en-GB', dateOptions)
-        }
-      ])
-    )
-  }
-}
-
-/**
- * Creates a table of actions for the agreement
- * @param {object} agreementData - The agreement data object
- * @returns Object containing headings and data for the agreement level actions table
- */
-const getAgreementLevelActions = (agreementData) => {
-  return {
-    headings: [
-      { text: 'Action code' },
-      { text: 'Title' },
-      { text: 'Action End date' },
-      { text: 'Action Start date' },
-      { text: 'Action duration' }
-    ],
-    data: agreementData.actions.map((action) => [
-      { text: action.code },
-      { text: action.title },
-      { text: action.endDate.toLocaleDateString('en-GB', dateOptions) },
-      { text: action.startDate.toLocaleDateString('en-GB', dateOptions) },
-      { text: action.duration }
+    data: Object.values(agreementData.payment.parcelItems).map((parcel) => [
+      { text: `${parcel.sheetId} ${parcel.parcelId}`, ...noWrap },
+      { text: parcel.code },
+      { text: parcel.description?.replace(`${parcel.code}: `, '') },
+      { text: parcel.quantity },
+      {
+        text: new Date(
+          agreementData.payment.agreementStartDate
+        ).toLocaleDateString('en-GB', dateOptions)
+      },
+      {
+        text: new Date(
+          agreementData.payment.agreementEndDate
+        ).toLocaleDateString('en-GB', dateOptions)
+      }
     ])
   }
 }
@@ -97,21 +97,72 @@ const getAgreementLevelActions = (agreementData) => {
  * @returns Object containing headings and data for the summary of payments table
  */
 const getSummaryOfPayments = (agreementData) => {
+  const firstPayment = agreementData.payment?.payments?.[0]
+  const subsequentPayment = agreementData.payment?.payments?.[1]
+
   return {
     headings: [
       { text: 'Code' },
       { text: 'Action' },
       { text: 'Total area (ha)' },
       { text: 'Payment rate' },
+      { text: 'First Payment' },
+      { text: 'Subsequent payments' },
       { text: 'Total yearly payment' }
     ],
-    data: agreementData.payments.activities.map((payment) => [
-      { text: payment.code },
-      { text: payment.description },
-      { text: payment.measurement },
-      { text: formatCurrency(payment.rate) + ' per ha' },
-      { text: formatCurrency(payment.annualPayment) }
-    ])
+    data: [
+      ...Object.entries(agreementData.payment.parcelItems).map(
+        ([key, payment]) => [
+          { text: payment.code },
+          { text: payment.description },
+          { text: round(payment.quantity, 4) },
+          {
+            text: `${formatCurrency(payment.rateInPence)} per ${payment.unit.replace(/s$/, '')}`
+          },
+          {
+            text: formatCurrency(
+              calculateFirstPaymentForParcelItem(firstPayment, key)
+            )
+          },
+          {
+            text: formatCurrency(
+              calculateSubsequentPaymentForParcelItem(subsequentPayment, key)
+            )
+          },
+          { text: formatCurrency(payment.annualPaymentPence) }
+        ]
+      ),
+      ...Object.entries(agreementData.payment.agreementLevelItems).map(
+        ([key, payment]) => {
+          const description = payment.description?.replace(
+            `${payment.code}: `,
+            ''
+          )
+          return [
+            { text: payment.code },
+            {
+              text: `One-off payment per agreement per year for ${description}`
+            },
+            { text: '' },
+            { text: '' },
+            {
+              text: formatCurrency(
+                calculateFirstPaymentForAgreementLevelItem(firstPayment, key)
+              )
+            },
+            {
+              text: formatCurrency(
+                calculateSubsequentPaymentForAgreementLevelItem(
+                  subsequentPayment,
+                  key
+                )
+              )
+            },
+            { text: formatCurrency(payment.annualPaymentPence) }
+          ]
+        }
+      )
+    ].sort((a, b) => a[0].text.localeCompare(b[0].text))
   }
 }
 
@@ -121,46 +172,100 @@ const getSummaryOfPayments = (agreementData) => {
  * @returns Object containing headings and data for the annual payment schedule table
  */
 const getAnnualPaymentSchedule = (agreementData) => {
+  const dataByCode = new Map()
+  agreementData.payment.payments.forEach((payment) => {
+    const year = new Date(payment.paymentDate).getFullYear()
+
+    payment.lineItems.forEach((line) => {
+      let code
+      if (line.parcelItemId) {
+        code = agreementData.payment.parcelItems[line.parcelItemId]?.code
+      }
+      if (line.agreementLevelItemId) {
+        code =
+          agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
+            ?.code
+      }
+
+      if (code) {
+        const years = dataByCode.has(code) ? dataByCode.get(code) : new Map()
+        const currentValue = years.has(year) ? years.get(year) : 0
+        years.set(year, Number(currentValue) + Number(line.paymentPence))
+
+        // Update total for this code
+        const currentTotal = years.has('total') ? years.get('total') : 0
+        years.set('total', Number(currentTotal) + Number(line.paymentPence))
+
+        dataByCode.set(code, years)
+      }
+    })
+  })
+
+  // Get all unique years from the data
+  const allYears = new Set()
+  dataByCode.forEach((years) => {
+    years.forEach((_value, year) => {
+      if (year !== 'total') {
+        allYears.add(year)
+      }
+    })
+  })
+
+  const sortedYears = Array.from(allYears).sort((a, b) => a - b)
+
+  // Sort dataByCode by code keys
+  const sortedCodes = Array.from(dataByCode.keys()).sort((a, b) =>
+    a.localeCompare(b, 'en-GB', { numeric: true, sensitivity: 'base' })
+  )
+
+  // Build table data
+  const tableData = []
+  const yearTotals = {}
+  let grandTotal = 0
+
+  // Initialize year totals
+  sortedYears.forEach((year) => {
+    yearTotals[year] = 0
+  })
+
+  // Add rows for each code in sorted order
+  sortedCodes.forEach((code) => {
+    const years = dataByCode.get(code)
+    const row = [{ text: code }]
+
+    // Add data for each year
+    sortedYears.forEach((year) => {
+      const yearValue = years.has(year) ? years.get(year) : 0
+      row.push({ text: formatCurrency(yearValue) })
+      yearTotals[year] += yearValue
+    })
+
+    // Add total for this code
+    const codeTotal = years.has('total') ? years.get('total') : 0
+    row.push({ text: formatCurrency(codeTotal) })
+    grandTotal += codeTotal
+
+    tableData.push(row)
+  })
+
+  // Add totals row
+  const totalsRow = [{ text: 'Total' }]
+  sortedYears.forEach((year) => {
+    totalsRow.push({ text: formatCurrency(yearTotals[year]) })
+  })
+  totalsRow.push({ text: formatCurrency(grandTotal) })
+  tableData.push(totalsRow)
+
+  // Build headings
+  const headings = [{ text: 'Code' }]
+  sortedYears.forEach((year) => {
+    headings.push({ text: year })
+  })
+  headings.push({ text: 'Total payment' })
+
   return {
-    headings: [
-      { text: 'Code' },
-      { text: 'Year 1' },
-      { text: 'Year 2' },
-      { text: 'Year 3' },
-      { text: 'Total payment' }
-    ],
-    data: [
-      ...agreementData.payments.yearlyBreakdown.details.map((detail) => [
-        { text: detail.code },
-        { text: formatCurrency(detail.year1) },
-        { text: formatCurrency(detail.year2) },
-        { text: formatCurrency(detail.year3) },
-        { text: formatCurrency(detail.totalPayment) }
-      ]),
-      [
-        { text: 'Total' },
-        {
-          text: formatCurrency(
-            agreementData.payments.yearlyBreakdown.annualTotals.year1
-          )
-        },
-        {
-          text: formatCurrency(
-            agreementData.payments.yearlyBreakdown.annualTotals.year2
-          )
-        },
-        {
-          text: formatCurrency(
-            agreementData.payments.yearlyBreakdown.annualTotals.year3
-          )
-        },
-        {
-          text: formatCurrency(
-            agreementData.payments.yearlyBreakdown.totalAgreementPayment
-          )
-        }
-      ]
-    ]
+    headings,
+    data: tableData
   }
 }
 
@@ -182,7 +287,6 @@ const getAgreement = async (agreementId, data) => {
 
   agreement.agreementLand = getAgreementLand(agreement)
   agreement.summaryOfActions = getSummaryOfActions(agreement)
-  agreement.agreementLevelActions = getAgreementLevelActions(agreement)
   agreement.summaryOfPayments = getSummaryOfPayments(agreement)
   agreement.annualPaymentSchedule = getAnnualPaymentSchedule(agreement)
   agreement.agreementNumber = agreementId

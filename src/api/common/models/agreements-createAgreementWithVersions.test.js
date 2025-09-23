@@ -126,7 +126,6 @@ describe('agreements.createAgreementWithVersions', () => {
       agreementNumber: AGREEMENT_BASE.agreementNumber,
       frn: AGREEMENT_BASE.frn,
       sbi: AGREEMENT_BASE.sbi,
-      agreementName: AGREEMENT_BASE.agreementName,
       createdBy: AGREEMENT_BASE.createdBy,
       versions: []
     })
@@ -205,9 +204,7 @@ describe('agreements.createAgreementWithVersions', () => {
         agreement: { /* missing agreementNumber/name */ frn: 'x', sbi: 'y' },
         versions: VERSION_PAYLOADS
       })
-    ).rejects.toThrow(
-      'agreement.agreementNumber and agreement.agreementName are required'
-    )
+    ).rejects.toThrow('agreement.agreementNumber is required')
   })
 
   it('throws when versions array is empty', async () => {

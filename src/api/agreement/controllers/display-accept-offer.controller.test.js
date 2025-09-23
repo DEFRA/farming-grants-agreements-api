@@ -114,7 +114,7 @@ describe('displayAcceptOfferController', () => {
           action: 'display-accept'
         },
         headers: {
-          'x-base-url': '/defra-grants-proxy',
+          'x-base-url': '/agreement',
           'x-encrypted-auth': 'valid-jwt-token'
         }
       })
@@ -122,7 +122,7 @@ describe('displayAcceptOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(String(result)).toContain('Accept your offer')
-      expect(String(result)).toContain('/defra-grants-proxy')
+      expect(String(result)).toContain('/agreement')
     })
 
     test('should handle database errors', async () => {
@@ -213,9 +213,13 @@ describe('displayAcceptOfferController', () => {
       const mockAgreementData = {
         agreementNumber: agreementId,
         status: 'accepted',
-        company: 'Test Company',
         sbi: '106284736',
-        username: 'Test User'
+        payment: {
+          agreementStartDate: '2025-12-05',
+          annualTotalPence: 0,
+          parcelItems: {},
+          agreementLevelItems: {}
+        }
       }
 
       jest
@@ -250,7 +254,7 @@ describe('displayAcceptOfferController', () => {
           action: 'accept-offer'
         },
         headers: {
-          'x-base-url': '/defra-grants-proxy',
+          'x-base-url': '/agreement',
           'x-encrypted-auth': 'valid-jwt-token'
         }
       })
@@ -258,7 +262,7 @@ describe('displayAcceptOfferController', () => {
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
       expect(String(result)).toContain('Offer accepted')
-      expect(String(result)).toContain('/defra-grants-proxy')
+      expect(String(result)).toContain('/agreement')
     })
   })
 })

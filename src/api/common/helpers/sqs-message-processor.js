@@ -20,7 +20,7 @@ export const handleEvent = async (notificationMessageId, payload, logger) => {
     return agreement
   }
 
-  return Promise.reject(new Error('Unrecognized event type'))
+  throw new Error('Unrecognized event type')
 }
 
 /**

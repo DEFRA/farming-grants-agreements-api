@@ -91,12 +91,12 @@ describe('publishEvent', () => {
 
     expect(mockSend).toHaveBeenCalledTimes(2)
     expect(logger.error).toHaveBeenCalledWith(
-      'Failed to publish event to SNS',
       expect.objectContaining({
         attempt: 1,
         error: 'fail',
         code: 'InternalError'
-      })
+      }),
+      'Failed to publish event to SNS'
     )
     expect(logger.info).toHaveBeenCalled()
   })
@@ -153,12 +153,12 @@ describe('publishEvent', () => {
 
     expect(mockSend).toHaveBeenCalledTimes(1)
     expect(logger.error).toHaveBeenCalledWith(
-      'Failed to publish event to SNS',
       expect.objectContaining({
         attempt: 1,
         error: 'bad request',
         code: 'BadRequest'
-      })
+      }),
+      'Failed to publish event to SNS'
     )
   })
 })

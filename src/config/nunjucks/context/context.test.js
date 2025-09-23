@@ -55,6 +55,27 @@ describe('#context', () => {
       expect(result.auth.name).toBe('Joe Bloggs')
     })
 
+    test('Should set csp nonce from request headers', async () => {
+      const mockRequest = {
+        path: '/',
+        auth: {
+          isAuthenticated: true,
+          credentials: {
+            name: 'Joe Bloggs',
+            sbi: 123456789,
+            organisationId: 'org-1',
+            role: 'farmer'
+          }
+        },
+        headers: {
+          'x-csp-nonce': 'test-nonce'
+        }
+      }
+
+      const result = await contextImport.context(mockRequest)
+      expect(result.cspNonce).toBe('test-nonce')
+    })
+
     afterAll(async () => {
       process.env.JWT_ENABLED = 'false'
       jest.resetModules()
@@ -98,8 +119,9 @@ describe('#context', () => {
           name: 'Unauthenticated user',
           role: undefined,
           organisationId: undefined,
-          sbi: 106284736
-        }
+          sbi: '0000000000'
+        },
+        cspNonce: ''
       })
     })
   })
@@ -186,9 +208,10 @@ describe('#context', () => {
             name: 'Unauthenticated user',
             organisationId: undefined,
             role: undefined,
-            sbi: 106284736
+            sbi: '0000000000'
           },
-          agreement: { agreementNumber: 'test' }
+          agreement: { agreementNumber: 'test' },
+          cspNonce: ''
         })
       })
     })

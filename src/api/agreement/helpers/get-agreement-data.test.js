@@ -2,8 +2,8 @@ import { jest } from '@jest/globals'
 import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import {
-  getAgreementDataById,
-  doesAgreementExist
+  doesAgreementExist,
+  getAgreementDataById
 } from './get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/versions.js')
@@ -13,40 +13,7 @@ describe('getAgreementDataById', () => {
   const mockAgreement = {
     agreementNumber: 'SFI123456789',
     agreementName: 'Test Agreement',
-    sbi: '106284736',
-    company: 'Test Farm Ltd',
-    address: '123 Test Lane',
-    postcode: 'TE1 1ST',
-    username: 'Test User',
-    agreementStartDate: '1/1/2024',
-    agreementEndDate: '31/12/2026',
-    signatureDate: '1/1/2024',
-    actions: [
-      {
-        code: 'TEST1',
-        title: 'Test Action',
-        startDate: '1/1/2024',
-        endDate: '31/12/2026',
-        duration: '3 years'
-      }
-    ],
-    parcels: [
-      {
-        parcelNumber: 'TEST123',
-        parcelName: 'Test Parcel',
-        totalArea: 1.0,
-        activities: []
-      }
-    ],
-    payments: {
-      activities: [],
-      totalAnnualPayment: 1000,
-      yearlyBreakdown: {
-        details: [],
-        annualTotals: { year1: 1000, year2: 1000, year3: 1000 },
-        totalAgreementPayment: 3000
-      }
-    }
+    signatureDate: '1/1/2024'
   }
 
   const mockGroup = {
@@ -100,9 +67,13 @@ describe('getAgreementDataById', () => {
     const agreementId = 'SFI123456789'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest
-        .fn()
-        .mockResolvedValue([{ ...mockGroup, invoice: [{ test: 'invoice' }] }])
+      catch: jest.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [{ test: 'invoice' }],
+          versions: [{ version: '1123' }]
+        }
+      ])
     })
 
     versionsModel.findOne.mockReturnValue({
@@ -126,7 +97,8 @@ describe('getAgreementDataById', () => {
     expect(result).toEqual({
       ...mockAgreement,
       agreementNumber: mockGroup.agreementNumber,
-      invoice: [{ test: 'invoice' }]
+      invoice: [{ test: 'invoice' }],
+      version: 1
     })
   })
 
@@ -167,7 +139,8 @@ describe('getAgreementDataById', () => {
     expect(result).toEqual({
       ...mockAgreement,
       agreementNumber: mockGroup.agreementNumber,
-      invoice: []
+      invoice: [],
+      version: 1
     })
   })
 })

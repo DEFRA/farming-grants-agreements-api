@@ -56,7 +56,7 @@ export async function publishEvent(
         })
       )
       logger?.info?.(
-        `Published event to SNS topic: ${topicArn} type: ${type} id: ${message.id}`
+        `Published event to SNS topic: ${topicArn} type: ${type} id: ${message.id} data: ${JSON.stringify(data)}`
       )
       return
     } catch (error) {
@@ -67,13 +67,16 @@ export async function publishEvent(
         error?.name === 'TimeoutError' ||
         error?.name === 'NetworkingError'
 
-      logger?.error?.('Failed to publish event to SNS', {
-        attempt: attempt + 1,
-        maxAttempts,
-        error: error?.message,
-        code: error?.name,
-        stack: error?.stack
-      })
+      logger?.error?.(
+        {
+          attempt: attempt + 1,
+          maxAttempts,
+          error: error?.message,
+          code: error?.name,
+          stack: error?.stack
+        },
+        'Failed to publish event to SNS'
+      )
 
       if (!isRetryable || attempt === maxAttempts - 1) {
         break

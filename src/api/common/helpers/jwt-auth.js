@@ -48,8 +48,10 @@ const extractJwtPayload = (authToken, logger) => {
 
     return payload
   } catch (jwtError) {
-    logger.error(`Invalid JWT token provided: ${jwtError.message}`)
-    logger.error(jwtError.stack)
+    logger.error(
+      jwtError.stack,
+      `Invalid JWT token provided: ${jwtError.message}`
+    )
     return null
   }
 }
@@ -70,7 +72,8 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
   }
 
   const result =
-    jwtPayload.source === 'defra' && jwtPayload.sbi === agreementData.sbi
+    jwtPayload.source === 'defra' &&
+    jwtPayload.sbi === agreementData?.identifiers?.sbi
 
   return result
 }
@@ -90,7 +93,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
       isJwtEnabled,
       hasAuthToken: !!authToken,
       authTokenLength: authToken ? authToken.length : 0,
-      agreementSbi: agreementData?.sbi,
+      agreementSbi: agreementData?.identifiers?.sbi,
       agreementNumber: agreementData?.agreementNumber
     },
     'JWT Authentication Validation Start:'
@@ -113,7 +116,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
     {
       payloadSbi: jwtPayload.sbi,
       payloadSource: jwtPayload.source,
-      agreementSbi: agreementData?.sbi
+      agreementSbi: agreementData?.identifiers?.sbi
     },
     'JWT payload extracted successfully:'
   )

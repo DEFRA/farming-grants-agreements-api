@@ -1,26 +1,12 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-
-/**
- * Flatten parcel activities to get land parcel and quantity
- * @param {object} agreementData
- * @returns {*[]} actions
- */
-function flattenParcelActivities(agreementData) {
-  const actions = []
-  ;(agreementData.parcels || []).forEach((parcel) => {
-    ;(parcel.activities ?? []).forEach((activity) => {
-      actions.push({
-        name:
-          agreementData.actions?.find((a) => a.code === activity.code)?.title ??
-          activity.code,
-        code: activity.code,
-        landParcel: parcel.parcelNumber,
-        quantity: activity.area
-      })
-    })
-  })
-  return actions
-}
+import {
+  calculateFirstPaymentForParcelItem,
+  calculateSubsequentPaymentForParcelItem,
+  calculateFirstPaymentForAgreementLevelItem,
+  calculateSubsequentPaymentForAgreementLevelItem,
+  calculateTotalFirstPayment,
+  calculateTotalSubsequentPayment
+} from '~/src/api/agreement/helpers/payment-calculations.js'
 
 /**
  * Controller to serve the View Offer page
@@ -30,39 +16,66 @@ function flattenParcelActivities(agreementData) {
 const reviewOfferController = {
   handler: (request, h) => {
     try {
-      const { agreementData } = request.auth.credentials
+      const { agreementData: { actionApplications, payment } = {} } =
+        request.auth.credentials
 
-      const actions = flattenParcelActivities(agreementData)
-
-      // Map payments
-      const payments = (agreementData.payments?.activities || []).map(
-        (payment) => ({
-          name: payment.description || payment.code,
-          code: payment.code,
-          rate: payment.rate,
-          yearly: payment.annualPayment
-        })
+      const codeDescriptions = Object.values(payment.parcelItems).reduce(
+        (prev, i) => ({
+          ...prev,
+          [i.code]: i.description.replace(`${i.code}: `, '')
+        }),
+        {}
       )
 
-      // Calculate totalYearly as the sum of the displayed payments
-      const totalYearly = payments.reduce(
-        (sum, payment) => sum + (payment.yearly || 0),
-        0
-      )
+      const quarterlyPayment = payment.payments?.[payment.payments?.length - 1]
 
-      // Calculate totalQuarterly as the sum of the displayed quarterly payments
-      const totalQuarterly = payments.reduce(
-        (sum, payment) => sum + (payment.yearly || 0) / 4,
-        0
-      )
-
+      const payments = [
+        ...(Object.entries(payment?.parcelItems || {}).map(([key, i]) => ({
+          ...i,
+          description: codeDescriptions[i.code],
+          unit: i.unit.replace(/s$/, ''),
+          quarterlyPayment: quarterlyPayment?.lineItems.find(
+            (li) => li.parcelItemId === Number(key)
+          )?.paymentPence,
+          firstPaymentPence: calculateFirstPaymentForParcelItem(
+            payment.payments?.[0], // first payment
+            key
+          ),
+          subsequentPaymentPence: calculateSubsequentPaymentForParcelItem(
+            payment.payments?.[1], // subsequent payments
+            key
+          )
+        })) || []),
+        ...(Object.entries(payment?.agreementLevelItems || {}).map(
+          ([key, i]) => ({
+            ...i,
+            description: `One-off payment per agreement per year for ${codeDescriptions[i.code]}`,
+            rateInPence: i.annualPaymentPence,
+            quarterlyPayment: quarterlyPayment?.lineItems.find(
+              (li) => li.agreementLevelItemId === Number(key)
+            )?.paymentPence,
+            firstPaymentPence: calculateFirstPaymentForAgreementLevelItem(
+              payment.payments?.[0], // first payment
+              key
+            ),
+            subsequentPaymentPence:
+              calculateSubsequentPaymentForAgreementLevelItem(
+                payment.payments?.[1], // subsequent payments
+                key
+              )
+          })
+        ) || [])
+      ].sort((a, b) => a.code.localeCompare(b.code))
       // Render the page with base context automatically applied
       return h
         .view('views/view-offer.njk', {
-          actions,
+          actionApplications,
+          codeDescriptions,
           payments,
-          totalYearly,
-          totalQuarterly
+          totalQuarterly: quarterlyPayment?.totalPaymentPence,
+          totalYearly: payment.annualTotalPence,
+          totalFirstPayment: calculateTotalFirstPayment(payments),
+          totalSubsequentPayment: calculateTotalSubsequentPayment(payments)
         })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
@@ -71,7 +84,6 @@ const reviewOfferController = {
       if (error.isBoom) {
         throw error
       }
-
       request.logger.error(`Error fetching offer: ${error.message}`)
       return h
         .response({

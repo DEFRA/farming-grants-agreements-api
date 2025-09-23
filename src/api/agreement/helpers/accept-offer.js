@@ -7,35 +7,22 @@ import { config } from '~/src/config/index.js'
  * Get agreement data for rendering templates
  * @param {agreementNumber} agreementNumber - The agreement Id
  * @param {Agreement} agreementData - The agreement data
- * @param {string} htmlPage - A HTML string of the accepted agreement
+ * @param {string} agreementUrl - The Agreement URL to generate the agreement PDF
  * @param {Request<ReqRefDefaults>['logger']} logger - The logger object
  * @returns {Promise<Agreement>} The agreement data
  */
-async function acceptOffer(agreementNumber, agreementData, htmlPage, logger) {
+async function acceptOffer(
+  agreementNumber,
+  agreementData,
+  agreementUrl,
+  logger
+) {
   if (!agreementNumber || !agreementData) {
     throw Boom.badRequest('Agreement data is required')
   }
 
   const acceptanceTime = new Date().toISOString()
-
-  // Publish event to SNS
-  await publishEvent(
-    {
-      topicArn: config.get('aws.sns.topic.offerAccepted.arn'),
-      type: config.get('aws.sns.topic.offerAccepted.type'),
-      time: acceptanceTime,
-      data: {
-        agreementNumber,
-        correlationId: agreementData?.correlationId,
-        clientRef: agreementData?.clientRef,
-        offerId: agreementNumber,
-        frn: agreementData?.frn,
-        sbi: agreementData?.sbi,
-        htmlPage
-      }
-    },
-    logger
-  )
+  const acceptedStatus = 'accepted'
 
   // Update the agreement in the database
   const agreement = await agreementsModel
@@ -45,7 +32,7 @@ async function acceptOffer(agreementNumber, agreementData, htmlPage, logger) {
       },
       {
         $set: {
-          status: 'accepted',
+          status: acceptedStatus,
           signatureDate: acceptanceTime
         }
       }
@@ -57,6 +44,25 @@ async function acceptOffer(agreementNumber, agreementData, htmlPage, logger) {
   if (!agreement) {
     throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
   }
+
+  // Publish event to SNS
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+      time: acceptanceTime,
+      data: {
+        agreementNumber,
+        correlationId: agreementData?.correlationId,
+        clientRef: agreementData?.clientRef,
+        version: agreementData?.version,
+        agreementUrl,
+        status: acceptedStatus,
+        date: acceptanceTime
+      }
+    },
+    logger
+  )
 
   return agreement
 }
