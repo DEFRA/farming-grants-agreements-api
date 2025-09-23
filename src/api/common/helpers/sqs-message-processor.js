@@ -34,11 +34,14 @@ export const processMessage = async (message, logger) => {
     const messageBody = JSON.parse(message.Body)
     await handleEvent(message.MessageId, messageBody, logger)
   } catch (error) {
-    logger.error('Error processing message:', {
-      message,
-      error: error.message,
-      stack: error.stack
-    })
+    logger.error(
+      {
+        message,
+        error: error.message,
+        stack: error.stack
+      },
+      'Error processing message:'
+    )
 
     if (error.name === 'SyntaxError') {
       throw Boom.badData('Invalid message format', {
