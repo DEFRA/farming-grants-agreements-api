@@ -1,4 +1,4 @@
-import { initAll } from 'govuk-frontend'
+import { initAll } from '@defra/forms-engine-plugin/shared.js'
 
 initAll()
 
