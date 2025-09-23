@@ -63,15 +63,18 @@ describe('jwt-auth', () => {
         }
       }
 
+      const mockError = new Error('Invalid signature')
+
       Jwt.token.decode = jest.fn().mockReturnValue(mockDecoded)
       Jwt.token.verify = jest.fn().mockImplementation(() => {
-        throw new Error('Invalid signature')
+        throw mockError
       })
 
       const result = extractJwtPayload('invalid-token', mockLogger)
 
       expect(result).toBeNull()
       expect(mockLogger.error).toHaveBeenCalledWith(
+        mockError.stack,
         'Invalid JWT token provided: Invalid signature'
       )
     })
