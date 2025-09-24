@@ -43,25 +43,25 @@
                 <div id="contents">
                     <p class="govuk-body-s">Contents</p>
                     <ul class="govuk-list toc">
-                        <li>
+                        <li data-test-id="contentsIntroLink">
                             <a href="#intro">1. Introduction and overview</a>
                         </li>
-                        <li>
+                        <li data-test-id="contentsPartiesLink">
                             <a href="#parties">2. Parties to the agreement</a>
                         </li>
-                        <li>
+                        <li data-test-id="contentsLandLink">
                             <a href="#land">3. Land covered by the agreement</a>
                         </li>
-                        <li>
+                        <li data-test-id="contentsActionsLink">
                             <a href="#actions">4. Summary of actions</a>
                         </li>
-                        <li>
+                        <li data-test-id="contentsPaymentLink">
                             <a href="#payment">5. Summary of payments</a>
                         </li>
-                        <li>
+                        <li data-test-id="contentsScheduleLink">
                             <a href="#schedule">6. Payment schedule</a>
                         </li>
-                        <li>
+                        <li data-test-id="contentsProtectionLink">
                             <a href="#protection">7. Data protection</a>
                         </li>
                     </ul>
@@ -106,12 +106,33 @@
             </p>
             <h2 id="land" class="govuk-heading-l">3. Land covered by the agreement</h2>
             <p class="govuk-body">The "Agreement Land" comprises the following land parcels:</p>
-            {{ govukTable({
-                        captionClasses: "govuk-table__caption--m",
-                        classes: "govuk-table--small-text-until-tablet",
-                        head: agreement.agreementLand.headings,
-                        rows: agreement.agreementLand.data
-                        }) }}
+            <table class="govuk-table govuk-table--small-text-until-tablet" data-test-id="landTable">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        {% for heading in agreement.agreementLand.headings %}
+                            <th scope="col" class="govuk-table__header"
+                              {% for key, value in heading.attributes %}
+                                  {{ key }}="{{ value }}"
+                              {% endfor %} >
+                              {{ heading.text }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for row in agreement.agreementLand.data %}
+                    <tr class="govuk-table__row" data-test-id="landTableRow{{ loop.index }}">
+                        {% for cell in row %}
+                        <td class="govuk-table__cell"
+                          data-test-id="landTableCell{{ loop.index }}_{{ loop.index0 }}"
+                          {% for key, value in cell.attributes %}
+                              {{ key }}="{{ value }}"
+                          {% endfor %} >
+                        {{ cell.text }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             <p class="govuk-body">
                 Please note that the Terms and Conditions contain separate obligations in relation to the "Agreement Land".
             </p>
@@ -119,14 +140,32 @@
             <p class="govuk-body">
                 The following table sets out a summary of the Parcel based SFI Actions you have chosen and agree to complete under the Agreement. The Terms and Conditions and the Actions set out the accompanying obligations for the chosen Actions.
             </p>
-            <table class="table-bordered">
-                {{ govukTable({
-                                captionClasses: "govuk-table__caption--m",
-                                classes: "govuk-table--small-text-until-tablet",
-                                head: agreement.summaryOfActions.headings,
-                                rows: agreement.summaryOfActions.data
-                                })
-                }}
+            <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="actionsTable">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        {% for heading in agreement.summaryOfActions.headings %}
+                        <th scope="col" class="govuk-table__header"
+                          {% for key, value in heading.attributes %}
+                            {{ key }}="{{ value }}"
+                          {% endfor %} >
+                          {{ heading.text }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for row in agreement.summaryOfActions.data %}
+                    <tr class="govuk-table__row" data-test-id="actionsTableRow{{ loop.index }}">
+                        {% for cell in row %}
+                        <td class="govuk-table__cell"
+                          data-test-id="actionsTableCell{{ loop.index }}_{{ loop.index0 }}"
+                          {% for key, value in cell.attributes %}
+                            {{ key }}="{{ value }}"
+                          {% endfor %} >
+                        {{ cell.text }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
             <h2 id="payment" class="govuk-heading-l">5. Summary of payments</h2>
             <p class="govuk-body">Subject to you complying with your Agreement, the following table sets out a summary of:</p>
@@ -141,14 +180,32 @@
             <p class="govuk-body">
                 Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the Terms and Conditions.
             </p>
-            <table class="table-bordered">
-                {{ govukTable({
-                                captionClasses: "govuk-table__caption--m",
-                                classes: "govuk-table--small-text-until-tablet",
-                                head: agreement.summaryOfPayments.headings,
-                                rows: agreement.summaryOfPayments.data
-                                })
-                }}
+            <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="paymentsTable">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        {% for heading in agreement.summaryOfPayments.headings %}
+                            <th scope="col" class="govuk-table__header"
+                              {% for key, value in heading.attributes %}
+                                  {{ key }}="{{ value }}"
+                              {% endfor %} >
+                              {{ heading.text }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for row in agreement.summaryOfPayments.data %}
+                    <tr class="govuk-table__row" data-test-id="paymentsTableRow{{ loop.index }}">
+                        {% for cell in row %}
+                        <td class="govuk-table__cell"
+                          data-test-id="paymentsTableCell{{ loop.index }}_{{ loop.index0 }}"
+                          {% for key, value in cell.attributes %}
+                            {{ key }}="{{ value }}"
+                          {% endfor %} >
+                        {{ cell.text }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
             <p class="govuk-body">
                 If you are eligible for the Management Payment (MPAY1) the payment details will be shown within section 7 below.
@@ -164,15 +221,31 @@
             </ul>
             <p class="govuk-body">
                 Please note that these figures are correct as at the Agreement Start Date and may vary as a result of the processes set out in the Terms and Conditions.
-            </p>
-            <table class="table-bordered">
-                {{ govukTable({
-                                captionClasses: "govuk-table__caption--m",
-                                classes: "govuk-table--small-text-until-tablet",
-                                head: agreement.annualPaymentSchedule.headings,
-                                rows: agreement.annualPaymentSchedule.data
-                                })
-                }}
+            </p>annualPaymentSchedule
+            <table class="govuk-table govuk-table--small-text-until-tablet table-bordered" data-test-id="scheduleTable">
+                <thead class="govuk-table__head">
+                    {% for heading in agreement.annualPaymentSchedule.headings %}
+                        <th scope="col" class="govuk-table__header"
+                          {% for key, value in heading.attributes %}
+                              {{ key }}="{{ value }}"
+                          {% endfor %} >
+                          {{ heading.text }}</th>
+                    {% endfor %}
+                </thead>
+                <tbody class="govuk-table__body">
+                    {% for row in agreement.annualPaymentSchedule.data %}
+                    <tr class="govuk-table__row" data-test-id="scheduleTableRow{{ loop.index }}">
+                        {% for cell in row %}
+                        <td class="govuk-table__cell"
+                          data-test-id="scheduleTableCell{{ loop.index }}_{{ loop.index0 }}"
+                          {% for key, value in cell.attributes %}
+                            {{ key }}="{{ value }}"
+                          {% endfor %} >
+                        {{ cell.text }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
             <p class="govuk-body">
                 Under an SFI agreement, your annual payment value is paid in quarterly instalments. You’ll usually receive your first payment in the fourth month after your agreement’s start date.
