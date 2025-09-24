@@ -339,6 +339,12 @@ const config = convict({
       format: Boolean,
       default: true,
       env: 'JWT_ENABLED'
+    },
+    isPaymentHubEnabled: {
+      doc: 'Enable or Disable payments hub',
+      format: Boolean,
+      default: false,
+      env: 'ENABLE_PAYMENT_HUB'
     }
   }
 })

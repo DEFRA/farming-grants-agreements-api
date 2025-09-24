@@ -3,6 +3,7 @@ import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-
 import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
 import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * Sends a payload to the payments hub
@@ -67,8 +68,10 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       paymentHubRequest
     })
 
-    // send the payment hub request
-    await sendPaymentHubRequest(server, logger, paymentHubRequest)
+    if (config.get('featureFlags.isPaymentHubEnabled')) {
+      // send the payment hub request
+      await sendPaymentHubRequest(server, logger, paymentHubRequest)
+    }
 
     return {
       status: 'success',
