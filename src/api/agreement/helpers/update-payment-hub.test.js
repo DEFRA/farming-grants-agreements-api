@@ -5,6 +5,7 @@ import { getAgreementDataById } from './get-agreement-data.js'
 import { createInvoice } from './invoice/create-invoice.js'
 import { updateInvoice } from './invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
+import { config } from '~/src/config/index.js'
 
 // Mock all dependencies
 jest.mock('./get-agreement-data.js')
@@ -15,6 +16,17 @@ jest.mock('@hapi/boom')
 jest.mock('./get-agreement-data.js', () => ({
   getAgreementDataById: jest.fn()
 }))
+jest.mock('~/src/config/index.js', () => {
+  const store = { 'featureFlags.isPaymentHubEnabled': false }
+  return {
+    config: {
+      get: jest.fn((key) => store[key]),
+      set: jest.fn((key, value) => {
+        store[key] = value
+      })
+    }
+  }
+})
 
 describe('updatePaymentHub', () => {
   let mockServer, mockLogger, mockContext
@@ -81,6 +93,8 @@ describe('updatePaymentHub', () => {
 
     // Mock Date to ensure consistent testing
     jest.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2024)
+
+    config.set('featureFlags.isPaymentHubEnabled', true)
   })
 
   afterEach(() => {
@@ -89,6 +103,7 @@ describe('updatePaymentHub', () => {
 
   describe('Successful Payment Hub Updates', () => {
     it('should successfully send payment to hub with valid agreement', async () => {
+      // await setPaymentHubConfig(true)
       const agreementNumber = 'SFI123456789'
 
       const result = await updatePaymentHub(mockContext, agreementNumber)
@@ -132,6 +147,65 @@ describe('updatePaymentHub', () => {
       })
 
       expect(sendPaymentHubRequest).toHaveBeenCalledWith(
+        mockServer,
+        mockLogger,
+        expect.objectContaining({
+          sourceSystem: 'AHWR',
+          agreementNumber: 'SFI123456789'
+        })
+      )
+
+      expect(result).toEqual({
+        status: 'success',
+        message: 'Payload sent to payment hub successfully'
+      })
+    })
+
+    it('should not send payment hub request when payment hub toggle is disabled', async () => {
+      config.set('featureFlags.isPaymentHubEnabled', false)
+      const agreementNumber = 'SFI123456789'
+
+      const result = await updatePaymentHub(mockContext, agreementNumber)
+
+      expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
+      expect(createInvoice).toHaveBeenCalledWith(
+        agreementNumber,
+        'test-correlation-id'
+      )
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining({
+          sourceSystem: 'AHWR',
+          frn: '1234567890',
+          sbi: '106284736',
+          marketingYear: 2024,
+          paymentRequestNumber: 1,
+          correlationId: 'test-correlation-id',
+          invoiceNumber: 'INV-123456',
+          agreementNumber: 'SFI123456789',
+          schedule: 'T4',
+          dueDate: '2022-11-09',
+          value: 500000,
+          invoiceLines: [
+            [
+              {
+                value: 200000,
+                description:
+                  '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
+                schemeCode: 'ACT001'
+              },
+              {
+                value: 300000,
+                description:
+                  '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
+                schemeCode: 'ACT002'
+              }
+            ]
+          ]
+        })
+      })
+
+      expect(sendPaymentHubRequest).not.toHaveBeenCalledWith(
         mockServer,
         mockLogger,
         expect.objectContaining({
