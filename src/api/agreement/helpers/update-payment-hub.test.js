@@ -103,7 +103,6 @@ describe('updatePaymentHub', () => {
 
   describe('Successful Payment Hub Updates', () => {
     it('should successfully send payment to hub with valid agreement', async () => {
-      // await setPaymentHubConfig(true)
       const agreementNumber = 'SFI123456789'
 
       const result = await updatePaymentHub(mockContext, agreementNumber)
