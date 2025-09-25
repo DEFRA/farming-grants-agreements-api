@@ -69,8 +69,12 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
     })
 
     if (config.get('featureFlags.isPaymentHubEnabled')) {
-      // send the payment hub request
       await sendPaymentHubRequest(server, logger, paymentHubRequest)
+    } else {
+      logger.info(
+        paymentHubRequest,
+        'The PaymentHub feature flag is disbaled.The request to be sent to payment hub:'
+      )
     }
 
     return {
