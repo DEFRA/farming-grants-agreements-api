@@ -82,7 +82,7 @@ describe('updatePaymentHub', () => {
     jest.clearAllMocks()
 
     mockServer = { mock: 'server' }
-    mockLogger = { mock: 'logger' }
+    mockLogger = { mock: 'logger', info: jest.fn() }
     mockContext = { server: mockServer, logger: mockLogger }
 
     // Setup successful mocks by default
@@ -164,7 +164,11 @@ describe('updatePaymentHub', () => {
       config.set('featureFlags.isPaymentHubEnabled', false)
       const agreementNumber = 'SFI123456789'
 
-      const result = await updatePaymentHub(mockContext, agreementNumber)
+      const result = await updatePaymentHub(
+        mockContext,
+        agreementNumber,
+        mockContext.logger
+      )
 
       expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
       expect(createInvoice).toHaveBeenCalledWith(
@@ -211,6 +215,14 @@ describe('updatePaymentHub', () => {
           sourceSystem: 'AHWR',
           agreementNumber: 'SFI123456789'
         })
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceSystem: 'AHWR',
+          agreementNumber: 'SFI123456789'
+        }),
+        'The PaymentHub feature flag is disbaled.The request to be sent to payment hub:'
       )
 
       expect(result).toEqual({
