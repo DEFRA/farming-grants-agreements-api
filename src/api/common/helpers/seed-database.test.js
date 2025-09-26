@@ -149,7 +149,7 @@ describe('seedDatabase', () => {
         {
           topicArn:
             'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
-          type: 'io.onsite.agreement.application.approved',
+          type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
           data: { agreementNumber: 'SFI123456789' }
         },
