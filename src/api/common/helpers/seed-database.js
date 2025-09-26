@@ -10,7 +10,7 @@ async function publishSampleAgreementEvents(tableData, logger) {
       {
         topicArn:
           'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
-        type: 'io.onsite.agreement.application.approved',
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         time: new Date().toISOString(),
         data: row
       },

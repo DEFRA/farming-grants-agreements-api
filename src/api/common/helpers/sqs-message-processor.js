@@ -9,7 +9,7 @@ import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
  * @returns {Promise<Agreement>}
  */
 export const handleEvent = async (notificationMessageId, payload, logger) => {
-  if (payload.type.indexOf('application.approved') !== -1) {
+  if (payload.type.indexOf('gas-backend.agreement.create') !== -1) {
     logger.info(`Creating agreement from event: ${notificationMessageId}`)
     const agreement = await createOffer(
       notificationMessageId,
