@@ -20,9 +20,13 @@ convict.addFormat({
   },
   coerce: (val) => {
     if (typeof val === 'string') {
-      const s = val.trim().toLowerCase()
-      if (s === 'true') return true
-      if (s === 'false') return false
+      const trimmedValue = val.trim().toLowerCase()
+      if (trimmedValue === 'true') {
+        return true
+      }
+      if (trimmedValue === 'false') {
+        return false
+      }
       return val
     }
     return val
