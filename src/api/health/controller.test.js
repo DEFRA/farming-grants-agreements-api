@@ -13,7 +13,9 @@ describe('#healthController', () => {
   })
 
   afterAll(async () => {
-    await server.stop({ timeout: 0 })
+    if (server) {
+      await server.stop({ timeout: 0 })
+    }
   })
 
   test('Should provide expected response', async () => {

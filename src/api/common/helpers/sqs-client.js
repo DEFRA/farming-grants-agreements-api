@@ -1,8 +1,39 @@
 import { SQSClient } from '@aws-sdk/client-sqs'
+import Boom from '@hapi/boom'
 import { Consumer } from 'sqs-consumer'
 import { config } from '~/src/config/index.js'
-import { processMessage } from './sqs-message-processor.js'
-import { seedDatabase } from './seed-database.js'
+
+/**
+ * Process a message from the SQS queue
+ * @param {Function} callback - The function to handle the message
+ * @param { Message } message - The message to process
+ * @param { import('@hapi/hapi').Server } logger - The logger instance
+ * @returns {Promise<void>}
+ */
+export const processMessage = async (callback, message, logger) => {
+  try {
+    const messageBody = JSON.parse(message.Body)
+    await callback(message.MessageId, messageBody, logger)
+  } catch (error) {
+    logger.error(
+      {
+        message,
+        error: error.message,
+        stack: error.stack
+      },
+      'Error processing message:'
+    )
+
+    if (error.name === 'SyntaxError') {
+      throw Boom.badData('Invalid message format', {
+        message,
+        error: error.message
+      })
+    }
+
+    throw Boom.badImplementation('Error processing SQS message', error)
+  }
+}
 
 /**
  * Hapi plugin for SQS message processing
@@ -12,9 +43,9 @@ import { seedDatabase } from './seed-database.js'
  *   queueUrl: string
  * }>}
  */
-export const sqsClientPlugin = {
+export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
   plugin: {
-    name: 'sqs',
+    name: `sqs-client-${tag}`,
     version: '1.0.0',
     /**
      *
@@ -23,20 +54,20 @@ export const sqsClientPlugin = {
      * @returns {void}
      */
     register: function (server, options) {
-      server.logger.info('Setting up SQS client')
+      server.logger.info(`Setting up SQS client (${tag})`)
 
       const sqsClient = new SQSClient({
         region: options.awsRegion,
         endpoint: options.sqsEndpoint
       })
 
-      const app = Consumer.create({
+      const sqsConsumer = Consumer.create({
         queueUrl: options.queueUrl,
         handleMessage: async (message) => {
           try {
-            await processMessage(message, server.logger)
+            await processMessage(callback, message, server.logger)
             server.logger.info(
-              `Successfully processed message: ${message.MessageId}`
+              `Successfully processed SQS (${tag}) message: ${message.MessageId}`
             )
           } catch (error) {
             server.logger.error(
@@ -46,7 +77,7 @@ export const sqsClientPlugin = {
                 stack: error.stack,
                 data: error.data
               },
-              'Failed to process message:'
+              `Failed to process SQS (${tag}) message:`
             )
           }
         },
@@ -59,51 +90,36 @@ export const sqsClientPlugin = {
         messageAttributeNames: ['All']
       })
 
-      app.on('error', (err) => {
+      sqsConsumer.on('error', (err) => {
         server.logger.error(
           {
             error: err.message || err.toString(),
             fullError: err
           },
-          'SQS Consumer error:'
+          `SQS Consumer (${tag}) error:`
         )
       })
 
-      app.on('processing_error', (err) => {
+      sqsConsumer.on('processing_error', (err) => {
         server.logger.error(
           {
             error: err.message,
             stack: err.stack
           },
-          'SQS Message processing error:'
+          `SQS Message (${tag}) processing error:`
         )
       })
 
-      app.on('started', () => {
-        server.logger.info('SQS Consumer started')
-
-        // Seed the database if required
-        if (config.get('featureFlags.seedDb') === true) {
-          server.logger.info('Seeding database')
-
-          seedDatabase(server.logger).catch((err) => {
-            server.logger.error(
-              {
-                error: err.message,
-                stack: err.stack
-              },
-              'Error seeding database failed:'
-            )
-          })
-        }
+      sqsConsumer.on('started', () => {
+        server.logger.info(`SQS Consumer (${tag}) started`)
       })
 
-      app.start()
+      sqsConsumer.start()
 
       server.events.on('stop', () => {
-        server.logger.info('Stopping SQS consumer')
-        app.stop()
-        server.logger.info('Closing SQS client')
+        server.logger.info(`Stopping SQS consumer (${tag})`)
+        sqsConsumer.stop()
+        server.logger.info(`Closing SQS client (${tag})`)
         sqsClient.destroy()
       })
     }
@@ -111,9 +127,9 @@ export const sqsClientPlugin = {
   options: {
     awsRegion: config.get('aws.region'),
     sqsEndpoint: config.get('sqs.endpoint'),
-    queueUrl: config.get('sqs.queueUrl')
+    queueUrl
   }
-}
+})
 
 /**
  * @import { Agreement } from '~/src/api/common/types/agreement.d.js'

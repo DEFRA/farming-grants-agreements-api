@@ -15,7 +15,7 @@ const testEndpoints = {
       server.route([
         {
           method: 'POST',
-          path: '/api/test/queue-message',
+          path: '/api/test/queue-message/{queueName?}',
           ...postTestQueueMessageController
         },
         {
