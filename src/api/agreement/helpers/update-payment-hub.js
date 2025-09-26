@@ -73,7 +73,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
     } else {
       logger.info(
         paymentHubRequest,
-        'The PaymentHub feature flag is disbaled.The request to be sent to payment hub:'
+        'The PaymentHub feature flag is disbaled. The request to be sent to payment hub:'
       )
     }
 
