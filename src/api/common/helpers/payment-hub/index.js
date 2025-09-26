@@ -104,6 +104,8 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
     throw new Error(`Payment hub request failed: ${response.statusText}`)
   }
 
+  logger.info('The PaymentHub request sent successfully')
+
   return {
     status: 'success',
     message: 'Payload sent to payment hub successfully'

@@ -222,7 +222,7 @@ describe('updatePaymentHub', () => {
           sourceSystem: 'AHWR',
           agreementNumber: 'SFI123456789'
         }),
-        'The PaymentHub feature flag is disbaled. The request to be sent to payment hub:'
+        'The PaymentHub feature flag is disbaled. The request has not been sent to payment hub:'
       )
 
       expect(result).toEqual({
