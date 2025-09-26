@@ -18,7 +18,7 @@ describe('SQS message processor', () => {
   describe('processMessage', () => {
     it('should process valid SNS message', async () => {
       const mockPayload = {
-        type: 'application.approved',
+        type: 'gas-backend.agreement.create',
         data: { id: '123' }
       }
       const message = {
@@ -75,7 +75,7 @@ describe('SQS message processor', () => {
   describe('handleEvent', () => {
     it('should create agreement for application-approved events', async () => {
       const mockPayload = {
-        type: 'application.approved',
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         data: { id: '123', status: 'approved' }
       }
 

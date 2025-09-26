@@ -93,7 +93,7 @@ describe('SQS Client', () => {
   describe('handleEvent', () => {
     it('should create agreement for application-approved events', async () => {
       const mockPayload = {
-        type: 'application.approved',
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         data: { id: '123', status: 'approved' }
       }
 

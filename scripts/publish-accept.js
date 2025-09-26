@@ -17,7 +17,7 @@ async function publishTestEvent() {
     id: 'xxxx-xxxx-xxxx-xxxx',
     source: 'fg-gas-backend',
     specVersion: '1.0',
-    type: 'cloud.defra.dev.fg-gas-backend.application.approved',
+    type: 'cloud.defra.test.fg-gas-backend.agreement.create',
     datacontenttype: 'application/json',
     data: {
       clientRef: 'ref-1234',
