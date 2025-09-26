@@ -58,7 +58,8 @@ async function acceptOffer(
         version: agreementData?.version,
         agreementUrl,
         status: acceptedStatus,
-        date: acceptanceTime
+        date: acceptanceTime,
+        code: agreementData?.code
       }
     },
     logger
