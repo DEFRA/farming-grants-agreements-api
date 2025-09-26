@@ -80,13 +80,6 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
     logger.info(body, 'Payload to be sent to payment hub:')
   }
 
-  if (config.get('env') === 'development') {
-    return {
-      status: 'success',
-      message: 'Payload sent to payment hub successfully'
-    }
-  }
-
   if (!config.get('paymentHub.keyName') || !config.get('paymentHub.key')) {
     throw new Error('Payment Hub keyname or key is not set')
   }
@@ -110,6 +103,8 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
   if (!response.ok) {
     throw new Error(`Payment hub request failed: ${response.statusText}`)
   }
+
+  logger.info('The PaymentHub request sent successfully')
 
   return {
     status: 'success',

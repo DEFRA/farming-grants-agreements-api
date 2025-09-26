@@ -10,6 +10,29 @@ const oneWeekMs = 604800000
 const isProduction = process.env.NODE_ENV === 'production'
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
+
+convict.addFormat({
+  name: 'strict-boolean',
+  validate: (val) => {
+    if (val !== true && val !== false) {
+      throw new Error('must be a boolean true/false')
+    }
+  },
+  coerce: (val) => {
+    if (typeof val === 'string') {
+      const trimmedValue = val.trim().toLowerCase()
+      if (trimmedValue === 'true') {
+        return true
+      }
+      if (trimmedValue === 'false') {
+        return false
+      }
+      return val
+    }
+    return val
+  }
+})
+
 const config = convict({
   serviceVersion: {
     doc: 'The service version, this variable is injected into your docker container in CDP environments',
@@ -342,7 +365,7 @@ const config = convict({
     },
     isPaymentHubEnabled: {
       doc: 'Enable or Disable payments hub',
-      format: Boolean,
+      format: 'strict-boolean',
       default: false,
       env: 'ENABLE_PAYMENT_HUB'
     }
