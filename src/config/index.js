@@ -23,7 +23,7 @@ convict.addFormat({
       const s = val.trim().toLowerCase()
       if (s === 'true') return true
       if (s === 'false') return false
-      return val // let validate() reject it
+      return val
     }
     return val
   }
@@ -367,20 +367,6 @@ const config = convict({
     }
   }
 })
-
-// function validationError(err) {
-//   const errorMessage = err?.message ?? err
-//   throw new Error(`❌ Config validation error ${errorMessage}`)
-// }
-
-// export function validateConfig(logger) {
-//   try {
-//     config.validate({ allowed: 'strict' })
-//   } catch (error) {
-//     const errorMessage = error?.message ?? error
-//     logger.error(errorMessage)
-//   }
-// }
 
 config.validate({ allowed: 'strict' })
 
