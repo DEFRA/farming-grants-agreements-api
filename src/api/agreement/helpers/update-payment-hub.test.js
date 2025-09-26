@@ -82,7 +82,7 @@ describe('updatePaymentHub', () => {
     jest.clearAllMocks()
 
     mockServer = { mock: 'server' }
-    mockLogger = { mock: 'logger', info: jest.fn() }
+    mockLogger = { mock: 'logger', warn: jest.fn() }
     mockContext = { server: mockServer, logger: mockLogger }
 
     // Setup successful mocks by default
@@ -217,7 +217,7 @@ describe('updatePaymentHub', () => {
         })
       )
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           sourceSystem: 'AHWR',
           agreementNumber: 'SFI123456789'
