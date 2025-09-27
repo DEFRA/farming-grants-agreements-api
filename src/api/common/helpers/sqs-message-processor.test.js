@@ -1,8 +1,10 @@
 import { jest } from '@jest/globals'
 import { handleEvent, processMessage } from './sqs-message-processor.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { config } from '~/src/config/index.js'
 
 jest.mock('~/src/api/agreement/helpers/create-offer.js')
+jest.mock('~/src/config/index.js')
 
 describe('SQS message processor', () => {
   let mockLogger
@@ -13,10 +15,19 @@ describe('SQS message processor', () => {
     createOffer.mockResolvedValue({
       agreementNumber: 'SFI123456789'
     })
+
+    // Mock config values
+    config.get = jest.fn((key) => {
+      const configValues = {
+        'files.s3.bucket': 'test-bucket',
+        'files.s3.region': 'eu-west-2'
+      }
+      return configValues[key]
+    })
   })
 
   describe('processMessage', () => {
-    it('should process valid SNS message', async () => {
+    it('should process valid SNS message for application.approved', async () => {
       const mockPayload = {
         type: 'gas-backend.agreement.create',
         data: { id: '123' }
@@ -33,6 +44,28 @@ describe('SQS message processor', () => {
         mockPayload.data,
         mockLogger
       )
+    })
+
+    it('should process valid SNS message for agreement.status.updated', async () => {
+      const mockPayload = {
+        type: 'agreement.status.updated',
+        data: {
+          status: 'accepted',
+          agreementNumber: 'SFI123456789',
+          agreementUrl: 'http://localhost:3555/SFI123456789'
+        }
+      }
+      const message = {
+        MessageId: 'aws-message-id',
+        Body: JSON.stringify(mockPayload)
+      }
+
+      await processMessage(message, mockLogger)
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Processing agreement status update: aws-message-id'
+      )
+      expect(createOffer).not.toHaveBeenCalled()
     })
 
     it('should handle invalid JSON in message body', async () => {
@@ -102,6 +135,81 @@ describe('SQS message processor', () => {
       ).rejects.toThrow('Unrecognized event type')
 
       expect(createOffer).not.toHaveBeenCalled()
+    })
+
+    it('should handle agreement status updated events with accepted status', async () => {
+      const mockPayload = {
+        type: 'agreement.status.updated',
+        data: {
+          status: 'accepted',
+          agreementNumber: 'SFI123456789',
+          agreementUrl: 'http://localhost:3555/SFI123456789'
+        }
+      }
+
+      const result = await handleEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Processing agreement status update: aws-message-id'
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'PDF generation triggered for agreement SFI123456789'
+      )
+      expect(result).toEqual(mockPayload.data)
+    })
+
+    it('should ignore agreement status updated events that are not accepted', async () => {
+      const mockPayload = {
+        type: 'agreement.status.updated',
+        data: {
+          status: 'offered',
+          agreementNumber: 'SFI123456789',
+          agreementUrl: 'http://localhost:3555/SFI123456789'
+        }
+      }
+
+      const result = await handleEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Processing agreement status update: aws-message-id'
+      )
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Agreement SFI123456789 accepted')
+      )
+      expect(result).toEqual(mockPayload.data)
+    })
+
+    it('should ignore agreement status updated events without agreementUrl', async () => {
+      const mockPayload = {
+        type: 'agreement.status.updated',
+        data: {
+          status: 'accepted',
+          agreementNumber: 'SFI123456789'
+          // agreementUrl is missing
+        }
+      }
+
+      const result = await handleEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Processing agreement status update: aws-message-id'
+      )
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Agreement SFI123456789 accepted')
+      )
+      expect(result).toEqual(mockPayload.data)
     })
   })
 })

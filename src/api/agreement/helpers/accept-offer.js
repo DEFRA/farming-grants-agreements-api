@@ -24,6 +24,24 @@ async function acceptOffer(
   const acceptanceTime = new Date().toISOString()
   const acceptedStatus = 'accepted'
 
+  // Validate PDF service configuration before accepting
+  const bucket = config.get('files.s3.bucket')
+  const region = config.get('files.s3.region')
+
+  if (!bucket) {
+    logger.error('PDF service configuration missing: FILES_S3_BUCKET not set')
+    throw Boom.badImplementation(
+      'PDF service configuration missing: FILES_S3_BUCKET not set'
+    )
+  }
+
+  if (!region) {
+    logger.error('PDF service configuration missing: FILES_S3_REGION not set')
+    throw Boom.badImplementation(
+      'PDF service configuration missing: FILES_S3_REGION not set'
+    )
+  }
+
   // Update the agreement in the database
   const agreement = await agreementsModel
     .updateOneAgreementVersion(
