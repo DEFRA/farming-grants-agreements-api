@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import { getTestAgreementController } from './get-test-agreement.js'
+import { getTestAgreementController } from './get-test-agreement.controller.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({

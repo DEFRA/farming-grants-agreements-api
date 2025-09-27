@@ -4,7 +4,25 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 import { acceptOffer, getFirstPaymentDate } from './accept-offer.js'
 import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
 
-jest.mock('~/src/api/common/models/agreements.js')
+jest.mock('~/src/api/common/models/agreements.js', () => ({
+  __esModule: true,
+  default: {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    findById: jest.fn(),
+    create: jest.fn(),
+    updateOne: jest.fn(),
+    updateMany: jest.fn(),
+    deleteOne: jest.fn(),
+    deleteMany: jest.fn(),
+    countDocuments: jest.fn(),
+    aggregate: jest.fn(),
+    distinct: jest.fn(),
+    findOneAndUpdate: jest.fn(),
+    updateOneAgreementVersion: jest.fn(),
+    createAgreementWithVersions: jest.fn()
+  }
+}))
 jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('acceptOffer', () => {

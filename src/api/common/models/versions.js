@@ -127,7 +127,7 @@ const schema = new mongoose.Schema(
       type: String,
       required: true,
       default: 'offered',
-      enum: ['offered', 'accepted']
+      enum: ['offered', 'withdrawn', 'accepted']
     },
     agreement: {
       type: mongoose.Schema.Types.ObjectId,
@@ -150,6 +150,7 @@ const schema = new mongoose.Schema(
 // Indexes for common queries
 schema.index({ notificationMessageId: 1 }, { unique: true })
 schema.index({ sbi: 1 })
+schema.index({ clientRef: 1 })
 schema.index({ agreementStartDate: 1 })
 schema.index({ agreementEndDate: 1 })
 schema.index({ agreement: 1, createdAt: -1, _id: -1 })

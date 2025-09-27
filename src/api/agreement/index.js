@@ -1,4 +1,4 @@
-import { Boom } from '@hapi/boom'
+import Boom from '@hapi/boom'
 import { getControllerByAction } from '~/src/api/agreement/controllers/index.js'
 import { downloadController } from './controllers/download.controller.js'
 

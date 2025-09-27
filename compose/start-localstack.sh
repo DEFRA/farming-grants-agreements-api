@@ -1,27 +1,20 @@
 #!/bin/bash
 set -e
 
-# Match the region your JS app uses by default
-export AWS_REGION=eu-west-2
-export AWS_DEFAULT_REGION=eu-west-2
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-
 echo "🚀 Initializing SNS + SQS in LocalStack..."
 
 # Define S3 bucket for generated PDFs
 declare S3_BUCKET="s3://farming-grants-agreements-pdf-bucket"
 
-# Define associative arrays for topics and queues
-declare -A TOPICS=(
-  [application_approved]="grant_application_approved"   # ↓ Grants UI has approved an application
-  [agreement_status_updated]="agreement_status_updated" # - Agreement status got updated i.e offered/accepted/withdrawn
-  [create_agreement_pdf]="agreement_status_updated"     # - Used to generate the PDF of the agreement
-)
+# SQS Queues we listen to
 declare -A QUEUES=(
-  [application_approved]="create_agreement" # We need to create the agreement in response to the application being approved
-  [agreement_status_updated]="record_agreement_status_update"
-  [create_agreement_pdf]="create_agreement_pdf" # We need to create the agreement PDF in response to the offer being accepted
+  [grant_application_approved]="create_agreement" # Grants UI has approved an application, we need to create the agreement in response
+  [gas__sns__application_status_updated]="gas_application_status_updated" # Grants Application Service update (e.g. withdrawn)
+)
+
+# SNS Topics we publish to
+declare -A TOPICS=(
+  [agreement_status_updated]="agreement_status_updated" # We've updated the agreement status e.g. created/accepted
 )
 
 # Associative arrays for ARNs and URLs
@@ -37,10 +30,28 @@ for key in "${!TOPICS[@]}"; do
   echo "✅ Created topic: $arn"
 done
 
+# Create mock SNS topics tests can use to publish and listen to
+for key in "${!QUEUES[@]}"; do
+  topic_name="$key"
+  arn=$(awslocal sns create-topic --name "$topic_name" --query 'TopicArn' --output text)
+  TOPIC_ARNS[$key]="$arn"
+  echo "✅ Created topic: $arn"
+done
+
 # Create SQS queues and get ARNs
 for key in "${!QUEUES[@]}"; do
   queue_name="${QUEUES[$key]}"
-  url=$(awslocal sqs create-queue --queue-name "$queue_name" --query 'QueueUrl' --output text)
+  url=$(awslocal sqs create-queue --queue-name "$queue_name" --endpoint-url=$AWS_ENDPOINT --query 'QueueUrl' --output text)
+  arn=$(awslocal sqs get-queue-attributes --queue-url "$url" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
+  QUEUE_URLS[$key]="$url"
+  QUEUE_ARNS[$key]="$arn"
+  echo "✅ Created queue: $url"
+done
+
+# Create mock SQS queues tests can use to publish and listen to
+for key in "${!TOPICS[@]}"; do
+  queue_name="$key"
+  url=$(awslocal sqs create-queue --queue-name "$queue_name" --endpoint-url=$AWS_ENDPOINT --query 'QueueUrl' --output text)
   arn=$(awslocal sqs get-queue-attributes --queue-url "$url" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
   QUEUE_URLS[$key]="$url"
   QUEUE_ARNS[$key]="$arn"
@@ -68,18 +79,28 @@ for key in "${!TOPICS[@]}"; do
   wait_for_topic "${TOPIC_ARNS[$key]}" "${TOPICS[$key]}"
 done
 
-# Subscribe each queue to its topic
+# Create loopback subscription for each topic
 for key in "${!TOPICS[@]}"; do
   awslocal sns subscribe \
     --topic-arn "${TOPIC_ARNS[$key]}" \
     --protocol sqs \
     --notification-endpoint "${QUEUE_ARNS[$key]}" \
     --attributes '{ "RawMessageDelivery": "true"}'
-  echo "🔗 Subscribed queue to topic: ${QUEUE_ARNS[$key]}"
+  echo "🔗 Subscribed topics queue ${QUEUE_ARNS[$key]} to topic: ${TOPIC_ARNS[$key]}"
+done
+
+# Subscribe each queue to its mock topic
+for key in "${!QUEUES[@]}"; do
+  awslocal sns subscribe \
+    --topic-arn "${TOPIC_ARNS[$key]}" \
+    --protocol sqs \
+    --notification-endpoint "${QUEUE_ARNS[$key]}" \
+    --attributes '{ "RawMessageDelivery": "true"}'
+  echo "🔗 Subscribed queue ${QUEUE_ARNS[$key]} to topic: ${TOPIC_ARNS[$key]}"
 done
 
 # Create S3 bucket
-awslocal --endpoint-url=http://localhost:4566 s3 mb ${S3_BUCKET}
+awslocal --endpoint-url=$AWS_ENDPOINT s3 mb ${S3_BUCKET}
 echo "✅ Created S3 bucket: ${S3_BUCKET}"
 
 echo "✅ SNS and SQS setup complete."

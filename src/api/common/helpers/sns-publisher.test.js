@@ -96,7 +96,7 @@ describe('publishEvent', () => {
         error: 'fail',
         code: 'InternalError'
       }),
-      'Failed to publish event to SNS'
+      'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:123456789012:test-topic type: TestType'
     )
     expect(logger.info).toHaveBeenCalled()
   })
@@ -158,7 +158,7 @@ describe('publishEvent', () => {
         error: 'bad request',
         code: 'BadRequest'
       }),
-      'Failed to publish event to SNS'
+      'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:123456789012:test-topic type: TestType'
     )
   })
 })

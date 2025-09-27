@@ -7,6 +7,7 @@ const collection = 'agreements'
 const schema = new mongoose.Schema(
   {
     agreementNumber: { type: String, required: true },
+    clientRef: { type: String, required: true },
     frn: { type: String, required: true },
     sbi: { type: String, required: true },
     versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }],
@@ -18,6 +19,7 @@ const schema = new mongoose.Schema(
 // Helpful indexes
 schema.index({ sbi: 1 })
 schema.index({ agreementNumber: 1 }, { unique: true })
+schema.index({ clientRef: 1 })
 schema.index({ createdAt: 1 })
 
 function assertValidCreateArgs(agreement, versions) {
@@ -55,6 +57,7 @@ schema.statics.createAgreementWithVersions = async function ({
       // create a minimal parent first (no children yet)
       const newParent = await this.create({
         agreementNumber: agreement.agreementNumber,
+        clientRef: agreement.clientRef,
         frn: agreement.frn,
         sbi: agreement.sbi,
         createdBy: agreement.createdBy,
@@ -115,15 +118,11 @@ schema.statics.createAgreementWithVersions = async function ({
 }
 
 /**
- * Update one child agreement that belongs to a agreement.
- *
+ * Find the latest agreement version.
+ * @param {object} agreementFilter - The filter to find the parent agreement
+ * @returns {Promise<Agreement>} The updated child agreement
  */
-
-schema.statics.updateOneAgreementVersion = async function (
-  agreementFilter,
-  update
-) {
-  // 1) find the parent agreement and get its child ids
+schema.statics.findLatestAgreementVersion = async function (agreementFilter) {
   const agreement = await this.findOne(agreementFilter)
     .select('versions')
     .lean()
@@ -141,27 +140,50 @@ schema.statics.updateOneAgreementVersion = async function (
     throw Boom.notFound('Agreement has no child versions to update')
   }
 
-  const agreementVersion = await versionsModel
+  return versionsModel
     .findOne({ agreement: agreement._id })
     .sort({ createdAt: -1, _id: -1 })
     .lean()
     .catch((err) => {
       throw Boom.internal(err)
     })
+}
 
-  // 3) update the child agreement
+/**
+ * Update one child agreement that belongs to a agreement.
+ * @param {object} agreementFilter - The filter to find the parent agreement
+ * @param {object} update - The update to apply to the child agreement
+ * @returns {Promise<Agreement>} The updated child agreement
+ * @throws {Boom} 404 if no parent or child agreement found, 500 on other errors
+ */
+schema.statics.updateOneAgreementVersion = async function (
+  agreementFilter,
+  update
+) {
+  let { agreementNumber, ...filter } = agreementFilter
+
+  if (agreementNumber) {
+    const agreementVersion = await this.findLatestAgreementVersion({
+      agreementNumber
+    })
+
+    filter = { _id: agreementVersion._id, ...filter }
+  }
+
   const updated = await versionsModel
-    .findOneAndUpdate({ _id: agreementVersion._id }, update, {
+    .findOneAndUpdate(filter, update, {
       new: true,
       runValidators: true,
       lean: true
     })
+    .populate('agreement')
+    .sort({ createdAt: -1, _id: -1 })
     .catch((err) => {
       throw Boom.internal(err)
     })
 
   if (!updated) {
-    throw Boom.internal('Failed to update the child agreement')
+    throw Boom.notFound('Failed to update agreement. Agreement not found')
   }
 
   return updated

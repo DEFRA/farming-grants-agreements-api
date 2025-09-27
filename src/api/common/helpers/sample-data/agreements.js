@@ -355,7 +355,7 @@ export default [
         agreementStartDate: startDate,
         agreementEndDate: endDate,
         frequency: 'Quarterly',
-        agreementTotalPence: 11270784,
+        agreementTotalPence: 11270793,
         annualTotalPence: 6440448,
         parcelItems: {
           1: {
@@ -457,44 +457,44 @@ export default [
         },
         payments: [
           {
-            totalPaymentPence: 1610112,
+            totalPaymentPence: 1610119,
             paymentDate: '2025-12-05',
             lineItems: [
               {
                 agreementLevelItemId: 1,
-                paymentPence: 6800
+                paymentPence: 6801
               },
               {
                 parcelItemId: 1,
-                paymentPence: 60919
+                paymentPence: 60920
               },
               {
                 parcelItemId: 2,
-                paymentPence: 237375
+                paymentPence: 237376
               },
               {
                 parcelItemId: 3,
-                paymentPence: 1639
+                paymentPence: 1640
               },
               {
                 parcelItemId: 4,
-                paymentPence: 32614
+                paymentPence: 32615
               },
               {
                 parcelItemId: 5,
-                paymentPence: 461450
+                paymentPence: 461451
               },
               {
                 parcelItemId: 6,
-                paymentPence: 584675
+                paymentPence: 584676
               },
               {
                 parcelItemId: 7,
-                paymentPence: 179250
+                paymentPence: 179251
               },
               {
                 parcelItemId: 8,
-                paymentPence: 45390
+                paymentPence: 45391
               }
             ]
           },
@@ -847,11 +847,11 @@ export default [
             lineItems: [
               {
                 parcelItemId: 1,
-                paymentPence: 1201
+                paymentPence: 1204
               },
               {
                 agreementLevelItemId: 1,
-                paymentPence: 6800
+                paymentPence: 6803
               }
             ]
           },
