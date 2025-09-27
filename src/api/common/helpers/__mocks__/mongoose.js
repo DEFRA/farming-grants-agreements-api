@@ -24,7 +24,7 @@ mockSchema.Types = {
 // Make Schema a proper constructor
 Object.setPrototypeOf(mockSchema, Function.prototype)
 
-const mockModel = jest.fn().mockImplementation((collection, schema) => {
+const mockModel = jest.fn().mockImplementation((_collection, schema) => {
   // Create a base mock with standard mongoose methods
   const mock = {
     find: jest.fn(),
