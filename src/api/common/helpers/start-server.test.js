@@ -73,6 +73,10 @@ describe('#startServer', () => {
         'Setting up Mongoose'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
+        3,
+        'Mongoose connected to MongoDB'
+      )
+      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         4,
         'Server started successfully'
       )

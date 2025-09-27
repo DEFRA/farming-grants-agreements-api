@@ -7,40 +7,33 @@ import { offerWithdrawnController } from '~/src/api/agreement/controllers/offer-
 
 export const getControllerByAction = (agreementStatus) => {
   let chooseControllerByActionOffer
-  switch (agreementStatus) {
-    case 'offered':
-      chooseControllerByActionOffer = (action) => {
-        switch (action) {
-          case 'display-accept':
-            return displayAcceptOfferController
-          case 'accept-offer':
-            return acceptOfferController
-          case 'review-offer':
-          default:
-            return reviewOfferController
-        }
+  if (agreementStatus === 'offered') {
+    chooseControllerByActionOffer = (action) => {
+      switch (action) {
+        case 'display-accept':
+          return displayAcceptOfferController
+        case 'accept-offer':
+          return acceptOfferController
+        case 'review-offer':
+        default:
+          return reviewOfferController
       }
-      break
-
-    case 'accepted':
-      chooseControllerByActionOffer = (action) => {
-        switch (action) {
-          case 'view-agreement':
-            return viewAgreementController
-          case 'accept-offer':
-          case 'offer-accepted':
-          default:
-            return acceptOfferController
-        }
+    }
+  } else if (agreementStatus === 'accepted') {
+    chooseControllerByActionOffer = (action) => {
+      switch (action) {
+        case 'view-agreement':
+          return viewAgreementController
+        case 'accept-offer':
+        case 'offer-accepted':
+        default:
+          return acceptOfferController
       }
-      break
-
-    case 'withdrawn':
-      chooseControllerByActionOffer = () => offerWithdrawnController
-      break
-
-    default:
-      throw Boom.badRequest(`Agreement is in an unknown state`)
+    }
+  } else if (agreementStatus === 'withdrawn') {
+    chooseControllerByActionOffer = () => offerWithdrawnController
+  } else {
+    throw Boom.badRequest(`Agreement is in an unknown state`)
   }
 
   return chooseControllerByActionOffer
