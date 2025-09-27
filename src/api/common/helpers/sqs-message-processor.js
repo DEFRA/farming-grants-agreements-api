@@ -20,7 +20,29 @@ export const handleEvent = async (notificationMessageId, payload, logger) => {
     return agreement
   }
 
-  throw new Error('Unrecognized event type')
+  if (payload.type.indexOf('agreement.status.updated') !== -1) {
+    logger.info(`Processing agreement status update: ${notificationMessageId}`)
+    handleAgreementStatusUpdate(notificationMessageId, payload.data, logger)
+    return payload.data
+  }
+
+  return Promise.reject(new Error('Unrecognized event type'))
+}
+
+/**
+ * Handle agreement status update events
+ * @param {string} notificationMessageId - The AWS notification message ID
+ * @param {object} data - The agreement status update data
+ * @param {import('@hapi/hapi').Server} logger - The logger instance
+ * @returns {void}
+ */
+const handleAgreementStatusUpdate = (notificationMessageId, data, logger) => {
+  const { status, agreementNumber, agreementUrl } = data
+
+  // Only process 'accepted' status for PDF generation
+  if (status === 'accepted' && agreementUrl) {
+    logger.info(`PDF generation triggered for agreement ${agreementNumber}`)
+  }
 }
 
 /**
