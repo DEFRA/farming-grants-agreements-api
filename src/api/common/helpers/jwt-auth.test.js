@@ -158,7 +158,8 @@ describe('jwt-auth', () => {
 
       const mockLogger = {
         info: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
+        warn: jest.fn()
       }
 
       // Act
@@ -170,7 +171,7 @@ describe('jwt-auth', () => {
 
       // Assert
       expect(result).toBe(true)
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         'JWT authentication is disabled via feature flag'
       )
     })

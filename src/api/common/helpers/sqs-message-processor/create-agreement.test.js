@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals'
-import { handleEvent, processMessage } from './sqs-message-processor.js'
+import { handleCreateAgreementEvent } from './create-agreement.js'
+import { processMessage } from '../sqs-client.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 
 jest.mock('~/src/api/agreement/helpers/create-offer.js')
@@ -26,7 +27,7 @@ describe('SQS message processor', () => {
         Body: JSON.stringify(mockPayload)
       }
 
-      await processMessage(message, mockLogger)
+      await processMessage(handleCreateAgreementEvent, message, mockLogger)
 
       expect(createOffer).toHaveBeenCalledWith(
         'aws-message-id',
@@ -40,9 +41,9 @@ describe('SQS message processor', () => {
         Body: 'invalid json'
       }
 
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Invalid message format'
-      )
+      await expect(
+        processMessage(handleCreateAgreementEvent, message, mockLogger)
+      ).rejects.toThrow('Invalid message format')
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           message,
@@ -59,9 +60,9 @@ describe('SQS message processor', () => {
         })
       }
 
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Error processing SQS message'
-      )
+      await expect(
+        processMessage(handleCreateAgreementEvent, message, mockLogger)
+      ).rejects.toThrow('Error processing SQS message')
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           message,
@@ -79,7 +80,11 @@ describe('SQS message processor', () => {
         data: { id: '123', status: 'approved' }
       }
 
-      await handleEvent('aws-message-id', mockPayload, mockLogger)
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
@@ -98,7 +103,7 @@ describe('SQS message processor', () => {
       }
 
       await expect(
-        handleEvent('aws-message-id', mockPayload, mockLogger)
+        handleCreateAgreementEvent('aws-message-id', mockPayload, mockLogger)
       ).rejects.toThrow('Unrecognized event type')
 
       expect(createOffer).not.toHaveBeenCalled()

@@ -13,11 +13,13 @@ import { pulse } from '~/src/api/common/helpers/pulse.js'
 import { requestTracing } from '~/src/api/common/helpers/request-tracing.js'
 import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
-import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
 import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
 import { nunjucksConfig } from '~/src/config/nunjucks/nunjucks.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
+import { createSqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
+import { handleCreateAgreementEvent } from './common/helpers/sqs-message-processor/create-agreement.js'
+import { handleUpdateAgreementEvent } from './common/helpers/sqs-message-processor/update-agreement.js'
 
 const customGrantsUiJwtScheme = () => ({
   authenticate: async (request, h) => {
@@ -108,7 +110,20 @@ async function createServer(serverOptions = {}) {
       pulse,
       mongooseDb,
       nunjucksConfig,
-      options.disableSQS ? null : sqsClientPlugin,
+      ...(!options.disableSQS
+        ? [
+            createSqsClientPlugin(
+              'gas_create_agreement',
+              config.get('sqs.queueUrl'),
+              handleCreateAgreementEvent
+            ),
+            createSqsClientPlugin(
+              'gas_application_updated',
+              config.get('sqs.gasApplicationUpdatedQueueUrl'),
+              handleUpdateAgreementEvent
+            )
+          ]
+        : []),
       errorHandlerPlugin,
       router
     ].filter(Boolean)

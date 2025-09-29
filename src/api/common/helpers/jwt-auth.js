@@ -100,7 +100,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
   )
 
   if (!isJwtEnabled) {
-    logger.info('JWT authentication is disabled via feature flag')
+    logger.warn('JWT authentication is disabled via feature flag')
     return true
   }
 

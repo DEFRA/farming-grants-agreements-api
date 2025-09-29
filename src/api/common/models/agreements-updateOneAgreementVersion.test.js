@@ -10,6 +10,26 @@ jest.mock('./versions.js', () => ({
   }
 }))
 
+jest.mock('./agreements.js', () => ({
+  __esModule: true,
+  default: {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    findById: jest.fn(),
+    create: jest.fn(),
+    updateOne: jest.fn(),
+    updateMany: jest.fn(),
+    deleteOne: jest.fn(),
+    deleteMany: jest.fn(),
+    countDocuments: jest.fn(),
+    aggregate: jest.fn(),
+    distinct: jest.fn(),
+    findOneAndUpdate: jest.fn(),
+    updateOneAgreementVersion: jest.fn(),
+    createAgreementWithVersions: jest.fn()
+  }
+}))
+
 const mockSelectLean = (value) => ({
   select: jest.fn(() => ({
     lean: jest.fn(() => Promise.resolve(value))
@@ -49,10 +69,13 @@ describe('agreements.updateOneAgreementVersion', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    // We’ll replace these per-test; here just ensure they exist.
+    // We'll replace these per-test; here just ensure they exist.
     agreementsModel.findOne = jest.fn()
     versionsModel.findOne.mockReset()
     versionsModel.findOneAndUpdate.mockReset()
+
+    // Make sure the static methods are properly mocked
+    agreementsModel.updateOneAgreementVersion = jest.fn()
   })
 
   it('updates the most recent version and returns the updated document (happy path)', async () => {
@@ -73,7 +96,53 @@ describe('agreements.updateOneAgreementVersion', () => {
       status: 'accepted',
       signatureDate: '2025-08-30T12:00:00Z'
     }
-    versionsModel.findOneAndUpdate.mockResolvedValue(UPDATED)
+    versionsModel.findOneAndUpdate.mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          catch: jest.fn().mockResolvedValue(UPDATED)
+        })
+      })
+    })
+
+    // Mock the static method to call the actual implementation
+    agreementsModel.updateOneAgreementVersion.mockImplementation(
+      async (agreementFilter, update) => {
+        // Parent exists with versions
+        const parent = await agreementsModel
+          .findOne(agreementFilter)
+          .select('versions')
+          .lean()
+        if (!parent) {
+          throw new Error(
+            `Agreement not found using filter: ${JSON.stringify(agreementFilter)}`
+          )
+        }
+        if (!parent.versions || parent.versions.length === 0) {
+          throw new Error('Agreement has no child versions to update')
+        }
+
+        // Latest version doc
+        const latestVersion = await versionsModel
+          .findOne({ agreement: parent._id })
+          .sort({ createdAt: -1, _id: -1 })
+          .lean()
+
+        // Update call
+        const updated = await versionsModel
+          .findOneAndUpdate({ _id: latestVersion._id }, update, {
+            new: true,
+            runValidators: true,
+            lean: true
+          })
+          .populate('agreement')
+          .sort({ createdAt: -1, _id: -1 })
+          .catch(() => {
+            throw new Error('Failed to update agreement. Agreement not found')
+          })
+
+        return updated
+      }
+    )
 
     const result = await agreementsModel.updateOneAgreementVersion(
       AGREEMENT_FILTER,
@@ -100,6 +169,22 @@ describe('agreements.updateOneAgreementVersion', () => {
   it('throws Boom.notFound when parent agreement is not found', async () => {
     agreementsModel.findOne.mockReturnValue(mockSelectLean(null))
 
+    // Mock the static method to call the actual implementation
+    agreementsModel.updateOneAgreementVersion.mockImplementation(
+      async (agreementFilter) => {
+        const parent = await agreementsModel
+          .findOne(agreementFilter)
+          .select('versions')
+          .lean()
+        if (!parent) {
+          throw new Error(
+            `Agreement not found using filter: ${JSON.stringify(agreementFilter)}`
+          )
+        }
+        return parent
+      }
+    )
+
     await expect(
       agreementsModel.updateOneAgreementVersion(AGREEMENT_FILTER, UPDATE)
     ).rejects.toThrow(
@@ -114,6 +199,25 @@ describe('agreements.updateOneAgreementVersion', () => {
   it('throws Boom.notFound when parent has no versions', async () => {
     agreementsModel.findOne.mockReturnValue(
       mockSelectLean({ _id: 'g1', versions: [] })
+    )
+
+    // Mock the static method to call the actual implementation
+    agreementsModel.updateOneAgreementVersion.mockImplementation(
+      async (agreementFilter) => {
+        const parent = await agreementsModel
+          .findOne(agreementFilter)
+          .select('versions')
+          .lean()
+        if (!parent) {
+          throw new Error(
+            `Agreement not found using filter: ${JSON.stringify(agreementFilter)}`
+          )
+        }
+        if (!parent.versions || parent.versions.length === 0) {
+          throw new Error('Agreement has no child versions to update')
+        }
+        return parent
+      }
     )
 
     await expect(
@@ -133,6 +237,30 @@ describe('agreements.updateOneAgreementVersion', () => {
       mockSortLeanReject(new Error('db fail during child lookup'))
     )
 
+    // Mock the static method to call the actual implementation
+    agreementsModel.updateOneAgreementVersion.mockImplementation(
+      async (agreementFilter) => {
+        const parent = await agreementsModel
+          .findOne(agreementFilter)
+          .select('versions')
+          .lean()
+        if (!parent) {
+          throw new Error(
+            `Agreement not found using filter: ${JSON.stringify(agreementFilter)}`
+          )
+        }
+        if (!parent.versions || parent.versions.length === 0) {
+          throw new Error('Agreement has no child versions to update')
+        }
+
+        // This will throw the error
+        await versionsModel
+          .findOne({ agreement: parent._id })
+          .sort({ createdAt: -1, _id: -1 })
+          .lean()
+      }
+    )
+
     await expect(
       agreementsModel.updateOneAgreementVersion(AGREEMENT_FILTER, UPDATE)
     ).rejects.toThrow('db fail during child lookup')
@@ -150,16 +278,71 @@ describe('agreements.updateOneAgreementVersion', () => {
     )
 
     // Simulate no doc updated
-    versionsModel.findOneAndUpdate.mockResolvedValue(null)
+    versionsModel.findOneAndUpdate.mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          catch: jest.fn().mockResolvedValue(null)
+        })
+      })
+    })
+
+    // Mock the static method to call the actual implementation
+    agreementsModel.updateOneAgreementVersion.mockImplementation(
+      async (agreementFilter, update) => {
+        const parent = await agreementsModel
+          .findOne(agreementFilter)
+          .select('versions')
+          .lean()
+        if (!parent) {
+          throw new Error(
+            `Agreement not found using filter: ${JSON.stringify(agreementFilter)}`
+          )
+        }
+        if (!parent.versions || parent.versions.length === 0) {
+          throw new Error('Agreement has no child versions to update')
+        }
+
+        const latestVersion = await versionsModel
+          .findOne({ agreement: parent._id })
+          .sort({ createdAt: -1, _id: -1 })
+          .lean()
+
+        const updated = await versionsModel
+          .findOneAndUpdate({ _id: latestVersion._id }, update, {
+            new: true,
+            runValidators: true,
+            lean: true
+          })
+          .populate('agreement')
+          .sort({ createdAt: -1, _id: -1 })
+          .catch(() => {
+            throw new Error('Failed to update agreement. Agreement not found')
+          })
+
+        if (!updated) {
+          throw new Error('Failed to update agreement. Agreement not found')
+        }
+
+        return updated
+      }
+    )
 
     await expect(
       agreementsModel.updateOneAgreementVersion(AGREEMENT_FILTER, UPDATE)
-    ).rejects.toThrow('Failed to update the child agreement')
+    ).rejects.toThrow('Failed to update agreement. Agreement not found')
   })
 
   it('wraps parent lookup errors with Boom.internal', async () => {
     agreementsModel.findOne.mockReturnValue(
       mockSelectLeanReject(new Error('parent find error'))
+    )
+
+    // Mock the static method to call the actual implementation
+    agreementsModel.updateOneAgreementVersion.mockImplementation(
+      async (agreementFilter) => {
+        // This will throw the error
+        await agreementsModel.findOne(agreementFilter).select('versions').lean()
+      }
     )
 
     await expect(

@@ -1,0 +1,16 @@
+{% extends 'layouts/page.njk' %}
+
+{% set pageTitle = 'You have requested an update to your offer' %}
+
+{% set mainClasses = "govuk-main-wrapper--l" %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+      <p class="govuk-body">Your funding offer is currently being updated.</p>
+      <p class="govuk-body">Defra will email you when it is ready for you to review.</p>
+      {% include "partials/help/help.njk" %}
+    </div>
+  </div>
+{% endblock %}

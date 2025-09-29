@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 import { config } from '~/src/config/index.js'
+import { seedDatabase } from './seed-database.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -16,13 +17,32 @@ export const mongooseDb = {
      * @returns {void}
      */
     register: async function (server, options) {
-      server.logger.info('Setting up mongoose')
+      server.logger.info('Setting up Mongoose')
 
       await mongoose.connect(options.mongoUrl, {
         dbName: options.databaseName
       })
 
+      server.logger.info('Mongoose connected to MongoDB')
+
       server.decorate('server', 'mongooseDb', mongoose.connection)
+
+      // Seed the database if required
+      if (config.get('featureFlags.seedDb') === true) {
+        server.logger.warn(
+          'featureFlags.seedDb is enabled. This should not be enabled in production.'
+        )
+
+        seedDatabase(server.logger).catch((err) => {
+          server.logger.error(
+            {
+              error: err.message,
+              stack: err.stack
+            },
+            'Error seeding database failed:'
+          )
+        })
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       server.events.on('stop', async () => {
