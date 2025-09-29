@@ -22,7 +22,7 @@ export const handleUpdateAgreementEvent = async (
     return version
   }
 
-  throw new Error('Unrecognized event type')
+  throw new Error(`Unrecognized event type: ${payload.type} (${data.status})`)
 }
 
 /**
