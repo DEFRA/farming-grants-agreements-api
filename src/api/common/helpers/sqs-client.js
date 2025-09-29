@@ -15,14 +15,7 @@ export const processMessage = async (callback, message, logger) => {
     const messageBody = JSON.parse(message.Body)
     await callback(message.MessageId, messageBody, logger)
   } catch (error) {
-    logger.error(
-      {
-        message,
-        error: error.message,
-        stack: error.stack
-      },
-      'Error processing message:'
-    )
+    logger.error(error, 'Error processing message:')
 
     if (error.name === 'SyntaxError') {
       throw Boom.badData('Invalid message format', {
@@ -71,12 +64,7 @@ export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
             )
           } catch (error) {
             server.logger.error(
-              {
-                messageId: message.MessageId,
-                error: error.message,
-                stack: error.stack,
-                data: error.data
-              },
+              error,
               `Failed to process SQS (${tag}) message:`
             )
           }
@@ -91,23 +79,11 @@ export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
       })
 
       sqsConsumer.on('error', (err) => {
-        server.logger.error(
-          {
-            error: err.message || err.toString(),
-            fullError: err
-          },
-          `SQS Consumer (${tag}) error:`
-        )
+        server.logger.error(err, `SQS Consumer (${tag}) error`)
       })
 
       sqsConsumer.on('processing_error', (err) => {
-        server.logger.error(
-          {
-            error: err.message,
-            stack: err.stack
-          },
-          `SQS Message (${tag}) processing error:`
-        )
+        server.logger.error(err, `SQS Message (${tag}) processing error`)
       })
 
       sqsConsumer.on('started', () => {

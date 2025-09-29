@@ -953,6 +953,7 @@ describe('reviewOfferController', () => {
         expect.objectContaining({ message: 'Failed to fetch offer' })
       )
       expect(request.logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
         expect.stringContaining('Error fetching offer:')
       )
     })

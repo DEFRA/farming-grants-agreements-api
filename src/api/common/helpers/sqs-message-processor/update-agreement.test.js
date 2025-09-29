@@ -44,10 +44,7 @@ describe('SQS message processor', () => {
         processMessage(handleUpdateAgreementEvent, message, mockLogger)
       ).rejects.toThrow('Invalid message format')
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        }),
+        expect.any(Error),
         expect.stringContaining('Error processing message')
       )
     })
@@ -63,10 +60,7 @@ describe('SQS message processor', () => {
         processMessage(handleUpdateAgreementEvent, message, mockLogger)
       ).rejects.toThrow('Error processing SQS message')
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        }),
+        expect.any(Error),
         expect.stringContaining('Error processing message')
       )
     })

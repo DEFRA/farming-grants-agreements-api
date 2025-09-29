@@ -34,13 +34,7 @@ export const mongooseDb = {
         )
 
         seedDatabase(server.logger).catch((err) => {
-          server.logger.error(
-            {
-              error: err.message,
-              stack: err.stack
-            },
-            'Error seeding database failed:'
-          )
+          server.logger.error(err, 'Error seeding database failed:')
         })
       }
 

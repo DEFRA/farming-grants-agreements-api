@@ -26,7 +26,7 @@ const postTestUnacceptOfferController = {
         return error
       }
 
-      request.logger.error(error, 'Error unaccepting offer:')
+      request.logger.error(error, 'Error unaccepting offer')
       return h
         .response({
           message: 'Failed to unaccept offer',

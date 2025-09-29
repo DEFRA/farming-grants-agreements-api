@@ -48,10 +48,7 @@ const extractJwtPayload = (authToken, logger) => {
 
     return payload
   } catch (jwtError) {
-    logger.error(
-      jwtError.stack,
-      `Invalid JWT token provided: ${jwtError.message}`
-    )
+    logger.error(jwtError, `Invalid JWT token provided: ${jwtError.message}`)
     return null
   }
 }

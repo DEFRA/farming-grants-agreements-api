@@ -46,7 +46,7 @@ const acceptOfferController = {
         return error
       }
 
-      request.logger.error(`Error accepting offer: ${error}`)
+      request.logger.error(error, 'Error accepting offer')
       return h
         .response({
           message: 'Failed to accept offer',

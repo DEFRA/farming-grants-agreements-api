@@ -18,6 +18,7 @@ const offerWithdrawnController = {
       }
 
       request.logger.error(
+        error,
         `Error displaying offer withdrawn page: ${error.message}`
       )
       return h

@@ -59,6 +59,7 @@ const viewAgreementController = {
       }
 
       request.logger.error(
+        error,
         `Error rendering agreement document: ${error.message}`
       )
       request.logger.error(error.stack)

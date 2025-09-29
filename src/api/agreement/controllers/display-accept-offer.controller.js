@@ -20,6 +20,7 @@ const displayAcceptOfferController = {
       }
 
       request.logger.error(
+        error,
         `Error displaying accept offer page: ${error.message}`
       )
       return h

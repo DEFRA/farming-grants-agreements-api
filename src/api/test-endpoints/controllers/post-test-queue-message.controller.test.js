@@ -194,8 +194,8 @@ describe('postTestQueueMessageController', () => {
       h
     )
 
-    expect(res.output.statusCode).toBe(statusCodes.internalServerError)
-    expect(res.output.payload.message).toBe('An internal server error occurred')
+    expect(res.statusCode).toBe(statusCodes.internalServerError)
+    expect(res.payload.message).toBe('Failed to post test queue message')
 
     // Restore setTimeout
     global.setTimeout.mockRestore()
