@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { v4 as uuidv4 } from 'uuid'
-import { Boom } from '@hapi/boom'
+import Boom from '@hapi/boom'
 
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
@@ -44,7 +44,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
   } = agreementData
 
   if (!payment || !applicant) {
-    throw new Boom('Offer data is missing payment and applicant')
+    throw Boom.badRequest('Offer data is missing payment and applicant')
   }
 
   let agreementNumber = generateAgreementNumber()
@@ -68,6 +68,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
   const agreement = await agreementsModel.createAgreementWithVersions({
     agreement: {
       agreementNumber,
+      clientRef,
       frn: identifiers.frn,
       sbi: identifiers.sbi,
       createdBy: 'system'
