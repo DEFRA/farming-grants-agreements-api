@@ -131,10 +131,7 @@ describe('mongooseDb', () => {
 
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(
-        {
-          error: 'Seed failed',
-          stack: seedError.stack
-        },
+        seedError,
         'Error seeding database failed:'
       )
     })

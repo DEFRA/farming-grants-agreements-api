@@ -176,36 +176,38 @@ describe('updatePaymentHub', () => {
         'test-correlation-id'
       )
 
-      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
-        paymentHubRequest: expect.objectContaining({
-          sourceSystem: 'AHWR',
-          frn: '1234567890',
-          sbi: '106284736',
-          marketingYear: 2024,
-          paymentRequestNumber: 1,
-          correlationId: 'test-correlation-id',
-          invoiceNumber: 'INV-123456',
-          agreementNumber: 'SFI123456789',
-          schedule: 'T4',
-          dueDate: '2022-11-09',
-          value: 500000,
-          invoiceLines: [
-            [
-              {
-                value: 200000,
-                description:
-                  '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
-                schemeCode: 'ACT001'
-              },
-              {
-                value: 300000,
-                description:
-                  '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
-                schemeCode: 'ACT002'
-              }
-            ]
+      const paymentHubRequestData = {
+        sourceSystem: 'AHWR',
+        frn: '1234567890',
+        sbi: '106284736',
+        marketingYear: 2024,
+        paymentRequestNumber: 1,
+        correlationId: 'test-correlation-id',
+        invoiceNumber: 'INV-123456',
+        agreementNumber: 'SFI123456789',
+        schedule: 'T4',
+        dueDate: '2022-11-09',
+        value: 500000,
+        invoiceLines: [
+          [
+            {
+              value: 200000,
+              description:
+                '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
+              schemeCode: 'ACT001'
+            },
+            {
+              value: 300000,
+              description:
+                '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
+              schemeCode: 'ACT002'
+            }
           ]
-        })
+        ]
+      }
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining(paymentHubRequestData)
       })
 
       expect(sendPaymentHubRequest).not.toHaveBeenCalledWith(
@@ -218,11 +220,7 @@ describe('updatePaymentHub', () => {
       )
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sourceSystem: 'AHWR',
-          agreementNumber: 'SFI123456789'
-        }),
-        'The PaymentHub feature flag is disbaled. The request has not been sent to payment hub:'
+        `The PaymentHub feature flag is disbaled. The request has not been sent to payment hub:${JSON.stringify(paymentHubRequestData, null, 2)}`
       )
 
       expect(result).toEqual({
