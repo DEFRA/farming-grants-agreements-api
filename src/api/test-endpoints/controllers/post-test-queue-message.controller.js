@@ -1,12 +1,12 @@
 import Boom, { isBoom } from '@hapi/boom'
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { config } from '~/src/config/index.js'
 
 const maxDelay = 8000
 
-const checkAgreementWithBackoff = async (sbi, frn, delay) => {
+const checkAgreementWithBackoff = async (sbi, frn, delay, logger) => {
   if (delay > maxDelay) {
     throw Boom.internal(
       `Failed to retrieve agreement data after multiple attempts for SBI: ${sbi}, FRN: ${frn}`
@@ -17,6 +17,10 @@ const checkAgreementWithBackoff = async (sbi, frn, delay) => {
   try {
     return await getAgreementData({ sbi, frn })
   } catch (error) {
+    logger.error(
+      error,
+      `Failed to retrieve agreement data for SBI: ${sbi}, FRN: ${frn}`
+    )
     if (isBoom(error) && error.output.statusCode === statusCodes.notFound) {
       await new Promise((resolve) => setTimeout(resolve, delay))
       return checkAgreementWithBackoff(sbi, frn, delay * 2)
@@ -65,7 +69,8 @@ const postTestQueueMessageController = {
         agreementData = await checkAgreementWithBackoff(
           queueMessage.data.identifiers.sbi,
           queueMessage.data.identifiers.frn,
-          1000
+          1000,
+          request.logger
         )
       }
 
@@ -80,7 +85,7 @@ const postTestQueueMessageController = {
         return error
       }
 
-      request.logger.error(`Error posting test queue message: ${error}`)
+      request.logger.error(error, `Error posting test queue message`)
       return h
         .response({
           message: 'Failed to post test queue message',
