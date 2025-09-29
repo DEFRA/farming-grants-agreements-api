@@ -20,7 +20,10 @@ async function withdrawOffer(clientRef) {
       }
     )
     .catch((error) => {
-      throw Boom.internal(error)
+      throw Boom.internal(
+        'Offer is not in the correct state to be withdrawn or was not found',
+        error
+      )
     })
 
   return offer

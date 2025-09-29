@@ -47,7 +47,10 @@ describe('withdrawOffer', () => {
     agreementModel.updateOneAgreementVersion.mockRejectedValueOnce(error)
 
     // Act & Assert
-    await expect(withdrawOffer(clientRef)).rejects.toThrow(Boom.internal(error))
+    await expect(withdrawOffer(clientRef)).rejects.toThrow(
+      'Offer is not in the correct state to be withdrawn or was not found',
+      Boom.internal(error)
+    )
   })
 
   test('should handle different clientRef values', async () => {
