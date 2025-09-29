@@ -69,6 +69,7 @@ describe('offerWithdrawnController', () => {
 
     // Assert
     expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.any(Error),
       'Error displaying offer withdrawn page: Template rendering failed'
     )
     expect(mockH.response).toHaveBeenCalledWith({
@@ -92,6 +93,7 @@ describe('offerWithdrawnController', () => {
 
     // Assert
     expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.any(Error),
       'Error displaying offer withdrawn page: undefined'
     )
     expect(mockH.response).toHaveBeenCalledWith({

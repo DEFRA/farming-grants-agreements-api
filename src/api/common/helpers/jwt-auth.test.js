@@ -74,7 +74,7 @@ describe('jwt-auth', () => {
 
       expect(result).toBeNull()
       expect(mockLogger.error).toHaveBeenCalledWith(
-        mockError.stack,
+        mockError,
         'Invalid JWT token provided: Invalid signature'
       )
     })
