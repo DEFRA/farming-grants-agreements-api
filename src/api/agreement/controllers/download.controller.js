@@ -26,8 +26,7 @@ export const downloadController = async (request, h) => {
 
   try {
     request.logger?.info(
-      { agreementId, version, key, bucket },
-      'Attempting agreement PDF download'
+      `Attempting agreement PDF download: ${JSON.stringify({ agreementId, version, key, bucket })}`
     )
 
     const stream = await getPdfStream({ bucket, key })
