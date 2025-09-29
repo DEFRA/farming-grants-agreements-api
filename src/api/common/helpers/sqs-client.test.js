@@ -224,7 +224,7 @@ describe('SQS Client', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.any(Error),
-        'Error processing message:'
+        'Failed to process SQS (test) message: Invalid message format: {"Body":"invalid json","MessageId":"msg-1"}'
       )
     })
 
@@ -247,7 +247,7 @@ describe('SQS Client', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         error,
-        'SQS Consumer (test) error'
+        'SQS Consumer (test) error: Consumer error'
       )
     })
 
@@ -270,7 +270,7 @@ describe('SQS Client', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         error,
-        'SQS Message (test) processing error'
+        'SQS Message (test) processing error: Processing error'
       )
     })
 

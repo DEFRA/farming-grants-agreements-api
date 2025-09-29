@@ -43,25 +43,20 @@ describe('SQS message processor', () => {
       await expect(
         processMessage(handleUpdateAgreementEvent, message, mockLogger)
       ).rejects.toThrow('Invalid message format')
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.stringContaining('Error processing message')
-      )
     })
 
     it('should handle non-SyntaxError with Boom.boomify', async () => {
       const message = {
         Body: JSON.stringify({
-          Message: JSON.stringify({ type: 'invalid.type' })
+          type: 'invalid.type',
+          data: { status: 'invalid.status' }
         })
       }
 
       await expect(
         processMessage(handleUpdateAgreementEvent, message, mockLogger)
-      ).rejects.toThrow('Error processing SQS message')
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.stringContaining('Error processing message')
+      ).rejects.toThrow(
+        'Unrecognized event type: invalid.type (invalid.status)'
       )
     })
   })
