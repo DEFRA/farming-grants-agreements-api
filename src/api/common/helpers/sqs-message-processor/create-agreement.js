@@ -23,7 +23,7 @@ export const handleCreateAgreementEvent = async (
     return agreement
   }
 
-  throw new Error(`Unrecognized event type: ${payload.type}`)
+  throw new Error(`Unrecognized event type: ${JSON.stringify(payload)}`)
 }
 
 /**
