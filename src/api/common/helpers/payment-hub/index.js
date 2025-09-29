@@ -77,7 +77,7 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
     logger &&
     typeof logger.info === 'function'
   ) {
-    logger.info(body, 'Payload to be sent to payment hub:')
+    logger.info(`Payload to be sent to payment hub: ${JSON.stringify(body)}`)
   }
 
   if (!config.get('paymentHub.keyName') || !config.get('paymentHub.key')) {
