@@ -55,6 +55,10 @@ const buildUrl = (...args) => path.join(...args)
 nunjucksEnvironment.addGlobal('getAssetPath', getAssetPath)
 nunjucksEnvironment.addGlobal('buildUrl', buildUrl)
 nunjucksEnvironment.addGlobal('govukRebrand', true)
+nunjucksEnvironment.addGlobal(
+  'gaTrackingId',
+  config.get('googleAnalytics.trackingId')
+)
 
 /**
  * @satisfies {ServerRegisterPluginObject<ServerViewsConfiguration>}

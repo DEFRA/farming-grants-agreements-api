@@ -90,6 +90,7 @@ services:
       LOCALSTACK_ENDPOINT: ${LOCALSTACK_ENDPOINT:-http://localstack:4566}
       MONGO_URI: mongodb://mongodb:27017/
       SEED_DB: ${SEED_DB:-true}
+      GA_TRACKING_ID: ${GA_TRACKING_ID:-GTM-WJ5C78H}
       SQS_ENDPOINT: ${SQS_ENDPOINT:-http://localstack:4566}
       QUEUE_URL: ${QUEUE_URL:-http://sqs.eu-west-2.127.0.0.1:4566/000000000000/create_agreement}
       QUEUE_NAME: ${QUEUE_NAME:-create_agreement}

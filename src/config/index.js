@@ -82,29 +82,29 @@ const config = convict({
   },
   isProduction: {
     doc: 'If this application running in the production environment',
-    format: Boolean,
+    format: 'strict-boolean',
     default: isProduction
   },
   isDevelopment: {
     doc: 'If this application running in the development environment',
-    format: Boolean,
+    format: 'strict-boolean',
     default: isDev
   },
   isTest: {
     doc: 'If this application running in the test environment',
-    format: Boolean,
+    format: 'strict-boolean',
     default: isTest
   },
   isPaymentHubLogging: {
     doc: 'If logging of payment hub requests is enabled',
-    format: Boolean,
+    format: 'strict-boolean',
     default: false,
     env: 'PAYMENT_HUB_LOGGING'
   },
   log: {
     enabled: {
       doc: 'Is logging enabled',
-      format: Boolean,
+      format: 'strict-boolean',
       default: !isTest,
       env: 'LOG_ENABLED'
     },
@@ -257,13 +257,13 @@ const config = convict({
   },
   isSecureContextEnabled: {
     doc: 'Enable Secure Context',
-    format: Boolean,
+    format: 'strict-boolean',
     default: isProduction,
     env: 'ENABLE_SECURE_CONTEXT'
   },
   isMetricsEnabled: {
     doc: 'Enable metrics reporting',
-    format: Boolean,
+    format: 'strict-boolean',
     default: isProduction,
     env: 'ENABLE_METRICS'
   },
@@ -273,6 +273,14 @@ const config = convict({
       format: String,
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
+    }
+  },
+  googleAnalytics: {
+    trackingId: {
+      doc: 'Google Analytics tracking ID',
+      format: String,
+      default: undefined,
+      env: 'GA_TRACKING_ID'
     }
   },
   paymentHub: {
@@ -305,13 +313,13 @@ const config = convict({
   nunjucks: {
     watch: {
       doc: 'Whether to watch templates for changes',
-      format: Boolean,
+      format: 'strict-boolean',
       default: isDev,
       env: 'NUNJUCKS_WATCH'
     },
     noCache: {
       doc: 'Disable template caching',
-      format: Boolean,
+      format: 'strict-boolean',
       default: !isProduction,
       env: 'NUNJUCKS_NO_CACHE'
     }
@@ -354,19 +362,19 @@ const config = convict({
   featureFlags: {
     seedDb: {
       doc: 'Seed the database',
-      format: Boolean,
+      format: 'strict-boolean',
       default: false,
       env: 'SEED_DB'
     },
     testEndpoints: {
       doc: 'Enable test endpoints',
-      format: Boolean,
+      format: 'strict-boolean',
       default: false,
       env: 'ENABLE_TEST_ENDPOINTS'
     },
     isJwtEnabled: {
       doc: 'Enable JWT authentication validation',
-      format: Boolean,
+      format: 'strict-boolean',
       default: true,
       env: 'JWT_ENABLED'
     },
