@@ -83,6 +83,7 @@ describe('seedDatabase', () => {
       await seedDatabase(logger)
 
       expect(mockProcessMessage).toHaveBeenCalledWith(
+        expect.any(String), // MessageId generated in publishEvent
         {
           MessageId: expect.any(String),
           Body: expect.stringContaining('"id":"abc123","foo":"bar"')
