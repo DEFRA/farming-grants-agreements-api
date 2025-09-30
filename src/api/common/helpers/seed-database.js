@@ -21,15 +21,8 @@ async function publishSampleAgreementEvents(tableData, logger) {
             // We're not allowed to publish application approved events on the platform
             // this mocks the SNS send/process logic for sample data
             send: async ({ input: { Message } }) => {
-              const body = JSON.parse(Message)
-              await handleCreateAgreementEvent(
-                body.id,
-                {
-                  MessageId: body.id,
-                  Body: body
-                },
-                logger
-              )
+              const message = JSON.parse(Message)
+              await handleCreateAgreementEvent(message.id, message, logger)
             }
           }
     )

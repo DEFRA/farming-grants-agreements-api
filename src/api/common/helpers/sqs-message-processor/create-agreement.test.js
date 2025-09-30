@@ -117,5 +117,31 @@ describe('SQS message processor', () => {
         'No action required for GAS create offer event: {"noType":"missing.type","data":{"id":"123"}}'
       )
     })
+
+    it('should log empty messages', async () => {
+      await handleCreateAgreementEvent('aws-message-id', undefined, mockLogger)
+
+      expect(createOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: undefined'
+      )
+    })
+
+    it('should handle empty data', async () => {
+      const mockPayload = {
+        type: 'empty data'
+      }
+
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(createOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: empty data'
+      )
+    })
   })
 })
