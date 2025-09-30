@@ -12,19 +12,19 @@ export const handleUpdateAgreementEvent = async (
   payload,
   logger
 ) => {
-  const { data = {} } = payload
+  const { data = {} } = payload || {}
   if (data.status?.includes?.('APPLICATION_WITHDRAWN') && data.clientRef) {
     logger.info(
       `Received application withdrawn from event: ${notificationMessageId}`
     )
     const version = await withdrawOffer(data.clientRef)
     logger.info(`Offer withdrawn: ${version.agreement.agreementNumber}`)
+  } else {
+    const status = data.status ? ` (${data.status})` : ''
+    logger.info(
+      `No action required for GAS application status update event: ${payload?.type || JSON.stringify(payload)}${status}`
+    )
   }
-
-  const status = data.status ? ` (${data.status})` : ''
-  logger.info(
-    `No action required for GAS application status update event: ${payload.type || JSON.stringify(payload)}${status}`
-  )
 }
 
 /**
