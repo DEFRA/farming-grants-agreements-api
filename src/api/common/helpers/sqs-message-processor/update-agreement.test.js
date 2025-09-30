@@ -53,10 +53,10 @@ describe('SQS message processor', () => {
         })
       }
 
-      await expect(
-        processMessage(handleUpdateAgreementEvent, message, mockLogger)
-      ).rejects.toThrow(
-        'Unrecognized event type: invalid.type (invalid.status)'
+      await processMessage(handleUpdateAgreementEvent, message, mockLogger)
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS application status update event: invalid.type (invalid.status)'
       )
     })
   })
@@ -83,17 +83,40 @@ describe('SQS message processor', () => {
       expect(withdrawOffer).toHaveBeenCalledWith('SFI123456789')
     })
 
-    it('should throw an error for non-application-withdrawn events', async () => {
+    it('should log an info for non-application-withdrawn events', async () => {
       const mockPayload = {
         type: 'some-other-event',
         data: { id: '123' }
       }
 
-      await expect(
-        handleUpdateAgreementEvent('aws-message-id', mockPayload, mockLogger)
-      ).rejects.toThrow('Unrecognized event type')
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
 
       expect(withdrawOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS application status update event: some-other-event'
+      )
+    })
+
+    it('should log an info for non-application-withdrawn events with no type', async () => {
+      const mockPayload = {
+        noType: 'missing.type',
+        data: { id: '123' }
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(withdrawOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS application status update event: {"noType":"missing.type","data":{"id":"123"}}'
+      )
     })
   })
 })

@@ -86,7 +86,18 @@ describe('seedDatabase', () => {
         expect.any(String), // MessageId generated in publishEvent
         {
           MessageId: expect.any(String),
-          Body: expect.stringContaining('"id":"abc123","foo":"bar"')
+          Body: {
+            id: expect.any(String),
+            datacontenttype: 'application/json',
+            specversion: '1.0',
+            source: 'urn:service:agreement',
+            time: expect.any(String),
+            type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+            data: {
+              foo: 'bar',
+              id: 'abc123'
+            }
+          }
         },
         logger
       )
