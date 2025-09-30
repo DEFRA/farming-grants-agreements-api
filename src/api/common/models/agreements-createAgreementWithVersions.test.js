@@ -10,8 +10,7 @@ describe('agreements.createAgreementWithVersions', () => {
     agreementNumber: 'SFI123456789',
     clientRef: 'TEST-CLIENT-REF',
     frn: '1234567890',
-    sbi: '106284736',
-    createdBy: 'system'
+    sbi: '106284736'
   }
 
   const VERSION_PAYLOADS = [

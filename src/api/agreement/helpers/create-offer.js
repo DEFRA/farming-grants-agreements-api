@@ -70,8 +70,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
       agreementNumber,
       clientRef,
       frn: identifiers.frn,
-      sbi: identifiers.sbi,
-      createdBy: 'system'
+      sbi: identifiers.sbi
     },
     versions: [data] // can pass multiple payloads
   })
