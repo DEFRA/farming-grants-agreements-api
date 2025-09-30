@@ -118,5 +118,31 @@ describe('SQS message processor', () => {
         'No action required for GAS application status update event: {"noType":"missing.type","data":{"id":"123"}}'
       )
     })
+
+    it('should log empty messages', async () => {
+      await handleUpdateAgreementEvent('aws-message-id', undefined, mockLogger)
+
+      expect(withdrawOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS application status update event: undefined'
+      )
+    })
+
+    it('should handle empty data', async () => {
+      const mockPayload = {
+        type: 'empty data'
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(withdrawOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS application status update event: empty data'
+      )
+    })
   })
 })
