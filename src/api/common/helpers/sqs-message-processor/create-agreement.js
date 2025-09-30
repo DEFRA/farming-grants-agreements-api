@@ -3,9 +3,9 @@ import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 /**
  * Handle an event from the SQS queue
  * @param {string} notificationMessageId - The AWS notification message ID
- * @param {object} payload - The message payload
+ * @param {Message} payload - The message payload
  * @param {import('@hapi/hapi').Server} logger - The logger instance
- * @returns {Promise<Agreement>}
+ * @returns {Promise<void>}
  */
 export const handleCreateAgreementEvent = async (
   notificationMessageId,
@@ -20,7 +20,6 @@ export const handleCreateAgreementEvent = async (
       logger
     )
     logger.info(`Agreement created: ${agreement.agreementNumber}`)
-    return agreement
   }
 
   logger.info(
@@ -29,6 +28,5 @@ export const handleCreateAgreementEvent = async (
 }
 
 /**
- * @import { Agreement } from '~/src/api/common/types/agreement.d.js'
  * @import { Message } from '@aws-sdk/client-sqs'
  */

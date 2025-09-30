@@ -3,9 +3,9 @@ import { withdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
 /**
  * Handle an event from the SQS queue
  * @param {string} notificationMessageId - The AWS notification message ID
- * @param {object} payload - The message payload
+ * @param {Message} payload - The message payload
  * @param {import('@hapi/hapi').Server} logger - The logger instance
- * @returns {Promise<Agreement>}
+ * @returns {Promise<void>}
  */
 export const handleUpdateAgreementEvent = async (
   notificationMessageId,
@@ -19,7 +19,6 @@ export const handleUpdateAgreementEvent = async (
     )
     const version = await withdrawOffer(data.clientRef)
     logger.info(`Offer withdrawn: ${version.agreement.agreementNumber}`)
-    return version
   }
 
   const status = data.status ? ` (${data.status})` : ''
@@ -29,6 +28,5 @@ export const handleUpdateAgreementEvent = async (
 }
 
 /**
- * @import { Agreement } from '~/src/api/common/types/agreement.d.js'
  * @import { Message } from '@aws-sdk/client-sqs'
  */
