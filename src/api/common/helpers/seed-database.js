@@ -26,7 +26,7 @@ async function publishSampleAgreementEvents(tableData, logger) {
                 body.id,
                 {
                   MessageId: body.id,
-                  Body: Message
+                  Body: body
                 },
                 logger
               )
