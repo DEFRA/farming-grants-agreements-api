@@ -16,14 +16,9 @@
 {% block head %}
   <link href="{{ getAssetPath(baseUrl, 'stylesheets/application.scss') }}" rel="stylesheet">
 
-  <script nonce="{{ cspNonce }}">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});let f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!=='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  });</script>
-{% endblock %}
+  {% endblock %}
 
-{% block header %}
+  {% block header %}
   {{ govukHeader({
     homepageUrl: "https://www.gov.uk/",
     classes: "govuk-header--full-width-border"
@@ -102,7 +97,23 @@
       ]
     }
   }) }}
+{%  if gaTrackingId %}
+  <script nonce="{{ cspNonce }}">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});let f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!=='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','{{ gaTrackingId }}');</script>
+  {% endif %}
 {% endblock %}
+
+{% block bodyStart %}
+  {%  if gaTrackingId %}
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id={{ gaTrackingId }}" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  {% endif %}
+{% endblock %}
+
 
 {% block bodyEnd %}
   <script type="module" src="{{ getAssetPath(baseUrl, 'application.js') }}"
