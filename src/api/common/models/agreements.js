@@ -10,8 +10,7 @@ const schema = new mongoose.Schema(
     clientRef: { type: String, required: true },
     frn: { type: String, required: true },
     sbi: { type: String, required: true },
-    versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }],
-    createdBy: { type: String }
+    versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }]
   },
   { collection, timestamps: true }
 )
@@ -60,7 +59,6 @@ schema.statics.createAgreementWithVersions = async function ({
         clientRef: agreement.clientRef,
         frn: agreement.frn,
         sbi: agreement.sbi,
-        createdBy: agreement.createdBy,
         versions: []
       })
       agreementId = newParent._id
