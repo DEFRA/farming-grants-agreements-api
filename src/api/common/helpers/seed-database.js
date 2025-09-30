@@ -23,6 +23,7 @@ async function publishSampleAgreementEvents(tableData, logger) {
             send: async ({ input: { Message } }) => {
               const body = JSON.parse(Message)
               await handleCreateAgreementEvent(
+                body.id,
                 {
                   MessageId: body.id,
                   Body: Message
