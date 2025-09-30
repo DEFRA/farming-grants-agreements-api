@@ -23,7 +23,9 @@ export const handleCreateAgreementEvent = async (
     return agreement
   }
 
-  throw new Error(`Unrecognized event type: ${payload.type}`)
+  logger.info(
+    `No action required for GAS create offer event: ${payload.type || JSON.stringify(payload)}`
+  )
 }
 
 /**

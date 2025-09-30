@@ -22,7 +22,10 @@ export const handleUpdateAgreementEvent = async (
     return version
   }
 
-  throw new Error(`Unrecognized event type: ${payload.type} (${data.status})`)
+  const status = data.status ? ` (${data.status})` : ''
+  logger.info(
+    `No action required for GAS application status update event: ${payload.type || JSON.stringify(payload)}${status}`
+  )
 }
 
 /**

@@ -46,14 +46,16 @@ describe('SQS message processor', () => {
       ).rejects.toThrow('Invalid message format')
     })
 
-    it('should handle non-SyntaxError with Boom.boomify', async () => {
+    it('should info log non-SyntaxError', async () => {
       const message = {
         Body: JSON.stringify({ type: 'invalid.type' })
       }
 
-      await expect(
-        processMessage(handleCreateAgreementEvent, message, mockLogger)
-      ).rejects.toThrow('Unrecognized event type: invalid.type')
+      await processMessage(handleCreateAgreementEvent, message, mockLogger)
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: invalid.type'
+      )
     })
   })
 
@@ -80,17 +82,40 @@ describe('SQS message processor', () => {
       )
     })
 
-    it('should throw an error for non-application-approved events', async () => {
+    it('should log an info for non-application-approved events', async () => {
       const mockPayload = {
         type: 'some-other-event',
         data: { id: '123' }
       }
 
-      await expect(
-        handleCreateAgreementEvent('aws-message-id', mockPayload, mockLogger)
-      ).rejects.toThrow('Unrecognized event type')
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
 
       expect(createOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: some-other-event'
+      )
+    })
+
+    it('should log an info for non-application-approved events with missing type', async () => {
+      const mockPayload = {
+        noType: 'missing.type',
+        data: { id: '123' }
+      }
+
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(createOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: {"noType":"missing.type","data":{"id":"123"}}'
+      )
     })
   })
 })

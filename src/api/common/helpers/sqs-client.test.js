@@ -116,11 +116,16 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
 
-      await expect(
-        handleCreateAgreementEvent('aws-message-id', mockPayload, mockLogger)
-      ).rejects.toThrow('Unrecognized event type')
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
 
       expect(createOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: some-other-event'
+      )
     })
   })
 
