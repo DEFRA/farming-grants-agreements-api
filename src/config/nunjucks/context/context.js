@@ -42,6 +42,7 @@ export function context(request) {
   return {
     baseUrl: getBaseUrl(request),
     assetPath: `${assetPath}/assets/rebrand`,
+    featureFlags: config.get('featureFlags'),
     serviceName: config.get('serviceName'),
     serviceTitle: config.get('serviceTitle'),
     auth,
