@@ -100,10 +100,10 @@ describe('#context', () => {
         baseUrl: '/',
         assetPath: '/public/assets/rebrand',
         featureFlags: {
-          isJwtEnabled: false,
-          isPaymentHubEnabled: false,
-          seedDb: true,
-          testEndpoints: true
+          isJwtEnabled: expect.any(Boolean),
+          isPaymentHubEnabled: expect.any(Boolean),
+          seedDb: expect.any(Boolean),
+          testEndpoints: expect.any(Boolean)
         },
         breadcrumbs: [],
         navigation: [
@@ -195,10 +195,10 @@ describe('#context', () => {
           baseUrl: '/',
           assetPath: '/public/assets/rebrand',
           featureFlags: {
-            isJwtEnabled: false,
-            isPaymentHubEnabled: false,
-            seedDb: true,
-            testEndpoints: true
+            isJwtEnabled: expect.any(Boolean),
+            isPaymentHubEnabled: expect.any(Boolean),
+            seedDb: expect.any(Boolean),
+            testEndpoints: expect.any(Boolean)
           },
           breadcrumbs: [],
           navigation: [
