@@ -72,8 +72,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       await sendPaymentHubRequest(server, logger, paymentHubRequest)
     } else {
       logger.warn(
-        paymentHubRequest,
-        'The PaymentHub feature flag is disbaled. The request has not been sent to payment hub:'
+        `The PaymentHub feature flag is disbaled. The request has not been sent to payment hub:${JSON.stringify(paymentHubRequest, null, 2)}`
       )
     }
 

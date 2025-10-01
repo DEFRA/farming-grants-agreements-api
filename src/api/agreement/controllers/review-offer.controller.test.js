@@ -24,7 +24,9 @@ describe('reviewOfferController', () => {
   })
 
   afterAll(async () => {
-    await server.stop({ timeout: 0 })
+    if (server) {
+      await server.stop({ timeout: 0 })
+    }
   })
 
   beforeEach(() => {
@@ -951,6 +953,7 @@ describe('reviewOfferController', () => {
         expect.objectContaining({ message: 'Failed to fetch offer' })
       )
       expect(request.logger.error).toHaveBeenCalledWith(
+        expect.any(Error),
         expect.stringContaining('Error fetching offer:')
       )
     })

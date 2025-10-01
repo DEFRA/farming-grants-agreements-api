@@ -2,7 +2,8 @@
 # Minimal SQS count monitor for LocalStack (counts only, no receive/delete)
 set -euo pipefail
 
-QUEUE_NAMES="${QUEUE_NAMES:-record_agreement_status_update}"   # comma-separated
+MONITOR_SQS="${MONITOR_SQS:-true}"
+QUEUE_NAMES="${QUEUE_NAMES:-agreement_status_updated}"   # comma-separated
 INTERVAL="${INTERVAL:-10}"                                     # seconds
 ACCOUNT_ID="${ACCOUNT_ID:-000000000000}"
 
@@ -50,5 +51,9 @@ monitor() {
 }
 
 # run in background so READY hook doesn’t block other init scripts
+if [ "$MONITOR_SQS" != "true" ]; then
+  echo "⏭️ SQS monitor disabled (set MONITOR_SQS=true to enable)"
+  exit 0
+fi
 monitor & disown
 echo "✅ SQS monitor started."

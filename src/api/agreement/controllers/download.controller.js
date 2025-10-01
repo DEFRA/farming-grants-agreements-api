@@ -26,16 +26,14 @@ export const downloadController = async (request, h) => {
 
   try {
     request.logger?.info(
-      { agreementId, version, key, bucket },
-      'Attempting agreement PDF download'
+      `Attempting agreement PDF download: ${JSON.stringify({ agreementId, version, key, bucket })}`
     )
 
     const stream = await getPdfStream({ bucket, key })
 
     if (!stream) {
       request.logger?.error(
-        { agreementId, version, key, bucket },
-        'Agreement PDF not found in S3 - Key: ' + key
+        `Agreement PDF not found in S3 ${JSON.stringify({ agreementId, version, key, bucket })}`
       )
       throw Boom.notFound('Agreement PDF not found')
     }
@@ -50,8 +48,8 @@ export const downloadController = async (request, h) => {
     }
 
     request.logger?.error(
-      { err, agreementId, version, key, bucket },
-      'Error retrieving agreement PDF from S3'
+      err,
+      `Error retrieving agreement PDF from S3 ${JSON.stringify({ agreementId, version, key, bucket })}`
     )
     throw Boom.badImplementation('Error retrieving agreement PDF')
   }

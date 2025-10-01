@@ -1,12 +1,9 @@
 import { jest } from '@jest/globals'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
-import { sqsClientPlugin } from './sqs-client.js'
-import { handleEvent } from './sqs-message-processor.js'
+import { createSqsClientPlugin } from './sqs-client.js'
+import { handleCreateAgreementEvent } from './sqs-message-processor/create-agreement.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
-import { seedDatabase } from './seed-database.js'
-
-jest.mock('./seed-database.js')
 
 // Mock AWS SDK credential provider
 jest.mock('@aws-sdk/credential-provider-node', () => ({
@@ -97,7 +94,11 @@ describe('SQS Client', () => {
         data: { id: '123', status: 'approved' }
       }
 
-      await handleEvent('aws-message-id', mockPayload, mockLogger)
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
@@ -115,11 +116,16 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
 
-      await expect(
-        handleEvent('aws-message-id', mockPayload, mockLogger)
-      ).rejects.toThrow('Unrecognized event type')
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
 
       expect(createOffer).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: some-other-event'
+      )
     })
   })
 
@@ -131,6 +137,11 @@ describe('SQS Client', () => {
     }
 
     it('should initialize properly when registered', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Check SQS client was created
@@ -173,6 +184,11 @@ describe('SQS Client', () => {
     })
 
     it('should handle plugin cleanup on server stop', async () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get and call the stop handler
@@ -193,6 +209,11 @@ describe('SQS Client', () => {
     })
 
     it('should handle message processing errors', async () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get the message handler
@@ -207,14 +228,17 @@ describe('SQS Client', () => {
       await messageHandler(invalidMessage)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          messageId: 'msg-1'
-        }),
-        'Failed to process message:'
+        expect.any(Error),
+        'Failed to process SQS (test) message: Invalid message format: {"Body":"invalid json","MessageId":"msg-1"}'
       )
     })
 
     it('should handle consumer errors', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get the error handler
@@ -227,14 +251,17 @@ describe('SQS Client', () => {
       errorHandler(error)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: error.message
-        }),
-        'SQS Consumer error:'
+        error,
+        'SQS Consumer (test) error: Consumer error'
       )
     })
 
     it('should handle processing errors', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get the processing error handler
@@ -247,40 +274,23 @@ describe('SQS Client', () => {
       errorHandler(error)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: error.message
-        }),
-        'SQS Message processing error:'
+        error,
+        'SQS Message (test) processing error: Processing error'
       )
     })
 
-    it('should seed the database if featureFlags.seedDb is true on start', () => {
+    it('should start the consumer successfully', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
-
-      seedDatabase.mockResolvedValue(true)
 
       mockConsumer.on.mock.calls.find((call) => call[0] === 'started')[1]()
 
-      expect(mockLogger.info).toHaveBeenCalledWith('SQS Consumer started')
-      expect(seedDatabase).toHaveBeenCalledWith(server.logger)
-    })
-
-    it('should log error if seeding database fails', async () => {
-      sqsClientPlugin.plugin.register(server, options)
-
-      const error = new Error('Seeding failed')
-      seedDatabase.mockRejectedValue(error)
-
-      await mockConsumer.on.mock.calls.find(
-        (call) => call[0] === 'started'
-      )[1]()
-
-      expect(server.logger.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: error.message,
-          stack: error.stack
-        }),
-        'Error seeding database failed:'
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'SQS Consumer (test) started'
       )
     })
   })

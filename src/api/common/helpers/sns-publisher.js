@@ -56,7 +56,7 @@ export async function publishEvent(
         })
       )
       logger?.info?.(
-        `Published event to SNS topic: ${topicArn} type: ${type} id: ${message.id} data: ${JSON.stringify(data)}`
+        `Published event to SNS topic: ${topicArn} type: ${type} id: ${message.id} data: ${JSON.stringify(data, null, 2)}`
       )
       return
     } catch (error) {
@@ -75,7 +75,7 @@ export async function publishEvent(
           code: error?.name,
           stack: error?.stack
         },
-        'Failed to publish event to SNS'
+        `Failed to publish event to SNS topic: ${topicArn} type: ${type}`
       )
 
       if (!isRetryable || attempt === maxAttempts - 1) {

@@ -1,16 +1,14 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 
 /**
- * Controller to display the Accept Offer page
- * Renders a Nunjucks template with agreement data (no acceptance logic)
+ * Controller to display the Offer withdrawn page
  * @satisfies {Partial<ServerRoute>}
  */
-const displayAcceptOfferController = {
+const offerWithdrawnController = {
   handler: (request, h) => {
     try {
-      // Render the accept offer template with agreement data
       return h
-        .view('views/accept-offer.njk')
+        .view('views/error/offer-withdrawn.njk')
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {
@@ -21,11 +19,11 @@ const displayAcceptOfferController = {
 
       request.logger.error(
         error,
-        `Error displaying accept offer page: ${error.message}`
+        `Error displaying offer withdrawn page: ${error.message}`
       )
       return h
         .response({
-          message: 'Failed to display accept offer page',
+          message: 'Failed to display offer withdrawn page',
           error: error.message
         })
         .code(statusCodes.internalServerError)
@@ -33,4 +31,4 @@ const displayAcceptOfferController = {
   }
 }
 
-export { displayAcceptOfferController }
+export { offerWithdrawnController }

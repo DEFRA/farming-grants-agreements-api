@@ -11,14 +11,46 @@ describe('seedDatabase', () => {
       process.env.NODE_ENV = 'test'
 
       // mocks required for this test
-      jest.doMock('~/src/api/common/helpers/sqs-message-processor.js', () => ({
-        processMessage: mockProcessMessage
-      }))
+      jest.doMock(
+        '~/src/api/common/helpers/sqs-message-processor/create-agreement.js',
+        () => ({
+          handleCreateAgreementEvent: mockProcessMessage
+        })
+      )
 
-      jest.doMock('mongoose', () => ({
-        connection: { readyState: 1 },
-        STATES: { connected: 1 }
-      }))
+      jest.doMock('mongoose', () => {
+        const mockSchema = jest.fn().mockImplementation(() => ({
+          add: jest.fn(),
+          pre: jest.fn(),
+          post: jest.fn(),
+          methods: {},
+          statics: {},
+          virtuals: {},
+          indexes: [],
+          index: jest.fn()
+        }))
+        mockSchema.Types = {
+          ObjectId: jest.fn()
+        }
+        return {
+          connection: { readyState: 1 },
+          STATES: { connected: 1 },
+          Schema: mockSchema,
+          model: jest.fn().mockImplementation(() => ({
+            find: jest.fn(),
+            findOne: jest.fn(),
+            findById: jest.fn(),
+            create: jest.fn(),
+            updateOne: jest.fn(),
+            updateMany: jest.fn(),
+            deleteOne: jest.fn(),
+            deleteMany: jest.fn(),
+            countDocuments: jest.fn(),
+            aggregate: jest.fn(),
+            distinct: jest.fn()
+          }))
+        }
+      })
 
       jest.doMock('~/src/api/common/models/index.js', () => ({
         __esModule: true,
@@ -44,13 +76,25 @@ describe('seedDatabase', () => {
     })
 
     it('calls processMessage with correct values via seedDatabase', async () => {
+      // Reset modules to ensure mocks are applied
+      jest.resetModules()
+
       const { seedDatabase } = await import('./seed-database.js')
       await seedDatabase(logger)
 
       expect(mockProcessMessage).toHaveBeenCalledWith(
+        expect.any(String), // MessageId generated in publishEvent
         {
-          MessageId: expect.any(String),
-          Body: expect.stringContaining('"id":"abc123","foo":"bar"')
+          id: expect.any(String),
+          datacontenttype: 'application/json',
+          specversion: '1.0',
+          source: 'urn:service:agreement',
+          time: expect.any(String),
+          type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+          data: {
+            foo: 'bar',
+            id: 'abc123'
+          }
         },
         logger
       )
@@ -77,10 +121,39 @@ describe('seedDatabase', () => {
       mockPublishEvent = jest.fn().mockResolvedValue(true)
 
       // default mongoose mock (tests that need custom readyState can override with their own jest.doMock)
-      jest.doMock('mongoose', () => ({
-        connection: { readyState: 1 },
-        STATES: { connected: 1 }
-      }))
+      jest.doMock('mongoose', () => {
+        const mockSchema = jest.fn().mockImplementation(() => ({
+          add: jest.fn(),
+          pre: jest.fn(),
+          post: jest.fn(),
+          methods: {},
+          statics: {},
+          virtuals: {},
+          indexes: [],
+          index: jest.fn()
+        }))
+        mockSchema.Types = {
+          ObjectId: jest.fn()
+        }
+        return {
+          connection: { readyState: 1 },
+          STATES: { connected: 1 },
+          Schema: mockSchema,
+          model: jest.fn().mockImplementation(() => ({
+            find: jest.fn(),
+            findOne: jest.fn(),
+            findById: jest.fn(),
+            create: jest.fn(),
+            updateOne: jest.fn(),
+            updateMany: jest.fn(),
+            deleteOne: jest.fn(),
+            deleteMany: jest.fn(),
+            countDocuments: jest.fn(),
+            aggregate: jest.fn(),
+            distinct: jest.fn()
+          }))
+        }
+      })
 
       jest.doMock('~/src/api/common/models/index.js', () => ({
         agreements: {

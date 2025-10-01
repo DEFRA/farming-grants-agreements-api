@@ -99,6 +99,12 @@ describe('#context', () => {
       expect(contextResult).toEqual({
         baseUrl: '/',
         assetPath: '/public/assets/rebrand',
+        featureFlags: {
+          isJwtEnabled: expect.any(Boolean),
+          isPaymentHubEnabled: expect.any(Boolean),
+          seedDb: expect.any(Boolean),
+          testEndpoints: expect.any(Boolean)
+        },
         breadcrumbs: [],
         navigation: [
           {
@@ -188,6 +194,12 @@ describe('#context', () => {
         expect(contextResult).toEqual({
           baseUrl: '/',
           assetPath: '/public/assets/rebrand',
+          featureFlags: {
+            isJwtEnabled: expect.any(Boolean),
+            isPaymentHubEnabled: expect.any(Boolean),
+            seedDb: expect.any(Boolean),
+            testEndpoints: expect.any(Boolean)
+          },
           breadcrumbs: [],
           navigation: [
             {

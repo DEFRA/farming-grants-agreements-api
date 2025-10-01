@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import models from '~/src/api/common/models/index.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { processMessage } from '~/src/api/common/helpers/sqs-message-processor.js'
+import { handleCreateAgreementEvent } from './sqs-message-processor/create-agreement.js'
 
 async function publishSampleAgreementEvents(tableData, logger) {
   for (const row of tableData) {
@@ -21,14 +21,8 @@ async function publishSampleAgreementEvents(tableData, logger) {
             // We're not allowed to publish application approved events on the platform
             // this mocks the SNS send/process logic for sample data
             send: async ({ input: { Message } }) => {
-              const body = JSON.parse(Message)
-              await processMessage(
-                {
-                  MessageId: body.id,
-                  Body: Message
-                },
-                logger
-              )
+              const message = JSON.parse(Message)
+              await handleCreateAgreementEvent(message.id, message, logger)
             }
           }
     )
@@ -43,6 +37,8 @@ export async function seedDatabase(logger) {
     logger.info('Waiting for mongoose to connect...')
     await new Promise((resolve) => setTimeout(resolve, 1000))
   }
+
+  logger.info('Seeding database')
 
   for (const [name, model] of Object.entries(models)) {
     try {

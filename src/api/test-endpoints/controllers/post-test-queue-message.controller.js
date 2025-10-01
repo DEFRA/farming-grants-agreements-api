@@ -1,12 +1,12 @@
 import Boom, { isBoom } from '@hapi/boom'
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { config } from '~/src/config/index.js'
 
 const maxDelay = 8000
 
-const checkAgreementWithBackoff = async (sbi, frn, delay) => {
+const checkAgreementWithBackoff = async (sbi, frn, delay, logger) => {
   if (delay > maxDelay) {
     throw Boom.internal(
       `Failed to retrieve agreement data after multiple attempts for SBI: ${sbi}, FRN: ${frn}`
@@ -17,6 +17,10 @@ const checkAgreementWithBackoff = async (sbi, frn, delay) => {
   try {
     return await getAgreementData({ sbi, frn })
   } catch (error) {
+    logger.error(
+      error,
+      `Failed to retrieve agreement data for SBI: ${sbi}, FRN: ${frn}`
+    )
     if (isBoom(error) && error.output.statusCode === statusCodes.notFound) {
       await new Promise((resolve) => setTimeout(resolve, delay))
       return checkAgreementWithBackoff(sbi, frn, delay * 2)
@@ -34,13 +38,18 @@ const postTestQueueMessageController = {
     try {
       const queueMessage = request.payload
 
-      request.logger.info(
-        `Posting test queue message with data: ${JSON.stringify(queueMessage)}`
-      )
-
       if (!queueMessage) {
         throw Boom.internal('Queue message data is required')
       }
+
+      const { queueName = 'create_agreement' } = request.params
+      const baseQueueUrl = config.get('sqs.queueUrl').split('/')
+      baseQueueUrl.pop()
+      const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
+
+      request.logger.info(
+        `Posting test queue message in: "${queueUrl}" with data: ${JSON.stringify(queueMessage)}`
+      )
 
       const sqsClient = new SQSClient({
         region: config.get('aws.region'),
@@ -48,18 +57,22 @@ const postTestQueueMessageController = {
       })
 
       const command = new SendMessageCommand({
-        QueueUrl: config.get('sqs.queueUrl'),
+        QueueUrl: queueUrl,
         MessageBody: JSON.stringify(queueMessage)
       })
 
       await sqsClient.send(command)
 
-      // Get the agreement from the database by SBI and FRN
-      const agreementData = await checkAgreementWithBackoff(
-        queueMessage.data.identifiers.sbi,
-        queueMessage.data.identifiers.frn,
-        1000
-      )
+      let agreementData
+      if (queueName === 'create_agreement') {
+        // Get the agreement from the database by SBI and FRN
+        agreementData = await checkAgreementWithBackoff(
+          queueMessage.data.identifiers.sbi,
+          queueMessage.data.identifiers.frn,
+          1000,
+          request.logger
+        )
+      }
 
       return h
         .response({
@@ -72,11 +85,11 @@ const postTestQueueMessageController = {
         return error
       }
 
-      request.logger.error(`Error posting test queue message: ${error}`)
+      request.logger.error(error, `Error posting test queue message`)
       return h
         .response({
           message: 'Failed to post test queue message',
-          error: error.message
+          error
         })
         .code(statusCodes.internalServerError)
     }

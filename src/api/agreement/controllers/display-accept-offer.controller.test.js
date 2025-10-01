@@ -22,7 +22,9 @@ describe('displayAcceptOfferController', () => {
   })
 
   afterAll(async () => {
-    await server.stop({ timeout: 0 })
+    if (server) {
+      await server.stop({ timeout: 0 })
+    }
   })
 
   beforeEach(() => {
@@ -155,17 +157,21 @@ describe('displayAcceptOfferController', () => {
 
       beforeEach(() => {
         // Mock the view rendering to throw an error
-        originalView =
-          server.realm.plugins.vision.manager._engines.njk.compileFunc
-        server.realm.plugins.vision.manager._engines.njk.compileFunc = () => {
-          throw new Error('Template rendering failed')
+        if (server?.realm?.plugins?.vision) {
+          originalView =
+            server.realm.plugins.vision.manager._engines.njk.compileFunc
+          server.realm.plugins.vision.manager._engines.njk.compileFunc = () => {
+            throw new Error('Template rendering failed')
+          }
         }
       })
 
       afterEach(() => {
         // Restore the original view function
-        server.realm.plugins.vision.manager._engines.njk.compileFunc =
-          originalView
+        if (server?.realm?.plugins?.vision && originalView) {
+          server.realm.plugins.vision.manager._engines.njk.compileFunc =
+            originalView
+        }
       })
 
       test('should handle template rendering errors', async () => {

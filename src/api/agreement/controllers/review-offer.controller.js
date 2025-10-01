@@ -84,7 +84,7 @@ const reviewOfferController = {
       if (error.isBoom) {
         throw error
       }
-      request.logger.error(`Error fetching offer: ${error.message}`)
+      request.logger.error(error, `Error fetching offer: ${error.message}`)
       return h
         .response({
           message: 'Failed to fetch offer',
