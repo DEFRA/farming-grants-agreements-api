@@ -3,6 +3,7 @@ import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { acceptOffer, getFirstPaymentDate } from './accept-offer.js'
 import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
+import { config } from '~/src/config/index.js'
 
 jest.mock('~/src/api/common/models/agreements.js', () => ({
   __esModule: true,
@@ -24,6 +25,7 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
   }
 }))
 jest.mock('~/src/api/common/helpers/sns-publisher.js')
+jest.mock('~/src/config/index.js')
 
 describe('acceptOffer', () => {
   const mockUpdateResult = {
@@ -43,6 +45,19 @@ describe('acceptOffer', () => {
     jest.clearAllMocks()
     jest.setSystemTime(new Date('2024-01-01'))
     mockLogger = { info: jest.fn(), error: jest.fn() }
+
+    // Mock config values
+    config.get = jest.fn((key) => {
+      const configValues = {
+        'files.s3.bucket': 'test-bucket',
+        'files.s3.region': 'eu-west-2',
+        'aws.sns.topic.agreementStatusUpdate.arn':
+          'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        'aws.sns.topic.agreementStatusUpdate.type':
+          'io.onsite.agreement.status.updated'
+      }
+      return configValues[key]
+    })
   })
 
   afterAll(() => {
@@ -88,6 +103,56 @@ describe('acceptOffer', () => {
         mockLogger
       )
     ).rejects.toThrow('Agreement data is required')
+  })
+
+  test('should throw error when S3 bucket config is missing', async () => {
+    config.get.mockImplementation((key) => {
+      if (key === 'files.s3.bucket') return null
+      if (key === 'files.s3.region') return 'eu-west-2'
+      return 'default-value'
+    })
+
+    const agreementData = {
+      agreementNumber: 'SFI123456789',
+      correlationId: 'test-correlation-id',
+      clientRef: 'test-client-ref'
+    }
+
+    await expect(
+      acceptOffer(
+        'SFI123456789',
+        agreementData,
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
+    ).rejects.toThrow(
+      'PDF service configuration missing: FILES_S3_BUCKET not set'
+    )
+  })
+
+  test('should throw error when S3 region config is missing', async () => {
+    config.get.mockImplementation((key) => {
+      if (key === 'files.s3.bucket') return 'test-bucket'
+      if (key === 'files.s3.region') return null
+      return 'default-value'
+    })
+
+    const agreementData = {
+      agreementNumber: 'SFI123456789',
+      correlationId: 'test-correlation-id',
+      clientRef: 'test-client-ref'
+    }
+
+    await expect(
+      acceptOffer(
+        'SFI123456789',
+        agreementData,
+        'http://localhost:3555/SFI123456789',
+        mockLogger
+      )
+    ).rejects.toThrow(
+      'PDF service configuration missing: FILES_S3_REGION not set'
+    )
   })
 
   test('should successfully accept an agreement', async () => {
