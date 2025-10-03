@@ -29,7 +29,6 @@ async function acceptOffer(
   const region = config.get('files.s3.region')
 
   if (!bucket) {
-    logger.error('PDF service configuration missing: FILES_S3_BUCKET not set')
     throw Boom.badImplementation(
       'PDF service configuration missing: FILES_S3_BUCKET not set'
     )
