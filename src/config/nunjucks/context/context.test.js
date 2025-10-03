@@ -120,6 +120,7 @@ describe('#context', () => {
         ],
         serviceName: cfg.get('serviceName'),
         serviceTitle: cfg.get('serviceTitle'),
+        serviceVersion: cfg.get('serviceVersion'),
         auth: {
           isAuthenticated: false,
           name: 'Unauthenticated user',
@@ -215,6 +216,7 @@ describe('#context', () => {
           ],
           serviceName: cfg.get('serviceName'),
           serviceTitle: cfg.get('serviceTitle'),
+          serviceVersion: cfg.get('serviceVersion'),
           auth: {
             isAuthenticated: false,
             name: 'Unauthenticated user',
