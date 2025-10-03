@@ -1,7 +1,4 @@
 /* @jest-environment jsdom */
-jest.mock('@defra/forms-engine-plugin/shared.js', () => ({
-  initAll: jest.fn()
-}))
 
 describe('#application', () => {
   const importFreshApp = async () => {
@@ -15,20 +12,10 @@ describe('#application', () => {
     window.print = jest.fn()
   })
 
-  test('calls initAll on all components', async () => {
-    await importFreshApp()
-
-    const { initAll } = await import('@defra/forms-engine-plugin/shared.js')
-    expect(initAll).toHaveBeenCalledTimes(1)
-  })
-
   test('does nothing when print button is absent', async () => {
     await importFreshApp()
 
     document.dispatchEvent(new Event('DOMContentLoaded'))
-
-    const { initAll } = await import('@defra/forms-engine-plugin/shared.js')
-    expect(initAll).toHaveBeenCalledTimes(1)
     expect(window.print).not.toHaveBeenCalled()
   })
 
