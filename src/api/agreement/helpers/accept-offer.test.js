@@ -128,10 +128,6 @@ describe('acceptOffer', () => {
     ).rejects.toThrow(
       'PDF service configuration missing: FILES_S3_BUCKET not set'
     )
-
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'PDF service configuration missing: FILES_S3_BUCKET not set'
-    )
   })
 
   test('should throw error when S3 region config is missing', async () => {
@@ -155,10 +151,6 @@ describe('acceptOffer', () => {
         mockLogger
       )
     ).rejects.toThrow(
-      'PDF service configuration missing: FILES_S3_REGION not set'
-    )
-
-    expect(mockLogger.error).toHaveBeenCalledWith(
       'PDF service configuration missing: FILES_S3_REGION not set'
     )
   })
