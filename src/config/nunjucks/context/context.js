@@ -45,6 +45,7 @@ export function context(request) {
     featureFlags: config.get('featureFlags'),
     serviceName: config.get('serviceName'),
     serviceTitle: config.get('serviceTitle'),
+    serviceVersion: config.get('serviceVersion'),
     auth,
     breadcrumbs: [],
     navigation: buildNavigation(request),
