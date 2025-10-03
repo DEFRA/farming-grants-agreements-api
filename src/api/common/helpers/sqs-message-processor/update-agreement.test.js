@@ -2,8 +2,10 @@ import { jest } from '@jest/globals'
 import { handleUpdateAgreementEvent } from './update-agreement.js'
 import { processMessage } from '../sqs-client.js'
 import { withdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
+import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 
 jest.mock('~/src/api/agreement/helpers/withdraw-offer.js')
+jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('SQS message processor', () => {
   let mockLogger
@@ -12,6 +14,10 @@ describe('SQS message processor', () => {
     jest.clearAllMocks()
     mockLogger = { info: jest.fn(), error: jest.fn() }
     withdrawOffer.mockResolvedValue({
+      clientRef: 'mockClientRef',
+      correlationId: 'mockCorrelationId',
+      code: 'mockCode',
+      status: 'withdrawn',
       agreement: { agreementNumber: 'SFI123456789' }
     })
   })
@@ -33,6 +39,23 @@ describe('SQS message processor', () => {
       await processMessage(handleUpdateAgreementEvent, message, mockLogger)
 
       expect(withdrawOffer).toHaveBeenCalledWith('SFI123456789')
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'SFI123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: expect.any(String),
+            status: 'withdrawn'
+          },
+          time: expect.any(String),
+          topicArn:
+            'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
     })
 
     it('should handle invalid JSON in message body', async () => {
@@ -58,6 +81,7 @@ describe('SQS message processor', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'No action required for GAS application status update event: invalid.type (invalid.status)'
       )
+      expect(mockPublishEvent).not.toHaveBeenCalled()
     })
   })
 
@@ -81,6 +105,23 @@ describe('SQS message processor', () => {
         expect.stringContaining('Received application withdrawn from event')
       )
       expect(withdrawOffer).toHaveBeenCalledWith('SFI123456789')
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'SFI123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: expect.any(String),
+            status: 'withdrawn'
+          },
+          time: expect.any(String),
+          topicArn:
+            'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
     })
 
     it('should log an info for non-application-withdrawn events', async () => {
@@ -99,6 +140,7 @@ describe('SQS message processor', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'No action required for GAS application status update event: some-other-event'
       )
+      expect(mockPublishEvent).not.toHaveBeenCalled()
     })
 
     it('should log an info for non-application-withdrawn events with no type', async () => {
