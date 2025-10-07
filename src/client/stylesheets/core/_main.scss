@@ -100,4 +100,15 @@ a:link,
     max-width: none !important;
     text-align: right;
   }
+
+  .dataset-info dd {
+    width: 30% !important;
+    margin-left: 0 !important;
+  }
+
+  .dataset-info dt {
+    width: 68% !important;
+    white-space: normal !important;
+    word-wrap: break-word;
+  }
 }
