@@ -75,6 +75,11 @@ a:link,
     display: block;
   }
 
+  /* Hide sign out link in account bar */
+  .defra-account-bar .govuk-link {
+    display: none !important;
+  }
+
   /* Force the account bar to remain two columns in print */
   .defra-account-bar__row {
     display: flex !important;
