@@ -64,6 +64,12 @@ a:link,
     display: none !important;
   }
 
+  .govuk-width-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
   .govuk-grid-column-two-thirds,
   .govuk-grid-column-three-quarters,
   .govuk-grid-column-one-quarter {
