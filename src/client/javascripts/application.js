@@ -1,3 +1,7 @@
+import { initAll } from 'govuk-frontend'
+
+initAll()
+
 document.addEventListener('DOMContentLoaded', () => {
   const btn = document.querySelector('.gem-c-print-link__button')
   if (!btn) {
