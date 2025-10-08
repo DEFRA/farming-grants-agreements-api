@@ -22,6 +22,7 @@ Core delivery platform Node.js Backend Template.
     - [Production image](#production-image)
     - [Docker Compose](#docker-compose)
     - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
+    - [The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)](#the-google-analytics-trackingid-secret-configuration-ga_tracking_idgoogleanalyticstrackingid)
     - [Dependabot](#dependabot)
     - [SonarCloud](#sonarcloud)
   - [Licence](#licence)
@@ -222,6 +223,11 @@ docker exec -it localstack sh -lc '
     --attribute-names All
 '
 ```
+
+### The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)
+
+- Development (Dev): GTM-WJ5C78H
+- Production (Prod): GTM-KRJXHHT
 
 ### Dependabot
 
