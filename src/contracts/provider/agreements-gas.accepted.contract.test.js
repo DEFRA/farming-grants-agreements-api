@@ -10,6 +10,7 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
   updateOneAgreementVersion: jest.fn().mockResolvedValue('created')
 }))
 
+// Reason: Pact consumer tests need to be setup in fg-gas-backend
 describe.skip('sending updated (accepted) events via SNS', () => {
   const mockLogger = {
     info: jest.fn(),
