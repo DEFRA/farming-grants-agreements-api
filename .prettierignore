@@ -5,3 +5,4 @@ node_modules
 coverage
 postman
 public
+src/contracts/pacts
