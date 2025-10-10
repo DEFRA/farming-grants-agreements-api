@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import { MessageProviderPact } from '@pact-foundation/pact'
 
 import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
@@ -16,13 +14,24 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
   })
 }))
 
-describe('sending updated (created) event via SNS', () => {
+// Reason: Pact consumer tests need to be setup in fg-gas-backend
+describe.skip('sending updated (created) event via SNS', () => {
   const mockLogger = {
     info: jest.fn(),
     error: jest.fn()
   }
 
   const messagePact = new MessageProviderPact({
+    provider: 'farming-grants-agreements-api',
+    consumer: 'fg-gas-backend',
+    pactBrokerUrl:
+      process.env.PACT_BROKER_URL ??
+      'https://ffc-pact-broker.azure.defra.cloud',
+    consumerVersionSelectors: [{ latest: true }],
+    pactBrokerUsername: process.env.PACT_BROKER_USERNAME,
+    pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
+    publishVerificationResult: true,
+    providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
     messageProviders: {
       'agreement created': async () => {
         let message
@@ -48,19 +57,7 @@ describe('sending updated (created) event via SNS', () => {
         }
         return message
       }
-    },
-    provider: 'sns-agreements:agreement_status_updated',
-    consumer: 'sqs-gas',
-    providerVersion: '1.0.0',
-    pactUrls: [
-      path.resolve(
-        'src',
-        'contracts',
-        'pacts',
-        'sns-agreements:agreement_status_updated:created.json'
-      )
-    ],
-    pactfileWriteMode: 'update'
+    }
   })
 
   it('should validate the message structure', async () => {

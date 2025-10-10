@@ -11,9 +11,9 @@ jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('receiving events from the GAS SQS queue and processing them', () => {
   const messagePact = new MessageConsumerPact({
-    consumer: 'sqs-agreements:create_agreement',
-    provider: 'sns-gas:grant_application_approved',
-    dir: path.resolve('src', 'contracts', 'pacts'),
+    consumer: 'farming-grants-agreements-api',
+    provider: 'fg-gas-backend',
+    dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
     pactfileWriteMode: 'update'
   })
 
