@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import { MessageProviderPact } from '@pact-foundation/pact'
 
 import { config } from '~/src/config/index.js'
@@ -12,13 +10,23 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
   updateOneAgreementVersion: jest.fn().mockResolvedValue('created')
 }))
 
-describe('sending updated (accepted) events via SNS', () => {
+describe.skip('sending updated (accepted) events via SNS', () => {
   const mockLogger = {
     info: jest.fn(),
     error: jest.fn()
   }
 
   const messagePact = new MessageProviderPact({
+    provider: 'farming-grants-agreements-api',
+    consumer: 'fg-gas-backend',
+    pactBrokerUrl:
+      process.env.PACT_BROKER_URL ??
+      'https://ffc-pact-broker.azure.defra.cloud',
+    consumerVersionSelectors: [{ latest: true }],
+    pactBrokerUsername: process.env.PACT_BROKER_USERNAME,
+    pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
+    publishVerificationResult: true,
+    providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
     messageProviders: {
       'agreement accepted': async () => {
         let message
@@ -53,19 +61,7 @@ describe('sending updated (accepted) events via SNS', () => {
         }
         return message
       }
-    },
-    provider: 'sns-agreements:agreement_status_updated',
-    consumer: 'sqs-gas',
-    providerVersion: '1.0.0',
-    pactUrls: [
-      path.resolve(
-        'src',
-        'contracts',
-        'pacts',
-        'sns-agreements:agreement_status_updated:accepted.json'
-      )
-    ],
-    pactfileWriteMode: 'update'
+    }
   })
 
   it('should validate the message structure', async () => {

@@ -36,6 +36,7 @@ jobs:
           npm run format:check
           npm run lint
           npm test
+          npm test:contracts:provider
 
       - name: Test Docker Image Build
         run: |
