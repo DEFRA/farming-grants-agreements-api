@@ -73,4 +73,4 @@ jobs:
           PACT_BROKER_USERNAME: ${{ secrets.PACT_USER }}
           PACT_BROKER_PASSWORD: ${{ secrets.PACT_PASS }}
         shell: bash
-        run: npm run test:contracts
+        run: SERVICE_VERSION=$(git describe --tags --abbrev=0) npm run test:contracts
