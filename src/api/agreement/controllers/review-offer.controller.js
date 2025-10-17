@@ -68,7 +68,7 @@ const reviewOfferController = {
       ].sort((a, b) => a.code.localeCompare(b.code))
       // Render the page with base context automatically applied
       return h
-        .view('views/view-offer.njk', {
+        .response({
           actionApplications,
           codeDescriptions,
           payments,
