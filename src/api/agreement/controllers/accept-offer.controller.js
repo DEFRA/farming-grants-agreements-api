@@ -34,10 +34,13 @@ const acceptOfferController = {
 
       // Render the offer accepted template with agreement data
       return h
-        .view('views/offer-accepted.njk', {
-          nearestQuarterlyPaymentDate: getFirstPaymentDate(
-            agreementData.payment.agreementStartDate
-          )
+        .response({
+          agreementData,
+          pageData: {
+            nearestQuarterlyPaymentDate: getFirstPaymentDate(
+              agreementData.payment.agreementStartDate
+            )
+          }
         })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)

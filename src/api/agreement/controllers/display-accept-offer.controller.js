@@ -8,9 +8,13 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 const displayAcceptOfferController = {
   handler: (request, h) => {
     try {
+      const { agreementData } = request.auth.credentials
+
       // Render the accept offer template with agreement data
       return h
-        .view('views/accept-offer.njk')
+        .response({
+          agreementData
+        })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {

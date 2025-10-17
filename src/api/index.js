@@ -20,6 +20,7 @@ import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
 import { createSqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
 import { handleCreateAgreementEvent } from './common/helpers/sqs-message-processor/create-agreement.js'
 import { handleUpdateAgreementEvent } from './common/helpers/sqs-message-processor/update-agreement.js'
+import { returnDataHandlerPlugin } from './common/helpers/return-data-handler.js'
 
 const customGrantsUiJwtScheme = () => ({
   authenticate: async (request, h) => {
@@ -125,6 +126,7 @@ async function createServer(serverOptions = {}) {
           ]
         : []),
       errorHandlerPlugin,
+      returnDataHandlerPlugin,
       router
     ].filter(Boolean)
   )

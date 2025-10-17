@@ -7,8 +7,10 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 const offerWithdrawnController = {
   handler: (request, h) => {
     try {
+      const { agreementData } = request.auth.credentials
+
       return h
-        .view('views/error/offer-withdrawn.njk')
+        .response({ agreementData })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
     } catch (error) {

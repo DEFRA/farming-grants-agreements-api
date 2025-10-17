@@ -68,14 +68,17 @@ const reviewOfferController = {
       ].sort((a, b) => a.code.localeCompare(b.code))
       // Render the page with base context automatically applied
       return h
-        .view('views/view-offer.njk', {
-          actionApplications,
-          codeDescriptions,
-          payments,
-          totalQuarterly: quarterlyPayment?.totalPaymentPence,
-          totalYearly: payment.annualTotalPence,
-          totalFirstPayment: calculateTotalFirstPayment(payments),
-          totalSubsequentPayment: calculateTotalSubsequentPayment(payments)
+        .response({
+          agreementData: request.auth.credentials.agreementData,
+          pageData: {
+            actionApplications,
+            codeDescriptions,
+            payments,
+            totalQuarterly: quarterlyPayment?.totalPaymentPence,
+            totalYearly: payment.annualTotalPence,
+            totalFirstPayment: calculateTotalFirstPayment(payments),
+            totalSubsequentPayment: calculateTotalSubsequentPayment(payments)
+          }
         })
         .header('Cache-Control', 'no-cache, no-store, must-revalidate')
         .code(statusCodes.ok)
