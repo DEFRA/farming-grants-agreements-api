@@ -1,10 +1,12 @@
 import { Decimal128 } from 'mongodb'
 
 function convertDecimal128(obj, seen = new WeakSet()) {
-  if (obj == null) return obj
+  if (obj == null) {
+    return obj
+  }
 
   if (obj instanceof Decimal128) {
-    return parseFloat(obj.toString())
+    return Number.parseFloat(obj.toString())
   }
 
   if (typeof obj !== 'object') {
