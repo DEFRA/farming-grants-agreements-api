@@ -13,50 +13,36 @@ import { config } from '~/src/config/index.js'
  */
 const acceptOfferController = {
   handler: async (request, h) => {
-    try {
-      // Get the agreement data before accepting
-      const { agreementData } = request.auth.credentials
-      const { agreementNumber, status } = agreementData
+    // Get the agreement data before accepting
+    const { agreementData } = request.auth.credentials
+    const { agreementNumber, status } = agreementData
 
-      if (status === 'offered') {
-        // Accept the agreement
-        const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
-        await acceptOffer(
-          agreementNumber,
-          agreementData,
-          agreementUrl,
-          request.logger
-        )
+    if (status === 'offered') {
+      // Accept the agreement
+      const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
+      await acceptOffer(
+        agreementNumber,
+        agreementData,
+        agreementUrl,
+        request.logger
+      )
 
-        // Update the payment hub
-        await updatePaymentHub(request, agreementNumber)
-      }
-
-      // Render the offer accepted template with agreement data
-      return h
-        .response({
-          agreementData,
-          pageData: {
-            nearestQuarterlyPaymentDate: getFirstPaymentDate(
-              agreementData.payment.agreementStartDate
-            )
-          }
-        })
-        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        .code(statusCodes.ok)
-    } catch (error) {
-      if (error.isBoom) {
-        return error
-      }
-
-      request.logger.error(error, 'Error accepting offer')
-      return h
-        .response({
-          message: 'Failed to accept offer',
-          error: error.message
-        })
-        .code(statusCodes.internalServerError)
+      // Update the payment hub
+      await updatePaymentHub(request, agreementNumber)
     }
+
+    // Render the offer accepted template with agreement data
+    return h
+      .response({
+        agreementData,
+        pageData: {
+          nearestQuarterlyPaymentDate: getFirstPaymentDate(
+            agreementData.payment.agreementStartDate
+          )
+        }
+      })
+      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+      .code(statusCodes.ok)
   }
 }
 

@@ -92,30 +92,8 @@ describe('acceptOfferDocumentController', () => {
     )
     expect(updatePaymentHub).toHaveBeenCalled()
     expect(statusCode).toBe(statusCodes.ok)
-    expect(String(result)).toContain('Offer accepted')
-    expect(String(result)).toContain(agreementId)
-  })
-
-  test('should handle agreement not found error', async () => {
-    // Arrange
-    const agreementId = 'invalid-agreement-id'
-    getAgreementDataById.mockResolvedValue(null)
-
-    // Act
-    const { statusCode, result } = await server.inject({
-      method: 'POST',
-      url: `/${agreementId}`,
-      payload: {
-        action: 'accept-offer'
-      },
-      headers: {
-        'x-encrypted-auth': 'valid-jwt-token'
-      }
-    })
-
-    // Assert
-    expect(statusCode).toBe(500)
-    expect(String(result)).toContain('Cannot read properties of null')
+    expect(result.agreementData.status).toContain('offered')
+    expect(result.agreementData.agreementNumber).toContain(agreementId)
   })
 
   test('should handle database errors from acceptOffer', async () => {
@@ -138,8 +116,14 @@ describe('acceptOfferDocumentController', () => {
     // Assert
     expect(statusCode).toBe(statusCodes.internalServerError)
     expect(result).toEqual({
-      message: 'Failed to accept offer',
-      error: 'Database connection failed'
+      agreement: {
+        agreementNumber: 'SFI123456789',
+        payment: {
+          agreementStartDate: '2024-01-01'
+        },
+        status: 'offered'
+      },
+      errorMessage: 'Database connection failed'
     })
   })
 
@@ -177,9 +161,8 @@ describe('acceptOfferDocumentController', () => {
 
     // Assert
     expect(statusCode).toBe(statusCodes.ok)
-    expect(String(result)).toContain('Offer accepted')
-    expect(String(result)).toContain(agreementId)
-    expect(String(result)).toContain('/agreement')
+    expect(result.agreementData.status).toContain('offered')
+    expect(result.agreementData.agreementNumber).toContain(agreementId)
   })
 
   test('should handle GET method when agreement is accepted', async () => {
@@ -208,12 +191,9 @@ describe('acceptOfferDocumentController', () => {
     // Assert
     expect(getFirstPaymentDate).toHaveBeenCalledWith('2024-01-01')
     expect(statusCode).toBe(statusCodes.ok)
-    expect(String(result)).toContain('Offer accepted')
-    expect(String(result)).toContain('Your agreement number is SFI123456789.')
-    expect(String(result)).toContain(
-      'You will receive your first payment for these actions in'
-    )
-    expect(String(result)).toContain('March 2025')
+    expect(result.agreementData.status).toContain('accepted')
+    expect(result.agreementData.agreementNumber).toContain('SFI123456789')
+    expect(result.pageData.nearestQuarterlyPaymentDate).toBe('March 2025')
   })
 })
 

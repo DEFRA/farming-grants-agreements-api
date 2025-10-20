@@ -122,9 +122,7 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     expect(res.statusCode).toBe(statusCodes.unauthorized)
     expect(res.result).toBeDefined()
-    expect(res.result.message || res.result.error || res.result).toContain(
-      'Not authorized'
-    )
+    expect(res.result.errorMessage).toContain('Not authorized')
   })
 
   test('security: uses agreementId from authenticated credentials, not URL parameter', async () => {
