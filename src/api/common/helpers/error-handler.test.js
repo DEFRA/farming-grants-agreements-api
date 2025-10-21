@@ -103,9 +103,7 @@ describe('errorHandlerPlugin', () => {
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
       expect(response.headers['surrogate-control']).toBe('no-store')
-      expect(response.payload).toContain(
-        'Sorry, there is a problem with the service'
-      )
+      expect(response.payload).toContain('Test boom error')
     })
 
     test('should add cache control headers to generic errors converted to Boom', async () => {
@@ -119,9 +117,7 @@ describe('errorHandlerPlugin', () => {
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
       expect(response.headers['surrogate-control']).toBe('no-store')
-      expect(response.payload).toContain(
-        'Sorry, there is a problem with the service'
-      )
+      expect(response.payload).toContain('Test generic error')
     })
 
     test('should not modify successful responses', async () => {
@@ -180,10 +176,10 @@ describe('errorHandlerPlugin', () => {
       })
 
       expect(response.statusCode).toBe(401)
-      expect(response.headers['content-type']).toContain('text/html')
-      expect(response.payload).toContain(
-        'You are not authorized to access this page'
+      expect(response.headers['content-type']).toContain(
+        'application/json; charset=utf-8'
       )
+      expect(response.payload).toContain('Unauthorized')
       expect(response.headers['cache-control']).toContain('no-cache')
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
@@ -197,8 +193,10 @@ describe('errorHandlerPlugin', () => {
       })
 
       expect(response.statusCode).toBe(404)
-      expect(response.headers['content-type']).toContain('text/html')
-      expect(response.payload).toContain('Page not found')
+      expect(response.headers['content-type']).toContain(
+        'application/json; charset=utf-8'
+      )
+      expect(response.payload).toContain('Not found')
       expect(response.headers['cache-control']).toContain('no-cache')
       expect(response.headers.pragma).toBe('no-cache')
       expect(response.headers.expires).toBe('0')
@@ -207,13 +205,13 @@ describe('errorHandlerPlugin', () => {
   })
 
   describe('onPreResponse extension continue to next handler', () => {
-    const view = jest.fn().mockReturnThis()
+    const response = jest.fn().mockReturnThis()
     const code = jest.fn().mockReturnThis()
     const header = jest.fn().mockReturnThis()
 
     const mockH = {
       continue: Symbol('continue'),
-      view,
+      response,
       code,
       header
     }
@@ -253,7 +251,7 @@ describe('errorHandlerPlugin', () => {
       }
 
       const error = new Error('Render failed')
-      view.mockImplementation(() => {
+      response.mockImplementation(() => {
         throw error
       })
 

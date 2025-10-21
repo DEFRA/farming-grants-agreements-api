@@ -87,10 +87,16 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(headers['content-type']).toContain('text/html')
-      expect(String(result)).toContain('Review your funding offer')
-      expect(String(result)).toContain('Arable and Horticultural Soils')
-      expect(String(result)).toContain('SFI1')
+      expect(headers['content-type']).toContain(
+        'application/json; charset=utf-8'
+      )
+      expect(result.agreement.status).toContain('offered')
+      expect(result.agreement.payment.parcelItems[1].description).toContain(
+        'Arable and Horticultural Soils'
+      )
+      expect(result.agreement.payment.parcelItems[1].description).toContain(
+        'SFI1'
+      )
     })
 
     test('should handle actions with missing action title and use activity code as fallback', async () => {
@@ -133,8 +139,12 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('UNKNOWN_CODE')
-      expect(String(result)).toContain('PARCEL001')
+      expect(result.agreement.actionApplications[0].code).toContain(
+        'UNKNOWN_CODE'
+      )
+      expect(result.agreement.actionApplications[0].parcelId).toContain(
+        'PARCEL001'
+      )
     })
 
     test('should handle payments with missing description and use payment code as fallback', async () => {
@@ -183,7 +193,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('SFI1') // Should use payment code as fallback
+      expect(result.agreement.actionApplications[0].code).toContain('SFI1') // Should use payment code as fallback
     })
 
     test('should handle empty parcels array', async () => {
@@ -219,7 +229,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Review your funding offer')
+      expect(result.agreement.status).toContain('offered')
     })
 
     test('should handle parcels with empty activities array', async () => {
@@ -255,7 +265,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Review your funding offer')
+      expect(result.agreement.status).toContain('offered')
     })
 
     test('should handle missing payments data', async () => {
@@ -297,7 +307,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Review your funding offer')
+      expect(result.agreement.status).toContain('offered')
     })
 
     test('should display first payment and subsequent payments from payment structure', async () => {
@@ -369,8 +379,8 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('£11.83') // First payment from payments[0]
-      expect(String(result)).toContain('£12.00') // Subsequent payment from payments[1]
+      expect(result.agreement.payment.payments[0].totalPaymentPence).toBe(1183)
+      expect(result.agreement.payment.payments[1].totalPaymentPence).toBe(1200)
     })
 
     test('should handle payments with integer division correctly', async () => {
@@ -442,7 +452,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('£25.00') // Both first and subsequent should be £25.00
+      expect(result.agreement.payment.payments[0].totalPaymentPence).toBe(2500) // Both first and subsequent should be £25.00
     })
 
     test('should calculate total first payment and total subsequent payment correctly with multiple payments', async () => {
@@ -534,84 +544,9 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('£22.83')
-      expect(String(result)).toContain('£25.00')
-      expect(String(result)).toContain('£97.83')
-    })
-
-    test('should handle base URL header', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'offered',
-        sbi: '106284736',
-        actionApplications: [],
-        payment: {
-          annualTotalPence: 0,
-          parcelItems: {},
-          agreementLevelItems: {}
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: `/${agreementId}`,
-        payload: {
-          action: 'review-offer'
-        },
-        headers: {
-          'x-base-url': '/agreement',
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Review your funding offer')
-      expect(String(result)).toContain('/agreement')
-    })
-
-    test('should handle base URL header as false', async () => {
-      // Arrange
-      const agreementId = 'SFI123456789'
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'offered',
-        sbi: '123456789',
-        actionApplications: [],
-        payment: {
-          annualTotalPence: 0,
-          parcelItems: {},
-          agreementLevelItems: {}
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: `/${agreementId}`,
-        payload: {
-          action: 'review-offer'
-        },
-        headers: {
-          'x-base-url': false,
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Review your funding offer')
+      expect(result.agreement.payment.payments[0].totalPaymentPence).toBe(2283)
+      expect(result.agreement.payment.payments[1].totalPaymentPence).toBe(2500)
+      expect(result.agreement.payment.annualTotalPence).toBe(9783)
     })
 
     test('should fail if theres an error reading the database', async () => {
@@ -638,7 +573,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(String(result)).toContain('Failed to fetch agreement data')
+      expect(result.errorMessage).toContain('Failed to fetch agreement data')
     })
 
     test('should fail if getAgreementDataById throws an error', async () => {
@@ -664,7 +599,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(String(result)).toContain('Failed to generate HTML document')
+      expect(result.errorMessage).toContain('Failed to generate HTML document')
     })
   })
 
@@ -704,7 +639,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Offer accepted')
+      expect(result.agreement.status).toContain('accepted')
     })
 
     test('should handle base URL when already accepted', async () => {
@@ -725,8 +660,7 @@ describe('reviewOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Offer accepted')
-      expect(String(result)).toContain('/agreement')
+      expect(result.agreement.status).toContain('accepted')
     })
   })
 
@@ -758,9 +692,8 @@ describe('reviewOfferController', () => {
       })
 
       expect(statusCode).toBe(statusCodes.unauthorized)
-      expect(String(result)).toContain('<!DOCTYPE html>')
-      expect(String(result)).toContain(
-        'You are not authorized to access this page'
+      expect(result.errorMessage).toContain(
+        'Not authorized to accept offer agreement document'
       )
     })
   })
@@ -769,7 +702,6 @@ describe('reviewOfferController', () => {
     /** Simple chainable h toolkit mocks */
     const createHToolkit = () => {
       const calls = {
-        view: null,
         header: null,
         code: null,
         response: null
@@ -787,14 +719,13 @@ describe('reviewOfferController', () => {
       }
 
       const h = {
-        view: (template, context) => {
-          calls.view = [template, context]
-          return chain
-        },
         response: (payload) => {
           calls.response = payload
           return {
-            code: (status) => ({ statusCode: status, result: payload, calls })
+            code: (status) => ({ statusCode: status, result: payload, calls }),
+            header: () => ({
+              code: (status) => ({ statusCode: status, result: payload, calls })
+            })
           }
         }
       }
@@ -802,7 +733,7 @@ describe('reviewOfferController', () => {
       return { h, calls, chain }
     }
 
-    test('renders view with transformed payments, totals and headers', () => {
+    test('renders response with transformed payments, totals and headers', () => {
       const request = {
         auth: {
           credentials: {
@@ -859,55 +790,31 @@ describe('reviewOfferController', () => {
       // Status
       expect(res.statusCode).toBe(statusCodes.ok)
 
-      // Header set
-      expect(calls.header).toEqual([
-        'Cache-Control',
-        'no-cache, no-store, must-revalidate'
-      ])
-
-      // View called with expected template
-      expect(calls.view[0]).toBe('views/view-offer.njk')
-
-      const context = calls.view[1]
-
-      // actionApplications passed through
-      expect(context.actionApplications).toEqual([{ code: 'A1' }])
-
-      // codeDescriptions built from parcel descriptions (without the leading "CODE: ")
-      expect(context.codeDescriptions).toEqual({
-        A01: 'Alpha',
-        B02: 'Bravo',
-        C99: undefined // not present in parcelItems, so undefined
+      expect(calls.response.agreementData).toEqual({
+        actionApplications: [{ code: 'A1' }],
+        payment: {
+          agreementLevelItems: { 1: { annualPaymentPence: 2500, code: 'C99' } },
+          annualTotalPence: 123400,
+          parcelItems: {
+            1: { code: 'B02', description: 'B02: Bravo', unit: 'units' },
+            2: { code: 'A01', description: 'A01: Alpha', unit: 'hours' }
+          },
+          payments: [
+            {
+              lineItems: [
+                { agreementLevelItemId: 1, paymentPence: 1 },
+                { parcelItemId: 1, paymentPence: 2 },
+                { parcelItemId: 2, paymentPence: 3 }
+              ],
+              paymentDate: '2025-12-05',
+              totalPaymentPence: 6800
+            }
+          ]
+        }
       })
-
-      // payments merged and sorted by code, with transformations applied
-      const codes = context.payments.map((p) => p.code)
-      expect(codes).toEqual(['A01', 'B02', 'C99'])
-
-      const a01 = context.payments.find((p) => p.code === 'A01')
-      expect(a01.description).toBe('Alpha')
-      expect(a01.unit).toBe('hour') // singularized
-      expect(a01.quarterlyPayment).toBe(3)
-
-      const b02 = context.payments.find((p) => p.code === 'B02')
-
-      expect(b02.description).toBe('Bravo')
-      expect(b02.unit).toBe('unit') // singularized
-      expect(b02.quarterlyPayment).toBe(2)
-
-      const c99 = context.payments.find((p) => p.code === 'C99')
-      expect(c99.description).toBe(
-        'One-off payment per agreement per year for undefined'
-      )
-      expect(c99.rateInPence).toBe(2500)
-      expect(c99.quarterlyPayment).toBe(1)
-
-      // totals
-      expect(context.totalYearly).toBe(123400)
-      expect(context.totalQuarterly).toBe(6800)
     })
 
-    test('throws Boom errors (from h.view) through to error handler', () => {
+    test('throws Boom errors (from h.response) through to error handler', () => {
       const request = {
         auth: {
           credentials: {
@@ -928,34 +835,12 @@ describe('reviewOfferController', () => {
       error.isBoom = true
 
       const h = {
-        view: () => {
+        response: () => {
           throw error
         }
       }
 
       expect(() => reviewOfferController.handler(request, h)).toThrow(error)
-    })
-
-    test('handles non-Boom errors and returns 500 response with message', () => {
-      // Cause an error early in the try block (missing credentials)
-      const request = {
-        auth: {},
-        logger: { error: jest.fn() }
-      }
-
-      const createHToolkitLocal = createHToolkit
-      const { h } = createHToolkitLocal()
-
-      const res = reviewOfferController.handler(request, h)
-
-      expect(res.statusCode).toBe(statusCodes.internalServerError)
-      expect(res.result).toEqual(
-        expect.objectContaining({ message: 'Failed to fetch offer' })
-      )
-      expect(request.logger.error).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.stringContaining('Error fetching offer:')
-      )
     })
   })
 })
