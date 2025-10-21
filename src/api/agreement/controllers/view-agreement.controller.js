@@ -8,39 +8,40 @@ import { getAgreement } from '~/src/api/agreement/helpers/get-agreement.js'
  */
 const viewAgreementController = {
   handler: async (request, h) => {
-    try {
-      const { agreementData } = request.auth.credentials
+    const { agreementData } = request.auth.credentials
 
-      request.logger.info(
-        `Rendering HTML agreement document for agreementNumber: ${agreementData.agreementNumber}`
-      )
+    request.logger.info(
+      `Rendering HTML agreement document for agreementNumber: ${agreementData.agreementNumber}`
+    )
 
-      // get agreement
-      const fullAgreementData = await getAgreement(
-        agreementData.agreementNumber,
-        agreementData
-      )
+    // get agreement
+    const fullAgreementData = await getAgreement(
+      agreementData.agreementNumber,
+      agreementData
+    )
 
-      const {
-        applicant: {
-          business: {
-            address: {
-              line1,
-              line2,
-              line3,
-              line4,
-              line5,
-              street,
-              city,
-              postalCode
-            } = {}
+    const {
+      applicant: {
+        business: {
+          address: {
+            line1,
+            line2,
+            line3,
+            line4,
+            line5,
+            street,
+            city,
+            postalCode
           } = {}
         } = {}
-      } = agreementData
+      } = {}
+    } = agreementData
 
-      // Return the HTML response
-      return h
-        .view('views/sfi-agreement.njk', {
+    // Return the HTML response
+    return h
+      .response({
+        agreementData,
+        pageData: {
           agreement: fullAgreementData,
           agreementName:
             fullAgreementData.agreementName ||
@@ -48,29 +49,10 @@ const viewAgreementController = {
           address: [line1, line2, line3, line4, line5, street, city, postalCode]
             .filter(Boolean)
             .join(', ')
-        })
-        .type('text/html')
-        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        .code(statusCodes.ok)
-    } catch (error) {
-      // Let Boom errors pass through to the error handler
-      if (error.isBoom) {
-        throw error
-      }
-
-      request.logger.error(
-        error,
-        `Error rendering agreement document: ${error.message}`
-      )
-      request.logger.error(error.stack)
-      return h
-        .response({
-          message: 'Failed to generate agreement document',
-          error: error.message
-        })
-        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        .code(statusCodes.internalServerError)
-    }
+        }
+      })
+      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+      .code(statusCodes.ok)
   }
 }
 

@@ -66,8 +66,10 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(headers['content-type']).toContain('text/html')
-      expect(String(result)).toContain('Accept your offer')
+      expect(headers['content-type']).toContain(
+        'application/json; charset=utf-8'
+      )
+      expect(result.agreement.status).toContain('offered')
     })
 
     test('should handle agreement not found', async () => {
@@ -90,7 +92,7 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(500)
-      expect(String(result)).toContain('Cannot read properties of null')
+      expect(result.errorMessage).toContain('Cannot read properties of null')
     })
 
     test('should handle base URL header', async () => {
@@ -123,8 +125,7 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Accept your offer')
-      expect(String(result)).toContain('/agreement')
+      expect(result.agreement.status).toContain('offered')
     })
 
     test('should handle database errors', async () => {
@@ -149,66 +150,7 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(String(result)).toContain('Database connection failed')
-    })
-
-    describe('template rendering errors', () => {
-      let originalView
-
-      beforeEach(() => {
-        // Mock the view rendering to throw an error
-        if (server?.realm?.plugins?.vision) {
-          originalView =
-            server.realm.plugins.vision.manager._engines.njk.compileFunc
-          server.realm.plugins.vision.manager._engines.njk.compileFunc = () => {
-            throw new Error('Template rendering failed')
-          }
-        }
-      })
-
-      afterEach(() => {
-        // Restore the original view function
-        if (server?.realm?.plugins?.vision && originalView) {
-          server.realm.plugins.vision.manager._engines.njk.compileFunc =
-            originalView
-        }
-      })
-
-      test('should handle template rendering errors', async () => {
-        // Arrange
-        const agreementId = 'SFI123456789'
-        const mockAgreementData = {
-          agreementNumber: agreementId,
-          status: 'offered',
-          company: 'Test Company',
-          sbi: '106284736',
-          username: 'Test User'
-        }
-
-        jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
-          .mockResolvedValue(mockAgreementData)
-
-        // Act
-        const { statusCode, result } = await server.inject({
-          method: 'POST',
-          url: `/${agreementId}`,
-          payload: {
-            action: 'display-accept'
-          },
-          headers: {
-            'x-encrypted-auth': 'valid-jwt-token'
-          }
-        })
-
-        // Assert
-        expect(statusCode).toBe(statusCodes.internalServerError)
-        expect(result).toEqual({
-          error: 'Internal Server Error',
-          message: 'An internal server error occurred',
-          statusCode: 500
-        })
-      })
+      expect(result.errorMessage).toContain('Database connection failed')
     })
   })
 
@@ -248,7 +190,7 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Offer accepted')
+      expect(result.agreement.status).toContain('accepted')
     })
 
     test('should render accept offer page with base URL when already accepted', async () => {
@@ -267,8 +209,7 @@ describe('displayAcceptOfferController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(String(result)).toContain('Offer accepted')
-      expect(String(result)).toContain('/agreement')
+      expect(result.agreement.status).toContain('accepted')
     })
   })
 })
