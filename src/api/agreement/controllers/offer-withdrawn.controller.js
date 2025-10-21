@@ -6,28 +6,12 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
  */
 const offerWithdrawnController = {
   handler: (request, h) => {
-    try {
-      return h
-        .view('views/error/offer-withdrawn.njk')
-        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        .code(statusCodes.ok)
-    } catch (error) {
-      // Let Boom errors pass through to the error handler
-      if (error.isBoom) {
-        throw error
-      }
+    const { agreementData } = request.auth.credentials
 
-      request.logger.error(
-        error,
-        `Error displaying offer withdrawn page: ${error.message}`
-      )
-      return h
-        .response({
-          message: 'Failed to display offer withdrawn page',
-          error: error.message
-        })
-        .code(statusCodes.internalServerError)
-    }
+    return h
+      .response({ agreementData })
+      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+      .code(statusCodes.ok)
   }
 }
 

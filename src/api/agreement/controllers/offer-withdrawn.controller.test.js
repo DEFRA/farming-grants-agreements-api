@@ -14,11 +14,15 @@ describe('offerWithdrawnController', () => {
     }
 
     mockRequest = {
+      auth: {
+        credentials: {
+          agreementData: 'mock'
+        }
+      },
       logger: mockLogger
     }
 
     mockH = {
-      view: jest.fn().mockReturnThis(),
       header: jest.fn().mockReturnThis(),
       code: jest.fn().mockReturnThis(),
       response: jest.fn().mockReturnThis()
@@ -34,7 +38,7 @@ describe('offerWithdrawnController', () => {
     const result = offerWithdrawnController.handler(mockRequest, mockH)
 
     // Assert
-    expect(mockH.view).toHaveBeenCalledWith('views/error/offer-withdrawn.njk')
+    expect(mockH.response).toHaveBeenCalledWith({ agreementData: 'mock' })
     expect(mockH.header).toHaveBeenCalledWith(
       'Cache-Control',
       'no-cache, no-store, must-revalidate'
@@ -47,7 +51,7 @@ describe('offerWithdrawnController', () => {
     // Arrange
     const boomError = Boom.badRequest('Test boom error')
     boomError.isBoom = true
-    mockH.view.mockImplementation(() => {
+    mockH.response.mockImplementation(() => {
       throw boomError
     })
 
@@ -55,52 +59,5 @@ describe('offerWithdrawnController', () => {
     expect(() => {
       offerWithdrawnController.handler(mockRequest, mockH)
     }).toThrow(boomError)
-  })
-
-  test('should handle non-Boom errors gracefully', () => {
-    // Arrange
-    const error = new Error('Template rendering failed')
-    mockH.view.mockImplementation(() => {
-      throw error
-    })
-
-    // Act
-    const result = offerWithdrawnController.handler(mockRequest, mockH)
-
-    // Assert
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.any(Error),
-      'Error displaying offer withdrawn page: Template rendering failed'
-    )
-    expect(mockH.response).toHaveBeenCalledWith({
-      message: 'Failed to display offer withdrawn page',
-      error: 'Template rendering failed'
-    })
-    expect(mockH.code).toHaveBeenCalledWith(statusCodes.internalServerError)
-    expect(result).toBe(mockH)
-  })
-
-  test('should handle errors with undefined message', () => {
-    // Arrange
-    const error = new Error()
-    error.message = undefined
-    mockH.view.mockImplementation(() => {
-      throw error
-    })
-
-    // Act
-    const result = offerWithdrawnController.handler(mockRequest, mockH)
-
-    // Assert
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.any(Error),
-      'Error displaying offer withdrawn page: undefined'
-    )
-    expect(mockH.response).toHaveBeenCalledWith({
-      message: 'Failed to display offer withdrawn page',
-      error: undefined
-    })
-    expect(mockH.code).toHaveBeenCalledWith(statusCodes.internalServerError)
-    expect(result).toBe(mockH)
   })
 })

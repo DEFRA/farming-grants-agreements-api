@@ -7,29 +7,15 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
  */
 const displayAcceptOfferController = {
   handler: (request, h) => {
-    try {
-      // Render the accept offer template with agreement data
-      return h
-        .view('views/accept-offer.njk')
-        .header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        .code(statusCodes.ok)
-    } catch (error) {
-      // Let Boom errors pass through to the error handler
-      if (error.isBoom) {
-        throw error
-      }
+    const { agreementData } = request.auth.credentials
 
-      request.logger.error(
-        error,
-        `Error displaying accept offer page: ${error.message}`
-      )
-      return h
-        .response({
-          message: 'Failed to display accept offer page',
-          error: error.message
-        })
-        .code(statusCodes.internalServerError)
-    }
+    // Render the accept offer template with agreement data
+    return h
+      .response({
+        agreementData
+      })
+      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+      .code(statusCodes.ok)
   }
 }
 

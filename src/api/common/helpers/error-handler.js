@@ -1,5 +1,3 @@
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-
 /**
  * Hapi plugin for registering the default error handler
  */
@@ -11,22 +9,11 @@ export const errorHandlerPlugin = {
       if (response.isBoom) {
         request.server.logger.info(response)
 
-        let template = 'views/error/error.njk'
-        const templateData = {
-          errorMessage: response.message
-        }
-
-        if (response.output.statusCode === statusCodes.unauthorized) {
-          template = 'views/error/unauthorized.njk'
-        }
-
-        if (response.output.statusCode === statusCodes.notFound) {
-          template = 'views/error/not-found.njk'
-        }
-
         try {
           return h
-            .view(template, templateData)
+            .response({
+              errorMessage: response.message
+            })
             .code(response.output.statusCode)
             .header(
               'Cache-Control',

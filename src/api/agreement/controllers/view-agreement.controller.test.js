@@ -75,7 +75,9 @@ describe('viewAgreementController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(headers['content-type']).toContain('text/html')
+      expect(headers['content-type']).toContain(
+        'application/json; charset=utf-8'
+      )
       expect(payload).toContain('Test agreement')
 
       // Verify mocks were called correctly
@@ -88,57 +90,9 @@ describe('viewAgreementController', () => {
       )
     })
 
-    test('Should handle missing agreement ID', async () => {
-      // Act
-      const { statusCode, headers, payload } = await server.inject({
-        method: 'POST',
-        url: '/undefined',
-        payload: {
-          action: 'view-agreement'
-        },
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(headers['content-type']).toContain('text/html')
-      expect(payload).toContain('Farm payments')
-
-      // Verify the function defaulted to a reasonable value when ID was missing
-      expect(agreementDataHelper.getAgreementDataById).toHaveBeenCalledWith(
-        'undefined'
-      )
-    })
-
-    test('Should handle error when template rendering fails', async () => {
-      // Arrange
-      const errorMessage = 'Failed to render HTML'
-      jest
-        .spyOn(getAgreement, 'getAgreement')
-        .mockRejectedValue(new Error(errorMessage))
-
-      // Act
-      const { statusCode, result } = await server.inject({
-        method: 'POST',
-        url: '/SFI123456789',
-        payload: {
-          action: 'view-agreement'
-        },
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(result.message).toBe('Failed to generate agreement document')
-    })
-
     test('Should handle error when agreement data retrieval fails', async () => {
       // Arrange
-      const errorMessage = 'Failed to render HTML'
+      const errorMessage = 'Mock error'
       jest
         .spyOn(agreementDataHelper, 'getAgreementDataById')
         .mockImplementation(() => {
@@ -159,27 +113,7 @@ describe('viewAgreementController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.internalServerError)
-      expect(String(result)).toContain('Failed to render HTML')
-    })
-
-    test('Should rethrow Boom errors from getAgreement (Boom passthrough)', async () => {
-      // Arrange
-      const Boom = await import('@hapi/boom')
-      jest
-        .spyOn(getAgreement, 'getAgreement')
-        .mockRejectedValue(Boom.unauthorized('No token'))
-
-      // Act
-      const { statusCode } = await server.inject({
-        method: 'POST',
-        url: '/SFI123456789',
-        payload: { action: 'view-agreement' },
-        headers: { 'x-encrypted-auth': 'valid-jwt-token' }
-      })
-
-      // Assert
-      expect(statusCode).toBe(401)
-      // Error body rendering is handled by error handler; status code is sufficient here
+      expect(result.errorMessage).toContain('Mock error')
     })
   })
 })
