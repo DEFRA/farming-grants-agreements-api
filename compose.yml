@@ -69,39 +69,39 @@ services:
   #   networks:
   #     - cdp-tenant
 
-  cdp-agreement-service:
-    build: ./
-    ports:
-      - '3555:3555'
-    links:
-      - 'localstack:localstack'
-      - 'mongodb:mongodb'
-    depends_on:
-      localstack:
-        condition: service_healthy
-      mongodb:
-        condition: service_started
-    env_file:
-      - 'compose/aws.env'
-    environment:
-      PAYMENT_HUB_LOGGING: true
-      PORT: 3555
-      NODE_ENV: ${NODE_ENV:-development}
-      LOCALSTACK_ENDPOINT: ${LOCALSTACK_ENDPOINT:-http://localstack:4566}
-      MONGO_URI: mongodb://mongodb:27017/
-      SEED_DB: ${SEED_DB:-true}
-      GA_TRACKING_ID: ${GA_TRACKING_ID}
-      SQS_ENDPOINT: ${SQS_ENDPOINT:-http://localstack:4566}
-      QUEUE_URL: ${QUEUE_URL:-http://sqs.eu-west-2.127.0.0.1:4566/000000000000/create_agreement}
-      QUEUE_NAME: ${QUEUE_NAME:-create_agreement}
-      ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-true}
-      JWT_ENABLED: ${JWT_ENABLED:-false}
-      ENABLE_PAYMENT_HUB: ${ENABLE_PAYMENT_HUB:-false}
-      VIEW_AGREEMENT_URI: ${VIEW_AGREEMENT_URI:-http://localhost:3555}
-      SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED: ${SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED:-io.onsite.agreement.status.updated}
-      SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED": ${SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED:-arn:aws:sns:eu-west-2:332499610595:agreement_status_updated}
-    networks:
-      - cdp-tenant
+#  cdp-agreement-service:
+#    build: ./
+#    ports:
+#      - '3555:3555'
+#    links:
+#      - 'localstack:localstack'
+#      - 'mongodb:mongodb'
+#    depends_on:
+#      localstack:
+#        condition: service_healthy
+#      mongodb:
+#        condition: service_started
+#    env_file:
+#      - 'compose/aws.env'
+#    environment:
+#      PAYMENT_HUB_LOGGING: true
+#      PORT: 3555
+#      NODE_ENV: ${NODE_ENV:-development}
+#      LOCALSTACK_ENDPOINT: ${LOCALSTACK_ENDPOINT:-http://localstack:4566}
+#      MONGO_URI: mongodb://mongodb:27017/
+#      SEED_DB: ${SEED_DB:-true}
+#      GA_TRACKING_ID: ${GA_TRACKING_ID}
+#      SQS_ENDPOINT: ${SQS_ENDPOINT:-http://localstack:4566}
+#      QUEUE_URL: ${QUEUE_URL:-http://sqs.eu-west-2.127.0.0.1:4566/000000000000/create_agreement}
+#      QUEUE_NAME: ${QUEUE_NAME:-create_agreement}
+#      ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-true}
+#      JWT_ENABLED: ${JWT_ENABLED:-false}
+#      ENABLE_PAYMENT_HUB: ${ENABLE_PAYMENT_HUB:-false}
+#      VIEW_AGREEMENT_URI: ${VIEW_AGREEMENT_URI:-http://localhost:3555}
+#      SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED: ${SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED:-io.onsite.agreement.status.updated}
+#      SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED": ${SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED:-arn:aws:sns:eu-west-2:332499610595:agreement_status_updated}
+#    networks:
+#      - cdp-tenant
 
 ################################################################################
 
