@@ -160,18 +160,18 @@ return await fetch(url, {
 
 ## Docker
 
-### Development image
+### image
 
 Build:
 
 ```bash
-docker build --target development --no-cache --tag farming-grants-agreements-api:development .
+docker build --no-cache -t defradigital/farming-grants-agreements-api:latest .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api:development
+docker run -e PORT=3001 -p 3001:3001 defradigital/farming-grants-agreements-api:latest
 ```
 
 ### Production image
@@ -179,13 +179,13 @@ docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api:development
 Build:
 
 ```bash
-docker build --no-cache --tag farming-grants-agreements-api .
+docker build --no-cache --tag defradigital/farming-grants-agreements-api:latest .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api
+docker run -e PORT=3001 -p 3001:3001 defradigital/farming-grants-agreements-api:latest
 ```
 
 ### Docker Compose
@@ -193,10 +193,8 @@ docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api
 A local environment with:
 
 - Localstack for AWS services (S3, SQS)
-- Redis
 - MongoDB
 - This service.
-- A commented out frontend example.
 
 ```bash
 docker compose up --build -d
@@ -204,7 +202,7 @@ docker compose up --build -d
 
 ### Viewing messages in LocalStack SQS
 
-By default, our LocalStack monitor only shows **message counts** (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue.  
+By default, our LocalStack monitor only shows **message counts** (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue.
 This is intentional so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
 
 If you want to **peek at the actual messages** (for debugging or development only), you can run:
