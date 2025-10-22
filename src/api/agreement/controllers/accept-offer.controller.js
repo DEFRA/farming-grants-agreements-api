@@ -1,8 +1,5 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import {
-  acceptOffer,
-  getFirstPaymentDate
-} from '~/src/api/agreement/helpers/accept-offer.js'
+import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { config } from '~/src/config/index.js'
 
@@ -11,39 +8,30 @@ import { config } from '~/src/config/index.js'
  * Renders a Nunjucks template with agreement data
  * @satisfies {Partial<ServerRoute>}
  */
-const acceptOfferController = {
-  handler: async (request, h) => {
-    // Get the agreement data before accepting
-    const { agreementData } = request.auth.credentials
-    const { agreementNumber, status } = agreementData
+const acceptOfferController = async (request, h) => {
+  // Get the agreement data before accepting
+  const { agreementData } = request.auth.credentials
+  const { agreementNumber, status } = agreementData
 
-    if (status === 'offered') {
-      // Accept the agreement
-      const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
-      await acceptOffer(
-        agreementNumber,
-        agreementData,
-        agreementUrl,
-        request.logger
-      )
+  if (status === 'offered') {
+    // Accept the agreement
+    const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
+    await acceptOffer(
+      agreementNumber,
+      agreementData,
+      agreementUrl,
+      request.logger
+    )
 
-      // Update the payment hub
-      await updatePaymentHub(request, agreementNumber)
-    }
-
-    // Render the offer accepted template with agreement data
-    return h
-      .response({
-        agreementData,
-        pageData: {
-          nearestQuarterlyPaymentDate: getFirstPaymentDate(
-            agreementData.payment.agreementStartDate
-          )
-        }
-      })
-      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
-      .code(statusCodes.ok)
+    // Update the payment hub
+    await updatePaymentHub(request, agreementNumber)
   }
+
+  // Render the offer accepted template with agreement data
+  return h
+    .response({ agreementData })
+    .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    .code(statusCodes.ok)
 }
 
 export { acceptOfferController }

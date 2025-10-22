@@ -1,9 +1,6 @@
 import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import {
-  acceptOffer,
-  getFirstPaymentDate
-} from '~/src/api/agreement/helpers/accept-offer.js'
+import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
@@ -71,9 +68,6 @@ describe('acceptOfferDocumentController', () => {
     const { statusCode, result } = await server.inject({
       method: 'POST',
       url: `/${agreementId}`,
-      payload: {
-        action: 'accept-offer'
-      },
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
       }
@@ -105,9 +99,6 @@ describe('acceptOfferDocumentController', () => {
     const { statusCode, result } = await server.inject({
       method: 'POST',
       url: `/SFI123456789`,
-      payload: {
-        action: 'accept-offer'
-      },
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
       }
@@ -132,9 +123,6 @@ describe('acceptOfferDocumentController', () => {
     const { statusCode } = await server.inject({
       method: 'POST',
       url: '/',
-      payload: {
-        action: 'accept-offer'
-      },
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
       }
@@ -150,9 +138,6 @@ describe('acceptOfferDocumentController', () => {
     const { statusCode, result } = await server.inject({
       method: 'POST',
       url: `/${agreementId}`,
-      payload: {
-        action: 'accept-offer'
-      },
       headers: {
         'x-base-url': '/agreement',
         'x-encrypted-auth': 'valid-jwt-token'
@@ -177,7 +162,6 @@ describe('acceptOfferDocumentController', () => {
       }
     }
     getAgreementDataById.mockResolvedValue(acceptedAgreementData)
-    getFirstPaymentDate.mockReturnValue('March 2025')
 
     // Act
     const { statusCode, result } = await server.inject({
@@ -189,11 +173,9 @@ describe('acceptOfferDocumentController', () => {
     })
 
     // Assert
-    expect(getFirstPaymentDate).toHaveBeenCalledWith('2024-01-01')
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain('SFI123456789')
-    expect(result.pageData.nearestQuarterlyPaymentDate).toBe('March 2025')
   })
 })
 
