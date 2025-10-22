@@ -1,5 +1,5 @@
-import Boom from '@hapi/boom'
-import { getControllerByAction } from '~/src/api/agreement/controllers/index.js'
+import { getAgreementController } from './controllers/get-agreement.controller.js'
+import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
 
 /**
@@ -10,7 +10,7 @@ const agreement = {
     name: 'agreement',
     register: (server) => {
       server.route({
-        method: ['GET', 'POST'],
+        method: 'GET',
         path: '/{agreementId}',
         options: {
           auth: 'grants-ui-jwt'
@@ -19,21 +19,20 @@ const agreement = {
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
          */
-        handler: (request, h) => {
-          const payload = request.payload || {}
-          const { action } = payload
-          const { agreementData } = request.auth.credentials
+        handler: getAgreementController
+      })
 
-          const controller = getControllerByAction(agreementData.status)(action)
-          if (!controller?.handler) {
-            throw Boom.badRequest(
-              `Unrecognised action in POST payload: ${String(action)}`
-            )
-          }
-
-          // Delegate to chosen controller handler
-          return controller.handler(request, h)
-        }
+      server.route({
+        method: 'POST',
+        path: '/{agreementId}',
+        options: {
+          auth: 'grants-ui-jwt'
+        },
+        /**
+         * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
+         * @param {import('@hapi/hapi').ResponseToolkit} h
+         */
+        handler: acceptOfferController
       })
 
       server.route({
