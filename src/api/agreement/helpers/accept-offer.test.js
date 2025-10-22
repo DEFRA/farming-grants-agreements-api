@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
-import { acceptOffer, getFirstPaymentDate } from './accept-offer.js'
+import { acceptOffer } from './accept-offer.js'
 import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 
@@ -291,18 +291,5 @@ describe('acceptOffer', () => {
         mockLogger
       )
     ).rejects.toEqual(boomError)
-  })
-})
-
-describe('getFirstPaymentDate', () => {
-  test('returns correct first payment date', () => {
-    expect(getFirstPaymentDate('2024-02-15')).toBe('May 2024')
-    expect(getFirstPaymentDate('2024-02-31')).toBe('June 2024')
-    expect(getFirstPaymentDate('2024-12-26')).toBe('March 2025')
-    expect(getFirstPaymentDate('2024-12-27')).toBe('April 2025')
-  })
-
-  test('handles invalid date string gracefully', () => {
-    expect(getFirstPaymentDate('invalid-date')).toBe('')
   })
 })
