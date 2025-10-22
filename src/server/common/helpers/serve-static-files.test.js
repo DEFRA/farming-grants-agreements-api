@@ -39,9 +39,10 @@ describe('#serveStaticFiles', () => {
       expect(statusCode).toBe(statusCodes.noContent)
     })
 
-    test('Should serve assets as expected', async () => {
-      // Note npm run build is ran in the postinstall hook in package.json to make sure there is always a file
-      // available for this test. Remove as you see fit
+    test.skip('Should serve assets as expected', async () => {
+      // TODO This test is disabled because the webpack build system was removed.
+      // The test expects assets built by webpack to exist in .public/assets/images/.
+      // I'll remove it entirely in a subsequent PR once I've removed static file serving.
       const { statusCode } = await server.inject({
         method: 'GET',
         url: '/public/assets/images/govuk-crest.svg'
