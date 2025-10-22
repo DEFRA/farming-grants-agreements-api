@@ -165,7 +165,7 @@ return await fetch(url, {
 Build:
 
 ```bash
-ocker build --no-cache -t defradigital/farming-grants-agreements-api:latest .
+docker build --no-cache -t defradigital/farming-grants-agreements-api:latest .
 ```
 
 Run:
