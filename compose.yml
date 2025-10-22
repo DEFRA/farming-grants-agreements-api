@@ -2,7 +2,6 @@ version: '3.4'
 services:
   localstack:
     image: localstack/localstack:3.0.2
-    container_name: localstack
     ports:
       - '4566:4566' # LocalStack Gateway
       - '4510-4559:4510-4559' # external services port range
@@ -12,7 +11,7 @@ services:
       DEBUG: ${DEBUG:-1}
       LS_LOG: WARN # Localstack DEBUG Level
       SERVICES: s3,sqs,sns,firehose
-      LOCALSTACK_HOST: 127.0.0.1
+#      LOCALSTACK_HOST: 127.0.0.1
       MONITOR_SQS: ${MONITOR_SQS:-true}
     volumes:
       - '${TMPDIR:-/tmp}/localstack:/var/lib/localstack'
@@ -26,14 +25,6 @@ services:
     networks:
       - cdp-tenant
 
-  redis:
-    image: redis:7.2.3-alpine3.18
-    ports:
-      - '6379:6379'
-    restart: always
-    networks:
-      - cdp-tenant
-
   mongodb:
     image: mongo:6.0.13
     networks:
@@ -41,54 +32,36 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - mongodb-data:/data
+      - mongodb-data:/data/db
     restart: always
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   ################################################################################
 
-  # your-frontend:
-  #   image: defradigital/your-frontend:${YOUR_FRONTEND_VERSION:-latest}
-  #   ports:
-  #     - '3000:3000'
-  #   links:
-  #     - 'localstack:localstack'
-  #     - 'redis:redis'
-  #   depends_on:
-  #     localstack:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_started
-  #   env_file:
-  #     - 'compose/aws.env'
-  #   environment:
-  #     PORT: 3000
-  #     NODE_ENV: development
-  #     REDIS_HOST: redis
-  #     LOCALSTACK_ENDPOINT: http://localstack:4566
-  #     USE_SINGLE_INSTANCE_CACHE: true
-  #   networks:
-  #     - cdp-tenant
-
-  cdp-agreement-service:
+  farming-grants-agreements-api:
     build: ./
     ports:
       - '3555:3555'
-    links:
-      - 'localstack:localstack'
-      - 'mongodb:mongodb'
+#    links:
+#      - 'localstack:localstack'
+#      - 'mongodb:mongodb'
     depends_on:
       localstack:
         condition: service_healthy
       mongodb:
-        condition: service_started
+        condition: service_healthy
     env_file:
       - 'compose/aws.env'
     environment:
-      PAYMENT_HUB_LOGGING: true
+      PAYMENT_HUB_LOGGING: ${PAYMENT_HUB_LOGGING:-true}
       PORT: 3555
       NODE_ENV: ${NODE_ENV:-development}
       LOCALSTACK_ENDPOINT: ${LOCALSTACK_ENDPOINT:-http://localstack:4566}
-      MONGO_URI: mongodb://mongodb:27017/
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/}
       SEED_DB: ${SEED_DB:-true}
       GA_TRACKING_ID: ${GA_TRACKING_ID}
       SQS_ENDPOINT: ${SQS_ENDPOINT:-http://localstack:4566}
@@ -100,6 +73,8 @@ services:
       VIEW_AGREEMENT_URI: ${VIEW_AGREEMENT_URI:-http://localhost:3555}
       SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED: ${SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED:-io.onsite.agreement.status.updated}
       SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED": ${SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED:-arn:aws:sns:eu-west-2:332499610595:agreement_status_updated}
+      FILES_S3_BUCKET: ${FILES_S3_BUCKET:-farming-grants-agreements-pdf-bucket}
+      FILES_S3_PREFIX: ${FILES_S3_PREFIX:-agreements}
     networks:
       - cdp-tenant
 
