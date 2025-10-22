@@ -2,6 +2,8 @@ import { getAgreementController } from './controllers/get-agreement.controller.j
 import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
 
+const auth = 'grants-ui-jwt'
+
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
  */
@@ -12,9 +14,7 @@ const agreement = {
       server.route({
         method: 'GET',
         path: '/{agreementId}',
-        options: {
-          auth: 'grants-ui-jwt'
-        },
+        options: { auth },
         /**
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
@@ -25,9 +25,7 @@ const agreement = {
       server.route({
         method: 'POST',
         path: '/{agreementId}',
-        options: {
-          auth: 'grants-ui-jwt'
-        },
+        options: { auth },
         /**
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
@@ -38,9 +36,7 @@ const agreement = {
       server.route({
         method: 'GET',
         path: '/{agreementId}/{version}/download',
-        options: {
-          auth: 'grants-ui-jwt'
-        },
+        options: { auth },
         /**
          * @param {import('@hapi/hapi').Request} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
