@@ -107,13 +107,6 @@ describe('acceptOfferDocumentController', () => {
     // Assert
     expect(statusCode).toBe(statusCodes.internalServerError)
     expect(result).toEqual({
-      agreement: {
-        agreementNumber: 'SFI123456789',
-        payment: {
-          agreementStartDate: '2024-01-01'
-        },
-        status: 'offered'
-      },
       errorMessage: 'Database connection failed'
     })
   })
