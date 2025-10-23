@@ -4,7 +4,7 @@ import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
 
 /**
  * Controller to change the status of an agreement document back to offered
- * Renders a Nunjucks template with agreement data
+ * Returns JSON data with operation result
  * @satisfies {Partial<ServerRoute>}
  */
 const postTestUnacceptOfferController = {
@@ -19,7 +19,7 @@ const postTestUnacceptOfferController = {
       // Unaccept the agreement
       await unacceptOffer(agreementId)
 
-      // Return the HTML response
+      // Return JSON response
       return h.response({ message: 'Offer unaccepted' }).code(statusCodes.ok)
     } catch (error) {
       if (error.isBoom) {

@@ -153,7 +153,7 @@ describe('getAgreementController', () => {
       expect(result.agreement.status).toContain('accepted')
     })
 
-    test('should render accept offer page with base URL when already accepted', async () => {
+    test('should return accepted agreement data with base URL when already accepted', async () => {
       // Arrange
       const { statusCode, result } = await server.inject({
         method: 'GET',

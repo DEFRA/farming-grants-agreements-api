@@ -4,8 +4,8 @@ import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub
 import { config } from '~/src/config/index.js'
 
 /**
- * Controller to serve HTML agreement document
- * Renders a Nunjucks template with agreement data
+ * Controller to accept agreement offer
+ * Returns JSON data with agreement information
  * @satisfies {Partial<ServerRoute>}
  */
 const acceptOfferController = async (request, h) => {
@@ -27,7 +27,7 @@ const acceptOfferController = async (request, h) => {
     await updatePaymentHub(request, agreementNumber)
   }
 
-  // Render the offer accepted template with agreement data
+  // Return JSON response with agreement data
   return h
     .response({ agreementData })
     .header('Cache-Control', 'no-cache, no-store, must-revalidate')

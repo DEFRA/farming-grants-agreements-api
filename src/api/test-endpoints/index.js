@@ -38,7 +38,7 @@ const testEndpoints = {
           options: {
             auth: false,
             description:
-              'Test endpoint to trigger 401 error and render unauthorized template'
+              'Test endpoint to trigger 401 error and return JSON error response'
           }
         }
       ])

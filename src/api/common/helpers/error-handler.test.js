@@ -169,7 +169,7 @@ describe('errorHandlerPlugin', () => {
       }
     })
 
-    test('should render unauthorized template for 401 errors', async () => {
+    test('should return JSON error response for 401 errors', async () => {
       const response = await server.inject({
         method: 'GET',
         url: '/test-401'
@@ -186,7 +186,7 @@ describe('errorHandlerPlugin', () => {
       expect(response.headers['surrogate-control']).toBe('no-store')
     })
 
-    test('should render not found template for 404 errors', async () => {
+    test('should return JSON error response for 404 errors', async () => {
       const response = await server.inject({
         method: 'GET',
         url: '/test-404'
@@ -237,7 +237,7 @@ describe('errorHandlerPlugin', () => {
       expect(result).toBe(mockH.continue)
     })
 
-    test('should continue when unauthorized template rendering fails', async () => {
+    test('should continue when error response creation fails', async () => {
       const mockRequest = {
         response: {
           isBoom: true,
@@ -250,7 +250,7 @@ describe('errorHandlerPlugin', () => {
         server: { logger: { info: jest.fn(), error: jest.fn() } }
       }
 
-      const error = new Error('Render failed')
+      const error = new Error('Response creation failed')
       response.mockImplementation(() => {
         throw error
       })
@@ -264,7 +264,7 @@ describe('errorHandlerPlugin', () => {
       expect(result).toBe(mockH.continue)
       expect(mockRequest.server.logger.error).toHaveBeenCalledWith(
         error,
-        'Failed to render error template:'
+        'Failed to create error response:'
       )
     })
   })
