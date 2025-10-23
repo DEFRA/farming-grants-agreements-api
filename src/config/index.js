@@ -5,8 +5,6 @@ import { fileURLToPath } from 'node:url'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const oneWeekMs = 604800000
-
 const isProduction = process.env.NODE_ENV === 'production'
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
@@ -54,12 +52,6 @@ const config = convict({
     default: 3001,
     env: 'PORT'
   },
-  staticCacheTimeout: {
-    doc: 'Static cache timeout in milliseconds',
-    format: Number,
-    default: oneWeekMs,
-    env: 'STATIC_CACHE_TIMEOUT'
-  },
   serviceName: {
     doc: 'Api Service Name',
     format: String,
@@ -74,12 +66,6 @@ const config = convict({
     doc: 'Project root',
     format: String,
     default: path.resolve(dirname, '../..')
-  },
-  assetPath: {
-    doc: 'Asset path',
-    format: String,
-    default: '/public',
-    env: 'ASSET_PATH'
   },
   isProduction: {
     doc: 'If this application running in the production environment',
