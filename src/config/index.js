@@ -311,20 +311,6 @@ const config = convict({
       env: 'PAYMENT_HUB_SA_KEY'
     }
   },
-  nunjucks: {
-    watch: {
-      doc: 'Whether to watch templates for changes',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: isDev,
-      env: 'NUNJUCKS_WATCH'
-    },
-    noCache: {
-      doc: 'Disable template caching',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: !isProduction,
-      env: 'NUNJUCKS_NO_CACHE'
-    }
-  },
   files: {
     s3: {
       bucket: {
