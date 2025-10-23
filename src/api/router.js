@@ -1,6 +1,5 @@
 import { health } from '~/src/api/health/index.js'
 import { agreement } from '~/src/api/agreement/index.js'
-import { serveStaticFiles } from '~/src/server/common/helpers/serve-static-files.js'
 import { config } from '~/src/config/index.js'
 import { testEndpoints } from '~/src/api/test-endpoints/index.js'
 
@@ -16,9 +15,6 @@ const router = {
 
       // Application specific routes, add your own routes here.
       await server.register([agreement])
-
-      // Assets route, used to serve static files.
-      await server.register([serveStaticFiles])
 
       if (config.get('featureFlags.testEndpoints') === true) {
         server.logger.warn(

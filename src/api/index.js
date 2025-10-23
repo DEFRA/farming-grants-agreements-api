@@ -1,4 +1,3 @@
-import path from 'node:path'
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
 import inert from '@hapi/inert'
@@ -14,7 +13,6 @@ import { requestTracing } from '~/src/api/common/helpers/request-tracing.js'
 import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
 import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
-import { nunjucksConfig } from '~/src/config/nunjucks/nunjucks.js'
 import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
 import { createSqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
@@ -57,9 +55,6 @@ async function createServer(serverOptions = {}) {
           abortEarly: false
         },
         failAction
-      },
-      files: {
-        relativeTo: path.resolve(config.get('root'), '.public')
       },
       security: {
         hsts: {
@@ -110,7 +105,6 @@ async function createServer(serverOptions = {}) {
       secureContext,
       pulse,
       mongooseDb,
-      nunjucksConfig,
       ...(!options.disableSQS
         ? [
             createSqsClientPlugin(
