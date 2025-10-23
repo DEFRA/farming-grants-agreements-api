@@ -4,7 +4,7 @@ import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 
 /**
- * Get agreement data for rendering templates
+ * Accept an agreement offer
  * @param {agreementNumber} agreementNumber - The agreement Id
  * @param {Agreement} agreementData - The agreement data
  * @param {string} agreementUrl - The Agreement URL to generate the agreement PDF

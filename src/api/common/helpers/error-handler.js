@@ -23,7 +23,7 @@ export const errorHandlerPlugin = {
             .header('Expires', '0')
             .header('Surrogate-Control', 'no-store')
         } catch (error) {
-          request.server.logger.error(error, 'Failed to render error template:')
+          request.server.logger.error(error, 'Failed to create error response:')
           return h.continue
         }
       }
