@@ -48,8 +48,6 @@ export const returnDataHandlerPlugin = {
         return h.continue
       }
 
-      response.source.agreement =
-        response.source.agreementData || request.auth.credentials?.agreementData
       response.source = convertDecimal128(response.source)
 
       return h.continue

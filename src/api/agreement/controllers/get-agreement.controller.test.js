@@ -71,7 +71,7 @@ describe('getAgreementController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(result.agreement.status).toContain('offered')
+      expect(result.agreementData.status).toContain('offered')
     })
 
     test('should handle agreement not found', async () => {
@@ -150,7 +150,7 @@ describe('getAgreementController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(result.agreement.status).toContain('accepted')
+      expect(result.agreementData.status).toContain('accepted')
     })
 
     test('should return accepted agreement data with base URL when already accepted', async () => {
@@ -166,7 +166,7 @@ describe('getAgreementController', () => {
 
       // Assert
       expect(statusCode).toBe(statusCodes.ok)
-      expect(result.agreement.status).toContain('accepted')
+      expect(result.agreementData.status).toContain('accepted')
     })
   })
 })
