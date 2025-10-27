@@ -194,8 +194,11 @@ describe('postTestQueueMessageController', () => {
       h
     )
 
-    expect(res.statusCode).toBe(statusCodes.internalServerError)
-    expect(res.payload.message).toBe('Failed to post test queue message')
+    expect(res).toEqual(
+      new Error(
+        'Failed to retrieve agreement data after multiple attempts for SBI: 123456789, FRN: 9999999999'
+      )
+    )
 
     // Restore setTimeout
     global.setTimeout.mockRestore()
