@@ -5,14 +5,14 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
  * Returns JSON data with agreement information
  * @satisfies {Partial<ServerRoute>}
  */
-const getAgreementController = (request, h) => {
+const getAgreementBySBIController = (request, h) => {
   const { agreementData } = request.auth.credentials
 
   // Return JSON response with agreement data
-  return h.response({ agreementData, showAgreement: true }).code(statusCodes.ok)
+  return h.response({ agreementData }).code(statusCodes.ok)
 }
 
-export { getAgreementController }
+export { getAgreementBySBIController }
 
 /**
  * @import { ServerRoute } from '@hapi/hapi'
