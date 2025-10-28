@@ -20,8 +20,8 @@ describe('UI sending a GET request to get an agreement', () => {
 
     // Configure the application
     config.set('port', crypto.randomInt(30001, 65535))
-    config.set('isJwtEnabled', false)
     config.set('mongoUri', mongoUri)
+    config.set('featureFlags.isJwtEnabled', false)
     config.set('featureFlags.seedDb', true)
 
     // Create and start the server
