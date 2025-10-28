@@ -23,7 +23,7 @@ const checkAgreementWithBackoff = async (sbi, frn, delay, logger) => {
     )
     if (isBoom(error) && error.output.statusCode === statusCodes.notFound) {
       await new Promise((resolve) => setTimeout(resolve, delay))
-      return checkAgreementWithBackoff(sbi, frn, delay * 2)
+      return checkAgreementWithBackoff(sbi, frn, delay * 2, logger)
     }
     throw error
   }
