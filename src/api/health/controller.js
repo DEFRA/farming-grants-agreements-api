@@ -1,3 +1,5 @@
+import mongoose from 'mongoose'
+
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 
 /**
@@ -5,8 +7,22 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
  * @satisfies {Partial<ServerRoute>}
  */
 const healthController = {
-  handler: (_request, h) =>
-    h.response({ message: 'success' }).code(statusCodes.ok)
+  handler: async (_request, h) => {
+    try {
+      if (!(await mongoose.connection.db.admin().ping()).ok) {
+        throw new Error('MongoDB ping failed')
+      }
+    } catch (e) {
+      return h
+        .response({
+          error: 'Unable to connect to backend MongoDB',
+          details: e.message
+        })
+        .code(statusCodes.serviceUnavailable)
+    }
+
+    return h.response({ message: 'success' }).code(statusCodes.ok)
+  }
 }
 
 export { healthController }
