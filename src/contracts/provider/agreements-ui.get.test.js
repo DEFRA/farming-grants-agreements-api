@@ -21,6 +21,8 @@ describe('UI sending a GET request to get an agreement', () => {
     // Configure the application
     config.set('port', crypto.randomInt(30001, 65535))
     config.set('mongoUri', mongoUri)
+    config.set('files.s3.bucket', 'mockBucket')
+    config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.isJwtEnabled', false)
     config.set('featureFlags.seedDb', true)
 
