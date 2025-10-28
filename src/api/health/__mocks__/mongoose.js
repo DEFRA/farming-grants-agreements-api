@@ -2,18 +2,19 @@ const mockPing = jest.fn()
 const mockModel = jest.fn().mockImplementation((_collection, schema) => {
   // Create a base mock with standard mongoose methods
   const mock = {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    findById: jest.fn(),
-    create: jest.fn(),
-    updateOne: jest.fn(),
-    updateMany: jest.fn(),
-    deleteOne: jest.fn(),
-    deleteMany: jest.fn(),
-    countDocuments: jest.fn(),
-    aggregate: jest.fn(),
-    distinct: jest.fn(),
-    findOneAndUpdate: jest.fn()
+    find: jest.fn().mockReturnThis(),
+    findOne: jest.fn().mockReturnThis(),
+    findById: jest.fn().mockReturnThis(),
+    create: jest.fn().mockReturnThis(),
+    updateOne: jest.fn().mockReturnThis(),
+    updateMany: jest.fn().mockReturnThis(),
+    deleteOne: jest.fn().mockReturnThis(),
+    deleteMany: jest.fn().mockReturnThis(),
+    countDocuments: jest.fn().mockReturnThis(),
+    aggregate: jest.fn().mockReturnThis(),
+    distinct: jest.fn().mockReturnThis(),
+    findOneAndUpdate: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockReturnThis()
   }
 
   // Preserve static methods from the schema if they exist

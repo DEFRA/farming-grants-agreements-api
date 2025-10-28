@@ -6,26 +6,35 @@ import { handleCreateAgreementEvent } from './sqs-message-processor/create-agree
 
 async function publishSampleAgreementEvents(tableData, logger) {
   for (const row of tableData) {
-    await publishEvent(
-      {
-        topicArn:
-          'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
-        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
-        time: new Date().toISOString(),
-        data: row
-      },
-      logger,
-      process.env.NODE_ENV === 'development'
-        ? undefined
-        : {
-            // We're not allowed to publish application approved events on the platform
-            // this mocks the SNS send/process logic for sample data
-            send: async ({ input: { Message } }) => {
-              const message = JSON.parse(Message)
-              await handleCreateAgreementEvent(message.id, message, logger)
+    const event = {
+      topicArn: 'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+      type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+      time: new Date().toISOString(),
+      data: row
+    }
+    if (process.env.NODE_ENV === 'test') {
+      // Contract tests need to publish directly (as they don't have access to SNS)
+      await handleCreateAgreementEvent(
+        event.data.notificationMessageId,
+        event,
+        logger
+      )
+    } else {
+      await publishEvent(
+        event,
+        logger,
+        process.env.NODE_ENV === 'development'
+          ? undefined
+          : {
+              // We're not allowed to publish application approved events on the platform
+              // this mocks the SNS send/process logic for sample data
+              send: async ({ input: { Message } }) => {
+                const message = JSON.parse(Message)
+                await handleCreateAgreementEvent(message.id, message, logger)
+              }
             }
-          }
-    )
+      )
+    }
   }
   logger.info(
     `Successfully published ${tableData.length} 'agreements' documents`
