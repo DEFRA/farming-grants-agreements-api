@@ -53,8 +53,8 @@ describe('#healthController', () => {
       })
 
       expect(result).toEqual({
-        error: 'Unable to connect to backend MongoDB',
-        details: 'MongoDB ping failed'
+        message: 'Unable to connect to backend MongoDB',
+        error: 'MongoDB ping failed'
       })
       expect(statusCode).toBe(statusCodes.serviceUnavailable)
     })
@@ -70,8 +70,8 @@ describe('#healthController', () => {
       })
 
       expect(result).toEqual({
-        error: 'Unable to connect to backend MongoDB',
-        details: err.message
+        message: 'Unable to connect to backend MongoDB',
+        error: err.message
       })
       expect(statusCode).toBe(statusCodes.serviceUnavailable)
     })

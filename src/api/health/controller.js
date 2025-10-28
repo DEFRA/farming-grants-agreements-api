@@ -15,8 +15,8 @@ const healthController = {
     } catch (e) {
       return h
         .response({
-          error: 'Unable to connect to backend MongoDB',
-          details: e.message
+          message: 'Unable to connect to backend MongoDB',
+          error: e.message
         })
         .code(statusCodes.serviceUnavailable)
     }
