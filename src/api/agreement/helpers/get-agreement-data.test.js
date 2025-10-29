@@ -235,7 +235,6 @@ describe('getAgreementDataBySbi', () => {
       agreement: mockGroup._id
     })
 
-    // 🆕 assert sbi is propagated into the result
     expect(result.identifiers.sbi).toBe(sbi) // value check
     expect(typeof result.identifiers.sbi).toBe('string') // type check (guards against numeric sbi)
 

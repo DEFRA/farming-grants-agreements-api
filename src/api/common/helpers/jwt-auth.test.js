@@ -137,7 +137,6 @@ describe('jwt-auth', () => {
       expect(result).toBe(false)
     })
 
-    // 🆕 covers: DEFRA + jwtSbi present + agreementSbi missing => true
     test('should return true for defra when jwtSbi present and agreementSbi missing', () => {
       const jwtPayload = { sbi: '123456', source: 'defra' }
       const agreementData = { identifiers: {} } // no sbi
@@ -147,27 +146,24 @@ describe('jwt-auth', () => {
       expect(result).toBe(true)
     })
 
-    // 🆕 normalization: jwt.sbi number, agreement.sbi string => true
     test('should return true for defra when jwtSbi is number and agreementSbi is string (matching)', () => {
-      const jwtPayload = { sbi: 123456, source: 'defra' } // number
-      const agreementData = { identifiers: { sbi: '123456' } } // string
+      const jwtPayload = { sbi: 123456, source: 'defra' }
+      const agreementData = { identifiers: { sbi: '123456' } }
 
       const result = verifyJwtPayload(jwtPayload, agreementData)
 
       expect(result).toBe(true)
     })
 
-    // 🆕 normalization: jwt.sbi string, agreement.sbi number => true
     test('should return true for defra when jwtSbi is string and agreementSbi is number (matching)', () => {
-      const jwtPayload = { sbi: '123456', source: 'defra' } // string
-      const agreementData = { identifiers: { sbi: 123456 } } // number
+      const jwtPayload = { sbi: '123456', source: 'defra' }
+      const agreementData = { identifiers: { sbi: 123456 } }
 
       const result = verifyJwtPayload(jwtPayload, agreementData)
 
       expect(result).toBe(true)
     })
 
-    // 🆕 missing jwt.sbi: should be false even if agreement has sbi
     test('should return false for defra when jwtSbi is missing', () => {
       const jwtPayload = { source: 'defra' } // no sbi
       const agreementData = { identifiers: { sbi: '123456' } }
@@ -177,7 +173,6 @@ describe('jwt-auth', () => {
       expect(result).toBe(false)
     })
 
-    // 🆕 agreement missing identifiers entirely: jwtSbi present => true
     test('should return true for defra when jwtSbi present and identifiers object missing', () => {
       const jwtPayload = { sbi: '123456', source: 'defra' }
       const agreementData = {} // no identifiers at all
@@ -187,9 +182,8 @@ describe('jwt-auth', () => {
       expect(result).toBe(true)
     })
 
-    // 🆕 empty-string SBI edge cases
     test('should return false for defra when jwtSbi is empty string, agreementSbi present', () => {
-      const jwtPayload = { sbi: '', source: 'defra' } // empty string is falsy
+      const jwtPayload = { sbi: '', source: 'defra' }
       const agreementData = { identifiers: { sbi: '123456' } }
 
       const result = verifyJwtPayload(jwtPayload, agreementData)
@@ -207,7 +201,7 @@ describe('jwt-auth', () => {
     })
 
     test('should return false for defra when jwtSbi is null', () => {
-      const jwtPayload = { sbi: null, source: 'defra' } // -> jwtSbi === null
+      const jwtPayload = { sbi: null, source: 'defra' }
       const agreementData = { identifiers: { sbi: '123456' } }
 
       const result = verifyJwtPayload(jwtPayload, agreementData)
@@ -217,7 +211,7 @@ describe('jwt-auth', () => {
 
     test('should return true for defra when agreementSbi is null and jwtSbi present', () => {
       const jwtPayload = { sbi: '123456', source: 'defra' }
-      const agreementData = { identifiers: { sbi: null } } // -> agreementSbi === null
+      const agreementData = { identifiers: { sbi: null } }
 
       const result = verifyJwtPayload(jwtPayload, agreementData)
 
@@ -235,7 +229,7 @@ describe('jwt-auth', () => {
 
     test('should return true for defra when agreementSbi is empty string and jwtSbi present', () => {
       const jwtPayload = { sbi: '123456', source: 'defra' }
-      const agreementData = { identifiers: { sbi: '' } } // String('') === '' (falsy)
+      const agreementData = { identifiers: { sbi: '' } }
 
       const result = verifyJwtPayload(jwtPayload, agreementData)
 
@@ -243,7 +237,7 @@ describe('jwt-auth', () => {
     })
 
     test('should return true for defra when jwtSbi is 0 (number) and agreementSbi missing', () => {
-      const jwtPayload = { sbi: 0, source: 'defra' } // String(0) === "0" (truthy)
+      const jwtPayload = { sbi: 0, source: 'defra' }
       const agreementData = { identifiers: {} }
 
       const result = verifyJwtPayload(jwtPayload, agreementData)
@@ -264,7 +258,6 @@ describe('jwt-auth', () => {
     })
 
     test('should return {valid:true, source:null} when JWT feature flag is disabled', () => {
-      // Arrange
       config.get = jest.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return false
         if (key === 'jwtSecret') return 'mock-jwt-secret'
@@ -284,7 +277,6 @@ describe('jwt-auth', () => {
         mockLogger
       )
 
-      // Assert
       expect(result).toEqual({
         valid: true,
         source: null,
@@ -297,7 +289,6 @@ describe('jwt-auth', () => {
     })
 
     test('should validate and return object when feature flag enabled and JWT is valid (defra)', () => {
-      // Arrange
       config.get = jest.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return true
         if (key === 'jwtSecret') return 'mock-jwt-secret'
@@ -319,14 +310,12 @@ describe('jwt-auth', () => {
         error: jest.fn()
       }
 
-      // Act
       const result = validateJwtAuthentication(
         'valid-token',
         mockAgreementData,
         mockLogger
       )
 
-      // Assert
       expect(result).toEqual({
         valid: true,
         source: 'defra',
@@ -335,7 +324,6 @@ describe('jwt-auth', () => {
     })
 
     test('should throw 400 when feature flag is disabled and neither agreement data is provided', () => {
-      // Arrange
       config.get = jest.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return false
       })
@@ -348,7 +336,6 @@ describe('jwt-auth', () => {
     })
 
     test('should throw 400 when feature flag is enabled and no token provided', () => {
-      // Arrange
       config.get = jest.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return true
       })
@@ -363,7 +350,6 @@ describe('jwt-auth', () => {
     })
 
     test('should return {valid:true, source:"entra", sbi:<payload sbi>} for Entra users when feature flag is enabled', () => {
-      // Arrange
       config.get = jest.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return true
         if (key === 'jwtSecret') return 'mock-jwt-secret'
@@ -378,14 +364,12 @@ describe('jwt-auth', () => {
 
       const mockLogger = { info: jest.fn(), error: jest.fn() }
 
-      // Act
       const result = validateJwtAuthentication(
         'valid-token',
         mockAgreementData,
         mockLogger
       )
 
-      // Assert
       expect(result).toEqual({
         valid: true,
         source: 'entra',

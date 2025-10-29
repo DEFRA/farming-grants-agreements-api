@@ -112,7 +112,6 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
     })}`
   )
 
-  // 🟡 JWT Disabled – automatically valid
   if (!isJwtEnabled) {
     logger.warn('JWT authentication is disabled via feature flag')
     return { valid: true, source: null, sbi: undefined }
@@ -139,7 +138,6 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
 
   logger.info(`JWT payload verification result: ${validationResult}`)
 
-  // 🟢 Return richer object instead of plain boolean
   return {
     valid: validationResult,
     source: jwtPayload?.source ?? null,
