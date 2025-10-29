@@ -35,7 +35,11 @@ describe('getAgreementController', () => {
 
     // Setup default mock implementations
     jest.spyOn(agreementDataHelper, 'getAgreementDataById')
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+      valid: true,
+      source: 'defra',
+      sbi: '106284736'
+    })
   })
 
   describe('not yet accepted', () => {

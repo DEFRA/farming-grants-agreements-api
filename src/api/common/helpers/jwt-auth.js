@@ -1,5 +1,6 @@
 import { config } from '~/src/config/index.js'
 import Jwt from '@hapi/jwt'
+import Boom from '@hapi/boom'
 
 /**
  * Validates and verifies a JWT token against a secret to extract the payload
@@ -66,11 +67,17 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
     return true
   }
 
-  const result =
-    jwtPayload.source === 'defra' &&
-    jwtPayload.sbi === agreementData?.identifiers?.sbi
+  // Ensure both SBI values are compared as strings
+  const jwtSbi = jwtPayload?.sbi != null ? String(jwtPayload.sbi) : null
+  const agreementSbi =
+    agreementData?.identifiers?.sbi != null
+      ? String(agreementData.identifiers.sbi)
+      : null
 
-  return result
+  return Boolean(
+    jwtPayload.source === 'defra' &&
+      (jwtSbi === agreementSbi || (jwtSbi && !agreementSbi))
+  )
 }
 
 /**
@@ -78,10 +85,22 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
  * @param {string} authToken - The JWT token to verify and decode
  * @param {object} agreementData - The agreement data object
  * @param {object} logger - Logger instance for error reporting
- * @returns {boolean} - true if JWT is disabled or JWT validation passes, false otherwise
+ * @returns {{valid: boolean, source: null, sbi: undefined}} - true if JWT is disabled or JWT validation passes, false otherwise
  */
 const validateJwtAuthentication = (authToken, agreementData, logger) => {
   const isJwtEnabled = config.get('featureFlags.isJwtEnabled')
+
+  if (!agreementData && !isJwtEnabled) {
+    throw Boom.badRequest(
+      'Bad request, Neither JWT is enabled nor agreementId is provided'
+    )
+  }
+
+  if (isJwtEnabled && !authToken) {
+    throw Boom.badRequest(
+      'Bad request, JWT is enabled but no auth token provided in the header'
+    )
+  }
 
   logger.info(
     `JWT Authentication Validation Start: ${JSON.stringify({
@@ -93,9 +112,10 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
     })}`
   )
 
+  // 🟡 JWT Disabled – automatically valid
   if (!isJwtEnabled) {
     logger.warn('JWT authentication is disabled via feature flag')
-    return true
+    return { valid: true, source: null, sbi: undefined }
   }
 
   logger.info('JWT authentication is enabled, proceeding with validation')
@@ -103,21 +123,28 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
   const jwtPayload = extractJwtPayload(authToken, logger)
   if (!jwtPayload) {
     logger.info('JWT payload extraction failed')
-    return false
+    return { valid: false, source: null, sbi: undefined }
   }
 
   logger.info(
     `JWT payload extracted successfully: ${JSON.stringify({
       payloadSbi: jwtPayload.sbi,
       payloadSource: jwtPayload.source,
-      agreementSbi: agreementData?.identifiers?.sbi
+      agreementSbi: agreementData?.identifiers?.sbi,
+      jwtSbi: jwtPayload.sbi
     })}`
   )
 
   const validationResult = verifyJwtPayload(jwtPayload, agreementData)
+
   logger.info(`JWT payload verification result: ${validationResult}`)
 
-  return validationResult
+  // 🟢 Return richer object instead of plain boolean
+  return {
+    valid: validationResult,
+    source: jwtPayload?.source ?? null,
+    sbi: jwtPayload.sbi
+  }
 }
 
 export { extractJwtPayload, verifyJwtPayload, validateJwtAuthentication }

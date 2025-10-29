@@ -45,7 +45,11 @@ describe('acceptOfferDocumentController', () => {
     getAgreementDataById.mockResolvedValue(mockAgreementData)
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+      valid: true,
+      source: 'defra',
+      sbi: '106284736'
+    })
   })
 
   const mockAgreementData = {
