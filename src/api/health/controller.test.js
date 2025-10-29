@@ -1,4 +1,5 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { config } from '~/src/config/index.js'
 
 // use the manual mock in src/api/health/__mocks__/mongoose.js
 jest.mock('mongoose')
@@ -11,6 +12,8 @@ describe('#healthController', () => {
   beforeAll(async () => {
     // import the mocked mongoose (manual mock default export)
     mongooseModule = await import('mongoose')
+
+    config.set('serviceVersion', 'versionMock')
 
     // import createServer after mongoose is mocked so controller picks up the mock
     const { createServer } = await import('~/src/api/index.js')
@@ -37,7 +40,7 @@ describe('#healthController', () => {
         url: '/health'
       })
 
-      expect(result).toEqual({ message: 'success' })
+      expect(result).toEqual({ message: 'success', version: 'versionMock' })
       expect(statusCode).toBe(statusCodes.ok)
     })
   })
@@ -54,7 +57,8 @@ describe('#healthController', () => {
 
       expect(result).toEqual({
         message: 'Unable to connect to backend MongoDB',
-        error: 'MongoDB ping failed'
+        error: 'MongoDB ping failed',
+        version: 'versionMock'
       })
       expect(statusCode).toBe(statusCodes.serviceUnavailable)
     })
@@ -71,7 +75,8 @@ describe('#healthController', () => {
 
       expect(result).toEqual({
         message: 'Unable to connect to backend MongoDB',
-        error: err.message
+        error: err.message,
+        version: 'versionMock'
       })
       expect(statusCode).toBe(statusCodes.serviceUnavailable)
     })
