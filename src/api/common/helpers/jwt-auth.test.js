@@ -288,10 +288,8 @@ describe('jwt-auth', () => {
       expect(result).toEqual({
         valid: true,
         source: null,
-        sdi: undefined,
         sbi: undefined
-      }) // tolerate sdi typo? remove
-      // Actually just:
+      })
       expect(result).toEqual({ valid: true, source: null, sbi: undefined })
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'JWT authentication is disabled via feature flag'
