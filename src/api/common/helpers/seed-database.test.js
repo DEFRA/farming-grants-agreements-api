@@ -2,13 +2,13 @@ describe('seedDatabase', () => {
   describe('processMessage', () => {
     const mockProcessMessage = jest.fn()
     const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
-    let oldEnv
+    let prevEnv
 
     beforeEach(() => {
       jest.resetModules()
       jest.clearAllMocks()
-      oldEnv = process.env.NODE_ENV
-      process.env.NODE_ENV = 'test'
+      prevEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'production'
 
       // mocks required for this test
       jest.doMock(
@@ -72,7 +72,7 @@ describe('seedDatabase', () => {
     })
 
     afterEach(() => {
-      process.env.NODE_ENV = oldEnv
+      process.env.NODE_ENV = prevEnv
     })
 
     it('calls processMessage with correct values via seedDatabase', async () => {
@@ -105,10 +105,14 @@ describe('seedDatabase', () => {
     let mockLogger
     let mockDropCollection
     let mockPublishEvent
+    let prevEnv
 
     beforeEach(() => {
       jest.resetModules()
       jest.clearAllMocks()
+
+      prevEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'production'
 
       mockLogger = {
         info: jest.fn(),
@@ -170,6 +174,10 @@ describe('seedDatabase', () => {
       jest.doMock('~/src/api/common/helpers/sns-publisher.js', () => ({
         publishEvent: mockPublishEvent
       }))
+    })
+
+    afterEach(() => {
+      process.env.NODE_ENV = prevEnv
     })
 
     test('waits for mongoose to connect when readyState is not connected (mocks time)', async () => {
@@ -254,6 +262,66 @@ describe('seedDatabase', () => {
       await seedDatabase(mockLogger)
 
       expect(mockLogger.error).toHaveBeenCalledWith(error)
+    })
+  })
+
+  describe('contract test data seeding', () => {
+    let prevEnv
+    let mockLogger
+    const mockProcessMessage = jest.fn()
+
+    beforeEach(() => {
+      jest.resetModules()
+      jest.clearAllMocks()
+
+      prevEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'test'
+
+      mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn()
+      }
+
+      jest.doMock(
+        '~/src/api/common/helpers/sqs-message-processor/create-agreement.js',
+        () => ({
+          handleCreateAgreementEvent: mockProcessMessage
+        })
+      )
+
+      jest.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
+        agreements: [
+          {
+            notificationMessageId: 'mockNotificationMessageId',
+            agreementNumber: 'SFI123456789'
+          }
+        ]
+      }))
+    })
+
+    afterEach(() => {
+      process.env.NODE_ENV = prevEnv
+    })
+
+    test('calls handleCreateAgreementEvent correctly for contract tests', async () => {
+      const { seedDatabase } = await import('./seed-database.js')
+      await seedDatabase(mockLogger)
+
+      expect(mockProcessMessage).toHaveBeenCalledWith(
+        'mockNotificationMessageId',
+        {
+          topicArn:
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+          time: expect.any(String),
+          type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+          data: {
+            notificationMessageId: 'mockNotificationMessageId',
+            agreementNumber: 'SFI123456789'
+          }
+        },
+        mockLogger
+      )
     })
   })
 })

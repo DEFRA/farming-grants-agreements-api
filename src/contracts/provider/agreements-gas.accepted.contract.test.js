@@ -18,8 +18,8 @@ describe.skip('sending updated (accepted) events via SNS', () => {
   }
 
   const messagePact = new MessageProviderPact({
-    provider: 'farming-grants-agreements-api',
-    consumer: 'fg-gas-backend',
+    provider: 'farming-grants-agreements-api-sns',
+    consumer: 'fg-gas-backend-sqs',
     pactBrokerUrl:
       process.env.PACT_BROKER_URL ??
       'https://ffc-pact-broker.azure.defra.cloud',
