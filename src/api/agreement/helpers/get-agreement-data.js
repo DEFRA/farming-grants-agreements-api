@@ -88,9 +88,10 @@ const getAgreementDataById = async (agreementId) => {
   validateAgreementId(agreementId)
 
   // Get the agreement data before accepting
-  return await getAgreementData({
+  const agreementData = await getAgreementData({
     agreementNumber: agreementId
   })
+  return agreementData
 }
 
 /**
@@ -111,9 +112,11 @@ const doesAgreementExist = async (searchTerms) => {
 const getAgreementDataBySbi = async (sbi) => {
   validateSbi(sbi)
 
-  return await getAgreementData({
+  const agreementData = await getAgreementData({
     sbi: String(sbi)
   })
+
+  return agreementData
 }
 
 export { getAgreementDataById, doesAgreementExist, getAgreementDataBySbi }

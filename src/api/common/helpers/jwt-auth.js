@@ -67,12 +67,15 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
     return true
   }
 
-  // Ensure both SBI values are compared as strings
   const jwtSbi = jwtPayload?.sbi != null ? String(jwtPayload.sbi) : null
   const agreementSbi =
     agreementData?.identifiers?.sbi != null
       ? String(agreementData.identifiers.sbi)
       : null
+
+  if (jwtSbi === null && agreementSbi === null) {
+    return false
+  }
 
   return Boolean(
     jwtPayload.source === 'defra' &&
@@ -114,7 +117,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
 
   if (!isJwtEnabled) {
     logger.warn('JWT authentication is disabled via feature flag')
-    return { valid: true, source: null, sbi: undefined }
+    return { valid: true, source: null, sbi: null }
   }
 
   logger.info('JWT authentication is enabled, proceeding with validation')
@@ -122,7 +125,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
   const jwtPayload = extractJwtPayload(authToken, logger)
   if (!jwtPayload) {
     logger.info('JWT payload extraction failed')
-    return { valid: false, source: null, sbi: undefined }
+    return { valid: false, source: null, sbi: null }
   }
 
   logger.info(
