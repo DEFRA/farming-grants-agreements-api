@@ -13,6 +13,17 @@ const agreement = {
     register: (server) => {
       server.route({
         method: 'GET',
+        path: '/',
+        options: { auth },
+        /**
+         * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
+         * @param {import('@hapi/hapi').ResponseToolkit} h
+         */
+        handler: getAgreementController
+      })
+
+      server.route({
+        method: 'GET',
         path: '/{agreementId}',
         options: { auth },
         /**
