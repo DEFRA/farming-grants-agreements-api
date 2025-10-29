@@ -70,6 +70,16 @@ const validateAgreementId = (agreementId) => {
 }
 
 /**
+ * Validate the SBI
+ * @param {string|number} sbi - The SBI to validate
+ */
+const validateSbi = (sbi) => {
+  if (sbi == null || String(sbi).trim() === '') {
+    throw Boom.badRequest('SBI is required')
+  }
+}
+
+/**
  * Get the agreement data before accepting
  * @param {string} agreementId - The agreement ID to fetch
  * @returns {Promise<Agreement>} The agreement data
@@ -78,11 +88,9 @@ const getAgreementDataById = async (agreementId) => {
   validateAgreementId(agreementId)
 
   // Get the agreement data before accepting
-  const agreementData = await getAgreementData({
+  return await getAgreementData({
     agreementNumber: agreementId
   })
-
-  return agreementData
 }
 
 /**
@@ -95,6 +103,19 @@ const doesAgreementExist = async (searchTerms) => {
   return Boolean(agreements)
 }
 
-export { getAgreementDataById, doesAgreementExist }
+/**
+ * Get the agreement data by SBI (assumed unique)
+ * @param {string|number} sbi - The SBI associated with the agreement
+ * @returns {Promise<Agreement>} The agreement data
+ */
+const getAgreementDataBySbi = async (sbi) => {
+  validateSbi(sbi)
+
+  return await getAgreementData({
+    sbi: String(sbi)
+  })
+}
+
+export { getAgreementDataById, doesAgreementExist, getAgreementDataBySbi }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
