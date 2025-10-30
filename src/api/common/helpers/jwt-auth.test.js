@@ -191,6 +191,15 @@ describe('jwt-auth', () => {
       expect(result).toBe(false)
     })
 
+    test('should return false for defra when both jwtSbi and agreementSbi are not present', () => {
+      const jwtPayload = { sbi: null, source: 'defra' }
+      const agreementData = { identifiers: { sbi: null } }
+
+      const result = verifyJwtPayload(jwtPayload, agreementData)
+
+      expect(result).toBe(false)
+    })
+
     test('should return false for defra when both jwtSbi and agreementSbi are empty/absent', () => {
       const jwtPayload = { sbi: '', source: 'defra' }
       const agreementData = { identifiers: {} }

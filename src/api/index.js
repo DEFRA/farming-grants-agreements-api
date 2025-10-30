@@ -48,7 +48,8 @@ const customGrantsUiJwtScheme = () => ({
 
     return h.authenticated({
       credentials: {
-        agreementData
+        agreementData,
+        source: authResult.source
       }
     })
   }

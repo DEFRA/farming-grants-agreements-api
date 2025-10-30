@@ -10,19 +10,19 @@ jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   __esModule: true,
   ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
-  getAgreementDataById: jest.fn()
+  getAgreementDataBySbi: jest.fn()
 }))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 
-describe('getAgreementController', () => {
+describe('getAgreementBySbiController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
-  const doGet = (agreementId = 'SFI123456789', headers = {}) =>
+  const doGet = () =>
     server.inject({
       method: 'GET',
-      url: `/${agreementId}`,
-      headers: { 'x-encrypted-auth': 'valid-jwt-token', ...headers }
+      url: '/',
+      headers: { 'x-encrypted-auth': 'valid-jwt-token' }
     })
 
   beforeAll(async () => {
@@ -37,16 +37,11 @@ describe('getAgreementController', () => {
   })
 
   beforeEach(() => {
-    // Reset mocks before each test
     jest.clearAllMocks()
-
-    // Setup default mock implementations
-    jest.spyOn(agreementDataHelper, 'getAgreementDataById')
+    jest.spyOn(agreementDataHelper, 'getAgreementDataBySbi')
   })
 
   describe('Farmer', () => {
-    const agreementId = 'SFI123456789'
-
     beforeEach(() => {
       jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
         valid: true,
@@ -56,6 +51,8 @@ describe('getAgreementController', () => {
     })
 
     describe('not yet accepted', () => {
+      const agreementId = 'SFI123456789'
+
       beforeEach(() => {
         const mockAgreementData = {
           agreementNumber: agreementId,
@@ -70,22 +67,22 @@ describe('getAgreementController', () => {
         }
 
         jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .spyOn(agreementDataHelper, 'getAgreementDataBySbi')
           .mockResolvedValue(mockAgreementData)
       })
 
       test('should return offered data', async () => {
-        const { statusCode, result } = await doGet(agreementId)
+        const { statusCode, result } = await doGet()
         expect(statusCode).toBe(statusCodes.ok)
         expect(result.agreementData.status).toContain('offered')
       })
 
       test('should handle agreement not found', async () => {
         jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .spyOn(agreementDataHelper, 'getAgreementDataBySbi')
           .mockRejectedValue(Boom.notFound('Agreement not found'))
 
-        const { statusCode, result } = await doGet('INVALID123')
+        const { statusCode, result } = await doGet()
         expect(statusCode).toBe(404)
         expect(result.errorMessage).toContain('Agreement not found')
       })
@@ -93,10 +90,10 @@ describe('getAgreementController', () => {
       test('should handle database errors', async () => {
         const errorMessage = 'Database connection failed'
         jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .spyOn(agreementDataHelper, 'getAgreementDataBySbi')
           .mockRejectedValue(new Error(errorMessage))
 
-        const { statusCode, result } = await doGet(agreementId)
+        const { statusCode, result } = await doGet()
         expect(statusCode).toBe(statusCodes.internalServerError)
         expect(result.errorMessage).toContain('Database connection failed')
       })
@@ -105,7 +102,7 @@ describe('getAgreementController', () => {
     describe('already accepted', () => {
       beforeEach(() => {
         const mockAgreementData = {
-          agreementNumber: agreementId,
+          agreementNumber: 'SFI123456789',
           status: 'accepted',
           sbi: '106284736',
           payment: {
@@ -117,20 +114,12 @@ describe('getAgreementController', () => {
         }
 
         jest
-          .spyOn(agreementDataHelper, 'getAgreementDataById')
+          .spyOn(agreementDataHelper, 'getAgreementDataBySbi')
           .mockResolvedValue(mockAgreementData)
       })
 
       test('should return accepted data', async () => {
-        const { statusCode, result } = await doGet(agreementId)
-        expect(statusCode).toBe(statusCodes.ok)
-        expect(result.agreementData.status).toContain('accepted')
-      })
-
-      test('should return accepted agreement data with base URL when already accepted', async () => {
-        const { statusCode, result } = await doGet(agreementId, {
-          'x-base-url': '/agreement'
-        })
+        const { statusCode, result } = await doGet()
         expect(statusCode).toBe(statusCodes.ok)
         expect(result.agreementData.status).toContain('accepted')
       })
@@ -157,67 +146,16 @@ describe('getAgreementController', () => {
       }
 
       jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
+        .spyOn(agreementDataHelper, 'getAgreementDataBySbi')
         .mockResolvedValue(mockAgreementData)
     })
 
-    test('should handle agreement success', async () => {
-      const { statusCode, result } = await doGet('SFI123456789')
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(result.agreementData.status).toContain('offered')
-    })
-  })
-
-  describe('already accepted', () => {
-    const agreementId = 'SFI123456789'
-
-    beforeEach(() => {
-      const mockAgreementData = {
-        agreementNumber: agreementId,
-        status: 'accepted',
-        sbi: '106284736',
-        payment: {
-          agreementStartDate: '2025-12-05',
-          annualTotalPence: 0,
-          parcelItems: {},
-          agreementLevelItems: {}
-        }
-      }
-
-      jest
-        .spyOn(agreementDataHelper, 'getAgreementDataById')
-        .mockResolvedValue(mockAgreementData)
-    })
-
-    test('should return accepted data', async () => {
-      // Arrange
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: `/${agreementId}`,
-        headers: {
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(result.agreementData.status).toContain('accepted')
-    })
-
-    test('should return accepted agreement data with base URL when already accepted', async () => {
-      // Arrange
-      const { statusCode, result } = await server.inject({
-        method: 'GET',
-        url: `/${agreementId}`,
-        headers: {
-          'x-base-url': '/agreement',
-          'x-encrypted-auth': 'valid-jwt-token'
-        }
-      })
-
-      // Assert
-      expect(statusCode).toBe(statusCodes.ok)
-      expect(result.agreementData.status).toContain('accepted')
+    test('should handle agreement forbidden', async () => {
+      const { statusCode, result } = await doGet()
+      expect(statusCode).toBe(401)
+      expect(result.errorMessage).toContain(
+        'Not allowed to view the agreement. Source: entra'
+      )
     })
   })
 })
