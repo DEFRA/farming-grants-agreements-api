@@ -35,7 +35,11 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     config.set('files.s3.bucket', 'test-bucket')
 
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue(true)
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+      valid: true,
+      source: 'defra',
+      sbi: '106284736'
+    })
 
     jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',

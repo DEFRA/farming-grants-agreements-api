@@ -3,7 +3,8 @@ import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import {
   doesAgreementExist,
-  getAgreementDataById
+  getAgreementDataById,
+  getAgreementDataBySbi
 } from './get-agreement-data.js'
 
 jest.mock('~/src/api/common/models/versions.js')
@@ -139,6 +140,150 @@ describe('getAgreementDataById', () => {
     expect(result).toEqual({
       ...mockAgreement,
       agreementNumber: mockGroup.agreementNumber,
+      invoice: [],
+      version: 1
+    })
+  })
+})
+
+describe('getAgreementDataBySbi', () => {
+  const mockAgreement = {
+    agreementNumber: 'SFI123456789',
+    agreementName: 'Test Agreement',
+    signatureDate: '1/1/2024',
+    identifiers: { sbi: '106284736' }
+  }
+
+  const mockGroup = {
+    _id: '507f1f77bcf86cd799439011',
+    agreementNumber: 'SFI123456789',
+    agreementName: 'Test Agreement',
+    sbi: '106284736'
+  }
+
+  const expectedLookup = {
+    $lookup: {
+      from: 'invoices',
+      localField: 'agreementNumber',
+      foreignField: 'agreementNumber',
+      as: 'invoice'
+    }
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('should throw Boom.badRequest when sbi is undefined getAgreementDataBySbi', async () => {
+    await expect(getAgreementDataBySbi(undefined)).rejects.toThrow(
+      'SBI is required'
+    )
+  })
+
+  test('should throw Boom.notFound when agreement group is not found getAgreementDataBySbi', async () => {
+    const sbi = '106284736'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([])
+    })
+
+    await expect(getAgreementDataBySbi(sbi)).rejects.toThrow(
+      `Agreement not found using search terms: ${JSON.stringify({
+        sbi
+      })}`
+    )
+
+    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
+      { $match: { sbi } },
+      expectedLookup,
+      { $limit: 1 }
+    ])
+    expect(versionsModel.findOne).not.toHaveBeenCalled()
+  })
+
+  test('should return agreement data when found getAgreementDataBySbi', async () => {
+    // Arrange
+    const sbi = '106284736'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [{ test: 'invoice' }],
+          versions: [{ version: '1123' }]
+        }
+      ])
+    })
+
+    versionsModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => Promise.resolve({ ...mockAgreement })
+      })
+    })
+
+    // Act
+    const result = await getAgreementDataBySbi(sbi)
+
+    // Assert
+    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
+      { $match: { sbi } }, // if you match a nested path, use { 'identifiers.sbi': sbi }
+      expectedLookup,
+      { $limit: 1 }
+    ])
+
+    expect(versionsModel.findOne).toHaveBeenCalledWith({
+      agreement: mockGroup._id
+    })
+
+    expect(result.identifiers.sbi).toBe(sbi) // value check
+    expect(typeof result.identifiers.sbi).toBe('string') // type check (guards against numeric sbi)
+
+    expect(result).toEqual({
+      ...mockAgreement,
+      agreementNumber: mockGroup.agreementNumber,
+      identifiers: { sbi: mockGroup.sbi },
+      invoice: [{ test: 'invoice' }],
+      version: 1
+    })
+  })
+
+  test('should throw Boom.notFound when agreement is not found getAgreementDataBySbi', async () => {
+    // Arrange
+    const sbi = '106284736'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([])
+    })
+
+    // Act & Assert
+    await expect(getAgreementDataBySbi(sbi)).rejects.toThrow(
+      `Agreement not found using search terms: ${JSON.stringify({
+        sbi
+      })}`
+    )
+  })
+
+  test('should handle missing logger gracefully getAgreementDataBySbi', async () => {
+    // Arrange
+    const sbi = '106284736'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: jest.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
+    })
+
+    versionsModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => Promise.resolve({ ...mockAgreement })
+      })
+    })
+
+    // Act
+    const result = await getAgreementDataBySbi(sbi)
+
+    // Assert
+    expect(result).toEqual({
+      ...mockAgreement,
+      identifiers: { sbi: mockGroup.sbi },
       invoice: [],
       version: 1
     })
