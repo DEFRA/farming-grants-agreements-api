@@ -1,6 +1,7 @@
 import { createServer } from './index.js'
 import { validateJwtAuthentication } from './common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
+import { Decimal128 } from 'mongodb'
 
 // Mock the dependencies
 jest.mock('./common/helpers/jwt-auth.js', () => ({
@@ -214,6 +215,56 @@ describe('Custom Grants UI JWT Authentication Scheme', () => {
       // Test that the authentication strategy works by making a request
       // If the strategy is registered, the authentication should be processed
       expect(server.auth.api).toBeDefined()
+    })
+  })
+
+  describe('return-data-handler convertDecimal128', () => {
+    beforeAll(() => {
+      server.route({
+        method: 'GET',
+        path: '/__test/decimal',
+        handler: () => ({
+          a: Decimal128.fromString('1.23'),
+          b: { c: Decimal128.fromString('4.56'), d: 'x' },
+          e: [
+            Decimal128.fromString('7.89'),
+            { f: Decimal128.fromString('0.12') }
+          ],
+          n: null,
+          p: 42
+        })
+      })
+
+      server.route({
+        method: 'GET',
+        path: '/__test/decimal-array',
+        handler: () => [
+          Decimal128.fromString('10.01'),
+          Decimal128.fromString('0'),
+          Decimal128.fromString('999999.9999')
+        ]
+      })
+    })
+
+    it('converts Decimal128 values to numbers in nested objects and arrays', async () => {
+      const res = await server.inject({ method: 'GET', url: '/__test/decimal' })
+      expect(res.statusCode).toBe(200)
+      expect(res.result).toEqual({
+        a: 1.23,
+        b: { c: 4.56, d: 'x' },
+        e: [7.89, { f: 0.12 }],
+        n: null,
+        p: 42
+      })
+    })
+
+    it('converts Decimal128 values inside arrays', async () => {
+      const res = await server.inject({
+        method: 'GET',
+        url: '/__test/decimal-array'
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.result).toEqual([10.01, 0, 999999.9999])
     })
   })
 })
