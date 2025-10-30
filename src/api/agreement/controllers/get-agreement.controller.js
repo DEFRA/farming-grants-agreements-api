@@ -9,7 +9,7 @@ const getAgreementController = (request, h) => {
   const { agreementData } = request.auth.credentials
 
   // Return JSON response with agreement data
-  return h.response({ agreementData }).code(statusCodes.ok)
+  return h.response({ agreementData, showAgreement: true }).code(statusCodes.ok)
 }
 
 export { getAgreementController }

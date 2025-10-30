@@ -203,7 +203,7 @@ docker compose up --build -d
 ### Viewing messages in LocalStack SQS
 
 By default, our LocalStack monitor only shows **message counts** (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue.
-This is intentional so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
+This is intentional, so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
 
 If you want to **peek at the actual messages** (for debugging or development only), you can run:
 

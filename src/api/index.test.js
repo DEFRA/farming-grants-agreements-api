@@ -40,7 +40,11 @@ describe('Custom Grants UI JWT Authentication Scheme', () => {
     it('should authenticate successfully with valid JWT and agreement data', async () => {
       // Arrange
       getAgreementDataById.mockResolvedValue(mockAgreementData)
-      validateJwtAuthentication.mockReturnValue(true)
+      validateJwtAuthentication.mockReturnValue({
+        valid: true,
+        source: 'defra',
+        sbi: '123456'
+      })
 
       // Act - make a request to a route that uses the authentication
       const response = await server.inject({
@@ -181,7 +185,11 @@ describe('Custom Grants UI JWT Authentication Scheme', () => {
     it('should pass correct parameters to validateJwtAuthentication', async () => {
       // Arrange
       getAgreementDataById.mockResolvedValue(mockAgreementData)
-      validateJwtAuthentication.mockReturnValue(true)
+      validateJwtAuthentication.mockReturnValue({
+        valid: true,
+        source: 'defra',
+        sbi: '123456'
+      })
 
       // Act
       await server.inject({
