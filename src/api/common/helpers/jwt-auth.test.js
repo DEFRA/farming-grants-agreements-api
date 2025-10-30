@@ -386,3 +386,36 @@ describe('jwt-auth', () => {
     })
   })
 })
+
+describe('validateJwtAuthentication - payload extraction failure path', () => {
+  test('returns { valid: false, source: null, sbi: null } when extractJwtPayload returns null', () => {
+    // Enable JWT feature flag
+    config.get = jest.fn((key) => {
+      if (key === 'featureFlags.isJwtEnabled') return true
+      if (key === 'jwtSecret') return 'mock-jwt-secret'
+      return 'mock-jwt-secret'
+    })
+
+    const agreementData = {
+      identifiers: { sbi: '123456' },
+      agreementNumber: 'SFI123456789'
+    }
+
+    const logger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+
+    // Force extractJwtPayload to return null by making decode throw
+    Jwt.token.decode = jest.fn(() => {
+      throw new Error('decode error')
+    })
+
+    const result = validateJwtAuthentication(
+      'some-token',
+      agreementData,
+      logger
+    )
+
+    expect(result).toEqual({ valid: false, source: null, sbi: null })
+    // Ensure the specific info log for failed extraction is recorded
+    expect(logger.info).toHaveBeenCalledWith('JWT payload extraction failed')
+  })
+})

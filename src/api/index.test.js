@@ -1,6 +1,7 @@
 import { createServer } from './index.js'
 import { validateJwtAuthentication } from './common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
+import { Decimal128 } from 'mongodb'
 
 // Mock the dependencies
 jest.mock('./common/helpers/jwt-auth.js', () => ({
@@ -214,6 +215,104 @@ describe('Custom Grants UI JWT Authentication Scheme', () => {
       // Test that the authentication strategy works by making a request
       // If the strategy is registered, the authentication should be processed
       expect(server.auth.api).toBeDefined()
+    })
+  })
+
+  describe('return-data-handler convertDecimal128', () => {
+    beforeAll(() => {
+      server.route({
+        method: 'GET',
+        path: '/__test/decimal',
+        handler: () => ({
+          a: Decimal128.fromString('1.23'),
+          b: { c: Decimal128.fromString('4.56'), d: 'x' },
+          e: [
+            Decimal128.fromString('7.89'),
+            { f: Decimal128.fromString('0.12') }
+          ],
+          n: null,
+          p: 42
+        })
+      })
+
+      server.route({
+        method: 'GET',
+        path: '/__test/decimal-array',
+        handler: () => [
+          Decimal128.fromString('10.01'),
+          Decimal128.fromString('0'),
+          Decimal128.fromString('999999.9999')
+        ]
+      })
+
+      // Shared reference to trigger seen.has branch without circular structure
+      server.route({
+        method: 'GET',
+        path: '/__test/decimal-shared',
+        handler: () => {
+          const shared = { value: Decimal128.fromString('3.14') }
+          return {
+            first: shared,
+            second: shared,
+            arr: [shared, shared]
+          }
+        }
+      })
+
+      // Null coverage in nested structures and arrays
+      server.route({
+        method: 'GET',
+        path: '/__test/nulls',
+        handler: () => ({
+          top: null,
+          inner: { n: null, d: Decimal128.fromString('2.5') },
+          list: [null, Decimal128.fromString('1.5'), { x: null }]
+        })
+      })
+    })
+
+    it('converts Decimal128 values to numbers in nested objects and arrays', async () => {
+      const res = await server.inject({ method: 'GET', url: '/__test/decimal' })
+      expect(res.statusCode).toBe(200)
+      expect(res.result).toEqual({
+        a: 1.23,
+        b: { c: 4.56, d: 'x' },
+        e: [7.89, { f: 0.12 }],
+        n: null,
+        p: 42
+      })
+    })
+
+    it('converts Decimal128 values inside arrays', async () => {
+      const res = await server.inject({
+        method: 'GET',
+        url: '/__test/decimal-array'
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.result).toEqual([10.01, 0, 999999.9999])
+    })
+
+    it('handles shared object references (seen.has) and converts values once', async () => {
+      const res = await server.inject({
+        method: 'GET',
+        url: '/__test/decimal-shared'
+      })
+      expect(res.statusCode).toBe(200)
+      // Both paths point to the same object during conversion; value should be converted to number
+      expect(res.result.first.value).toBe(3.14)
+      expect(res.result.second.value).toBe(3.14)
+      expect(res.result.arr[0].value).toBe(3.14)
+      expect(res.result.arr[1].value).toBe(3.14)
+    })
+
+    it('returns nulls unchanged and converts Decimal128 alongside them', async () => {
+      const res = await server.inject({ method: 'GET', url: '/__test/nulls' })
+      expect(res.statusCode).toBe(200)
+      expect(res.result).toEqual({
+        top: null,
+        inner: { n: null, d: 2.5 },
+        list: [null, 1.5, { x: null }]
+      })
     })
   })
 })
