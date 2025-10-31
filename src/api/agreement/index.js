@@ -24,6 +24,17 @@ const agreement = {
       })
 
       server.route({
+        method: 'POST',
+        path: '/',
+        options: { auth },
+        /**
+         * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
+         * @param {import('@hapi/hapi').ResponseToolkit} h
+         */
+        handler: acceptOfferController
+      })
+
+      server.route({
         method: 'GET',
         path: '/{agreementId}',
         options: { auth },
@@ -32,17 +43,6 @@ const agreement = {
          * @param {import('@hapi/hapi').ResponseToolkit} h
          */
         handler: getAgreementController
-      })
-
-      server.route({
-        method: 'POST',
-        path: '/{agreementId}',
-        options: { auth },
-        /**
-         * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
-         * @param {import('@hapi/hapi').ResponseToolkit} h
-         */
-        handler: acceptOfferController
       })
 
       server.route({
