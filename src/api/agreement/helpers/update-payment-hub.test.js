@@ -220,7 +220,7 @@ describe('updatePaymentHub', () => {
       )
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        `The PaymentHub feature flag is disbaled. The request has not been sent to payment hub:${JSON.stringify(paymentHubRequestData, null, 2)}`
+        `The PaymentHub feature flag is disabled. The request has not been sent to payment hub:${JSON.stringify(paymentHubRequestData, null, 2)}`
       )
 
       expect(result).toEqual({
