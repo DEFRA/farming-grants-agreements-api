@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import agreementModel from '~/src/api/common/models/agreements.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 
 // Import the module after setting up the mocks
@@ -10,8 +10,7 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
   findOne: jest.fn().mockReturnThis(),
   populate: jest.fn().mockReturnThis(),
   lean: jest.fn().mockReturnThis(),
-  exec: jest.fn(),
-  updateOneAgreementVersion: jest.fn()
+  exec: jest.fn()
 }))
 
 jest.mock('~/src/api/common/models/versions.js', () => ({
@@ -34,54 +33,6 @@ describe('unacceptOffer', () => {
   test('should successfully unaccept an offer', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
-    const updateResult = { modifiedCount: 1 }
-
-    agreementsModel.updateOneAgreementVersion.mockResolvedValueOnce(
-      updateResult
-    )
-
-    // Act
-    const result = await unacceptOffer(agreementId)
-
-    // Assert
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
-      { agreementNumber: agreementId },
-      { $set: { status: 'offered', signatureDate: null } }
-    )
-    expect(result).toEqual({ success: true, updatedVersions: 1 })
-  })
-
-  test('should throw a boom error when updateOneAgreementVersion fails', async () => {
-    // Arrange
-    const agreementId = 'SFI123456789'
-
-    agreementsModel.updateOneAgreementVersion.mockRejectedValueOnce(
-      'Mock error'
-    )
-
-    // Act
-    await expect(unacceptOffer(agreementId)).rejects.toThrow(
-      Boom.internal('Mock error')
-    )
-  })
-})
-
-describe('unacceptOffer for all version', () => {
-  beforeAll(() => {
-    jest.useFakeTimers()
-  })
-
-  beforeEach(() => {
-    jest.setSystemTime(new Date('2024-01-01'))
-  })
-
-  afterAll(() => {
-    jest.useRealTimers()
-  })
-
-  test('should successfully unaccept an offer', async () => {
-    // Arrange
-    const agreementId = 'SFI123456789'
     const mockAgreement = {
       _id: 'agreement1',
       agreementNumber: agreementId,
@@ -89,19 +40,19 @@ describe('unacceptOffer for all version', () => {
     }
     const updateResult = { modifiedCount: 2 }
 
-    agreementsModel.exec.mockResolvedValueOnce(mockAgreement)
+    agreementModel.exec.mockResolvedValueOnce(mockAgreement)
     versionsModel.updateMany.mockResolvedValueOnce(updateResult)
 
     // Act
-    const result = await unacceptOffer(agreementId, { all: true })
+    const result = await unacceptOffer(agreementId)
 
     // Assert
-    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+    expect(agreementModel.findOne).toHaveBeenCalledWith({
       agreementNumber: agreementId
     })
-    expect(agreementsModel.populate).toHaveBeenCalledWith('versions')
-    expect(agreementsModel.lean).toHaveBeenCalledTimes(1)
-    expect(agreementsModel.exec).toHaveBeenCalledTimes(1)
+    expect(agreementModel.populate).toHaveBeenCalledWith('versions')
+    expect(agreementModel.lean).toHaveBeenCalledTimes(1)
+    expect(agreementModel.exec).toHaveBeenCalledTimes(1)
     expect(versionsModel.updateMany).toHaveBeenCalledWith(
       { _id: { $in: mockAgreement.versions } },
       {
@@ -124,17 +75,17 @@ describe('unacceptOffer for all version', () => {
       agreementNumber: agreementId,
       versions: ['version1']
     }
-    agreementsModel.exec.mockResolvedValueOnce(mockAgreement)
+    agreementModel.exec.mockResolvedValueOnce(mockAgreement)
     versionsModel.updateMany.mockResolvedValueOnce({
       matchedCount: 1,
       modifiedCount: 1
     })
 
     // Act
-    const result = await unacceptOffer(agreementId, { all: true })
+    const result = await unacceptOffer(agreementId)
 
     // Assert
-    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+    expect(agreementModel.findOne).toHaveBeenCalledWith({
       agreementNumber: agreementId
     })
     expect(versionsModel.updateMany).toHaveBeenCalledWith(
@@ -155,10 +106,10 @@ describe('unacceptOffer for all version', () => {
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
     const agreementId = 'SFI999999999'
-    agreementsModel.exec.mockResolvedValueOnce(null)
+    agreementModel.exec.mockResolvedValueOnce(null)
 
     // Act & Assert
-    await expect(unacceptOffer(agreementId, { all: true })).rejects.toThrow(
+    await expect(unacceptOffer(agreementId)).rejects.toThrow(
       Boom.notFound(`Agreement not found with agreementNumber ${agreementId}`)
     )
   })
@@ -167,13 +118,13 @@ describe('unacceptOffer for all version', () => {
     // Arrange
     const agreementId = 'SFI123456789'
     const error = new Error('Database connection failed')
-    agreementsModel.exec.mockRejectedValueOnce(error)
+    agreementModel.exec.mockRejectedValueOnce(error)
 
     // Act & Assert
-    await expect(unacceptOffer(agreementId, { all: true })).rejects.toThrow(
+    await expect(unacceptOffer(agreementId)).rejects.toThrow(
       Boom.internal('Database connection failed')
     )
-    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+    expect(agreementModel.findOne).toHaveBeenCalledWith({
       agreementNumber: agreementId
     })
     expect(versionsModel.updateMany).not.toHaveBeenCalled()
@@ -187,12 +138,12 @@ describe('unacceptOffer for all version', () => {
       agreementNumber: agreementId,
       versions: ['version1']
     }
-    agreementsModel.exec.mockResolvedValueOnce(mockAgreement)
+    agreementModel.exec.mockResolvedValueOnce(mockAgreement)
     const dbError = new Error('Failed to update versions')
     versionsModel.updateMany.mockRejectedValueOnce(dbError)
 
     // Act & Assert
-    await expect(unacceptOffer(agreementId, { all: true })).rejects.toThrow(
+    await expect(unacceptOffer(agreementId)).rejects.toThrow(
       Boom.internal('Failed to update versions: Failed to update versions')
     )
   })
@@ -206,14 +157,14 @@ describe('unacceptOffer for all version', () => {
       versions: []
     }
 
-    agreementsModel.exec.mockResolvedValueOnce(mockAgreement)
+    agreementModel.exec.mockResolvedValueOnce(mockAgreement)
     versionsModel.updateMany.mockResolvedValueOnce({
       matchedCount: 0,
       modifiedCount: 0
     })
 
     // Act & Assert
-    await expect(unacceptOffer(agreementId, { all: true })).rejects.toThrow(
+    await expect(unacceptOffer(agreementId)).rejects.toThrow(
       Boom.notFound(`No versions found for agreement ${agreementId}`)
     )
   })
@@ -227,14 +178,14 @@ describe('unacceptOffer for all version', () => {
       versions: ['version1', 'version2']
     }
     const errorMessage = 'Version update failed'
-    agreementsModel.exec.mockResolvedValueOnce(mockAgreement)
+    agreementModel.exec.mockResolvedValueOnce(mockAgreement)
     versionsModel.updateMany.mockRejectedValueOnce(new Error(errorMessage))
 
     // Act & Assert
-    await expect(unacceptOffer(agreementId, { all: true })).rejects.toThrow(
+    await expect(unacceptOffer(agreementId)).rejects.toThrow(
       Boom.internal(`Failed to update versions: ${errorMessage}`)
     )
-    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+    expect(agreementModel.findOne).toHaveBeenCalledWith({
       agreementNumber: agreementId
     })
     expect(versionsModel.updateMany).toHaveBeenCalledWith(
