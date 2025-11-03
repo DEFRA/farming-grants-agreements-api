@@ -7,7 +7,7 @@ import Boom from '@hapi/boom'
  * @satisfies {Partial<ServerRoute>}
  */
 const getAgreementController =
-  ({ allowEntra = false } = {}) =>
+  ({ allowEntra } = {}) =>
   (request, h) => {
     const { agreementData, source } = request.auth.credentials
     if (!allowEntra && source === 'entra') {

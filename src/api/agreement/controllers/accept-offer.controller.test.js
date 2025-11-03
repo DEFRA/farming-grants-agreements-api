@@ -181,6 +181,28 @@ describe('acceptOfferDocumentController', () => {
     expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain('SFI123456789')
   })
+
+  test('should rollback the accepting the agreement if the payment hub request fails', async () => {
+    // Arrange
+    const error = new Error('Payment hub request failed')
+    updatePaymentHub.mockRejectedValue(error)
+
+    // Act
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: '/',
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
+    })
+
+    // Assert
+    expect(statusCode).toBe(statusCodes.internalServerError)
+    expect(unacceptOffer).toHaveBeenCalledWith('SFI123456789')
+    expect(result).toEqual({
+      errorMessage: 'Payment hub request failed'
+    })
+  })
 })
 
 /**
