@@ -1,6 +1,5 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { config } from '~/src/config/index.js'
 
@@ -24,14 +23,8 @@ const acceptOfferController = async (request, h) => {
       request.logger
     )
 
-    try {
-      // Update the payment hub
-      await updatePaymentHub(request, agreementNumber)
-    } catch (err) {
-      // If payments hub has an error rollback the previous accept offer
-      await unacceptOffer(agreementNumber)
-      throw err
-    }
+    // Update the payment hub
+    await updatePaymentHub(request, agreementNumber)
   }
 
   // Return JSON response with agreement data
