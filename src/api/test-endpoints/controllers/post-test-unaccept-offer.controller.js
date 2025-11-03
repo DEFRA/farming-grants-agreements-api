@@ -17,7 +17,7 @@ const postTestUnacceptOfferController = {
       }
 
       // Unaccept the agreement
-      await unacceptOffer(agreementId)
+      await unacceptOffer(agreementId, { all: true })
 
       // Return JSON response
       return h.response({ message: 'Offer unaccepted' }).code(statusCodes.ok)

@@ -1,7 +1,6 @@
 import { getAgreementController } from './controllers/get-agreement.controller.js'
 import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
-import { getAgreementBySbiController } from '~/src/api/agreement/controllers/get-agreement-by-sbi.controller.js'
 
 const auth = 'grants-ui-jwt'
 
@@ -20,7 +19,7 @@ const agreement = {
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
          */
-        handler: getAgreementBySbiController
+        handler: getAgreementController({ allowEntra: false })
       })
 
       server.route({
@@ -42,7 +41,7 @@ const agreement = {
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
          */
-        handler: getAgreementController
+        handler: getAgreementController({ allowEntra: true })
       })
 
       server.route({
