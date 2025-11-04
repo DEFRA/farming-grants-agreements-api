@@ -59,12 +59,7 @@ describe('UI sending a GET request to get an agreement', () => {
       pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
       publishVerificationResult: true,
       providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
-      providerBaseUrl: `http://localhost:${config.get('port')}`, // server.info.uri,
-      // logLevel: 'debug',
-      // Uncomment to hard code Pact consumer path for local testing
-      // pactUrls: [
-      //   '../farming-grants-agreements-ui/src/contracts/consumer/pacts/farming-grants-agreements-ui-rest-farming-grants-agreements-api-rest.json'
-      // ],
+      providerBaseUrl: `http://localhost:${config.get('port')}`,
       requestFilter: (req, res, next) => {
         // Disable Pact setup calls, as we setup the server in the before steps
         req.url = `/${req.url.replace('_pactSetup', '')}`
