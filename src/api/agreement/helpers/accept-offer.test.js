@@ -2,7 +2,6 @@ import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { acceptOffer } from './accept-offer.js'
-import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 
 jest.mock('~/src/api/common/models/agreements.js', () => ({
@@ -24,7 +23,6 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
     createAgreementWithVersions: jest.fn()
   }
 }))
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
 jest.mock('~/src/config/index.js')
 
 describe('acceptOffer', () => {
@@ -170,8 +168,7 @@ describe('acceptOffer', () => {
     agreementsModel.updateOneAgreementVersion.mockResolvedValue(
       mockUpdateResult
     )
-    const mockEventResult = Promise.resolve()
-    snsPublisher.publishEvent.mockReturnValue(mockEventResult)
+
     // Act
     const result = await acceptOffer(
       agreementId,
@@ -181,23 +178,6 @@ describe('acceptOffer', () => {
     )
 
     // Assert
-    expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
-      {
-        time: '2024-01-01T00:00:00.000Z',
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
-        type: 'io.onsite.agreement.status.updated',
-        data: {
-          agreementNumber: 'SFI123456789',
-          correlationId: 'test-correlation-id',
-          version: 1,
-          agreementUrl: 'http://localhost:3555/SFI123456789',
-          clientRef: 'test-client-ref',
-          status: 'accepted',
-          date: '2024-01-01T00:00:00.000Z'
-        }
-      },
-      mockLogger
-    )
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {

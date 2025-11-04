@@ -7,6 +7,7 @@ import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
 import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
+import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
 
 jest.mock('~/src/api/agreement/helpers/accept-offer.js')
 jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
@@ -17,6 +18,7 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataBySbi: jest.fn()
 }))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
+jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('acceptOfferDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -43,7 +45,10 @@ describe('acceptOfferDocumentController', () => {
     getAgreementDataBySbi.mockReset()
     updatePaymentHub.mockReset()
 
-    acceptOffer.mockResolvedValue()
+    acceptOffer.mockResolvedValue({
+      signatureDate: '2024-01-01T00:00:00.000Z',
+      status: 'accepted'
+    })
     unacceptOffer.mockResolvedValue()
     updatePaymentHub.mockResolvedValue()
 
@@ -61,12 +66,17 @@ describe('acceptOfferDocumentController', () => {
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
     status: 'offered',
+    clientRef: 'test-client-ref',
+    correlationId: 'test-correlation-id',
     payment: {
       agreementStartDate: '2024-01-01'
-    }
+    },
+    version: 1
   }
 
   test('should successfully accept an offer and return 200 OK', async () => {
+    snsPublisher.publishEvent.mockResolvedValue(true)
+
     // Register a test-only extension to inject the mock logger
     server.ext('onPreHandler', (request, h) => {
       request.logger = mockLogger
@@ -90,14 +100,33 @@ describe('acceptOfferDocumentController', () => {
       expect.objectContaining({
         agreementNumber: agreementId,
         status: 'offered'
-      }),
-      expect.stringContaining('http://localhost:3555/'),
-      mockLogger
+      })
     )
-    expect(updatePaymentHub).toHaveBeenCalled()
+    expect(updatePaymentHub).toHaveBeenCalledWith(
+      expect.any(Object),
+      agreementId
+    )
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('offered')
     expect(result.agreementData.agreementNumber).toContain(agreementId)
+
+    expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
+      {
+        time: '2024-01-01T00:00:00.000Z',
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        type: 'io.onsite.agreement.status.updated',
+        data: {
+          agreementNumber: 'SFI123456789',
+          correlationId: 'test-correlation-id',
+          version: 1,
+          agreementUrl: 'http://localhost:3555/SFI123456789',
+          clientRef: 'test-client-ref',
+          status: 'accepted',
+          date: '2024-01-01T00:00:00.000Z'
+        }
+      },
+      mockLogger
+    )
   })
 
   test('should handle database errors from acceptOffer', async () => {
@@ -180,6 +209,29 @@ describe('acceptOfferDocumentController', () => {
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain('SFI123456789')
+  })
+
+  test('should rollback the accepting the agreement if the payment hub request fails', async () => {
+    // Arrange
+    const error = new Error('Payment hub request failed')
+    updatePaymentHub.mockRejectedValue(error)
+
+    // Act
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: '/',
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
+    })
+
+    // Assert
+    expect(statusCode).toBe(statusCodes.internalServerError)
+    expect(unacceptOffer).toHaveBeenCalledWith('SFI123456789')
+    expect(result).toEqual({
+      errorMessage: 'Payment hub request failed'
+    })
+    expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
   })
 })
 

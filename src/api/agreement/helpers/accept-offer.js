@@ -1,22 +1,14 @@
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 
 /**
  * Accept an agreement offer
  * @param {agreementNumber} agreementNumber - The agreement Id
  * @param {Agreement} agreementData - The agreement data
- * @param {string} agreementUrl - The Agreement URL to generate the agreement PDF
- * @param {Request<ReqRefDefaults>['logger']} logger - The logger object
  * @returns {Promise<Agreement>} The agreement data
  */
-async function acceptOffer(
-  agreementNumber,
-  agreementData,
-  agreementUrl,
-  logger
-) {
+async function acceptOffer(agreementNumber, agreementData) {
   if (!agreementNumber || !agreementData) {
     throw Boom.badRequest('Agreement data is required')
   }
@@ -60,26 +52,6 @@ async function acceptOffer(
   if (!agreement) {
     throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
   }
-
-  // Publish event to SNS
-  await publishEvent(
-    {
-      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
-      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
-      time: acceptanceTime,
-      data: {
-        agreementNumber,
-        correlationId: agreementData?.correlationId,
-        clientRef: agreementData?.clientRef,
-        version: agreementData?.version,
-        agreementUrl,
-        status: acceptedStatus,
-        date: acceptanceTime,
-        code: agreementData?.code
-      }
-    },
-    logger
-  )
 
   return agreement
 }
