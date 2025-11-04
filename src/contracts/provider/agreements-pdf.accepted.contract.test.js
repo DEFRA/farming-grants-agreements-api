@@ -1,20 +1,77 @@
 import { MessageProviderPact } from '@pact-foundation/pact'
 
-import { config } from '~/src/config/index.js'
-import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { createServer } from '~/src/api/index.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import sampleData from '~/src/api/common/helpers/sample-data/index.js'
+import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
+import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
+import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
+import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
-jest.mock('~/src/api/common/models/agreements.js', () => ({
-  updateOneAgreementVersion: jest.fn().mockResolvedValue('created')
+jest.mock('~/src/api/agreement/helpers/accept-offer.js')
+jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
+jest.mock('~/src/api/agreement/helpers/update-payment-hub.js')
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  __esModule: true,
+  ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
+  getAgreementDataBySbi: jest.fn()
 }))
+jest.mock('~/src/api/common/helpers/jwt-auth.js')
+jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('sending updated (accepted) events via SNS', () => {
-  const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn()
+  /** @type {import('@hapi/hapi').Server} */
+  let server
+
+  const mockAgreementData = {
+    code: 'mockCode',
+    agreementNumber: 'SFI123456789',
+    status: 'offered',
+    clientRef: 'mockClientRef',
+    correlationId: 'mockCorrelationId',
+    payment: {
+      agreementStartDate: '2024-01-01'
+    },
+    version: 1
   }
+
+  beforeAll(async () => {
+    server = await createServer({ disableSQS: true })
+    await server.initialize()
+  })
+
+  afterAll(async () => {
+    if (server) {
+      await server.stop({ timeout: 0 })
+    }
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+
+    // Reset mock implementations
+    acceptOffer.mockReset()
+    unacceptOffer.mockReset()
+    getAgreementDataBySbi.mockReset()
+    updatePaymentHub.mockReset()
+
+    acceptOffer.mockResolvedValue({
+      signatureDate: '2024-01-01T00:00:00.000Z',
+      status: 'accepted'
+    })
+    unacceptOffer.mockResolvedValue()
+    updatePaymentHub.mockResolvedValue()
+
+    // Setup default mock implementations with complete data structure
+    getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
+
+    // Mock JWT auth functions to return valid authorization by default
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+      valid: true,
+      source: 'defra',
+      sbi: '106284736'
+    })
+  })
 
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api-sns',
@@ -42,21 +99,13 @@ describe('sending updated (accepted) events via SNS', () => {
         // Respond with data based on the state handler mock state
         let message
         try {
-          config.set('files.s3.bucket', 'mockS3Bucket')
-          config.set('files.s3.region', 'mockS3Region')
-
-          await acceptOffer(
-            'SFI123456789',
-            {
-              ...sampleData.agreements[1],
-              correlationId: 'mockCorrelationId',
-              clientRef: 'mockClientRef',
-              version: 'mockVersion',
-              code: 'mockCode'
-            },
-            'http://example.com/mockAgreementUrl',
-            mockLogger
-          )
+          await server.inject({
+            method: 'POST',
+            url: '/',
+            headers: {
+              'x-encrypted-auth': 'valid-jwt-token'
+            }
+          })
 
           message = mockPublishEvent.mock.calls[0][0]
 
