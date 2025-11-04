@@ -41,7 +41,7 @@ async function publishSampleAgreementEvents(tableData, logger) {
   )
 }
 
-export async function seedDatabase(logger) {
+export async function seedDatabase(logger, tableData = sampleData.agreements) {
   while (mongoose.connection.readyState !== mongoose.STATES.connected) {
     logger.info('Waiting for mongoose to connect...')
     await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -59,7 +59,7 @@ export async function seedDatabase(logger) {
   }
 
   try {
-    await publishSampleAgreementEvents(sampleData.agreements, logger)
+    await publishSampleAgreementEvents(tableData, logger)
   } catch (e) {
     logger.error(e)
   }
