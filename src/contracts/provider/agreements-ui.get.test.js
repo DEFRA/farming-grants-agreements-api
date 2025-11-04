@@ -4,6 +4,9 @@ import { Verifier } from '@pact-foundation/pact'
 
 import { createServer } from '~/src/api/index.js'
 import { config } from '~/src/config/index.js'
+import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
+import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
+import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 
 jest.unmock('mongoose')
 
@@ -23,12 +26,19 @@ describe('UI sending a GET request to get an agreement', () => {
     config.set('mongoUri', mongoUri)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
-    config.set('featureFlags.isJwtEnabled', false)
-    config.set('featureFlags.seedDb', true)
+    config.set('featureFlags.seedDb', false)
+
+    // Mock JWT auth functions to return valid authorization by default
+    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+      valid: true,
+      source: 'defra',
+      sbi: '106284736'
+    })
 
     // Create and start the server
     server = await createServer({ disableSQS: true })
     await server.start()
+    await seedDatabase(console, [agreements[1]])
   })
 
   afterAll(async () => {
@@ -37,8 +47,7 @@ describe('UI sending a GET request to get an agreement', () => {
     }
   })
 
-  // Reason: Pact provider test has stopped working correctly and requires investigation
-  it.skip('should validate the expectations of the UI', async () => {
+  it('should validate the expectations of the UI', async () => {
     const pactOpts = {
       provider: 'farming-grants-agreements-api-rest',
       consumer: 'farming-grants-agreements-ui-rest',
@@ -50,8 +59,12 @@ describe('UI sending a GET request to get an agreement', () => {
       pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
       publishVerificationResult: true,
       providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
-      providerBaseUrl: `http://localhost:${config.get('port')}` // server.info.uri,
-      // logLevel: 'debug'
+      providerBaseUrl: `http://localhost:${config.get('port')}`,
+      requestFilter: (req, res, next) => {
+        // Disable Pact setup calls, as we setup the server in the before steps
+        req.url = `/${req.url.replace('_pactSetup', '')}`
+        next()
+      }
     }
 
     const verify = await new Verifier(pactOpts).verifyProvider()
