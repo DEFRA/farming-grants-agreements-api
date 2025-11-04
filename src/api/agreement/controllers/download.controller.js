@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom'
 import { config } from '~/src/config/index.js'
 import { getPdfStream } from '~/src/api/common/helpers/s3-client.js'
+import { calculateRetentionPeriod } from '~/src/api/common/helpers/retention-period.js'
 
 export const downloadController = async (request, h) => {
   const agreementData = request.auth.credentials?.agreementData
@@ -20,7 +21,18 @@ export const downloadController = async (request, h) => {
     throw Boom.serverUnavailable('Agreement PDF bucket not configured')
   }
 
-  const prefix = config.get('files.s3.prefix')
+  // Calculate retention period based on agreement end date
+  const endDate = agreementData?.answers?.payment?.agreementEndDate
+  const retentionPeriod = calculateRetentionPeriod(endDate)
+
+  // Map retention period to config variables
+  const prefixMap = {
+    10: config.get('files.s3.shortTermPrefix'),
+    15: config.get('files.s3.mediumTermPrefix'),
+    20: config.get('files.s3.longTermPrefix')
+  }
+  const prefix = prefixMap[retentionPeriod]
+
   const filename = `${agreementId}-${version}.pdf`
   const key = [prefix, agreementId, version, filename].filter(Boolean).join('/')
 

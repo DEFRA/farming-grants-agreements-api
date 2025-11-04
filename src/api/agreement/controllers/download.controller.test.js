@@ -5,6 +5,7 @@ import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-
 import { mockClient } from 'aws-sdk-client-mock'
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import { config } from '~/src/config/index.js'
+import { addYears } from 'date-fns'
 
 jest.mock('~/src/api/common/helpers/sqs-client.js')
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
@@ -34,6 +35,9 @@ describe('GET /{agreementId}/{version}/download', () => {
     s3Mock.reset()
 
     config.set('files.s3.bucket', 'test-bucket')
+    config.set('files.s3.shortTermPrefix', 'agreements_10')
+    config.set('files.s3.mediumTermPrefix', 'agreements_15')
+    config.set('files.s3.longTermPrefix', 'agreements_20')
 
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
@@ -44,7 +48,12 @@ describe('GET /{agreementId}/{version}/download', () => {
     jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
       sbi: '123456789',
-      status: 'offered'
+      status: 'offered',
+      answers: {
+        payment: {
+          agreementEndDate: addYears(new Date(), 3).toISOString()
+        }
+      }
     })
   })
 
@@ -134,7 +143,12 @@ describe('GET /{agreementId}/{version}/download', () => {
     jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-999',
       sbi: '123456789',
-      status: 'offered'
+      status: 'offered',
+      answers: {
+        payment: {
+          agreementEndDate: addYears(new Date(), 3).toISOString()
+        }
+      }
     })
 
     const res = await server.inject({
@@ -147,5 +161,111 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     expect(res.statusCode).toBe(statusCodes.ok)
     expect(res.headers['content-disposition']).toContain('AGR-999-1.pdf')
+  })
+
+  test('uses retention period 10 for agreement ending in 3 years', async () => {
+    s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
+    jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
+      agreementNumber: 'AGR-123',
+      sbi: '123456789',
+      status: 'offered',
+      answers: {
+        payment: {
+          agreementEndDate: addYears(new Date(), 3).toISOString()
+        }
+      }
+    })
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
+    })
+
+    expect(res.statusCode).toBe(statusCodes.ok)
+    // Verify S3 was called with the correct key including retention period
+    const s3Calls = s3Mock.commandCalls(GetObjectCommand)
+    expect(s3Calls[0].args[0].input.Key).toContain('agreements_10/')
+  })
+
+  test('uses retention period 15 for agreement ending in 5 years', async () => {
+    s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
+    jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
+      agreementNumber: 'AGR-123',
+      sbi: '123456789',
+      status: 'offered',
+      answers: {
+        payment: {
+          agreementEndDate: addYears(new Date(), 5).toISOString()
+        }
+      }
+    })
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
+    })
+
+    expect(res.statusCode).toBe(statusCodes.ok)
+    const s3Calls = s3Mock.commandCalls(GetObjectCommand)
+    expect(s3Calls[0].args[0].input.Key).toContain('agreements_15/')
+  })
+
+  test('uses retention period 20 for agreement ending in 10 years', async () => {
+    s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
+    jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
+      agreementNumber: 'AGR-123',
+      sbi: '123456789',
+      status: 'offered',
+      answers: {
+        payment: {
+          agreementEndDate: addYears(new Date(), 10).toISOString()
+        }
+      }
+    })
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
+    })
+
+    expect(res.statusCode).toBe(statusCodes.ok)
+    const s3Calls = s3Mock.commandCalls(GetObjectCommand)
+    expect(s3Calls[0].args[0].input.Key).toContain('agreements_20/')
+  })
+
+  test('uses custom short term prefix from config', async () => {
+    s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
+    config.set('files.s3.shortTermPrefix', 'custom-short-term')
+    jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
+      agreementNumber: 'AGR-123',
+      sbi: '123456789',
+      status: 'offered',
+      answers: {
+        payment: {
+          agreementEndDate: addYears(new Date(), 2).toISOString()
+        }
+      }
+    })
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/AGR-123/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
+    })
+
+    expect(res.statusCode).toBe(statusCodes.ok)
+    const s3Calls = s3Mock.commandCalls(GetObjectCommand)
+    expect(s3Calls[0].args[0].input.Key).toContain('custom-short-term/')
   })
 })

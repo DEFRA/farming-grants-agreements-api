@@ -311,11 +311,23 @@ const config = convict({
         default: 'eu-west-2',
         env: 'FILES_S3_REGION'
       },
-      prefix: {
-        doc: 'Optional key prefix for PDFs, e.g. "agreements/" or per-env nesting',
+      shortTermPrefix: {
+        doc: 'S3 key prefix for agreements with 10-year retention period',
         format: String,
-        default: '',
-        env: 'FILES_S3_PREFIX'
+        default: 'agreements_10',
+        env: 'FILES_S3_SHORT_TERM_PREFIX'
+      },
+      mediumTermPrefix: {
+        doc: 'S3 key prefix for agreements with 15-year retention period',
+        format: String,
+        default: 'agreements_15',
+        env: 'FILES_S3_MEDIUM_TERM_PREFIX'
+      },
+      longTermPrefix: {
+        doc: 'S3 key prefix for agreements with 20-year retention period',
+        format: String,
+        default: 'agreements_20',
+        env: 'FILES_S3_LONG_TERM_PREFIX'
       },
       endpoint: {
         doc: 'Optional custom S3 endpoint (LocalStack or custom gateway); leave empty in CDP',

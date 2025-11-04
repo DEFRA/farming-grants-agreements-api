@@ -31,7 +31,8 @@ describe('acceptOfferDocumentController', () => {
     clientRef: 'test-client-ref',
     correlationId: 'test-correlation-id',
     payment: {
-      agreementStartDate: '2024-01-01'
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2027-12-31'
     },
     version: 1
   }
@@ -123,7 +124,9 @@ describe('acceptOfferDocumentController', () => {
           agreementUrl: 'http://localhost:3555/SFI123456789',
           clientRef: 'test-client-ref',
           status: 'accepted',
-          date: '2024-01-01T00:00:00.000Z'
+          date: '2024-01-01T00:00:00.000Z',
+          code: 'test-code',
+          endDate: '2027-12-31'
         }
       },
       mockLogger

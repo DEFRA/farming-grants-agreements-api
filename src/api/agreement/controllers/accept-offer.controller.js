@@ -43,7 +43,8 @@ const acceptOfferController = async (request, h) => {
           agreementUrl,
           status: agreementData.status,
           date: agreementData.signatureDate,
-          code: agreementData?.code
+          code: agreementData?.code,
+          endDate: agreementData?.payment?.agreementEndDate
         }
       },
       request.logger
