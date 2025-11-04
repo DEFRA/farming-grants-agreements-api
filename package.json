@@ -25,6 +25,7 @@
     "test": "node --no-experimental-require-module ./node_modules/jest/bin/jest.js --testPathIgnorePatterns='/contracts/' --coverage --verbose --runInBand",
     "test:watch": "jest --watch",
     "test:contracts": "jest src/contracts",
+    "test:contracts:consumer": "jest src/contracts/consumer",
     "test:contracts:provider": "jest src/contracts/provider",
     "server:watch": "nodemon --exec tsx --enable-source-maps ./src",
     "server:debug": "nodemon --exec tsx --enable-source-maps --inspect ./src",
