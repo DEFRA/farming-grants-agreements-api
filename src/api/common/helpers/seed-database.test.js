@@ -263,6 +263,43 @@ describe('seedDatabase', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(error)
     })
+
+    test('accepts a custom tableData parameter and publishes provided data', async () => {
+      const { seedDatabase } = await import('./seed-database.js')
+      const customTableData = [
+        { agreementNumber: 'CUST1' },
+        { agreementNumber: 'CUST2' }
+      ]
+
+      await seedDatabase(mockLogger, customTableData)
+
+      expect(mockPublishEvent).toHaveBeenCalledTimes(2)
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          topicArn:
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+          type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+          time: expect.any(String),
+          data: { agreementNumber: 'CUST1' }
+        },
+        mockLogger,
+        expect.objectContaining({ send: expect.any(Function) })
+      )
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          topicArn:
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+          type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+          time: expect.any(String),
+          data: { agreementNumber: 'CUST2' }
+        },
+        mockLogger,
+        expect.objectContaining({ send: expect.any(Function) })
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Successfully published 2 'agreements' documents"
+      )
+    })
   })
 
   describe('contract test data seeding', () => {
