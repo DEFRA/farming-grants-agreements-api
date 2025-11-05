@@ -58,6 +58,7 @@ describe('getAgreementDataById', () => {
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: { agreementNumber: agreementId } },
       expectedLookup,
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
     expect(versionsModel.findOne).not.toHaveBeenCalled()
@@ -90,6 +91,7 @@ describe('getAgreementDataById', () => {
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: { agreementNumber: agreementId } },
       expectedLookup,
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
     expect(versionsModel.findOne).toHaveBeenCalledWith({
@@ -196,6 +198,7 @@ describe('getAgreementDataBySbi', () => {
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: { sbi } },
       expectedLookup,
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
     expect(versionsModel.findOne).not.toHaveBeenCalled()
@@ -228,6 +231,7 @@ describe('getAgreementDataBySbi', () => {
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: { sbi } }, // if you match a nested path, use { 'identifiers.sbi': sbi }
       expectedLookup,
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
 
@@ -318,6 +322,7 @@ describe('doesAgreementExist', () => {
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: searchTerms },
       mockLookup,
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
     expect(result).toBe(true)
@@ -337,6 +342,7 @@ describe('doesAgreementExist', () => {
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: searchTerms },
       mockLookup,
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
     expect(result).toBe(false)
@@ -385,6 +391,7 @@ describe('doesAgreementExist', () => {
     expect(agreementsModel.aggregate).toHaveBeenCalledWith([
       { $match: searchTerms },
       mockLookup,
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
     expect(result).toBe(true)

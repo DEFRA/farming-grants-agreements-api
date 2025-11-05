@@ -21,6 +21,7 @@ const searchForAgreement = async (searchTerms) => {
           as: 'invoice'
         }
       },
+      { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
     .catch((error) => {
