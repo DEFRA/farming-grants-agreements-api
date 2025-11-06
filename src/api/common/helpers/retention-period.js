@@ -8,11 +8,14 @@ import { config } from '~/src/config/index.js'
  * @returns {string} S3 prefix for the retention period (e.g., "base", "extended", "maximum")
  */
 export function getRetentionPrefix(startDate, endDate) {
-  const yearsFromNow = differenceInYears(new Date(endDate), new Date(startDate))
+  const documentTermInYears = differenceInYears(
+    new Date(endDate),
+    new Date(startDate)
+  )
 
   // Get base retention years from config
   const baseYears = config.get('files.s3.retentionBaseYears')
-  const totalYears = yearsFromNow + baseYears
+  const totalYears = documentTermInYears + baseYears
 
   // Get thresholds from config
   const baseThreshold = config.get('files.s3.baseTermThreshold')

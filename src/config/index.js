@@ -9,6 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 const STRICT_BOOLEAN_FORMAT = 'strict-boolean'
+const LOCALSTACK_ENDPOINT = 'http://localhost:4566'
 
 convict.addFormat({
   name: STRICT_BOOLEAN_FORMAT,
@@ -138,7 +139,7 @@ const config = convict({
       endpoint: {
         doc: 'AWS SNS endpoint',
         format: String,
-        default: 'http://localhost:4566',
+        default: LOCALSTACK_ENDPOINT,
         env: 'SNS_ENDPOINT'
       },
       maxAttempts: {
@@ -176,7 +177,7 @@ const config = convict({
     endpoint: {
       doc: 'AWS SQS endpoint',
       format: String,
-      default: 'http://localhost:4566',
+      default: LOCALSTACK_ENDPOINT,
       env: 'SQS_ENDPOINT'
     },
     queueUrl: {
@@ -357,7 +358,7 @@ const config = convict({
         doc: 'Optional custom S3 endpoint (LocalStack or custom gateway); leave empty in CDP',
         format: String,
         nullable: true,
-        default: 'http://localhost:4566',
+        default: LOCALSTACK_ENDPOINT,
         env: 'S3_ENDPOINT'
       }
     }

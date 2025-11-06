@@ -23,8 +23,8 @@ export const downloadController = async (request, h) => {
 
   // Get S3 prefix based on agreement start and end date
   const prefix = getRetentionPrefix(
-    agreementData?.answers?.payment?.agreementStartDate,
-    agreementData?.answers?.payment?.agreementEndDate
+    agreementData?.payment?.agreementStartDate,
+    agreementData?.payment?.agreementEndDate
   )
 
   const filename = `${agreementId}-${version}.pdf`

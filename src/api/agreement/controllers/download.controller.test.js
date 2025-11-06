@@ -53,11 +53,9 @@ describe('GET /{agreementId}/{version}/download', () => {
       agreementNumber: 'AGR-123',
       sbi: '123456789',
       status: 'offered',
-      answers: {
-        payment: {
-          agreementStartDate: new Date().toISOString(),
-          agreementEndDate: addYears(new Date(), 3).toISOString()
-        }
+      payment: {
+        agreementStartDate: new Date().toISOString(),
+        agreementEndDate: addYears(new Date(), 3).toISOString()
       }
     })
   })
@@ -149,11 +147,9 @@ describe('GET /{agreementId}/{version}/download', () => {
       agreementNumber: 'AGR-999',
       sbi: '123456789',
       status: 'offered',
-      answers: {
-        payment: {
-          agreementStartDate: new Date().toISOString(),
-          agreementEndDate: addYears(new Date(), 3).toISOString()
-        }
+      payment: {
+        agreementStartDate: new Date().toISOString(),
+        agreementEndDate: addYears(new Date(), 3).toISOString()
       }
     })
 
@@ -175,11 +171,9 @@ describe('GET /{agreementId}/{version}/download', () => {
       agreementNumber: 'AGR-123',
       sbi: '123456789',
       status: 'offered',
-      answers: {
-        payment: {
-          agreementStartDate: new Date().toISOString(),
-          agreementEndDate: addYears(new Date(), 3).toISOString()
-        }
+      payment: {
+        agreementStartDate: new Date().toISOString(),
+        agreementEndDate: addYears(new Date(), 3).toISOString()
       }
     })
 
@@ -203,11 +197,9 @@ describe('GET /{agreementId}/{version}/download', () => {
       agreementNumber: 'AGR-123',
       sbi: '123456789',
       status: 'offered',
-      answers: {
-        payment: {
-          agreementStartDate: new Date().toISOString(),
-          agreementEndDate: addYears(new Date(), 8).toISOString()
-        }
+      payment: {
+        agreementStartDate: new Date().toISOString(),
+        agreementEndDate: addYears(new Date(), 8).toISOString()
       }
     })
 
@@ -230,11 +222,9 @@ describe('GET /{agreementId}/{version}/download', () => {
       agreementNumber: 'AGR-123',
       sbi: '123456789',
       status: 'offered',
-      answers: {
-        payment: {
-          agreementStartDate: new Date().toISOString(),
-          agreementEndDate: addYears(new Date(), 13).toISOString()
-        }
+      payment: {
+        agreementStartDate: new Date().toISOString(),
+        agreementEndDate: addYears(new Date(), 13).toISOString()
       }
     })
 
@@ -258,11 +248,9 @@ describe('GET /{agreementId}/{version}/download', () => {
       agreementNumber: 'AGR-123',
       sbi: '123456789',
       status: 'offered',
-      answers: {
-        payment: {
-          agreementStartDate: new Date().toISOString(),
-          agreementEndDate: addYears(new Date(), 3).toISOString()
-        }
+      payment: {
+        agreementStartDate: new Date().toISOString(),
+        agreementEndDate: addYears(new Date(), 3).toISOString()
       }
     })
 

@@ -8,6 +8,7 @@ import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
+import { config } from '~/src/config/index.js'
 
 jest.mock('~/src/api/agreement/helpers/accept-offer.js')
 jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
@@ -30,6 +31,7 @@ describe('acceptOfferDocumentController', () => {
     status: 'offered',
     clientRef: 'test-client-ref',
     correlationId: 'test-correlation-id',
+    code: 'test-code',
     payment: {
       agreementStartDate: '2024-01-01',
       agreementEndDate: '2027-12-31'
@@ -121,7 +123,7 @@ describe('acceptOfferDocumentController', () => {
           agreementNumber: 'SFI123456789',
           correlationId: 'test-correlation-id',
           version: 1,
-          agreementUrl: 'http://localhost:3555/SFI123456789',
+          agreementUrl: `${config.get('viewAgreementURI')}/SFI123456789`,
           clientRef: 'test-client-ref',
           status: 'accepted',
           date: '2024-01-01T00:00:00.000Z',
