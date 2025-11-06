@@ -106,6 +106,16 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
 
   logger.info('The PaymentHub request sent successfully')
 
+  if (
+    config.get('isPaymentHubLogging') &&
+    logger &&
+    typeof logger.info === 'function'
+  ) {
+    logger.info(
+      `Payment hub response: ${JSON.stringify(response)}. Body: ${JSON.stringify(await response.text())}`
+    )
+  }
+
   return {
     status: 'success',
     message: 'Payload sent to payment hub successfully'
