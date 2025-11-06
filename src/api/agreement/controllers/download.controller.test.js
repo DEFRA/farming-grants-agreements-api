@@ -187,7 +187,7 @@ describe('GET /{agreementId}/{version}/download', () => {
     expect(res.statusCode).toBe(statusCodes.ok)
     // Verify S3 was called with the correct key including retention period
     const s3Calls = s3Mock.commandCalls(GetObjectCommand)
-    expect(s3Calls[0].args[0].input.Key).toContain('agreements_10/')
+    expect(s3Calls[0].args[0].input.Key).toContain('base/')
   })
 
   test('uses retention period 15 for agreement ending in 5 years', async () => {
@@ -213,7 +213,7 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     expect(res.statusCode).toBe(statusCodes.ok)
     const s3Calls = s3Mock.commandCalls(GetObjectCommand)
-    expect(s3Calls[0].args[0].input.Key).toContain('agreements_15/')
+    expect(s3Calls[0].args[0].input.Key).toContain('extended/')
   })
 
   test('uses retention period 20 for agreement ending in 10 years', async () => {
@@ -239,12 +239,12 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     expect(res.statusCode).toBe(statusCodes.ok)
     const s3Calls = s3Mock.commandCalls(GetObjectCommand)
-    expect(s3Calls[0].args[0].input.Key).toContain('agreements_20/')
+    expect(s3Calls[0].args[0].input.Key).toContain('maximum/')
   })
 
   test('uses custom short term prefix from config', async () => {
     s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
-    config.set('files.s3.retentionBasePrefix', 'custom-short-term_10')
+    config.set('files.s3.baseTermPrefix', 'custom-base')
     jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
       sbi: '123456789',
@@ -266,6 +266,6 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     expect(res.statusCode).toBe(statusCodes.ok)
     const s3Calls = s3Mock.commandCalls(GetObjectCommand)
-    expect(s3Calls[0].args[0].input.Key).toContain('custom-short-term_10/')
+    expect(s3Calls[0].args[0].input.Key).toContain('custom-base/')
   })
 })

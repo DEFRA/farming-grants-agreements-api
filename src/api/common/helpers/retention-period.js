@@ -2,44 +2,32 @@ import { differenceInYears } from 'date-fns'
 import { config } from '~/src/config/index.js'
 
 /**
- * Extract retention period number from S3 prefix (e.g., "agreements_10" -> 10)
- * @param {string} prefix S3 prefix string
- * @returns {number} Retention period in years
- */
-function extractRetentionYears(prefix) {
-  const match = /\d+/.exec(prefix)
-  return match ? Number.parseInt(match[0], 10) : 0
-}
-
-/**
- * Calculate retention period based on years from now until agreement end date
+ * Get the S3 prefix for retention period based on agreement end date
  * @param {Date|string} endDate Agreement end date
- * @returns {number} Retention period (10, 15, or 20 years)
+ * @returns {string} S3 prefix for the retention period (e.g., "base", "extended", "maximum")
  */
-export function calculateRetentionPeriod(endDate) {
+export function getRetentionPrefix(endDate) {
   const yearsFromNow = differenceInYears(new Date(endDate), new Date())
 
   // Get base retention years from config
   const baseYears = config.get('files.s3.retentionBaseYears')
   const totalYears = yearsFromNow + baseYears
 
-  // Extract retention thresholds from S3 prefix configuration
-  const shortTermThreshold = extractRetentionYears(
-    config.get('files.s3.retentionBasePrefix')
-  )
-  const mediumTermThreshold = extractRetentionYears(
-    config.get('files.s3.retentionExtendedPrefix')
-  )
-  const longTermThreshold = extractRetentionYears(
-    config.get('files.s3.retentionMaximumPrefix')
-  )
+  // Get thresholds from config
+  const baseThreshold = config.get('files.s3.baseTermThreshold')
+  const extendedThreshold = config.get('files.s3.extendedTermThreshold')
 
-  // Assign retention period based on thresholds
-  if (totalYears <= shortTermThreshold) {
-    return shortTermThreshold
-  } else if (totalYears <= mediumTermThreshold) {
-    return mediumTermThreshold
+  // Get prefixes from config
+  const baseTermPrefix = config.get('files.s3.baseTermPrefix')
+  const extendedTermPrefix = config.get('files.s3.extendedTermPrefix')
+  const maximumTermPrefix = config.get('files.s3.maximumTermPrefix')
+
+  // Determine which term prefix to use based on thresholds
+  if (totalYears <= baseThreshold) {
+    return baseTermPrefix
+  } else if (totalYears <= extendedThreshold) {
+    return extendedTermPrefix
   } else {
-    return longTermThreshold
+    return maximumTermPrefix
   }
 }
