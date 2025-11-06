@@ -35,9 +35,13 @@ describe('GET /{agreementId}/{version}/download', () => {
     s3Mock.reset()
 
     config.set('files.s3.bucket', 'test-bucket')
-    config.set('files.s3.retentionBasePrefix', 'agreements_10')
-    config.set('files.s3.retentionExtendedPrefix', 'agreements_15')
-    config.set('files.s3.retentionMaximumPrefix', 'agreements_20')
+    config.set('files.s3.baseTermPrefix', 'base')
+    config.set('files.s3.extendedTermPrefix', 'extended')
+    config.set('files.s3.maximumTermPrefix', 'maximum')
+    config.set('files.s3.baseTermThreshold', 10)
+    config.set('files.s3.extendedTermThreshold', 15)
+    config.set('files.s3.maximumTermThreshold', 20)
+    config.set('files.s3.retentionBaseYears', 7)
 
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
@@ -51,6 +55,7 @@ describe('GET /{agreementId}/{version}/download', () => {
       status: 'offered',
       answers: {
         payment: {
+          agreementStartDate: new Date().toISOString(),
           agreementEndDate: addYears(new Date(), 3).toISOString()
         }
       }
@@ -146,6 +151,7 @@ describe('GET /{agreementId}/{version}/download', () => {
       status: 'offered',
       answers: {
         payment: {
+          agreementStartDate: new Date().toISOString(),
           agreementEndDate: addYears(new Date(), 3).toISOString()
         }
       }
@@ -171,6 +177,7 @@ describe('GET /{agreementId}/{version}/download', () => {
       status: 'offered',
       answers: {
         payment: {
+          agreementStartDate: new Date().toISOString(),
           agreementEndDate: addYears(new Date(), 3).toISOString()
         }
       }
@@ -198,7 +205,8 @@ describe('GET /{agreementId}/{version}/download', () => {
       status: 'offered',
       answers: {
         payment: {
-          agreementEndDate: addYears(new Date(), 5).toISOString()
+          agreementStartDate: new Date().toISOString(),
+          agreementEndDate: addYears(new Date(), 8).toISOString()
         }
       }
     })
@@ -224,7 +232,8 @@ describe('GET /{agreementId}/{version}/download', () => {
       status: 'offered',
       answers: {
         payment: {
-          agreementEndDate: addYears(new Date(), 10).toISOString()
+          agreementStartDate: new Date().toISOString(),
+          agreementEndDate: addYears(new Date(), 13).toISOString()
         }
       }
     })
@@ -251,7 +260,8 @@ describe('GET /{agreementId}/{version}/download', () => {
       status: 'offered',
       answers: {
         payment: {
-          agreementEndDate: addYears(new Date(), 2).toISOString()
+          agreementStartDate: new Date().toISOString(),
+          agreementEndDate: addYears(new Date(), 3).toISOString()
         }
       }
     })

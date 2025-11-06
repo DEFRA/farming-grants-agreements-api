@@ -3,11 +3,12 @@ import { config } from '~/src/config/index.js'
 
 /**
  * Get the S3 prefix for retention period based on agreement end date
+ * @param {Date|string} startDate Agreement start date
  * @param {Date|string} endDate Agreement end date
  * @returns {string} S3 prefix for the retention period (e.g., "base", "extended", "maximum")
  */
-export function getRetentionPrefix(endDate) {
-  const yearsFromNow = differenceInYears(new Date(endDate), new Date())
+export function getRetentionPrefix(startDate, endDate) {
+  const yearsFromNow = differenceInYears(new Date(endDate), new Date(startDate))
 
   // Get base retention years from config
   const baseYears = config.get('files.s3.retentionBaseYears')

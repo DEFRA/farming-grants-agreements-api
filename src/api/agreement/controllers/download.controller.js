@@ -21,9 +21,11 @@ export const downloadController = async (request, h) => {
     throw Boom.serverUnavailable('Agreement PDF bucket not configured')
   }
 
-  // Get S3 prefix based on agreement end date
-  const endDate = agreementData?.answers?.payment?.agreementEndDate
-  const prefix = getRetentionPrefix(endDate)
+  // Get S3 prefix based on agreement start and end date
+  const prefix = getRetentionPrefix(
+    agreementData?.answers?.payment?.agreementStartDate,
+    agreementData?.answers?.payment?.agreementEndDate
+  )
 
   const filename = `${agreementId}-${version}.pdf`
   const key = [prefix, agreementId, version, filename].filter(Boolean).join('/')
