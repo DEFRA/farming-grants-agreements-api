@@ -130,6 +130,39 @@ describe('acceptOfferDocumentController', () => {
     )
   })
 
+  test('should not accept an offer if the status is not offered', async () => {
+    getAgreementDataBySbi.mockResolvedValue({
+      ...mockAgreementData,
+      status: 'withdrawn'
+    })
+
+    // Register a test-only extension to inject the mock logger
+    server.ext('onPreHandler', (request, h) => {
+      request.logger = mockLogger
+      return h.continue
+    })
+
+    const agreementId = 'SFI123456789'
+
+    const { statusCode, result } = await server.inject({
+      method: 'POST',
+      url: '/',
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
+      }
+    })
+
+    // Assert
+    expect(getAgreementDataBySbi).toHaveBeenCalledWith('106284736')
+    expect(acceptOffer).not.toHaveBeenCalled()
+    expect(updatePaymentHub).not.toHaveBeenCalled()
+    expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
+
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(result.agreementData.status).toContain('withdrawn')
+    expect(result.agreementData.agreementNumber).toContain(agreementId)
+  })
+
   test('should handle database errors from acceptOffer', async () => {
     // Arrange
     const error = new Error('Database connection failed')
