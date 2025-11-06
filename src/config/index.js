@@ -357,8 +357,8 @@ const config = convict({
         doc: 'Optional custom S3 endpoint (LocalStack or custom gateway); leave empty in CDP',
         format: String,
         nullable: true,
-        default: null,
-        env: 'AWS_S3_ENDPOINT'
+        default: 'http://localhost:4566',
+        env: 'S3_ENDPOINT'
       }
     }
   },
