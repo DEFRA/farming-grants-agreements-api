@@ -12,16 +12,13 @@ import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
  */
 const acceptOfferController = async (request, h) => {
   // Get the agreement data before accepting
-  const { agreementData } = request.auth.credentials
-  const { agreementNumber, status } = agreementData
+  let { agreementData } = request.auth.credentials
+  const { agreementNumber } = agreementData
 
-  if (status === 'offered') {
+  if (agreementData.status === 'offered') {
     // Accept the agreement
     const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
-    const { signatureDate, status: acceptedStatus } = await acceptOffer(
-      agreementNumber,
-      agreementData
-    )
+    agreementData = await acceptOffer(agreementNumber, agreementData)
 
     try {
       // Update the payment hub
@@ -37,15 +34,15 @@ const acceptOfferController = async (request, h) => {
       {
         topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
-        time: signatureDate,
+        time: agreementData.signatureDate,
         data: {
           agreementNumber,
           correlationId: agreementData?.correlationId,
           clientRef: agreementData?.clientRef,
           version: agreementData?.version,
           agreementUrl,
-          status: acceptedStatus,
-          date: signatureDate,
+          status: agreementData.status,
+          date: agreementData.signatureDate,
           code: agreementData?.code
         }
       },

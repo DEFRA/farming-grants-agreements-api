@@ -25,6 +25,17 @@ describe('acceptOfferDocumentController', () => {
   let server
   const mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() }
 
+  const mockAgreementData = {
+    agreementNumber: 'SFI123456789',
+    status: 'offered',
+    clientRef: 'test-client-ref',
+    correlationId: 'test-correlation-id',
+    payment: {
+      agreementStartDate: '2024-01-01'
+    },
+    version: 1
+  }
+
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
     await server.initialize()
@@ -46,6 +57,7 @@ describe('acceptOfferDocumentController', () => {
     updatePaymentHub.mockReset()
 
     acceptOffer.mockResolvedValue({
+      ...mockAgreementData,
       signatureDate: '2024-01-01T00:00:00.000Z',
       status: 'accepted'
     })
@@ -62,17 +74,6 @@ describe('acceptOfferDocumentController', () => {
       sbi: '106284736'
     })
   })
-
-  const mockAgreementData = {
-    agreementNumber: 'SFI123456789',
-    status: 'offered',
-    clientRef: 'test-client-ref',
-    correlationId: 'test-correlation-id',
-    payment: {
-      agreementStartDate: '2024-01-01'
-    },
-    version: 1
-  }
 
   test('should successfully accept an offer and return 200 OK', async () => {
     snsPublisher.publishEvent.mockResolvedValue(true)
@@ -107,7 +108,7 @@ describe('acceptOfferDocumentController', () => {
       agreementId
     )
     expect(statusCode).toBe(statusCodes.ok)
-    expect(result.agreementData.status).toContain('offered')
+    expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain(agreementId)
 
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
@@ -180,7 +181,7 @@ describe('acceptOfferDocumentController', () => {
 
     // Assert
     expect(statusCode).toBe(statusCodes.ok)
-    expect(result.agreementData.status).toContain('offered')
+    expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain(agreementId)
   })
 
