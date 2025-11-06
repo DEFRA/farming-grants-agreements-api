@@ -17,7 +17,7 @@ jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
 let server
 
 // Reason: Pact test seems to be timing out and needs investigation
-describe.skip('UI sending a GET request to get an agreement', () => {
+describe('UI sending a GET request to get an agreement', () => {
   beforeAll(async () => {
     // Use the MongoDB URI provided by @shelf/jest-mongodb
     const mongoUri = globalThis.__MONGO_URI__
@@ -28,6 +28,7 @@ describe.skip('UI sending a GET request to get an agreement', () => {
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.seedDb', false)
+    config.set('featureFlags.isPaymentHubEnabled', false)
 
     // Mock JWT auth functions to return valid authorization by default
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({

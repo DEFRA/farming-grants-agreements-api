@@ -38,6 +38,7 @@ describe('UI sending a POST request to accept an agreement', () => {
     config.set('mongoUri', mongoUri)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
+    config.set('featureFlags.isPaymentHubEnabled', true)
     config.set('featureFlags.seedDb', false)
 
     // Mock JWT auth functions to return valid authorization by default
@@ -57,7 +58,7 @@ describe('UI sending a POST request to accept an agreement', () => {
     if (server) {
       await server.stop({ timeout: 0 })
     }
-
+    config.set('featureFlags.isPaymentHubEnabled', false)
     fetchMock.enableMocks()
   })
 
@@ -74,7 +75,6 @@ describe('UI sending a POST request to accept an agreement', () => {
       })
       .executeTest(async (mockServer) => {
         config.set('paymentHub.uri', mockServer.url)
-        config.set('featureFlags.isPaymentHubEnabled', true)
 
         const { statusCode, result } = await server.inject({
           method: 'POST',
