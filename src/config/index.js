@@ -311,23 +311,29 @@ const config = convict({
         default: 'eu-west-2',
         env: 'FILES_S3_REGION'
       },
-      shortTermPrefix: {
+      retentionBasePrefix: {
         doc: 'S3 key prefix for agreements with 10-year retention period',
         format: String,
         default: 'agreements_10',
-        env: 'FILES_S3_SHORT_TERM_PREFIX'
+        env: 'FILES_RETENTION_BASE_PREFIX'
       },
-      mediumTermPrefix: {
+      retentionExtendedPrefix: {
         doc: 'S3 key prefix for agreements with 15-year retention period',
         format: String,
         default: 'agreements_15',
-        env: 'FILES_S3_MEDIUM_TERM_PREFIX'
+        env: 'FILES_RETENTION_EXTENDED_PREFIX'
       },
-      longTermPrefix: {
+      retentionMaximumPrefix: {
         doc: 'S3 key prefix for agreements with 20-year retention period',
         format: String,
         default: 'agreements_20',
-        env: 'FILES_S3_LONG_TERM_PREFIX'
+        env: 'FILES_RETENTION_MAXIMUM_PREFIX'
+      },
+      retentionBaseYears: {
+        doc: 'Base number of years added to agreement end date for retention calculation',
+        format: 'nat',
+        default: 7,
+        env: 'FILES_RETENTION_BASE_YEARS'
       },
       endpoint: {
         doc: 'Optional custom S3 endpoint (LocalStack or custom gateway); leave empty in CDP',

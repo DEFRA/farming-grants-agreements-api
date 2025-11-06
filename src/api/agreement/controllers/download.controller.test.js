@@ -35,9 +35,9 @@ describe('GET /{agreementId}/{version}/download', () => {
     s3Mock.reset()
 
     config.set('files.s3.bucket', 'test-bucket')
-    config.set('files.s3.shortTermPrefix', 'agreements_10')
-    config.set('files.s3.mediumTermPrefix', 'agreements_15')
-    config.set('files.s3.longTermPrefix', 'agreements_20')
+    config.set('files.s3.retentionBasePrefix', 'agreements_10')
+    config.set('files.s3.retentionExtendedPrefix', 'agreements_15')
+    config.set('files.s3.retentionMaximumPrefix', 'agreements_20')
 
     jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
@@ -244,7 +244,7 @@ describe('GET /{agreementId}/{version}/download', () => {
 
   test('uses custom short term prefix from config', async () => {
     s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
-    config.set('files.s3.shortTermPrefix', 'custom-short-term')
+    config.set('files.s3.retentionBasePrefix', 'custom-short-term_10')
     jest.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
       sbi: '123456789',
@@ -266,6 +266,6 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     expect(res.statusCode).toBe(statusCodes.ok)
     const s3Calls = s3Mock.commandCalls(GetObjectCommand)
-    expect(s3Calls[0].args[0].input.Key).toContain('custom-short-term/')
+    expect(s3Calls[0].args[0].input.Key).toContain('custom-short-term_10/')
   })
 })

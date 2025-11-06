@@ -27,9 +27,9 @@ export const downloadController = async (request, h) => {
 
   // Map retention period to config variables
   const prefixMap = {
-    10: config.get('files.s3.shortTermPrefix'),
-    15: config.get('files.s3.mediumTermPrefix'),
-    20: config.get('files.s3.longTermPrefix')
+    10: config.get('files.s3.retentionBasePrefix'),
+    15: config.get('files.s3.retentionExtendedPrefix'),
+    20: config.get('files.s3.retentionMaximumPrefix')
   }
   const prefix = prefixMap[retentionPeriod]
 
