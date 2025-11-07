@@ -138,8 +138,8 @@ const schema = new mongoose.Schema(
     signatureDate: { type: Date },
     scheme: { type: String },
     actionApplications: { type: [ActionApplications], required: true },
-    payment: { type: Payment, required: false },
-    applicant: { type: Applicant, required: false }
+    payment: { type: Payment, required: true },
+    applicant: { type: Applicant, required: true }
   },
   {
     collection,
