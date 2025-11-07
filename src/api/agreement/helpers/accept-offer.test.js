@@ -162,7 +162,12 @@ describe('acceptOffer', () => {
       clientRef: 'test-client-ref',
       frn: 'test-frn',
       sbi: 'test-sbi',
-      version: 1
+      version: 1,
+      answers: {
+        payment: {
+          agreementEndDate: '2027-10-31'
+        }
+      }
     }
 
     // Arrange

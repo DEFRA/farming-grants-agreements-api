@@ -132,7 +132,9 @@ const agreementData = {
         }
       }
     ],
-    payment: {},
+    payment: {
+      agreementEndDate: '2027-12-31'
+    },
     applicant: {
       customer: {
         name: {
@@ -226,7 +228,8 @@ describe('createOffer', () => {
           ),
           clientRef: 'ref-1234',
           status: 'offered',
-          date: '2025-01-01T00:00:00.000Z'
+          date: '2025-01-01T00:00:00.000Z',
+          endDate: '2027-12-31'
         })
       },
       mockLogger

@@ -44,7 +44,13 @@ describe.skip('sending updated (accepted) events via SNS', () => {
               correlationId: 'mockCorrelationId',
               clientRef: 'mockClientRef',
               version: 'mockVersion',
-              code: 'mockCode'
+              code: 'mockCode',
+              answers: {
+                ...sampleData.agreements[1].answers
+              },
+              payment: {
+                agreementEndDate: '2027-12-31'
+              }
             },
             'http://example.com/mockAgreementUrl',
             mockLogger

@@ -30,7 +30,8 @@ describe('sending updated (accepted) events via SNS', () => {
     clientRef: 'mockClientRef',
     correlationId: 'mockCorrelationId',
     payment: {
-      agreementStartDate: '2024-01-01'
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2027-12-31'
     },
     version: 1
   }

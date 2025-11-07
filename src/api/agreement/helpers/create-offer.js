@@ -87,7 +87,8 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
         clientRef,
         status: 'offered',
         date: new Date().toISOString(),
-        code
+        code,
+        endDate: payment?.agreementEndDate
       }
     },
     logger
