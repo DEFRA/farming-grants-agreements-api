@@ -9,6 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 const STRICT_BOOLEAN_FORMAT = 'strict-boolean'
+const LOCALSTACK_ENDPOINT = 'http://localhost:4566'
 
 convict.addFormat({
   name: STRICT_BOOLEAN_FORMAT,
@@ -138,7 +139,7 @@ const config = convict({
       endpoint: {
         doc: 'AWS SNS endpoint',
         format: String,
-        default: 'http://localhost:4566',
+        default: LOCALSTACK_ENDPOINT,
         env: 'SNS_ENDPOINT'
       },
       maxAttempts: {
@@ -176,7 +177,7 @@ const config = convict({
     endpoint: {
       doc: 'AWS SQS endpoint',
       format: String,
-      default: 'http://localhost:4566',
+      default: LOCALSTACK_ENDPOINT,
       env: 'SQS_ENDPOINT'
     },
     queueUrl: {
@@ -311,18 +312,54 @@ const config = convict({
         default: 'eu-west-2',
         env: 'FILES_S3_REGION'
       },
-      prefix: {
-        doc: 'Optional key prefix for PDFs, e.g. "agreements/" or per-env nesting',
+      baseTermPrefix: {
+        doc: 'S3 key prefix for base term retention (10 years)',
         format: String,
-        default: '',
-        env: 'FILES_S3_PREFIX'
+        default: 'base',
+        env: 'FILES_S3_BASE_TERM_PREFIX'
+      },
+      extendedTermPrefix: {
+        doc: 'S3 key prefix for extended term retention (15 years)',
+        format: String,
+        default: 'extended',
+        env: 'FILES_S3_EXTENDED_TERM_PREFIX'
+      },
+      maximumTermPrefix: {
+        doc: 'S3 key prefix for maximum term retention (20 years)',
+        format: String,
+        default: 'maximum',
+        env: 'FILES_S3_MAXIMUM_TERM_PREFIX'
+      },
+      baseTermThreshold: {
+        doc: 'Threshold in years for base term retention period',
+        format: 'nat',
+        default: 10,
+        env: 'FILES_S3_BASE_TERM_THRESHOLD'
+      },
+      extendedTermThreshold: {
+        doc: 'Threshold in years for extended term retention period',
+        format: 'nat',
+        default: 15,
+        env: 'FILES_S3_EXTENDED_TERM_THRESHOLD'
+      },
+      maximumTermThreshold: {
+        doc: 'Threshold in years for maximum term retention period',
+        format: 'nat',
+        default: 20,
+        env: 'FILES_S3_MAXIMUM_TERM_THRESHOLD'
+      },
+      retentionBaseYears: {
+        doc: 'Base number of years added to agreement end date for retention calculation',
+        format: 'nat',
+        default: 7,
+        env: 'FILES_S3_RETENTION_BASE_YEARS'
       },
       endpoint: {
         doc: 'Optional custom S3 endpoint (LocalStack or custom gateway); leave empty in CDP',
         format: String,
         nullable: true,
-        default: null,
-        env: 'AWS_S3_ENDPOINT'
+        default: LOCALSTACK_ENDPOINT,
+        env: 'S3_ENDPOINT'
       }
     }
   },
