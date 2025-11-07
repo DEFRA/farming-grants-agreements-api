@@ -56,6 +56,7 @@ describe('sending updated (accepted) events via SNS', () => {
     updatePaymentHub.mockReset()
 
     acceptOffer.mockResolvedValue({
+      ...mockAgreementData,
       signatureDate: '2024-01-01T00:00:00.000Z',
       status: 'accepted'
     })
