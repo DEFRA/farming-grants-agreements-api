@@ -31,7 +31,9 @@ describe('acceptOffer', () => {
     modifiedCount: 1,
     upsertedId: null,
     upsertedCount: 0,
-    matchedCount: 1
+    matchedCount: 1,
+    signatureDate: '2024-01-01T00:00:00.000Z',
+    status: 'accepted'
   }
   let mockLogger
 
