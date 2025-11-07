@@ -394,14 +394,18 @@ describe('createOffer', () => {
 
     // Ensure the notification id hasn't been used
     doesAgreementExist.mockResolvedValueOnce(false)
-    let error
-    try {
-      await createOffer('aws-message-id', missingAnswers)
-    } catch (e) {
-      error = e
-    }
-    expect(error).toBeDefined()
-    expect(error.message).toBe('Offer data is missing payment and applicant')
+
+    const result = await createOffer(
+      'aws-message-id',
+      missingAnswers,
+      mockLogger
+    )
+
+    expect(result).toBeDefined()
+    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
+    const publishArgs = publishEvent.mock.calls[0]?.[0]
+    expect(publishArgs).toBeDefined()
+    expect(publishArgs.data.endDate).toBeUndefined()
   })
 
   describe('Error Handling', () => {
@@ -440,16 +444,20 @@ describe('createOffer', () => {
       ).rejects.toThrow('Generic error')
     })
 
-    it('should propagate Boom error when payment/applicant missing', async () => {
+    it('should allow missing payment or applicant data', async () => {
       const bad = {
         clientRef: 'ref',
         code: 'frps-private-beta',
         identifiers: { sbi: '1', frn: '2' },
         answers: { scheme: 'SFI' }
       }
-      await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
-        'Offer data is missing payment and applicant'
-      )
+
+      doesAgreementExist.mockResolvedValueOnce(false)
+      const result = await createOffer(uuidv4(), bad, mockLogger)
+
+      expect(result).toBeDefined()
+      const publishArgs = publishEvent.mock.calls[0]?.[0]
+      expect(publishArgs.data.endDate).toBeUndefined()
     })
   })
 })
