@@ -52,7 +52,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     (!legacyPayment || !legacyActionApplications || !legacyApplicant) &&
     agreementData.application
   ) {
-    // TODO: remove payment details once handled in accept-offer.js via API call to land-grants-api
+    // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
     const converted = buildLegacyPaymentFromApplication(agreementData)
     legacyPayment = legacyPayment || converted.payment
     legacyActionApplications =

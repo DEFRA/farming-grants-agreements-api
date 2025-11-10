@@ -134,4 +134,63 @@ describe('legacy-application-mapper', () => {
 
     expect(payment.agreementLevelItems).toEqual({})
   })
+
+  it('falls back when rate data invalid and dates missing', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-01-15T00:00:00.000Z'))
+
+    const payload = {
+      application: {
+        totalAnnualPaymentPence: 1200,
+        parcels: [
+          {
+            sheetId: 'SHEET-1',
+            parcelId: 'PARCEL-1',
+            actions: [
+              {
+                code: 'ACTION-NO-RATE',
+                description: 'Action without numeric rate',
+                eligible: { unit: 'ha' },
+                paymentRates: { ratePerUnitPence: 'not-a-number' }
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const payment = result.payment
+
+    // Start date falls back to current time
+    expect(payment.agreementStartDate).toBe('2026-01-15T00:00:00.000Z')
+    // End date derived by adding one year
+    expect(payment.agreementEndDate).toBe('2027-01-15T00:00:00.000Z')
+    expect(payment.frequency).toBe('Quarterly')
+    expect(payment.annualTotalPence).toBe(1200)
+    expect(payment.agreementTotalPence).toBe(1200)
+
+    // Line items contain zero payments, totals fall back to annual total / 4
+    expect(payment.payments).toEqual([
+      {
+        totalPaymentPence: 300,
+        paymentDate: '2026-04-15T00:00:00.000Z',
+        lineItems: [
+          {
+            parcelItemId: 1,
+            paymentPence: 0
+          }
+        ]
+      },
+      {
+        totalPaymentPence: 300,
+        paymentDate: '2026-07-15T00:00:00.000Z',
+        lineItems: [
+          {
+            parcelItemId: 1,
+            paymentPence: 0
+          }
+        ]
+      }
+    ])
+  })
 })

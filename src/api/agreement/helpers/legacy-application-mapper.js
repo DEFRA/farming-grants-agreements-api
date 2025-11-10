@@ -87,16 +87,16 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
     agreementStartDate ||
     agreementData.agreementStartDate ||
     agreementData.answers?.payment?.agreementStartDate ||
-    new Date().toISOString() // Placeholder: fall back to "now" when start date missing
+    new Date().toISOString() // TODO: remove legacy fall-back once schedule is deprecated
 
   const agreementTotalPence =
-    computedAgreementTotal || annualTotalPence * (maxDurationYears || 1) // Placeholder: estimate agreement total from duration
+    computedAgreementTotal || annualTotalPence * (maxDurationYears || 1) // TODO: remove legacy fall-back once schedule is deprecated
 
   const endDate =
     agreementEndDate ||
     agreementData.agreementEndDate ||
     agreementData.answers?.payment?.agreementEndDate ||
-    addYears(startDate, maxDurationYears || 1) // Placeholder: derive end date by adding duration
+    addYears(startDate, maxDurationYears || 1) // TODO: remove legacy fall-back once schedule is deprecated
 
   const payments = buildPaymentsWithPlaceholders({
     startDate,
@@ -109,7 +109,7 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
     payment: {
       agreementStartDate: startDate,
       agreementEndDate: endDate,
-      frequency: paymentFrequency || DEFAULT_PAYMENT_FREQUENCY, // Placeholder: assume quarterly cadence when missing
+      frequency: paymentFrequency || DEFAULT_PAYMENT_FREQUENCY, // TODO: remove legacy fall-back once schedule is deprecated
       agreementTotalPence,
       annualTotalPence,
       parcelItems,
@@ -133,11 +133,11 @@ function buildPaymentsWithPlaceholders({
   const quarterLineItems = [
     ...parcelEntries.map(([id, item]) => ({
       parcelItemId: Number(id),
-      paymentPence: Math.round(toNumber(item.annualPaymentPence, 0) / 4) // Placeholder: evenly split annual parcel payments across four quarters
+      paymentPence: Math.round(toNumber(item.annualPaymentPence, 0) / 4) // TODO: remove legacy fall-back once schedule is deprecated
     })),
     ...agreementLevelEntries.map(([id, item]) => ({
       agreementLevelItemId: Number(id),
-      paymentPence: Math.round(toNumber(item.annualPaymentPence, 0) / 4) // Placeholder: evenly split agreement-level payments across four quarters
+      paymentPence: Math.round(toNumber(item.annualPaymentPence, 0) / 4) // TODO: remove legacy fall-back once schedule is deprecated
     }))
   ]
 
@@ -145,10 +145,10 @@ function buildPaymentsWithPlaceholders({
     quarterLineItems.reduce(
       (sum, lineItem) => sum + toNumber(lineItem.paymentPence),
       0
-    ) || Math.round(toNumber(annualTotalPence, 0) / 4) // Placeholder: use annual total if line-item sums are unavailable
+    ) || Math.round(toNumber(annualTotalPence, 0) / 4) // TODO: remove legacy fall-back once schedule is deprecated
 
-  const firstPaymentDate = addMonths(startDate, 3) // Placeholder: assume first payment 3 months after start
-  const subsequentPaymentDate = addMonths(startDate, 6) // Placeholder: assume subsequent payment 6 months after start
+  const firstPaymentDate = addMonths(startDate, 3) // TODO: remove legacy fall-back once schedule is deprecated
+  const subsequentPaymentDate = addMonths(startDate, 6) // TODO: remove legacy fall-back once schedule is deprecated
 
   return [
     {
