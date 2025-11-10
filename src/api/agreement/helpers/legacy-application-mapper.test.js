@@ -234,7 +234,7 @@ describe('legacy-application-mapper', () => {
 
     const result = buildLegacyPaymentFromApplication(payload)
     const { payment } = result
-    const { agreementLevelItems, parcelItems } = payment
+    const { agreementLevelItems, parcelItems, inclusion } = payment
 
     expect(payment.agreementStartDate).toBe('2024-01-01T00:00:00.000Z')
     expect(payment.agreementEndDate).toBe('2028-01-01T00:00:00.000Z')
@@ -264,6 +264,13 @@ describe('legacy-application-mapper', () => {
     payment.payments.forEach((instalment) => {
       expect(instalment.totalPaymentPence).toBe(Math.round(8000 / 4))
       expect(instalment.lineItems).toHaveLength(3)
+    })
+
+    expect(inclusion).toEqual({
+      defaultDurationYears: 4,
+      maxDurationYears: 4,
+      computedAgreementTotal: 2000 * 4 + 1000 * 2,
+      computedAnnualTotal: 3000
     })
   })
 })

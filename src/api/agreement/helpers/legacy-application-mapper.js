@@ -121,7 +121,16 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
       annualTotalPence,
       parcelItems,
       agreementLevelItems,
-      payments
+      payments,
+      inclusion: {
+        // Expose the inputs we use to derive agreement totals so legacy UI/tests
+        // can verify calculations while the schedule is being phased out.
+        // TODO: remove this block once schedule handling is fully deprecated.
+        defaultDurationYears,
+        maxDurationYears,
+        computedAgreementTotal,
+        computedAnnualTotal
+      }
     },
     applicant: applicationApplicant,
     actionApplications: buildLegacyActionApplications(parcels)
