@@ -193,4 +193,77 @@ describe('legacy-application-mapper', () => {
       }
     ])
   })
+
+  it('prefers agreement-level fallbacks when application omits dates', () => {
+    const payload = {
+      agreementStartDate: '2024-01-01T00:00:00.000Z',
+      agreementEndDate: '2028-01-01T00:00:00.000Z',
+      answers: {
+        payment: {
+          agreementStartDate: '2023-05-01T00:00:00.000Z',
+          agreementEndDate: '2027-05-01T00:00:00.000Z'
+        }
+      },
+      application: {
+        applicant: {},
+        durationYears: '4',
+        parcels: [
+          {
+            sheetId: 'SHEET-X',
+            parcelId: 'PARCEL-X',
+            actions: [
+              {
+                code: 'A1',
+                description: 'Primary action',
+                annualPaymentPence: 2000,
+                paymentRates: {
+                  agreementLevelAmountPence: 5000
+                }
+              },
+              {
+                code: 'A2',
+                description: 'Secondary action',
+                durationYears: 2,
+                annualPaymentPence: 1000
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const { payment } = result
+    const { agreementLevelItems, parcelItems } = payment
+
+    expect(payment.agreementStartDate).toBe('2024-01-01T00:00:00.000Z')
+    expect(payment.agreementEndDate).toBe('2028-01-01T00:00:00.000Z')
+    expect(payment.frequency).toBe('Quarterly')
+
+    // Annual total = parcel annuals (2000 + 1000) + agreement-level amount (5000)
+    expect(payment.annualTotalPence).toBe(8000)
+    // Agreement total computed from annual payments * duration (A1 uses application duration 4, A2 uses 2)
+    expect(payment.agreementTotalPence).toBe(2000 * 4 + 1000 * 2)
+
+    expect(Object.keys(parcelItems)).toHaveLength(2)
+    expect(parcelItems['1']).toMatchObject({
+      code: 'A1',
+      annualPaymentPence: 2000
+    })
+    expect(parcelItems['2']).toMatchObject({
+      code: 'A2',
+      annualPaymentPence: 1000
+    })
+
+    expect(Object.keys(agreementLevelItems)).toHaveLength(1)
+    expect(agreementLevelItems['1']).toMatchObject({
+      code: 'A1',
+      annualPaymentPence: 5000
+    })
+
+    payment.payments.forEach((instalment) => {
+      expect(instalment.totalPaymentPence).toBe(Math.round(8000 / 4))
+      expect(instalment.lineItems).toHaveLength(3)
+    })
+  })
 })

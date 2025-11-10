@@ -21,7 +21,9 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
   let parcelIndex = 1
   let agreementLevelIndex = 1
   let computedAgreementTotal = 0
-  let maxDurationYears = toNumber(applicationDurationYears, 1) || 1
+  let computedAnnualTotal = 0
+  const defaultDurationYears = toNumber(applicationDurationYears, 1) || 1
+  let maxDurationYears = defaultDurationYears
 
   parcels.forEach((parcel) => {
     const { actions = [] } = parcel
@@ -49,11 +51,14 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
         parcelId: parcel.parcelId
       }
 
-      const durationYears = toNumber(action.durationYears, 1) || 1
+      const durationYears =
+        toNumber(action.durationYears, defaultDurationYears) ||
+        defaultDurationYears
       maxDurationYears = Math.max(maxDurationYears, durationYears)
 
       if (annualPayment !== null && annualPayment !== undefined) {
         computedAgreementTotal += annualPayment * durationYears
+        computedAnnualTotal += annualPayment
       }
 
       const agreementLevelAmount =
@@ -90,7 +95,9 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
     new Date().toISOString() // TODO: remove legacy fall-back once schedule is deprecated
 
   const agreementTotalPence =
-    computedAgreementTotal || annualTotalPence * (maxDurationYears || 1) // TODO: remove legacy fall-back once schedule is deprecated
+    computedAgreementTotal ||
+    annualTotalPence * (maxDurationYears || 1) || // TODO: remove legacy fall-back once schedule is deprecated
+    computedAnnualTotal
 
   const endDate =
     agreementEndDate ||
