@@ -40,7 +40,9 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
         version: 1,
         unit: eligible.unit || null,
         quantity:
-          eligible.quantity !== undefined ? Number(eligible.quantity) : eligible.quantity,
+          eligible.quantity !== undefined
+            ? Number(eligible.quantity)
+            : eligible.quantity,
         rateInPence: ratePerUnit,
         annualPaymentPence: annualPayment,
         sheetId: parcel.sheetId,
@@ -54,7 +56,8 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
         computedAgreementTotal += annualPayment * durationYears
       }
 
-      const agreementLevelAmount = action.paymentRates?.agreementLevelAmountPence
+      const agreementLevelAmount =
+        action.paymentRates?.agreementLevelAmountPence
       if (agreementLevelAmount) {
         agreementLevelItems[agreementLevelIndex] = {
           code: action.code,
@@ -139,8 +142,10 @@ function buildPaymentsWithPlaceholders({
   ]
 
   const totalQuarterly =
-    quarterLineItems.reduce((sum, lineItem) => sum + toNumber(lineItem.paymentPence), 0) ||
-    Math.round(toNumber(annualTotalPence, 0) / 4) // Placeholder: use annual total if line-item sums are unavailable
+    quarterLineItems.reduce(
+      (sum, lineItem) => sum + toNumber(lineItem.paymentPence),
+      0
+    ) || Math.round(toNumber(annualTotalPence, 0) / 4) // Placeholder: use annual total if line-item sums are unavailable
 
   const firstPaymentDate = addMonths(startDate, 3) // Placeholder: assume first payment 3 months after start
   const subsequentPaymentDate = addMonths(startDate, 6) // Placeholder: assume subsequent payment 6 months after start
@@ -198,4 +203,3 @@ function addYears(isoDate, yearsToAdd) {
   cloned.setUTCFullYear(cloned.getUTCFullYear() + yearsToAdd)
   return cloned.toISOString()
 }
-

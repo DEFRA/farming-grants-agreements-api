@@ -415,7 +415,8 @@ describe('createOffer', () => {
 
     await createOffer('application-message', payload, mockLogger)
 
-    const callPayload = agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
     const { payment, actionApplications } = callPayload.versions[0]
 
     expect(payment.annualTotalPence).toBe(35150)
