@@ -194,6 +194,44 @@ describe('legacy-application-mapper', () => {
     ])
   })
 
+  it('uses answers payment block when application and root dates missing', () => {
+    const payload = {
+      answers: {
+        payment: {
+          agreementStartDate: '2022-03-01T00:00:00.000Z',
+          agreementEndDate: '2025-03-01T00:00:00.000Z'
+        }
+      },
+      application: {
+        applicant: {},
+        parcels: [
+          {
+            sheetId: 'SHEET-ANS',
+            parcelId: 'PARCEL-ANS',
+            actions: [
+              {
+                code: 'ANS1',
+                description: 'Action using answers start',
+                durationYears: 2,
+                annualPaymentPence: 1500
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const { payment } = result
+
+    expect(payment.agreementStartDate).toBe('2022-03-01T00:00:00.000Z')
+    expect(payment.agreementEndDate).toBe('2025-03-01T00:00:00.000Z')
+    expect(payment.annualTotalPence).toBe(1500)
+    expect(payment.agreementTotalPence).toBe(1500 * 2)
+    expect(payment.inclusion.defaultDurationYears).toBe(1)
+    expect(payment.inclusion.maxDurationYears).toBe(2)
+  })
+
   it('prefers agreement-level fallbacks when application omits dates', () => {
     const payload = {
       agreementStartDate: '2024-01-01T00:00:00.000Z',
