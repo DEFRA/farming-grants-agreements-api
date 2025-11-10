@@ -6,6 +6,7 @@ import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
 
 export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
@@ -30,7 +31,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     throw new Error('Agreement has already been created')
   }
 
-  const {
+  let {
     clientRef,
     code,
     identifiers,
@@ -42,6 +43,25 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
       applicant
     } = {}
   } = agreementData
+
+  let legacyActionApplications = actionApplications
+  let legacyPayment = payment
+  let legacyApplicant = applicant
+
+  if (
+    (!legacyPayment || !legacyActionApplications || !legacyApplicant) &&
+    agreementData.application
+  ) {
+    // TODO: remove payment details once handled in accept-offer.js via API call to land-grants-api
+    const converted = buildLegacyPaymentFromApplication(agreementData)
+    legacyPayment = legacyPayment || converted.payment
+    legacyActionApplications = legacyActionApplications || converted.actionApplications
+    legacyApplicant = legacyApplicant || converted.applicant
+  }
+
+  payment = legacyPayment
+  actionApplications = legacyActionApplications
+  applicant = legacyApplicant
 
   if (!payment || !applicant) {
     throw Boom.badRequest('Offer data is missing payment and applicant')

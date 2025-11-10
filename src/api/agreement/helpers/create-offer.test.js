@@ -369,6 +369,72 @@ describe('createOffer', () => {
   })
   // Note: yearly breakdown and activities are no longer present in payments
 
+  it('should build legacy payment structure when application payload is provided', async () => {
+    const applicationPayload = {
+      agreementStartDate: '2025-01-01T00:00:00.000Z',
+      agreementEndDate: '2028-01-01T00:00:00.000Z',
+      paymentFrequency: 'Quarterly',
+      applicant: agreementData.answers.applicant,
+      totalAnnualPaymentPence: 35150,
+      parcels: [
+        {
+          sheetId: 'AB1234',
+          parcelId: '10001',
+          actions: [
+            {
+              code: 'CMOR1',
+              description: 'Assess moorland and produce a written record',
+              durationYears: 3,
+              eligible: {
+                unit: 'ha',
+                quantity: 7.5
+              },
+              paymentRates: {
+                ratePerUnitPence: 1060
+              },
+              annualPaymentPence: 35150
+            }
+          ]
+        }
+      ]
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const payload = {
+      clientRef: 'application-ref',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      application: applicationPayload
+    }
+
+    await createOffer('application-message', payload, mockLogger)
+
+    const callPayload = agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications } = callPayload.versions[0]
+
+    expect(payment.annualTotalPence).toBe(35150)
+    expect(payment.parcelItems['1']).toMatchObject({
+      code: 'CMOR1',
+      rateInPence: 1060,
+      annualPaymentPence: 35150,
+      sheetId: 'AB1234',
+      parcelId: '10001'
+    })
+    expect(payment.payments).toHaveLength(2)
+    expect(actionApplications).toHaveLength(1)
+    expect(actionApplications[0]).toMatchObject({
+      code: 'CMOR1',
+      parcelId: '10001',
+      sheetId: 'AB1234'
+    })
+  })
+
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()
