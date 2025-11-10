@@ -23,55 +23,20 @@ export const generateAgreementNumber = () => {
  * @returns {Promise<Agreement>} The agreement data
  */
 const createOffer = async (notificationMessageId, agreementData, logger) => {
-  if (!agreementData) {
-    throw new Error('Offer data is required')
-  }
+  await ensureAgreementDataIsValid(notificationMessageId, agreementData)
 
-  if (await doesAgreementExist({ notificationMessageId })) {
-    throw new Error('Agreement has already been created')
-  }
-
-  let {
+  const {
     clientRef,
     code,
     identifiers,
-    answers: {
-      scheme,
-      agreementName,
-      actionApplications,
-      payment,
-      applicant
-    } = {}
-  } = agreementData
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant
+  } = resolveAgreementFields(agreementData)
 
-  let legacyActionApplications = actionApplications
-  let legacyPayment = payment
-  let legacyApplicant = applicant
-
-  if (
-    (!legacyPayment || !legacyActionApplications || !legacyApplicant) &&
-    agreementData.application
-  ) {
-    // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
-    const converted = buildLegacyPaymentFromApplication(agreementData)
-    legacyPayment = legacyPayment || converted.payment
-    legacyActionApplications =
-      legacyActionApplications || converted.actionApplications
-    legacyApplicant = legacyApplicant || converted.applicant
-  }
-
-  payment = legacyPayment
-  actionApplications = legacyActionApplications
-  applicant = legacyApplicant
-
-  if (!payment || !applicant) {
-    throw Boom.badRequest('Offer data is missing payment and applicant')
-  }
-
-  let agreementNumber = generateAgreementNumber()
-  if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {
-    agreementNumber = agreementData.agreementNumber
-  }
+  const agreementNumber = determineAgreementNumber(agreementData)
 
   const data = {
     notificationMessageId,
@@ -122,3 +87,90 @@ export { createOffer }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
 /** @import { Request } from '@hapi/hapi' */
+
+async function ensureAgreementDataIsValid(
+  notificationMessageId,
+  agreementData
+) {
+  if (!agreementData) {
+    throw new Error('Offer data is required')
+  }
+
+  if (await doesAgreementExist({ notificationMessageId })) {
+    throw new Error('Agreement has already been created')
+  }
+}
+
+function resolveAgreementFields(agreementData) {
+  const {
+    clientRef,
+    code,
+    identifiers,
+    answers: {
+      scheme,
+      agreementName,
+      actionApplications,
+      payment,
+      applicant
+    } = {}
+  } = agreementData
+
+  const { resolvedActions, resolvedPayment, resolvedApplicant } =
+    buildLegacyAgreementContent(
+      agreementData,
+      actionApplications,
+      payment,
+      applicant
+    )
+
+  return {
+    clientRef,
+    code,
+    identifiers,
+    scheme,
+    agreementName,
+    actionApplications: resolvedActions,
+    payment: resolvedPayment,
+    applicant: resolvedApplicant
+  }
+}
+
+function buildLegacyAgreementContent(
+  agreementData,
+  actionApplications,
+  payment,
+  applicant
+) {
+  let resolvedActions = actionApplications
+  let resolvedPayment = payment
+  let resolvedApplicant = applicant
+
+  if (
+    (!resolvedPayment || !resolvedActions || !resolvedApplicant) &&
+    agreementData.application
+  ) {
+    // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
+    const converted = buildLegacyPaymentFromApplication(agreementData)
+    resolvedPayment = resolvedPayment || converted.payment
+    resolvedActions = resolvedActions || converted.actionApplications
+    resolvedApplicant = resolvedApplicant || converted.applicant
+  }
+
+  if (!resolvedPayment || !resolvedApplicant) {
+    throw Boom.badRequest('Offer data is missing payment and applicant')
+  }
+
+  return {
+    resolvedActions,
+    resolvedPayment,
+    resolvedApplicant
+  }
+}
+
+function determineAgreementNumber(agreementData) {
+  if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {
+    return agreementData.agreementNumber
+  }
+
+  return generateAgreementNumber()
+}
