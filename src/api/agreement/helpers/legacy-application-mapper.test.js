@@ -311,4 +311,74 @@ describe('legacy-application-mapper', () => {
       computedAnnualTotal: 3000
     })
   })
+
+  it('handles application with no parcels gracefully', () => {
+    const payload = {
+      application: {
+        applicant: { name: 'No Parcel Applicant' }
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const { payment, applicant, actionApplications } = result
+
+    expect(applicant).toEqual({ name: 'No Parcel Applicant' })
+    expect(actionApplications).toEqual([])
+    expect(payment.parcelItems).toEqual({})
+    expect(payment.agreementLevelItems).toEqual({})
+    expect(payment.annualTotalPence).toBe(0)
+  })
+
+  it('treats missing action list as empty during mapping', () => {
+    const payload = {
+      application: {
+        applicant: {},
+        parcels: [
+          {
+            sheetId: 'SHEET-EMPTY',
+            parcelId: 'PARCEL-EMPTY'
+            // no actions field
+          }
+        ]
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const { payment, actionApplications } = result
+
+    expect(actionApplications).toEqual([])
+    expect(payment.parcelItems).toEqual({})
+    expect(payment.annualTotalPence).toBe(0)
+  })
+
+  it('falls back to zero dates when addMonths/addYears receive invalid values', () => {
+    const payload = {
+      application: {
+        applicant: {},
+        parcels: [
+          {
+            sheetId: 'SHEET-PARS',
+            parcelId: 'PARCEL-PARS',
+            actions: [
+              {
+                code: 'INV1',
+                description: 'Invalid date action',
+                paymentRates: { ratePerUnitPence: 100 },
+                eligible: { unit: 'ha', quantity: 1 }
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const { payment } = result
+
+    expect(payment.agreementStartDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(payment.agreementEndDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    payment.payments.forEach((instalment) => {
+      expect(instalment.paymentDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    })
+  })
 })
