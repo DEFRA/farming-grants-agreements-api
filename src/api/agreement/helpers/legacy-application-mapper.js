@@ -166,73 +166,30 @@ function addYears(isoDate, yearsToAdd = 0) {
   return cloned.toISOString()
 }
 
-function summariseParcels(parcels = [], defaultDurationYears) {
-  const parcelItems = {}
-  const agreementLevelItems = {}
-  let parcelIndex = 1
-  let agreementLevelIndex = 1
-  let computedAgreementTotal = 0
-  let computedAnnualTotal = 0
-  let maxDurationYears = defaultDurationYears
+function summariseParcels(parcels, defaultDurationYears) {
+  const state = {
+    parcelItems: {},
+    agreementLevelItems: {},
+    parcelIndex: 1,
+    agreementLevelIndex: 1,
+    computedAgreementTotal: 0,
+    computedAnnualTotal: 0,
+    maxDurationYears: defaultDurationYears
+  }
 
-  parcels.forEach((parcel) => {
-    const actions = parcel.actions || []
+  ;(parcels ?? []).forEach((parcel) => {
+    const actions = parcel.actions ?? []
     actions.forEach((action) => {
-      const eligible = action.appliedFor || action.eligible || {}
-      const ratePerUnit = toNumber(action.paymentRates?.ratePerUnitPence, null)
-      const annualPayment =
-        action.annualPaymentPence ??
-        (ratePerUnit !== null && eligible?.quantity !== undefined
-          ? Math.round(ratePerUnit * Number(eligible.quantity))
-          : null)
-
-      parcelItems[parcelIndex] = {
-        code: action.code,
-        description: action.description,
-        version: 1,
-        unit: eligible.unit || null,
-        quantity:
-          eligible.quantity !== undefined
-            ? Number(eligible.quantity)
-            : eligible.quantity,
-        rateInPence: ratePerUnit,
-        annualPaymentPence: annualPayment,
-        sheetId: parcel.sheetId,
-        parcelId: parcel.parcelId
-      }
-
-      const durationYears =
-        toNumber(action.durationYears, defaultDurationYears) ||
-        defaultDurationYears
-      maxDurationYears = Math.max(maxDurationYears, durationYears)
-
-      if (annualPayment !== null && annualPayment !== undefined) {
-        computedAgreementTotal += annualPayment * durationYears
-        computedAnnualTotal += annualPayment
-      }
-
-      const agreementLevelAmount =
-        action.paymentRates?.agreementLevelAmountPence
-      if (agreementLevelAmount) {
-        agreementLevelItems[agreementLevelIndex] = {
-          code: action.code,
-          description: action.description,
-          version: 1,
-          annualPaymentPence: agreementLevelAmount
-        }
-        agreementLevelIndex += 1
-      }
-
-      parcelIndex += 1
+      updateParcelStateForAction(state, parcel, action, defaultDurationYears)
     })
   })
 
   return {
-    parcelItems,
-    agreementLevelItems,
-    computedAgreementTotal,
-    computedAnnualTotal,
-    maxDurationYears
+    parcelItems: state.parcelItems,
+    agreementLevelItems: state.agreementLevelItems,
+    computedAgreementTotal: state.computedAgreementTotal,
+    computedAnnualTotal: state.computedAnnualTotal,
+    maxDurationYears: state.maxDurationYears
   }
 }
 
@@ -291,4 +248,56 @@ function resolveAgreementDates({
 export const __private__ = {
   addMonths,
   addYears
+}
+
+function updateParcelStateForAction(
+  state,
+  parcel,
+  action,
+  defaultDurationYears
+) {
+  const eligible = action.appliedFor || action.eligible || {}
+  const ratePerUnit = toNumber(action.paymentRates?.ratePerUnitPence, NaN)
+  const annualPayment =
+    action.annualPaymentPence ??
+    (Number.isFinite(ratePerUnit) && eligible?.quantity !== undefined
+      ? Math.round(ratePerUnit * Number(eligible.quantity))
+      : null)
+
+  state.parcelItems[state.parcelIndex] = {
+    code: action.code,
+    description: action.description,
+    version: 1,
+    unit: eligible.unit || null,
+    quantity:
+      eligible.quantity !== undefined
+        ? Number(eligible.quantity)
+        : eligible.quantity,
+    rateInPence: ratePerUnit,
+    annualPaymentPence: annualPayment,
+    sheetId: parcel.sheetId,
+    parcelId: parcel.parcelId
+  }
+
+  const durationYears =
+    toNumber(action.durationYears, defaultDurationYears) || defaultDurationYears
+  state.maxDurationYears = Math.max(state.maxDurationYears, durationYears)
+
+  if (annualPayment !== null && annualPayment !== undefined) {
+    state.computedAgreementTotal += annualPayment * durationYears
+    state.computedAnnualTotal += annualPayment
+  }
+
+  const agreementLevelAmount = action.paymentRates?.agreementLevelAmountPence
+  if (agreementLevelAmount) {
+    state.agreementLevelItems[state.agreementLevelIndex] = {
+      code: action.code,
+      description: action.description,
+      version: 1,
+      annualPaymentPence: agreementLevelAmount
+    }
+    state.agreementLevelIndex += 1
+  }
+
+  state.parcelIndex += 1
 }
