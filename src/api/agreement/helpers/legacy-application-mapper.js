@@ -16,94 +16,33 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
     durationYears: applicationDurationYears
   } = application
 
-  const parcelItems = {}
-  const agreementLevelItems = {}
-  let parcelIndex = 1
-  let agreementLevelIndex = 1
-  let computedAgreementTotal = 0
-  let computedAnnualTotal = 0
   const defaultDurationYears = toNumber(applicationDurationYears, 1) || 1
-  let maxDurationYears = defaultDurationYears
 
-  parcels.forEach((parcel) => {
-    const { actions = [] } = parcel
-    actions.forEach((action) => {
-      const eligible = action.appliedFor || action.eligible || {}
-      const ratePerUnit = toNumber(action.paymentRates?.ratePerUnitPence, null)
-      const annualPayment =
-        action.annualPaymentPence ??
-        (ratePerUnit !== null && eligible?.quantity !== undefined
-          ? Math.round(ratePerUnit * Number(eligible.quantity))
-          : null)
+  const {
+    parcelItems,
+    agreementLevelItems,
+    computedAgreementTotal,
+    computedAnnualTotal,
+    maxDurationYears
+  } = summariseParcels(parcels, defaultDurationYears)
 
-      parcelItems[parcelIndex] = {
-        code: action.code,
-        description: action.description,
-        version: 1,
-        unit: eligible.unit || null,
-        quantity:
-          eligible.quantity !== undefined
-            ? Number(eligible.quantity)
-            : eligible.quantity,
-        rateInPence: ratePerUnit,
-        annualPaymentPence: annualPayment,
-        sheetId: parcel.sheetId,
-        parcelId: parcel.parcelId
-      }
-
-      const durationYears =
-        toNumber(action.durationYears, defaultDurationYears) ||
-        defaultDurationYears
-      maxDurationYears = Math.max(maxDurationYears, durationYears)
-
-      if (annualPayment !== null && annualPayment !== undefined) {
-        computedAgreementTotal += annualPayment * durationYears
-        computedAnnualTotal += annualPayment
-      }
-
-      const agreementLevelAmount =
-        action.paymentRates?.agreementLevelAmountPence
-      if (agreementLevelAmount) {
-        agreementLevelItems[agreementLevelIndex] = {
-          code: action.code,
-          description: action.description,
-          version: 1,
-          annualPaymentPence: agreementLevelAmount
-        }
-        agreementLevelIndex += 1
-      }
-
-      parcelIndex += 1
-    })
+  const { annualTotalPence, agreementTotalPence } = calculateTotals({
+    totalAnnualPaymentPence,
+    parcelItems,
+    agreementLevelItems,
+    computedAgreementTotal,
+    computedAnnualTotal,
+    maxDurationYears,
+    defaultDurationYears
   })
 
-  const annualTotalPence =
-    toNumber(totalAnnualPaymentPence, 0) ||
-    Object.values(parcelItems).reduce(
-      (sum, item) => sum + toNumber(item.annualPaymentPence, 0),
-      0
-    ) +
-      Object.values(agreementLevelItems).reduce(
-        (sum, item) => sum + toNumber(item.annualPaymentPence, 0),
-        0
-      )
-
-  const startDate =
-    agreementStartDate ||
-    agreementData.agreementStartDate ||
-    agreementData.answers?.payment?.agreementStartDate ||
-    new Date().toISOString() // TODO: remove legacy fall-back once schedule is deprecated
-
-  const agreementTotalPence =
-    computedAgreementTotal ||
-    annualTotalPence * (maxDurationYears || 1) || // TODO: remove legacy fall-back once schedule is deprecated
-    computedAnnualTotal
-
-  const endDate =
-    agreementEndDate ||
-    agreementData.agreementEndDate ||
-    agreementData.answers?.payment?.agreementEndDate ||
-    addYears(startDate, maxDurationYears || 1) // TODO: remove legacy fall-back once schedule is deprecated
+  const { startDate, endDate } = resolveAgreementDates({
+    agreementData,
+    agreementStartDate,
+    agreementEndDate,
+    maxDurationYears,
+    defaultDurationYears
+  })
 
   const payments = buildPaymentsWithPlaceholders({
     startDate,
@@ -218,4 +157,126 @@ function addYears(isoDate, yearsToAdd) {
   const cloned = new Date(date)
   cloned.setUTCFullYear(cloned.getUTCFullYear() + yearsToAdd)
   return cloned.toISOString()
+}
+
+function summariseParcels(parcels = [], defaultDurationYears) {
+  const parcelItems = {}
+  const agreementLevelItems = {}
+  let parcelIndex = 1
+  let agreementLevelIndex = 1
+  let computedAgreementTotal = 0
+  let computedAnnualTotal = 0
+  let maxDurationYears = defaultDurationYears
+
+  parcels.forEach((parcel) => {
+    const actions = parcel.actions || []
+    actions.forEach((action) => {
+      const eligible = action.appliedFor || action.eligible || {}
+      const ratePerUnit = toNumber(action.paymentRates?.ratePerUnitPence, null)
+      const annualPayment =
+        action.annualPaymentPence ??
+        (ratePerUnit !== null && eligible?.quantity !== undefined
+          ? Math.round(ratePerUnit * Number(eligible.quantity))
+          : null)
+
+      parcelItems[parcelIndex] = {
+        code: action.code,
+        description: action.description,
+        version: 1,
+        unit: eligible.unit || null,
+        quantity:
+          eligible.quantity !== undefined
+            ? Number(eligible.quantity)
+            : eligible.quantity,
+        rateInPence: ratePerUnit,
+        annualPaymentPence: annualPayment,
+        sheetId: parcel.sheetId,
+        parcelId: parcel.parcelId
+      }
+
+      const durationYears =
+        toNumber(action.durationYears, defaultDurationYears) ||
+        defaultDurationYears
+      maxDurationYears = Math.max(maxDurationYears, durationYears)
+
+      if (annualPayment !== null && annualPayment !== undefined) {
+        computedAgreementTotal += annualPayment * durationYears
+        computedAnnualTotal += annualPayment
+      }
+
+      const agreementLevelAmount =
+        action.paymentRates?.agreementLevelAmountPence
+      if (agreementLevelAmount) {
+        agreementLevelItems[agreementLevelIndex] = {
+          code: action.code,
+          description: action.description,
+          version: 1,
+          annualPaymentPence: agreementLevelAmount
+        }
+        agreementLevelIndex += 1
+      }
+
+      parcelIndex += 1
+    })
+  })
+
+  return {
+    parcelItems,
+    agreementLevelItems,
+    computedAgreementTotal,
+    computedAnnualTotal,
+    maxDurationYears
+  }
+}
+
+function calculateTotals({
+  totalAnnualPaymentPence,
+  parcelItems,
+  agreementLevelItems,
+  computedAgreementTotal,
+  computedAnnualTotal,
+  maxDurationYears,
+  defaultDurationYears
+}) {
+  const annualTotalPence =
+    toNumber(totalAnnualPaymentPence, 0) ||
+    Object.values(parcelItems).reduce(
+      (sum, item) => sum + toNumber(item.annualPaymentPence, 0),
+      0
+    ) +
+      Object.values(agreementLevelItems).reduce(
+        (sum, item) => sum + toNumber(item.annualPaymentPence, 0),
+        0
+      )
+
+  const durationYears = maxDurationYears || defaultDurationYears || 1
+
+  const agreementTotalPence =
+    computedAgreementTotal ||
+    annualTotalPence * durationYears || // TODO: remove legacy fall-back once schedule is deprecated
+    computedAnnualTotal
+
+  return { annualTotalPence, agreementTotalPence }
+}
+
+function resolveAgreementDates({
+  agreementData,
+  agreementStartDate,
+  agreementEndDate,
+  maxDurationYears,
+  defaultDurationYears
+}) {
+  const startDate =
+    agreementStartDate ||
+    agreementData.agreementStartDate ||
+    agreementData.answers?.payment?.agreementStartDate ||
+    new Date().toISOString() // TODO: remove legacy fall-back once schedule is deprecated
+
+  const endDate =
+    agreementEndDate ||
+    agreementData.agreementEndDate ||
+    agreementData.answers?.payment?.agreementEndDate ||
+    addYears(startDate, maxDurationYears || defaultDurationYears || 1) // TODO: remove legacy fall-back once schedule is deprecated
+
+  return { startDate, endDate }
 }
