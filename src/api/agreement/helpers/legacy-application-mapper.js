@@ -76,6 +76,9 @@ export const buildLegacyPaymentFromApplication = (agreementData) => {
   }
 }
 
+const NUMBER_OF_QUARTERS = 4
+const MONTHS_IN_QUARTER = 3
+
 function buildPaymentsWithPlaceholders({
   startDate,
   parcelItems,
@@ -88,11 +91,15 @@ function buildPaymentsWithPlaceholders({
   const quarterLineItems = [
     ...parcelEntries.map(([id, item]) => ({
       parcelItemId: Number(id),
-      paymentPence: Math.round(toNumber(item.annualPaymentPence, 0) / 4) // TODO: remove legacy fall-back once schedule is deprecated
+      paymentPence: Math.round(
+        toNumber(item.annualPaymentPence, 0) / NUMBER_OF_QUARTERS
+      ) // TODO: remove legacy fall-back once schedule is deprecated
     })),
     ...agreementLevelEntries.map(([id, item]) => ({
       agreementLevelItemId: Number(id),
-      paymentPence: Math.round(toNumber(item.annualPaymentPence, 0) / 4) // TODO: remove legacy fall-back once schedule is deprecated
+      paymentPence: Math.round(
+        toNumber(item.annualPaymentPence, 0) / NUMBER_OF_QUARTERS
+      ) // TODO: remove legacy fall-back once schedule is deprecated
     }))
   ]
 
@@ -100,10 +107,10 @@ function buildPaymentsWithPlaceholders({
     quarterLineItems.reduce(
       (sum, lineItem) => sum + toNumber(lineItem.paymentPence),
       0
-    ) || Math.round(toNumber(annualTotalPence, 0) / 4) // TODO: remove legacy fall-back once schedule is deprecated
+    ) || Math.round(toNumber(annualTotalPence, 0) / NUMBER_OF_QUARTERS) // TODO: remove legacy fall-back once schedule is deprecated
 
-  const firstPaymentDate = addMonths(startDate, 3) // TODO: remove legacy fall-back once schedule is deprecated
-  const subsequentPaymentDate = addMonths(startDate, 6) // TODO: remove legacy fall-back once schedule is deprecated
+  const firstPaymentDate = addMonths(startDate, MONTHS_IN_QUARTER) // TODO: remove legacy fall-back once schedule is deprecated
+  const subsequentPaymentDate = addMonths(startDate, MONTHS_IN_QUARTER * 2) // TODO: remove legacy fall-back once schedule is deprecated
 
   return [
     {
@@ -137,7 +144,7 @@ function toNumber(value, fallback = 0) {
   return Number(value)
 }
 
-function addMonths(isoDate, monthsToAdd) {
+function addMonths(isoDate, monthsToAdd = 0) {
   const date = isoDate ? new Date(isoDate) : new Date()
   if (Number.isNaN(date.getTime())) {
     return new Date().toISOString()
@@ -148,7 +155,7 @@ function addMonths(isoDate, monthsToAdd) {
   return cloned.toISOString()
 }
 
-function addYears(isoDate, yearsToAdd) {
+function addYears(isoDate, yearsToAdd = 0) {
   const date = isoDate ? new Date(isoDate) : new Date()
   if (Number.isNaN(date.getTime())) {
     return new Date().toISOString()
@@ -279,4 +286,9 @@ function resolveAgreementDates({
     addYears(startDate, maxDurationYears || defaultDurationYears || 1) // TODO: remove legacy fall-back once schedule is deprecated
 
   return { startDate, endDate }
+}
+
+export const __private__ = {
+  addMonths,
+  addYears
 }

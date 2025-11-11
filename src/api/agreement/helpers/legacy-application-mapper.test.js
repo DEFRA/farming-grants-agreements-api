@@ -1,4 +1,9 @@
-import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
+import {
+  buildLegacyPaymentFromApplication,
+  __private__ as mapperPrivateExports
+} from './legacy-application-mapper.js'
+
+const { addMonths, addYears } = mapperPrivateExports
 
 describe('legacy-application-mapper', () => {
   afterEach(() => {
@@ -352,33 +357,7 @@ describe('legacy-application-mapper', () => {
   })
 
   it('falls back to zero dates when addMonths/addYears receive invalid values', () => {
-    const payload = {
-      application: {
-        applicant: {},
-        parcels: [
-          {
-            sheetId: 'SHEET-PARS',
-            parcelId: 'PARCEL-PARS',
-            actions: [
-              {
-                code: 'INV1',
-                description: 'Invalid date action',
-                paymentRates: { ratePerUnitPence: 100 },
-                eligible: { unit: 'ha', quantity: 1 }
-              }
-            ]
-          }
-        ]
-      }
-    }
-
-    const result = buildLegacyPaymentFromApplication(payload)
-    const { payment } = result
-
-    expect(payment.agreementStartDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    expect(payment.agreementEndDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    payment.payments.forEach((instalment) => {
-      expect(instalment.paymentDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    })
+    expect(addMonths(null, undefined)).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(addYears(null, undefined)).toMatch(/^\d{4}-\d{2}-\d{2}T/)
   })
 })
