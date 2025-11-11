@@ -257,6 +257,27 @@ function updateParcelStateForAction(
   defaultDurationYears
 ) {
   const eligible = action.appliedFor || action.eligible || {}
+  const { ratePerUnit, annualPayment, durationYears } = derivePaymentDetails(
+    action,
+    eligible,
+    defaultDurationYears
+  )
+
+  state.parcelItems[state.parcelIndex] = createParcelItem(
+    parcel,
+    action,
+    eligible,
+    ratePerUnit,
+    annualPayment
+  )
+
+  updateAgreementTotals(state, annualPayment, durationYears)
+  maybeAddAgreementItem(state, action)
+
+  state.parcelIndex += 1
+}
+
+function derivePaymentDetails(action, eligible, defaultDurationYears) {
   const ratePerUnit = toNumber(action.paymentRates?.ratePerUnitPence, NaN)
   const annualPayment =
     action.annualPaymentPence ??
@@ -264,7 +285,20 @@ function updateParcelStateForAction(
       ? Math.round(ratePerUnit * Number(eligible.quantity))
       : null)
 
-  state.parcelItems[state.parcelIndex] = {
+  const durationYears =
+    toNumber(action.durationYears, defaultDurationYears) || defaultDurationYears
+
+  return { ratePerUnit, annualPayment, durationYears }
+}
+
+function createParcelItem(
+  parcel,
+  action,
+  eligible,
+  ratePerUnit,
+  annualPayment
+) {
+  return {
     code: action.code,
     description: action.description,
     version: 1,
@@ -278,26 +312,28 @@ function updateParcelStateForAction(
     sheetId: parcel.sheetId,
     parcelId: parcel.parcelId
   }
+}
 
-  const durationYears =
-    toNumber(action.durationYears, defaultDurationYears) || defaultDurationYears
-  state.maxDurationYears = Math.max(state.maxDurationYears, durationYears)
-
+function updateAgreementTotals(state, annualPayment, durationYears) {
   if (annualPayment !== null && annualPayment !== undefined) {
     state.computedAgreementTotal += annualPayment * durationYears
     state.computedAnnualTotal += annualPayment
   }
 
+  state.maxDurationYears = Math.max(state.maxDurationYears, durationYears)
+}
+
+function maybeAddAgreementItem(state, action) {
   const agreementLevelAmount = action.paymentRates?.agreementLevelAmountPence
-  if (agreementLevelAmount) {
-    state.agreementLevelItems[state.agreementLevelIndex] = {
-      code: action.code,
-      description: action.description,
-      version: 1,
-      annualPaymentPence: agreementLevelAmount
-    }
-    state.agreementLevelIndex += 1
+  if (!agreementLevelAmount) {
+    return
   }
 
-  state.parcelIndex += 1
+  state.agreementLevelItems[state.agreementLevelIndex] = {
+    code: action.code,
+    description: action.description,
+    version: 1,
+    annualPaymentPence: agreementLevelAmount
+  }
+  state.agreementLevelIndex += 1
 }
