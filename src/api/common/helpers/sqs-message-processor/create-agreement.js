@@ -13,22 +13,32 @@ export const handleCreateAgreementEvent = async (
   logger
 ) => {
   if (payload?.type?.includes('gas-backend.agreement.create')) {
-    logger.info(`Creating agreement from event: ${notificationMessageId}`)
     if (logger?.info) {
-      logger.info(
-        `Full incoming message payload (as received): ${JSON.stringify(payload, null, 2)}`
-      )
+      logger.info(`Creating agreement from event: ${notificationMessageId}`)
+      try {
+        logger.info(
+          `Full incoming message payload (as received): ${JSON.stringify(payload, null, 2)}`
+        )
+      } catch (stringifyError) {
+        logger.info(
+          `Full incoming message payload (as received): [Unable to stringify payload]`
+        )
+      }
     }
     const agreement = await createOffer(
       notificationMessageId,
       payload.data,
       logger
     )
-    logger.info(`Agreement created: ${agreement.agreementNumber}`)
+    if (logger?.info) {
+      logger.info(`Agreement created: ${agreement.agreementNumber}`)
+    }
   } else {
-    logger.info(
-      `No action required for GAS create offer event: ${payload?.type || JSON.stringify(payload)}`
-    )
+    if (logger?.info) {
+      logger.info(
+        `No action required for GAS create offer event: ${payload?.type || JSON.stringify(payload)}`
+      )
+    }
   }
 }
 

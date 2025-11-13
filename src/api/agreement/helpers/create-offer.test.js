@@ -630,6 +630,24 @@ describe('createOffer', () => {
     ).rejects.toThrow('Offer data is missing payment and applicant')
   })
 
+  it('should handle case where neither application nor answers.parcels exist', async () => {
+    const payloadWithoutConversionFormat = {
+      clientRef: 'ref-no-format',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI'
+        // No payment, no applicant, no parcels, no application
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('test-id', payloadWithoutConversionFormat, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
   describe('Error Handling', () => {
     beforeEach(() => {
       jest.clearAllMocks()

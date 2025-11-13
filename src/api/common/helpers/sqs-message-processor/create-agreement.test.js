@@ -85,8 +85,8 @@ describe('SQS message processor', () => {
       )
     })
 
-    it('should not call debug when logger does not have debug method', async () => {
-      const loggerWithoutDebug = { info: jest.fn(), error: jest.fn() }
+    it('should not call info when logger does not have info method', async () => {
+      const loggerWithoutInfo = { error: jest.fn() }
       const mockPayload = {
         type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         data: { id: '123', status: 'approved' }
@@ -95,11 +95,45 @@ describe('SQS message processor', () => {
       await handleCreateAgreementEvent(
         'aws-message-id',
         mockPayload,
-        loggerWithoutDebug
+        loggerWithoutInfo
       )
 
-      expect(loggerWithoutDebug.info).toHaveBeenCalled()
       expect(createOffer).toHaveBeenCalled()
+      expect(loggerWithoutInfo.error).not.toHaveBeenCalled()
+    })
+
+    it('should handle JSON.stringify errors gracefully', async () => {
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+        data: { id: '123', status: 'approved' }
+      }
+
+      // Create a circular reference to cause JSON.stringify to fail
+      const circularPayload = { ...mockPayload }
+      circularPayload.circular = circularPayload
+
+      // Mock JSON.stringify to throw
+      const originalStringify = JSON.stringify
+      JSON.stringify = jest.fn(() => {
+        throw new Error('Circular reference')
+      })
+
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        circularPayload,
+        mockLogger
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Creating agreement from event')
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('[Unable to stringify payload]')
+      )
+      expect(createOffer).toHaveBeenCalled()
+
+      // Restore
+      JSON.stringify = originalStringify
     })
 
     it('should log an info for non-application-approved events', async () => {
