@@ -197,5 +197,39 @@ describe('SQS message processor', () => {
         'No action required for GAS create offer event: empty data'
       )
     })
+
+    it('should not call info in else branch when logger does not have info method', async () => {
+      const loggerWithoutInfo = { error: jest.fn() }
+      const mockPayload = {
+        type: 'some-other-event',
+        data: { id: '123' }
+      }
+
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        loggerWithoutInfo
+      )
+
+      expect(createOffer).not.toHaveBeenCalled()
+      expect(loggerWithoutInfo.error).not.toHaveBeenCalled()
+    })
+
+    it('should not call info after createOffer when logger does not have info method', async () => {
+      const loggerWithoutInfo = { error: jest.fn() }
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+        data: { id: '123', status: 'approved' }
+      }
+
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        loggerWithoutInfo
+      )
+
+      expect(createOffer).toHaveBeenCalled()
+      expect(loggerWithoutInfo.error).not.toHaveBeenCalled()
+    })
   })
 })
