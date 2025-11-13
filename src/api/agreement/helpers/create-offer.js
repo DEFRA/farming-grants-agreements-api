@@ -145,15 +145,37 @@ function buildLegacyAgreementContent(
   let resolvedPayment = payment
   let resolvedApplicant = applicant
 
-  if (
-    (!resolvedPayment || !resolvedActions || !resolvedApplicant) &&
-    agreementData.application
-  ) {
-    // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
-    const converted = buildLegacyPaymentFromApplication(agreementData)
-    resolvedPayment = resolvedPayment || converted.payment
-    resolvedActions = resolvedActions || converted.actionApplications
-    resolvedApplicant = resolvedApplicant || converted.applicant
+  // Check if we need to convert from application format (legacy) or answers.parcels format (new)
+  if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
+    // Try legacy application format first
+    if (agreementData.application) {
+      // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
+      const converted = buildLegacyPaymentFromApplication(agreementData)
+      resolvedPayment = resolvedPayment || converted.payment
+      resolvedActions = resolvedActions || converted.actionApplications
+      resolvedApplicant = resolvedApplicant || converted.applicant
+    }
+    // Try new format with parcels under answers
+    else if (agreementData.answers?.parcels) {
+      // Convert answers structure to application-like structure for the mapper
+      const applicationLikeData = {
+        ...agreementData,
+        application: {
+          applicant: agreementData.answers.applicant,
+          totalAnnualPaymentPence:
+            agreementData.answers.totalAnnualPaymentPence,
+          parcels: agreementData.answers.parcels,
+          agreementStartDate: agreementData.answers.agreementStartDate,
+          agreementEndDate: agreementData.answers.agreementEndDate,
+          paymentFrequency: agreementData.answers.paymentFrequency,
+          durationYears: agreementData.answers.durationYears
+        }
+      }
+      const converted = buildLegacyPaymentFromApplication(applicationLikeData)
+      resolvedPayment = resolvedPayment || converted.payment
+      resolvedActions = resolvedActions || converted.actionApplications
+      resolvedApplicant = resolvedApplicant || converted.applicant
+    }
   }
 
   if (!resolvedPayment || !resolvedApplicant) {
