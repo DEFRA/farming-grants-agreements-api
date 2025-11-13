@@ -157,6 +157,12 @@ describe('createOffer', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
+    mockLogger = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      error: jest.fn()
+    }
+
     // Make insertMany return a real-looking agreement (matching targetDataStructure)
     versionsModel.insertMany = jest.fn(() => [
       { ...targetDataStructure, _id: new mongoose.Types.ObjectId() }
@@ -514,6 +520,7 @@ describe('createOffer', () => {
         identifiers: { sbi: '1', frn: '2' },
         answers: { scheme: 'SFI' }
       }
+      doesAgreementExist.mockResolvedValueOnce(false)
       await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
         'Offer data is missing payment and applicant'
       )

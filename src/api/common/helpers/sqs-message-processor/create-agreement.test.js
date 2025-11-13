@@ -10,7 +10,7 @@ describe('SQS message processor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockLogger = { info: jest.fn(), error: jest.fn() }
+    mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() }
     createOffer.mockResolvedValue({
       agreementNumber: 'SFI123456789'
     })
@@ -75,11 +75,31 @@ describe('SQS message processor', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
       )
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Full incoming message payload (as received):')
+      )
       expect(createOffer).toHaveBeenCalledWith(
         'aws-message-id',
         mockPayload.data,
         mockLogger
       )
+    })
+
+    it('should not call debug when logger does not have debug method', async () => {
+      const loggerWithoutDebug = { info: jest.fn(), error: jest.fn() }
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+        data: { id: '123', status: 'approved' }
+      }
+
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        loggerWithoutDebug
+      )
+
+      expect(loggerWithoutDebug.info).toHaveBeenCalled()
+      expect(createOffer).toHaveBeenCalled()
     })
 
     it('should log an info for non-application-approved events', async () => {
