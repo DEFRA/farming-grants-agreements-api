@@ -442,6 +442,124 @@ describe('createOffer', () => {
     })
   })
 
+  it('should build legacy payment structure when answers.parcels format is provided', async () => {
+    const payloadWithAnswersParcels = {
+      clientRef: '581-e92-bbe',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'VAUGHAN FARMS LIMITED',
+            reference: '3989509178',
+            email: {
+              address:
+                'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
+            },
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Mason House Farm Clitheroe Rd',
+              line2: 'Bashall Eaves',
+              line3: null,
+              line4: null,
+              line5: null,
+              street: 'Bartindale Road',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
+            }
+          },
+          customer: {
+            name: {
+              title: 'Mr.',
+              first: 'Edward',
+              middle: 'Paul',
+              last: 'Jones'
+            }
+          }
+        },
+        applicationValidationRunId: 2335,
+        totalAnnualPaymentPence: 32006,
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland and produce a written record',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                appliedFor: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060,
+                  agreementLevelAmountPence: 27200
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'answers-parcels-message',
+      payloadWithAnswersParcels,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications, applicant } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(32006)
+    expect(payment.parcelItems).toBeDefined()
+    expect(Object.keys(payment.parcelItems).length).toBeGreaterThan(0)
+
+    const firstParcelItem = Object.values(payment.parcelItems)[0]
+    expect(firstParcelItem).toMatchObject({
+      code: 'CMOR1',
+      rateInPence: 1060,
+      annualPaymentPence: 4806,
+      sheetId: 'SD6743',
+      parcelId: '8083'
+    })
+
+    expect(payment.agreementLevelItems).toBeDefined()
+    const agreementLevelItems = Object.values(payment.agreementLevelItems)
+    expect(agreementLevelItems.length).toBeGreaterThan(0)
+    expect(agreementLevelItems[0].annualPaymentPence).toBe(27200)
+
+    expect(payment.payments).toBeDefined()
+    expect(payment.payments).toHaveLength(2)
+
+    expect(actionApplications).toBeDefined()
+    expect(actionApplications).toHaveLength(1)
+    expect(actionApplications[0]).toMatchObject({
+      code: 'CMOR1',
+      parcelId: '8083',
+      sheetId: 'SD6743'
+    })
+
+    expect(applicant).toBeDefined()
+    expect(applicant.business.name).toBe('VAUGHAN FARMS LIMITED')
+  })
+
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()
@@ -465,16 +583,51 @@ describe('createOffer', () => {
       answers: {}
     }
 
-    // Ensure the notification id hasn't been used
     doesAgreementExist.mockResolvedValueOnce(false)
     let error
     try {
-      await createOffer('aws-message-id', missingAnswers)
+      await createOffer('aws-message-id', missingAnswers, mockLogger)
     } catch (e) {
       error = e
     }
     expect(error).toBeDefined()
     expect(error.message).toBe('Offer data is missing payment and applicant')
+  })
+
+  it('should handle answers.parcels without applicant', async () => {
+    const payloadWithoutApplicant = {
+      clientRef: 'ref-no-applicant',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        totalAnnualPaymentPence: 32006,
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+    await expect(
+      createOffer('test-id', payloadWithoutApplicant, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
   })
 
   describe('Error Handling', () => {
@@ -527,5 +680,3 @@ describe('createOffer', () => {
     })
   })
 })
-
-// Payments/activity aggregation assertions no longer apply since payments schema changed
