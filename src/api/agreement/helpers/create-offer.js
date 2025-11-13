@@ -135,6 +135,38 @@ function resolveAgreementFields(agreementData) {
   }
 }
 
+function convertFromLegacyApplicationFormat(agreementData) {
+  // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
+  return buildLegacyPaymentFromApplication(agreementData)
+}
+
+function convertFromAnswersParcelsFormat(agreementData) {
+  // Convert the answers structure to application-like structure for the mapper
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      applicant: agreementData.answers.applicant,
+      totalAnnualPaymentPence: agreementData.answers.totalAnnualPaymentPence,
+      parcels: agreementData.answers.parcels,
+      agreementStartDate: agreementData.answers.agreementStartDate,
+      agreementEndDate: agreementData.answers.agreementEndDate,
+      paymentFrequency: agreementData.answers.paymentFrequency,
+      durationYears: agreementData.answers.durationYears
+    }
+  }
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function mergeConvertedValues(existing, converted, fieldName) {
+  return existing || converted[fieldName]
+}
+
+function validateResolvedContent(resolvedPayment, resolvedApplicant) {
+  if (!resolvedPayment || !resolvedApplicant) {
+    throw Boom.badRequest('Offer data is missing payment and applicant')
+  }
+}
+
 function buildLegacyAgreementContent(
   agreementData,
   actionApplications,
@@ -147,40 +179,37 @@ function buildLegacyAgreementContent(
 
   // Check if we need to convert from application format (legacy) or answers.parcels format (new)
   if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
-    // legacy format check first
+    let converted = null
+
     if (agreementData.application) {
-      // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
-      const converted = buildLegacyPaymentFromApplication(agreementData)
-      resolvedPayment = resolvedPayment || converted.payment
-      resolvedActions = resolvedActions || converted.actionApplications
-      resolvedApplicant = resolvedApplicant || converted.applicant
+      converted = convertFromLegacyApplicationFormat(agreementData)
+    } else if (agreementData.answers?.parcels) {
+      converted = convertFromAnswersParcelsFormat(agreementData)
+    } else {
+      // No conversion format available - will be caught by validation
+      converted = null
     }
-    // new format with parcels under answers
-    else if (agreementData.answers?.parcels) {
-      // convert the answers structure to application-like structure for the mapper
-      const applicationLikeData = {
-        ...agreementData,
-        application: {
-          applicant: agreementData.answers.applicant,
-          totalAnnualPaymentPence:
-            agreementData.answers.totalAnnualPaymentPence,
-          parcels: agreementData.answers.parcels,
-          agreementStartDate: agreementData.answers.agreementStartDate,
-          agreementEndDate: agreementData.answers.agreementEndDate,
-          paymentFrequency: agreementData.answers.paymentFrequency,
-          durationYears: agreementData.answers.durationYears
-        }
-      }
-      const converted = buildLegacyPaymentFromApplication(applicationLikeData)
-      resolvedPayment = resolvedPayment || converted.payment
-      resolvedActions = resolvedActions || converted.actionApplications
-      resolvedApplicant = resolvedApplicant || converted.applicant
+
+    if (converted) {
+      resolvedPayment = mergeConvertedValues(
+        resolvedPayment,
+        converted,
+        'payment'
+      )
+      resolvedActions = mergeConvertedValues(
+        resolvedActions,
+        converted,
+        'actionApplications'
+      )
+      resolvedApplicant = mergeConvertedValues(
+        resolvedApplicant,
+        converted,
+        'applicant'
+      )
     }
   }
 
-  if (!resolvedPayment || !resolvedApplicant) {
-    throw Boom.badRequest('Offer data is missing payment and applicant')
-  }
+  validateResolvedContent(resolvedPayment, resolvedApplicant)
 
   return {
     resolvedActions,
