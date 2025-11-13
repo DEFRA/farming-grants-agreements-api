@@ -75,7 +75,7 @@ describe('SQS message processor', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
       )
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Full incoming message payload (as received):')
       )
       expect(createOffer).toHaveBeenCalledWith(
@@ -85,8 +85,8 @@ describe('SQS message processor', () => {
       )
     })
 
-    it('should not call debug when logger does not have debug method', async () => {
-      const loggerWithoutDebug = { info: jest.fn(), error: jest.fn() }
+    it('should not call info when logger does not have info method', async () => {
+      const loggerWithoutInfo = { error: jest.fn() }
       const mockPayload = {
         type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         data: { id: '123', status: 'approved' }
@@ -95,10 +95,9 @@ describe('SQS message processor', () => {
       await handleCreateAgreementEvent(
         'aws-message-id',
         mockPayload,
-        loggerWithoutDebug
+        loggerWithoutInfo
       )
 
-      expect(loggerWithoutDebug.info).toHaveBeenCalled()
       expect(createOffer).toHaveBeenCalled()
     })
 
