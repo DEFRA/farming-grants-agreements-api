@@ -526,13 +526,11 @@ describe('createOffer', () => {
       agreementsModel.createAgreementWithVersions.mock.calls[0][0]
     const { payment, actionApplications, applicant } = callPayload.versions[0]
 
-    // Verify payment structure was created
     expect(payment).toBeDefined()
     expect(payment.annualTotalPence).toBe(32006)
     expect(payment.parcelItems).toBeDefined()
     expect(Object.keys(payment.parcelItems).length).toBeGreaterThan(0)
 
-    // Verify parcel items
     const firstParcelItem = Object.values(payment.parcelItems)[0]
     expect(firstParcelItem).toMatchObject({
       code: 'CMOR1',
@@ -542,17 +540,14 @@ describe('createOffer', () => {
       parcelId: '8083'
     })
 
-    // Verify agreement level items (from agreementLevelAmountPence)
     expect(payment.agreementLevelItems).toBeDefined()
     const agreementLevelItems = Object.values(payment.agreementLevelItems)
     expect(agreementLevelItems.length).toBeGreaterThan(0)
     expect(agreementLevelItems[0].annualPaymentPence).toBe(27200)
 
-    // Verify payments schedule was created
     expect(payment.payments).toBeDefined()
     expect(payment.payments).toHaveLength(2)
 
-    // Verify action applications
     expect(actionApplications).toBeDefined()
     expect(actionApplications).toHaveLength(1)
     expect(actionApplications[0]).toMatchObject({
@@ -561,7 +556,6 @@ describe('createOffer', () => {
       sheetId: 'SD6743'
     })
 
-    // Verify applicant was extracted
     expect(applicant).toBeDefined()
     expect(applicant.business.name).toBe('VAUGHAN FARMS LIMITED')
   })
@@ -589,7 +583,6 @@ describe('createOffer', () => {
       answers: {}
     }
 
-    // Ensure the notification id hasn't been used
     doesAgreementExist.mockResolvedValueOnce(false)
     let error
     try {
@@ -687,5 +680,3 @@ describe('createOffer', () => {
     })
   })
 })
-
-// Payments/activity aggregation assertions no longer apply since payments schema changed

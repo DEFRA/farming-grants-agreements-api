@@ -147,7 +147,7 @@ function buildLegacyAgreementContent(
 
   // Check if we need to convert from application format (legacy) or answers.parcels format (new)
   if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
-    // Try legacy application format first
+    // legacy format check first
     if (agreementData.application) {
       // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
       const converted = buildLegacyPaymentFromApplication(agreementData)
@@ -155,9 +155,9 @@ function buildLegacyAgreementContent(
       resolvedActions = resolvedActions || converted.actionApplications
       resolvedApplicant = resolvedApplicant || converted.applicant
     }
-    // Try new format with parcels under answers
+    // new format with parcels under answers
     else if (agreementData.answers?.parcels) {
-      // Convert answers structure to application-like structure for the mapper
+      // convert the answers structure to application-like structure for the mapper
       const applicationLikeData = {
         ...agreementData,
         application: {
