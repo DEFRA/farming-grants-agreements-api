@@ -142,16 +142,17 @@ function convertFromLegacyApplicationFormat(agreementData) {
 
 function convertFromAnswersParcelsFormat(agreementData) {
   // Convert the answers structure to application-like structure for the mapper
+  const answers = agreementData?.answers || {}
   const applicationLikeData = {
     ...agreementData,
     application: {
-      applicant: agreementData.answers.applicant,
-      totalAnnualPaymentPence: agreementData.answers.totalAnnualPaymentPence,
-      parcels: agreementData.answers.parcels,
-      agreementStartDate: agreementData.answers.agreementStartDate,
-      agreementEndDate: agreementData.answers.agreementEndDate,
-      paymentFrequency: agreementData.answers.paymentFrequency,
-      durationYears: agreementData.answers.durationYears
+      applicant: answers.applicant,
+      totalAnnualPaymentPence: answers.totalAnnualPaymentPence,
+      parcels: answers.parcels,
+      agreementStartDate: answers.agreementStartDate,
+      agreementEndDate: answers.agreementEndDate,
+      paymentFrequency: answers.paymentFrequency,
+      durationYears: answers.durationYears
     }
   }
   return buildLegacyPaymentFromApplication(applicationLikeData)
@@ -181,12 +182,15 @@ function buildLegacyAgreementContent(
   if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
     let converted = null
 
-    if (agreementData.application) {
-      converted = convertFromLegacyApplicationFormat(agreementData)
-    } else if (agreementData.answers?.parcels) {
-      converted = convertFromAnswersParcelsFormat(agreementData)
-    } else {
-      // No conversion format available - will be caught by validation
+    try {
+      if (agreementData.application) {
+        converted = convertFromLegacyApplicationFormat(agreementData)
+      } else if (agreementData.answers?.parcels) {
+        converted = convertFromAnswersParcelsFormat(agreementData)
+      } else {
+        converted = null
+      }
+    } catch (conversionError) {
       converted = null
     }
 
