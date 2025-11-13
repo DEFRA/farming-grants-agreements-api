@@ -630,6 +630,196 @@ describe('createOffer', () => {
     ).rejects.toThrow('Offer data is missing payment and applicant')
   })
 
+  it('should handle case where neither application nor answers.parcels exist', async () => {
+    const payloadWithoutConversionFormat = {
+      clientRef: 'ref-no-format',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI'
+        // No payment, no applicant, no parcels, no application
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('test-id', payloadWithoutConversionFormat, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
+  it('should handle conversion errors in catch block when mapper throws', async () => {
+    // Import the mapper module
+    const mapperModule = await import('./legacy-application-mapper.js')
+    const originalMapper = mapperModule.buildLegacyPaymentFromApplication
+
+    // Create a payload that will trigger conversion
+    const payloadWithParcels = {
+      clientRef: 'ref-error',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            actions: []
+          }
+        ]
+      }
+    }
+
+    // Mock the mapper to throw an error
+    mapperModule.buildLegacyPaymentFromApplication = jest.fn(() => {
+      throw new Error('Mapper conversion failed')
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    // The error should be caught and validation should throw
+    await expect(
+      createOffer('test-id', payloadWithParcels, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    // Restore original
+    mapperModule.buildLegacyPaymentFromApplication = originalMapper
+  })
+
+  it('should merge converted values when existing values are null or undefined', async () => {
+    // Test that mergeConvertedValues uses converted values when existing are null/undefined
+    // This tests the path where conversion provides all missing values
+    const payloadWithNullValues = {
+      clientRef: 'ref-null-values',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'TEST BUSINESS',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: {
+              line1: 'Test Address',
+              city: 'Test City',
+              postalCode: 'TE5T 1NG'
+            }
+          }
+        },
+        totalAnnualPaymentPence: 4806,
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    // This should succeed because conversion will provide payment and actionApplications
+    const result = await createOffer(
+      'test-id',
+      payloadWithNullValues,
+      mockLogger
+    )
+
+    expect(result).toBeDefined()
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    // Payment should come from conversion (not null)
+    expect(callPayload.versions[0].payment).toBeDefined()
+    expect(callPayload.versions[0].payment.annualTotalPence).toBe(4806)
+    // Applicant should be used from existing (not null)
+    expect(callPayload.versions[0].applicant).toBeDefined()
+    expect(callPayload.versions[0].applicant.business.name).toBe(
+      'TEST BUSINESS'
+    )
+    // ActionApplications should come from conversion
+    expect(callPayload.versions[0].actionApplications).toBeDefined()
+    expect(callPayload.versions[0].actionApplications.length).toBeGreaterThan(0)
+  })
+
+  it('should use existing values when both existing and converted are present', async () => {
+    // Test mergeConvertedValues prefers existing over converted
+    // Provide payment and applicant, but not actionApplications to trigger conversion
+    const payloadWithPartial = {
+      clientRef: 'ref-both',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        payment: {
+          annualTotalPence: 1000,
+          agreementStartDate: '2024-01-01',
+          agreementEndDate: '2027-01-01'
+        },
+        applicant: {
+          business: { name: 'Existing Business' }
+        },
+        // actionApplications is missing, so conversion will be triggered
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const result = await createOffer('test-id', payloadWithPartial, mockLogger)
+
+    expect(result).toBeDefined()
+    // Existing payment should be used (not converted one)
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    expect(callPayload.versions[0].payment.annualTotalPence).toBe(1000)
+    // But actionApplications should come from conversion
+    expect(callPayload.versions[0].actionApplications).toBeDefined()
+    expect(callPayload.versions[0].actionApplications.length).toBeGreaterThan(0)
+  })
+
   describe('Error Handling', () => {
     beforeEach(() => {
       jest.clearAllMocks()
