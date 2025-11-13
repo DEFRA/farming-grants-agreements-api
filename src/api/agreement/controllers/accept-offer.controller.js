@@ -39,7 +39,7 @@ const acceptOfferController = async (request, h) => {
           agreementNumber,
           correlationId: agreementData?.correlationId,
           clientRef: agreementData?.clientRef,
-          version: agreementData?.version,
+          version: agreementData?.versions?.length ?? 1,
           agreementUrl,
           status: agreementData.status,
           date: agreementData.signatureDate,
