@@ -23,33 +23,6 @@ export const generateAgreementNumber = () => {
  * @returns {Promise<Agreement>} The agreement data
  */
 const createOffer = async (notificationMessageId, agreementData, logger) => {
-  if (logger?.info) {
-    logger.info(
-      `createOffer called with notificationMessageId: ${notificationMessageId}`
-    )
-  }
-  if (logger?.debug) {
-    logger.debug(
-      `Agreement data structure: ${JSON.stringify({
-        hasAnswers: !!agreementData?.answers,
-        hasAnswersPayment: !!agreementData?.answers?.payment,
-        hasAnswersApplicant: !!agreementData?.answers?.applicant,
-        hasAnswersActionApplications:
-          !!agreementData?.answers?.actionApplications,
-        hasApplication: !!agreementData?.application,
-        hasApplicationApplicant: !!agreementData?.application?.applicant,
-        hasApplicationParcels: !!agreementData?.application?.parcels,
-        clientRef: agreementData?.clientRef,
-        code: agreementData?.code
-      })}`
-    )
-  }
-
-  // Attach logger to agreementData so it can be used in buildLegacyAgreementContent
-  if (agreementData) {
-    agreementData._logger = logger
-  }
-
   await ensureAgreementDataIsValid(notificationMessageId, agreementData)
 
   const {
@@ -172,65 +145,18 @@ function buildLegacyAgreementContent(
   let resolvedPayment = payment
   let resolvedApplicant = applicant
 
-  // Log what we received
-  const logger = agreementData._logger
-  if (logger?.info) {
-    logger.info(
-      `buildLegacyAgreementContent - initial state: ${JSON.stringify({
-        hasPayment: !!payment,
-        hasApplicant: !!applicant,
-        hasActionApplications: !!actionApplications,
-        hasApplication: !!agreementData.application,
-        hasApplicationApplicant: !!agreementData.application?.applicant,
-        hasApplicationParcels: !!agreementData.application?.parcels
-      })}`
-    )
-  }
-
   if (
     (!resolvedPayment || !resolvedActions || !resolvedApplicant) &&
     agreementData.application
   ) {
     // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
-    if (logger?.info) {
-      logger.info(
-        `Attempting to convert from application format. Missing: ${JSON.stringify(
-          {
-            payment: !resolvedPayment,
-            actions: !resolvedActions,
-            applicant: !resolvedApplicant
-          }
-        )}`
-      )
-    }
     const converted = buildLegacyPaymentFromApplication(agreementData)
-    if (logger?.info) {
-      logger.info(
-        `Conversion result: ${JSON.stringify({
-          hasConvertedPayment: !!converted.payment,
-          hasConvertedApplicant: !!converted.applicant,
-          hasConvertedActions: !!converted.actionApplications
-        })}`
-      )
-    }
     resolvedPayment = resolvedPayment || converted.payment
     resolvedActions = resolvedActions || converted.actionApplications
     resolvedApplicant = resolvedApplicant || converted.applicant
   }
 
   if (!resolvedPayment || !resolvedApplicant) {
-    if (logger?.error) {
-      logger.error(
-        `Missing required data before throwing error: ${JSON.stringify({
-          hasResolvedPayment: !!resolvedPayment,
-          hasResolvedApplicant: !!resolvedApplicant,
-          hasResolvedActions: !!resolvedActions,
-          originalHasPayment: !!payment,
-          originalHasApplicant: !!applicant,
-          originalHasApplication: !!agreementData.application
-        })}`
-      )
-    }
     throw Boom.badRequest('Offer data is missing payment and applicant')
   }
 
