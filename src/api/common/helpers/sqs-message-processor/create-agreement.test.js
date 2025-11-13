@@ -75,7 +75,7 @@ describe('SQS message processor', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
       )
-      expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Full incoming message payload (as received):')
       )
       expect(createOffer).toHaveBeenCalledWith(
