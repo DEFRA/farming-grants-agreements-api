@@ -8,17 +8,26 @@ const DEFAULT_BATCH_SIZE = 1000
 const DEFAULT_CONCURRENCY = 4
 const MAX_CONCURRENCY = 10
 const ERROR_SAMPLE_LIMIT = 25
+const AGREEMENT_NUMBER_PAD_LENGTH = 9
+const CLIENT_REF_PAD_LENGTH = 8
+const FRN_BASE = 1000000000
+const FRN_RANGE = 9000000000
+const SBI_BASE = 100000000
+const SBI_RANGE = 900000000
+const BATCH_LOG_INTERVAL = 10
 
 const SAMPLE_TEMPLATES = sampleData.agreements
+
+const safeStructuredClone =
+  typeof structuredClone === 'function'
+    ? structuredClone
+    : (value) => JSON.parse(JSON.stringify(value))
 
 const cloneValue = (value, fallback) => {
   if (value === undefined || value === null) {
     return fallback
   }
-  if (typeof structuredClone === 'function') {
-    return structuredClone(value)
-  }
-  return JSON.parse(JSON.stringify(value))
+  return safeStructuredClone(value)
 }
 
 const createDateRange = () => {
@@ -33,7 +42,7 @@ const createDateRange = () => {
 }
 
 const generateAgreementNumber = (index) =>
-  `SFI${String(index).padStart(9, '0')}`
+  `SFI${String(index).padStart(AGREEMENT_NUMBER_PAD_LENGTH, '0')}`
 
 const generateRandomDateInRange = ({ startMs, rangeMs }) => {
   const randomTime = startMs + Math.random() * rangeMs
@@ -48,10 +57,13 @@ const createAgreementVariation = (index, timestamp, dateRange) => {
   const agreementNumber = generateAgreementNumber(index)
   const notificationMessageId = `notification-${index}-${timestamp}`
   const correlationId = `correlation-${index}-${timestamp}`
-  const clientRef = `client-ref-${String(index).padStart(8, '0')}`
+  const clientRef = `client-ref-${String(index).padStart(
+    CLIENT_REF_PAD_LENGTH,
+    '0'
+  )}`
 
-  const frnBase = 1000000000 + (index % 9000000000)
-  const sbiBase = 100000000 + (index % 900000000)
+  const frnBase = FRN_BASE + (index % FRN_RANGE)
+  const sbiBase = SBI_BASE + (index % SBI_RANGE)
   const frn = String(frnBase)
   const sbi = String(sbiBase)
 
@@ -121,8 +133,7 @@ const processBatch = async ({ startIndex, batchSize, dateRange, logger }) => {
     insertedCount = agreementDocs.length
   } catch (err) {
     const firstAgreement = agreementDocs[0]?.agreementNumber
-    const lastAgreement =
-      agreementDocs[agreementDocs.length - 1]?.agreementNumber
+    const lastAgreement = agreementDocs.at(-1)?.agreementNumber
     batchErrors.push({
       agreementRange:
         firstAgreement && lastAgreement
@@ -148,78 +159,115 @@ const formatSeconds = (seconds) => {
   return `${mins}m ${secs}s`
 }
 
+const addErrorSamples = (errorsSample, errors) => {
+  if (!errors.length || errorsSample.length >= ERROR_SAMPLE_LIMIT) {
+    return
+  }
+  const availableSlots = ERROR_SAMPLE_LIMIT - errorsSample.length
+  errorsSample.push(...errors.slice(0, availableSlots))
+}
+
+const shouldLogBatch = (batchNumber, totalBatches) => {
+  const progressBatchNumber = batchNumber + 1
+  return (
+    progressBatchNumber % BATCH_LOG_INTERVAL === 0 ||
+    progressBatchNumber === totalBatches
+  )
+}
+
+const logBatchStats = (
+  logger,
+  batchNumber,
+  totalBatches,
+  successCount,
+  errors
+) => {
+  if (!logger) {
+    return
+  }
+  logger.info(
+    `[populate-agreements] Batch ${batchNumber + 1}/${totalBatches} complete (created ${successCount}, errors ${errors.length})`
+  )
+}
+
+const calculateSafeConcurrency = (requestedConcurrency, totalBatches) => {
+  const desired = Number.isInteger(requestedConcurrency)
+    ? requestedConcurrency
+    : DEFAULT_CONCURRENCY
+  return Math.max(1, Math.min(desired, MAX_CONCURRENCY, totalBatches))
+}
+
+const processAllBatches = async ({
+  targetCount,
+  batchSize,
+  totalBatches,
+  safeConcurrency,
+  dateRange,
+  logger
+}) => {
+  const errorsSample = []
+  let totalErrors = 0
+  let totalCreated = 0
+  let nextBatchNumber = 0
+
+  const createBatchPromise = (batchNumber) => {
+    const startIndex = batchNumber * batchSize
+    const currentBatchSize = Math.min(batchSize, targetCount - startIndex)
+    return processBatch({
+      startIndex,
+      batchSize: currentBatchSize,
+      dateRange,
+      logger
+    }).then((result) => ({
+      ...result,
+      batchNumber
+    }))
+  }
+
+  while (nextBatchNumber < totalBatches) {
+    const batchPromises = []
+    for (
+      let concurrentIndex = 0;
+      concurrentIndex < safeConcurrency && nextBatchNumber < totalBatches;
+      concurrentIndex++
+    ) {
+      batchPromises.push(createBatchPromise(nextBatchNumber))
+      nextBatchNumber++
+    }
+
+    const batchResults = await Promise.all(batchPromises)
+    for (const { successCount, errors, batchNumber } of batchResults) {
+      totalCreated += successCount
+      totalErrors += errors.length
+      addErrorSamples(errorsSample, errors)
+      if (shouldLogBatch(batchNumber, totalBatches)) {
+        logBatchStats(logger, batchNumber, totalBatches, successCount, errors)
+      }
+    }
+  }
+
+  return { totalCreated, totalErrors, errorsSample }
+}
+
 const populateAgreements = async ({
   targetCount = DEFAULT_TARGET_COUNT,
   batchSize = DEFAULT_BATCH_SIZE,
   concurrency = DEFAULT_CONCURRENCY,
   logger
 }) => {
-  const errorsSample = []
-  let totalErrors = 0
-  let totalCreated = 0
-
   const startTime = Date.now()
   const dateRange = createDateRange()
   const totalBatches = Math.ceil(targetCount / batchSize)
-  const safeConcurrency = Math.max(
-    1,
-    Math.min(
-      Number.isInteger(concurrency) ? concurrency : DEFAULT_CONCURRENCY,
-      MAX_CONCURRENCY,
-      totalBatches
-    )
-  )
+  const safeConcurrency = calculateSafeConcurrency(concurrency, totalBatches)
 
-  let nextBatchNumber = 0
-
-  while (nextBatchNumber < totalBatches) {
-    const activeBatches = []
-
-    for (
-      let concurrentIndex = 0;
-      concurrentIndex < safeConcurrency && nextBatchNumber < totalBatches;
-      concurrentIndex++
-    ) {
-      const batchNumber = nextBatchNumber
-      const startIndex = batchNumber * batchSize
-      const currentBatchSize = Math.min(batchSize, targetCount - startIndex)
-      const batchPromise = processBatch({
-        startIndex,
-        batchSize: currentBatchSize,
-        dateRange,
-        logger
-      }).then((result) => ({
-        ...result,
-        batchNumber,
-        currentBatchSize
-      }))
-
-      activeBatches.push(batchPromise)
-      nextBatchNumber++
-    }
-
-    const batchResults = await Promise.all(activeBatches)
-
-    for (const { successCount, errors, batchNumber } of batchResults) {
-      totalCreated += successCount
-      totalErrors += errors.length
-
-      if (errorsSample.length < ERROR_SAMPLE_LIMIT && errors.length) {
-        const availableSlots = ERROR_SAMPLE_LIMIT - errorsSample.length
-        errorsSample.push(...errors.slice(0, availableSlots))
-      }
-
-      const progressBatchNumber = batchNumber + 1
-      if (
-        progressBatchNumber % 10 === 0 ||
-        progressBatchNumber === totalBatches
-      ) {
-        logger?.info(
-          `[populate-agreements] Batch ${progressBatchNumber}/${totalBatches} complete (created ${successCount}, errors ${errors.length})`
-        )
-      }
-    }
-  }
+  const { totalCreated, totalErrors, errorsSample } = await processAllBatches({
+    targetCount,
+    batchSize,
+    totalBatches,
+    safeConcurrency,
+    dateRange,
+    logger
+  })
 
   const elapsedSeconds = (Date.now() - startTime) / 1000
   const averageRate = elapsedSeconds
