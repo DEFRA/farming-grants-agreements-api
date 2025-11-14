@@ -1,8 +1,9 @@
 import mongoose from 'mongoose'
+import crypto from 'node:crypto'
+import { structuredClone } from 'node:util'
 import agreements from '~/src/api/common/models/agreements.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
-import crypto from 'crypto'
 
 const DEFAULT_TARGET_COUNT = 70000
 const DEFAULT_BATCH_SIZE = 1000
@@ -19,16 +20,11 @@ const BATCH_LOG_INTERVAL = 10
 
 const SAMPLE_TEMPLATES = sampleData.agreements
 
-const safeStructuredClone =
-  typeof structuredClone === 'function'
-    ? structuredClone
-    : (value) => JSON.parse(JSON.stringify(value))
-
 const cloneValue = (value, fallback) => {
   if (value === undefined || value === null) {
     return fallback
   }
-  return safeStructuredClone(value)
+  return structuredClone(value)
 }
 
 const createDateRange = () => {
