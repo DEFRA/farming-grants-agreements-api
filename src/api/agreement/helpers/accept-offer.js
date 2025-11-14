@@ -53,7 +53,7 @@ async function acceptOffer(agreementNumber, agreementData) {
     throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
   }
 
-  return agreement
+  return { agreementNumber, ...agreement }
 }
 
 export { acceptOffer }
