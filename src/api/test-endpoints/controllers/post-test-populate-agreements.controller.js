@@ -10,6 +10,7 @@ import {
 
 const MAX_TARGET_COUNT = 100000
 const MAX_BATCH_SIZE = 1000
+const JOB_ID_RADIX = 36
 
 const parseNumber = (value, fallback) => {
   if (value === undefined || value === null || value === '') {
@@ -65,7 +66,7 @@ const postTestPopulateAgreementsController = {
     validateInputs(targetCount, batchSize, concurrency)
 
     const jobId = `populate-${Date.now()}-${Math.random()
-      .toString(36)
+      .toString(JOB_ID_RADIX)
       .slice(2, 8)}`
 
     const jobLogger = request.logger.child({
