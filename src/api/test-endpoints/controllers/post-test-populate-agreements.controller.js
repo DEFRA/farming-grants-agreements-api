@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom'
+import crypto from 'crypto'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import {
   populateAgreements,
@@ -10,7 +11,6 @@ import {
 
 const MAX_TARGET_COUNT = 100000
 const MAX_BATCH_SIZE = 1000
-const JOB_ID_RADIX = 36
 
 const parseNumber = (value, fallback) => {
   if (value === undefined || value === null || value === '') {
@@ -65,9 +65,7 @@ const postTestPopulateAgreementsController = {
 
     validateInputs(targetCount, batchSize, concurrency)
 
-    const jobId = `populate-${Date.now()}-${Math.random()
-      .toString(JOB_ID_RADIX)
-      .slice(2, 8)}`
+    const jobId = `populate-${Date.now()}-${crypto.randomBytes(4).toString('hex').slice(0, 6)}`
 
     const jobLogger = request.logger.child({
       jobId,
