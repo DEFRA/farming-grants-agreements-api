@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import agreements from '~/src/api/common/models/agreements.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
+import crypto from 'crypto'
 
 const DEFAULT_TARGET_COUNT = 70000
 const DEFAULT_BATCH_SIZE = 1000
@@ -45,8 +46,10 @@ const generateAgreementNumber = (index) =>
   `SFI${String(index).padStart(AGREEMENT_NUMBER_PAD_LENGTH, '0')}`
 
 const generateRandomDateInRange = ({ startMs, rangeMs }) => {
-  const randomTime = startMs + Math.random() * rangeMs
-  return new Date(randomTime).toISOString()
+  const r =
+    Number(crypto.randomBytes(8).readBigUInt64BE()) /
+    Number('0xFFFFFFFFFFFFFFFF')
+  return new Date(startMs + r * rangeMs).toISOString()
 }
 
 const createAgreementVariation = (index, timestamp, dateRange) => {
