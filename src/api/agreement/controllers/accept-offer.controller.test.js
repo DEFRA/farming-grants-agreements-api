@@ -9,6 +9,7 @@ import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
+import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/landgrantsAdapter.js'
 
 jest.mock('~/src/api/agreement/helpers/accept-offer.js')
 jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
@@ -20,6 +21,9 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
 }))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 jest.mock('~/src/api/common/helpers/sns-publisher.js')
+jest.mock('~/src/api/adapter/landgrantsAdapter.js', () => ({
+  calculatePaymentsBasedOnActions: jest.fn()
+}))
 
 describe('acceptOfferDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -32,6 +36,7 @@ describe('acceptOfferDocumentController', () => {
     clientRef: 'test-client-ref',
     correlationId: 'test-correlation-id',
     code: 'test-code',
+    actionApplications: [],
     payment: {
       agreementStartDate: '2024-01-01',
       agreementEndDate: '2027-12-31'
@@ -52,6 +57,16 @@ describe('acceptOfferDocumentController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    calculatePaymentsBasedOnActions.mockResolvedValue({
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2025-12-31',
+      frequency: 'Annual',
+      agreementTotalPence: 1000,
+      annualTotalPence: 1000,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
+    })
 
     // Reset mock implementations
     acceptOffer.mockReset()

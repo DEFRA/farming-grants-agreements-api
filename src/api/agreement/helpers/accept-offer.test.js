@@ -3,6 +3,7 @@ import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { acceptOffer } from './accept-offer.js'
 import { config } from '~/src/config/index.js'
+import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/landgrantsAdapter.js'
 
 jest.mock('~/src/api/common/models/agreements.js', () => ({
   __esModule: true,
@@ -24,6 +25,9 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
   }
 }))
 jest.mock('~/src/config/index.js')
+jest.mock('~/src/api/adapter/landgrantsAdapter.js', () => ({
+  calculatePaymentsBasedOnActions: jest.fn()
+}))
 
 describe('acceptOffer', () => {
   const mockUpdateResult = {
@@ -37,6 +41,7 @@ describe('acceptOffer', () => {
     status: 'accepted'
   }
   let mockLogger
+  let mockPayments
 
   beforeAll(() => {
     jest.useFakeTimers()
@@ -46,6 +51,17 @@ describe('acceptOffer', () => {
     jest.clearAllMocks()
     jest.setSystemTime(new Date('2024-01-01'))
     mockLogger = { info: jest.fn(), error: jest.fn() }
+    mockPayments = {
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2025-01-01',
+      frequency: 'Annual',
+      agreementTotalPence: 1200,
+      annualTotalPence: 1200,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
+    }
+    calculatePaymentsBasedOnActions.mockResolvedValue(mockPayments)
 
     // Mock config values
     config.get = jest.fn((key) => {
@@ -168,7 +184,8 @@ describe('acceptOffer', () => {
         payment: {
           agreementEndDate: '2027-10-31'
         }
-      }
+      },
+      actionApplications: [{ code: 'CMOR1' }]
     }
 
     // Arrange
@@ -186,12 +203,16 @@ describe('acceptOffer', () => {
     )
 
     // Assert
+    expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
+      agreementData.actionApplications
+    )
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
           status: 'accepted',
-          signatureDate: new Date().toISOString()
+          signatureDate: new Date().toISOString(),
+          payment: mockPayments
         }
       }
     )
@@ -206,22 +227,30 @@ describe('acceptOffer', () => {
     agreementsModel.updateOneAgreementVersion.mockResolvedValue(
       mockUpdateResult
     )
+    const agreementData = {
+      agreementNumber: agreementId,
+      actionApplications: []
+    }
 
     // Act
     const result = await acceptOffer(
       agreementId,
-      { agreementNumber: agreementId },
+      agreementData,
       'http://localhost:3555/sample',
       mockLogger
     )
 
     // Assert
+    expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
+      agreementData.actionApplications
+    )
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
           status: 'accepted',
-          signatureDate: new Date().toISOString()
+          signatureDate: new Date().toISOString(),
+          payment: mockPayments
         }
       }
     )
@@ -240,7 +269,7 @@ describe('acceptOffer', () => {
     await expect(
       acceptOffer(
         agreementId,
-        { agreementNumber: agreementId },
+        { agreementNumber: agreementId, actionApplications: [] },
         'http://localhost:3555/SFI999999999',
         mockLogger
       )
@@ -257,7 +286,7 @@ describe('acceptOffer', () => {
     await expect(
       acceptOffer(
         agreementId,
-        { agreementNumber: agreementId },
+        { agreementNumber: agreementId, actionApplications: [] },
         'http://localhost:3555/SFI123456789',
         mockLogger
       )
@@ -274,7 +303,7 @@ describe('acceptOffer', () => {
     await expect(
       acceptOffer(
         agreementId,
-        { agreementNumber: agreementId },
+        { agreementNumber: agreementId, actionApplications: [] },
         'http://localhost:3555/SFI123456789',
         mockLogger
       )

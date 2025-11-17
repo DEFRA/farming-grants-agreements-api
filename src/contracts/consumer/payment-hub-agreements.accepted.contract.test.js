@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
@@ -12,11 +13,68 @@ import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 
 jest.unmock('mongoose')
 
+const calculatedPayment = {
+  message: 'success',
+  payment: {
+    agreementStartDate: '2025-12-01',
+    agreementEndDate: '2028-12-01',
+    frequency: 'Quarterly',
+    agreementTotalPence: 242298,
+    annualTotalPence: 80766,
+
+    parcelItems: {
+      1: {
+        code: 'CMOR1',
+        description: 'Assess moorland',
+        unit: 'ha',
+        quantity: 50.53,
+        rateInPence: 1060,
+        annualPaymentPence: 53566,
+        parcelId: 'SE12 3456 7890',
+        version: 1
+      }
+    },
+
+    agreementLevelItems: {
+      1: {
+        code: 'CMOR1',
+        description: 'Agreement-level item',
+        annualPaymentPence: 27200,
+        version: 1
+      }
+    },
+
+    payments: [
+      {
+        paymentDate: '2026-03-05',
+        totalPaymentPence: 20197,
+        lineItems: [{ agreementLevelItemId: 1, paymentPence: 20197 }]
+      },
+      {
+        paymentDate: '2026-06-05',
+        totalPaymentPence: 20191,
+        lineItems: [{ agreementLevelItemId: 1, paymentPence: 20191 }]
+      },
+      {
+        paymentDate: '2026-09-07',
+        totalPaymentPence: 20191,
+        lineItems: [{ agreementLevelItemId: 1, paymentPence: 20191 }]
+      },
+      {
+        paymentDate: '2026-12-07',
+        totalPaymentPence: 20191,
+        lineItems: [{ agreementLevelItemId: 1, paymentPence: 20191 }]
+      }
+    ]
+  }
+}
+
 jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: jest.fn().mockResolvedValue(true)
 }))
 
 let server
+let originalFetch
 
 describe('UI sending a POST request to accept an agreement', () => {
   const provider = new Pact({
@@ -28,7 +86,25 @@ describe('UI sending a POST request to accept an agreement', () => {
   })
 
   beforeAll(async () => {
+    // Turn off jest-fetch-mock for this test file
     fetchMock.disableMocks()
+
+    // Save and replace global.fetch with a Jest mock
+    originalFetch = global.fetch
+    // Mock Land Grants payment calculation HTTP call to avoid real network fetches
+    // Return the structure that landgrantsAdapter expects, including headers
+    global.fetch = jest.fn((url, options) => {
+      const urlStr = String(url)
+      if (urlStr.includes('/payments/calculate')) {
+        return Promise.resolve({
+          ok: true,
+          headers: { get: jest.fn().mockReturnValue('application/json') },
+          json: jest.fn().mockResolvedValue(calculatedPayment)
+        })
+      }
+      // Delegate all other requests (e.g., Payment Hub) to the real fetch
+      return originalFetch(url, options)
+    })
 
     // Use the MongoDB URI provided by @shelf/jest-mongodb
     const mongoUri = globalThis.__MONGO_URI__
@@ -59,6 +135,9 @@ describe('UI sending a POST request to accept an agreement', () => {
       await server.stop({ timeout: 0 })
     }
     config.set('featureFlags.isPaymentHubEnabled', false)
+
+    // Restore original fetch and re-enable jest-fetch-mock for other tests
+    global.fetch = originalFetch
     fetchMock.enableMocks()
   })
 
