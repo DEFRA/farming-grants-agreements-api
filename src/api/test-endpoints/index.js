@@ -1,7 +1,8 @@
 import {
   postTestQueueMessageController,
   getTestAgreementController,
-  postTestUnacceptOfferController
+  postTestUnacceptOfferController,
+  postTestPopulateAgreementsController
 } from '~/src/api/test-endpoints/controllers/index.js'
 import Boom from '@hapi/boom'
 
@@ -27,6 +28,11 @@ const testEndpoints = {
           method: 'POST',
           path: '/api/test/unaccept-offer/{agreementId}',
           ...postTestUnacceptOfferController
+        },
+        {
+          method: 'POST',
+          path: '/api/test/populate-agreements',
+          ...postTestPopulateAgreementsController
         },
         {
           method: 'GET',
