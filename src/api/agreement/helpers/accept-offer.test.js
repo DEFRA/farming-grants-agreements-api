@@ -32,6 +32,7 @@ describe('acceptOffer', () => {
     upsertedId: null,
     upsertedCount: 0,
     matchedCount: 1,
+    agreementNumber: 'sample',
     signatureDate: '2024-01-01T00:00:00.000Z',
     status: 'accepted'
   }
