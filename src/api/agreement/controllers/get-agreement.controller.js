@@ -1,4 +1,5 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/landgrantsAdapter.js'
 import Boom from '@hapi/boom'
 
 /**
@@ -8,11 +9,20 @@ import Boom from '@hapi/boom'
  */
 const getAgreementController =
   ({ allowEntra } = {}) =>
-  (request, h) => {
+  async (request, h) => {
     const { agreementData, source } = request.auth.credentials
     if (!allowEntra && source === 'entra') {
       throw Boom.unauthorized(
         `Not allowed to view the agreement. Source: ${source}`
+      )
+    }
+
+    if (agreementData.status === 'offered') {
+      agreementData.payment = await calculatePaymentsBasedOnActions(
+        agreementData.actionApplications
+      )
+      request.logger.info(
+        'Successfully called Land Grants service for payments calculation.'
       )
     }
 
