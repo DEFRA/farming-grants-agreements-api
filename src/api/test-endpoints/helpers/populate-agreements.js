@@ -1,6 +1,5 @@
 import mongoose from 'mongoose'
 import crypto from 'node:crypto'
-import { structuredClone } from 'node:util'
 import agreements from '~/src/api/common/models/agreements.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
@@ -24,7 +23,10 @@ const cloneValue = (value, fallback) => {
   if (value === undefined || value === null) {
     return fallback
   }
-  return structuredClone(value)
+  if (typeof globalThis.structuredClone === 'function') {
+    return globalThis.structuredClone(value)
+  }
+  return JSON.parse(JSON.stringify(value))
 }
 
 const createDateRange = () => {
