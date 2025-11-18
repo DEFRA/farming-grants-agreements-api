@@ -23,11 +23,46 @@ describe('SQS message processor', () => {
   })
 
   describe('processMessage', () => {
-    it('should process valid SNS message', async () => {
+    it('should process APPLICATION_WITHDRAWN SNS message', async () => {
       const mockPayload = {
         type: 'gas-backend.agreement.update',
         data: {
           status: 'APPLICATION_WITHDRAWN',
+          clientRef: 'SFI123456789'
+        }
+      }
+      const message = {
+        MessageId: 'aws-message-id',
+        Body: JSON.stringify(mockPayload)
+      }
+
+      await processMessage(handleUpdateAgreementEvent, message, mockLogger)
+
+      expect(withdrawOffer).toHaveBeenCalledWith('SFI123456789')
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'SFI123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: expect.any(String),
+            status: 'withdrawn'
+          },
+          time: expect.any(String),
+          topicArn:
+            'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
+    })
+
+    it('should process WITHDRAWAL_REQUESTED SNS message', async () => {
+      const mockPayload = {
+        type: 'gas-backend.agreement.update',
+        data: {
+          status: 'PRE_AWARD:APPLICATION:WITHDRAWAL_REQUESTED',
           clientRef: 'SFI123456789'
         }
       }
@@ -86,11 +121,49 @@ describe('SQS message processor', () => {
   })
 
   describe('handleEvent', () => {
-    it('should withdraw offer for application-withdrawn events', async () => {
+    it('should withdraw offer for APPLICATION_WITHDRAWN events', async () => {
       const mockPayload = {
         type: 'cloud.defra.test.fg-gas-backend.agreement.update',
         data: {
           status: 'APPLICATION_WITHDRAWN',
+          clientRef: 'SFI123456789'
+        }
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Received application withdrawn from event')
+      )
+      expect(withdrawOffer).toHaveBeenCalledWith('SFI123456789')
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'SFI123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: expect.any(String),
+            status: 'withdrawn'
+          },
+          time: expect.any(String),
+          topicArn:
+            'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
+    })
+
+    it('should withdraw offer for WITHDRAWAL_REQUESTED events', async () => {
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'PRE_AWARD:APPLICATION:WITHDRAWAL_REQUESTED',
           clientRef: 'SFI123456789'
         }
       }
