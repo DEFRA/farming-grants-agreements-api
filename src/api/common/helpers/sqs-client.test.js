@@ -1,7 +1,8 @@
 import { jest } from '@jest/globals'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
-import { handleEvent, processMessage, sqsClientPlugin } from './sqs-client.js'
+import { createSqsClientPlugin } from './sqs-client.js'
+import { handleCreateAgreementEvent } from './sqs-message-processor/create-agreement.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 
 // Mock AWS SDK credential provider
@@ -25,6 +26,8 @@ jest.mock('~/src/config/index.js', () => ({
           return 5
         case 'sqs.visibilityTimeout':
           return 30
+        case 'featureFlags.seedDb':
+          return true
         default:
           return undefined
       }
@@ -70,6 +73,14 @@ describe('SQS Client', () => {
       on: jest.fn()
     }
     Consumer.create.mockReturnValue(mockConsumer)
+
+    // Setup createOffer mock to return a mock agreement
+    createOffer.mockResolvedValue({
+      agreementNumber: 'SFI123456789',
+      notificationMessageId: 'test-message-id',
+      frn: '123456789',
+      sbi: '123456789'
+    })
   })
 
   afterEach(() => {
@@ -79,16 +90,24 @@ describe('SQS Client', () => {
   describe('handleEvent', () => {
     it('should create agreement for application-approved events', async () => {
       const mockPayload = {
-        type: 'application.approved',
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         data: { id: '123', status: 'approved' }
       }
 
-      await handleEvent(mockPayload, mockLogger)
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Creating agreement from event')
       )
-      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
+      expect(createOffer).toHaveBeenCalledWith(
+        'aws-message-id',
+        mockPayload.data,
+        mockLogger
+      )
     })
 
     it('should throw an error for non-application-approved events', async () => {
@@ -97,79 +116,15 @@ describe('SQS Client', () => {
         data: { id: '123' }
       }
 
-      await expect(handleEvent(mockPayload, mockLogger)).rejects.toThrow(
-        'Unrecognized event type'
+      await handleCreateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
       )
 
       expect(createOffer).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('processMessage', () => {
-    it('should process valid SNS message', async () => {
-      const mockPayload = {
-        type: 'application.approved',
-        data: { id: '123' }
-      }
-      const message = {
-        Body: JSON.stringify(mockPayload)
-      }
-
-      await processMessage(message, mockLogger)
-
-      expect(createOffer).toHaveBeenCalledWith(mockPayload.data)
-    })
-
-    it('should handle invalid JSON in message body', async () => {
-      const message = {
-        Body: 'invalid json'
-      }
-
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Invalid message format'
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        })
-      )
-    })
-
-    it('should handle invalid JSON in SNS message', async () => {
-      const message = {
-        Body: 'invalid json'
-      }
-
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Invalid message format'
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        })
-      )
-    })
-
-    it('should handle non-SyntaxError with Boom.boomify', async () => {
-      const message = {
-        Body: JSON.stringify({
-          Message: JSON.stringify({ type: 'invalid.type' })
-        })
-      }
-
-      await expect(processMessage(message, mockLogger)).rejects.toThrow(
-        'Error processing SQS message'
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error processing message'),
-        expect.objectContaining({
-          message,
-          error: expect.any(String)
-        })
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No action required for GAS create offer event: some-other-event'
       )
     })
   })
@@ -182,6 +137,11 @@ describe('SQS Client', () => {
     }
 
     it('should initialize properly when registered', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Check SQS client was created
@@ -224,6 +184,11 @@ describe('SQS Client', () => {
     })
 
     it('should handle plugin cleanup on server stop', async () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get and call the stop handler
@@ -244,6 +209,11 @@ describe('SQS Client', () => {
     })
 
     it('should handle message processing errors', async () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get the message handler
@@ -258,14 +228,17 @@ describe('SQS Client', () => {
       await messageHandler(invalidMessage)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to process message:',
-        expect.objectContaining({
-          messageId: 'msg-1'
-        })
+        expect.any(Error),
+        'Failed to process SQS (test) message: Invalid message format: {"Body":"invalid json","MessageId":"msg-1"}'
       )
     })
 
     it('should handle consumer errors', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get the error handler
@@ -278,14 +251,17 @@ describe('SQS Client', () => {
       errorHandler(error)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'SQS Consumer error:',
-        expect.objectContaining({
-          error: error.message
-        })
+        error,
+        'SQS Consumer (test) error: Consumer error'
       )
     })
 
     it('should handle processing errors', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
       sqsClientPlugin.plugin.register(server, options)
 
       // Get the processing error handler
@@ -298,10 +274,23 @@ describe('SQS Client', () => {
       errorHandler(error)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'SQS Message processing error:',
-        expect.objectContaining({
-          error: error.message
-        })
+        error,
+        'SQS Message (test) processing error: Processing error'
+      )
+    })
+
+    it('should start the consumer successfully', () => {
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        jest.fn()
+      )
+      sqsClientPlugin.plugin.register(server, options)
+
+      mockConsumer.on.mock.calls.find((call) => call[0] === 'started')[1]()
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'SQS Consumer (test) started'
       )
     })
   })

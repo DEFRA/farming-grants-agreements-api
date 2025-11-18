@@ -1,10 +1,11 @@
 import { jest } from '@jest/globals'
 import Boom from '@hapi/boom'
 import { updatePaymentHub } from './update-payment-hub.js'
-import { getAgreementData } from './get-agreement-data.js'
+import { getAgreementDataById } from './get-agreement-data.js'
 import { createInvoice } from './invoice/create-invoice.js'
 import { updateInvoice } from './invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
+import { config } from '~/src/config/index.js'
 
 // Mock all dependencies
 jest.mock('./get-agreement-data.js')
@@ -12,6 +13,20 @@ jest.mock('./invoice/create-invoice.js')
 jest.mock('./invoice/update-invoice.js')
 jest.mock('~/src/api/common/helpers/payment-hub/index.js')
 jest.mock('@hapi/boom')
+jest.mock('./get-agreement-data.js', () => ({
+  getAgreementDataById: jest.fn()
+}))
+jest.mock('~/src/config/index.js', () => {
+  const store = { 'featureFlags.isPaymentHubEnabled': false }
+  return {
+    config: {
+      get: jest.fn((key) => store[key]),
+      set: jest.fn((key, value) => {
+        store[key] = value
+      })
+    }
+  }
+})
 
 describe('updatePaymentHub', () => {
   let mockServer, mockLogger, mockContext
@@ -19,32 +34,43 @@ describe('updatePaymentHub', () => {
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
     correlationId: 'test-correlation-id',
-    frn: '1234567890',
-    sbi: '123456789',
-    payments: {
-      activities: [
-        {
+    identifiers: {
+      frn: '1234567890',
+      sbi: '106284736'
+    },
+    frequency: 'Quarterly',
+    payment: {
+      parcelItems: {
+        'parcel-item-1': {
+          parcelId: 'PARCEL001',
           code: 'ACT001',
-          description: 'Test Activity 1'
+          description: 'ACT001: Test Activity 1',
+          quantity: 10
         },
-        {
+        'parcel-item-2': {
+          parcelId: 'PARCEL002',
           code: 'ACT002',
-          description: 'Test Activity 2'
+          description: 'ACT002: Test Activity 2',
+          quantity: 15
+        }
+      },
+      agreementLevelItems: {},
+      payments: [
+        {
+          paymentDate: '2022-11-09',
+          lineItems: [
+            {
+              parcelItemId: 'parcel-item-1',
+              paymentPence: 200000
+            },
+            {
+              parcelItemId: 'parcel-item-2',
+              paymentPence: 300000
+            }
+          ]
         }
       ],
-      yearlyBreakdown: {
-        totalAgreementPayment: 5000,
-        details: [
-          {
-            code: 'ACT001',
-            totalPayment: 2000
-          },
-          {
-            code: 'ACT002',
-            totalPayment: 3000
-          }
-        ]
-      }
+      agreementTotalPence: 500000
     }
   }
 
@@ -56,17 +82,19 @@ describe('updatePaymentHub', () => {
     jest.clearAllMocks()
 
     mockServer = { mock: 'server' }
-    mockLogger = { mock: 'logger' }
+    mockLogger = { mock: 'logger', warn: jest.fn() }
     mockContext = { server: mockServer, logger: mockLogger }
 
     // Setup successful mocks by default
-    getAgreementData.mockResolvedValue(mockAgreementData)
+    getAgreementDataById.mockResolvedValue(mockAgreementData)
     createInvoice.mockResolvedValue(mockInvoice)
     updateInvoice.mockResolvedValue({ acknowledged: true })
     sendPaymentHubRequest.mockResolvedValue({ success: true })
 
     // Mock Date to ensure consistent testing
     jest.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2024)
+
+    config.set('featureFlags.isPaymentHubEnabled', true)
   })
 
   afterEach(() => {
@@ -79,7 +107,7 @@ describe('updatePaymentHub', () => {
 
       const result = await updatePaymentHub(mockContext, agreementNumber)
 
-      expect(getAgreementData).toHaveBeenCalledWith({ agreementNumber })
+      expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
       expect(createInvoice).toHaveBeenCalledWith(
         agreementNumber,
         'test-correlation-id'
@@ -89,7 +117,7 @@ describe('updatePaymentHub', () => {
         paymentHubRequest: expect.objectContaining({
           sourceSystem: 'AHWR',
           frn: '1234567890',
-          sbi: '123456789',
+          sbi: '106284736',
           marketingYear: 2024,
           paymentRequestNumber: 1,
           correlationId: 'test-correlation-id',
@@ -97,18 +125,22 @@ describe('updatePaymentHub', () => {
           agreementNumber: 'SFI123456789',
           schedule: 'T4',
           dueDate: '2022-11-09',
-          value: 5000,
+          value: 500000,
           invoiceLines: [
-            {
-              value: 2000,
-              description: 'Test Activity 1',
-              schemeCode: 'ACT001'
-            },
-            {
-              value: 3000,
-              description: 'Test Activity 2',
-              schemeCode: 'ACT002'
-            }
+            [
+              {
+                value: 200000,
+                description:
+                  '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
+                schemeCode: 'ACT001'
+              },
+              {
+                value: 300000,
+                description:
+                  '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
+                schemeCode: 'ACT002'
+              }
+            ]
           ]
         })
       })
@@ -128,26 +160,99 @@ describe('updatePaymentHub', () => {
       })
     })
 
+    it('should not send payment hub request when payment hub toggle is disabled', async () => {
+      config.set('featureFlags.isPaymentHubEnabled', false)
+      const agreementNumber = 'SFI123456789'
+
+      const result = await updatePaymentHub(
+        mockContext,
+        agreementNumber,
+        mockContext.logger
+      )
+
+      expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
+      expect(createInvoice).toHaveBeenCalledWith(
+        agreementNumber,
+        'test-correlation-id'
+      )
+
+      const paymentHubRequestData = {
+        sourceSystem: 'AHWR',
+        frn: '1234567890',
+        sbi: '106284736',
+        marketingYear: 2024,
+        paymentRequestNumber: 1,
+        correlationId: 'test-correlation-id',
+        invoiceNumber: 'INV-123456',
+        agreementNumber: 'SFI123456789',
+        schedule: 'T4',
+        dueDate: '2022-11-09',
+        value: 500000,
+        invoiceLines: [
+          [
+            {
+              value: 200000,
+              description:
+                '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
+              schemeCode: 'ACT001'
+            },
+            {
+              value: 300000,
+              description:
+                '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
+              schemeCode: 'ACT002'
+            }
+          ]
+        ]
+      }
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining(paymentHubRequestData)
+      })
+
+      expect(sendPaymentHubRequest).not.toHaveBeenCalledWith(
+        mockServer,
+        mockLogger,
+        expect.objectContaining({
+          sourceSystem: 'AHWR',
+          agreementNumber: 'SFI123456789'
+        })
+      )
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `The PaymentHub feature flag is disabled. The request has not been sent to payment hub:${JSON.stringify(paymentHubRequestData, null, 2)}`
+      )
+
+      expect(result).toEqual({
+        status: 'success',
+        message: 'Payload sent to payment hub successfully'
+      })
+    })
+
     it('should handle agreement with no activities', async () => {
       const agreementWithNoActivities = {
         ...mockAgreementData,
-        payments: {
-          activities: [],
-          yearlyBreakdown: {
-            totalAgreementPayment: 0,
-            details: []
-          }
+        payment: {
+          parcelItems: {},
+          agreementLevelItems: {},
+          payments: [
+            {
+              paymentDate: '2022-11-09',
+              lineItems: []
+            }
+          ],
+          agreementTotalPence: 0
         }
       }
 
-      getAgreementData.mockResolvedValue(agreementWithNoActivities)
+      getAgreementDataById.mockResolvedValue(agreementWithNoActivities)
 
       const result = await updatePaymentHub(mockContext, 'SFI123456789')
 
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
           value: 0,
-          invoiceLines: []
+          invoiceLines: [[]]
         })
       })
 
@@ -159,7 +264,7 @@ describe('updatePaymentHub', () => {
     it('should throw Boom error when agreement is not found', async () => {
       const notFoundError = new Error('Agreement not found')
       notFoundError.isBoom = true
-      getAgreementData.mockRejectedValue(notFoundError)
+      getAgreementDataById.mockRejectedValue(notFoundError)
 
       await expect(updatePaymentHub(mockContext, 'INVALID')).rejects.toThrow(
         'Agreement not found'
@@ -216,13 +321,63 @@ describe('updatePaymentHub', () => {
   })
 
   describe('Data Mapping', () => {
+    it('should map agreement level items and omit schedule for non-quarterly', async () => {
+      const agreementWithAgreementLevelItem = {
+        ...mockAgreementData,
+        frequency: 'Annually',
+        payment: {
+          parcelItems: {},
+          agreementLevelItems: {
+            'agreement-level-1': {
+              code: 'AL001',
+              description: 'Annual management payment'
+            }
+          },
+          payments: [
+            {
+              paymentDate: '2023-02-01',
+              lineItems: [
+                {
+                  agreementLevelItemId: 'agreement-level-1',
+                  paymentPence: 12345
+                }
+              ]
+            }
+          ],
+          agreementTotalPence: 12345
+        }
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithAgreementLevelItem)
+
+      await updatePaymentHub(mockContext, 'SFI123456789')
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining({
+          schedule: undefined,
+          dueDate: '2023-02-01',
+          value: 12345,
+          invoiceLines: [
+            [
+              {
+                value: 12345,
+                description:
+                  '2023-02-01: One-off payment per agreement per year for Annual management payment',
+                schemeCode: 'AL001'
+              }
+            ]
+          ]
+        })
+      })
+    })
+
     it('should correctly map agreement data to payment hub request', async () => {
       await updatePaymentHub(mockContext, 'SFI123456789')
 
       const expectedPaymentRequest = {
         sourceSystem: 'AHWR',
         frn: '1234567890',
-        sbi: '123456789',
+        sbi: '106284736',
         marketingYear: 2024,
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
@@ -230,18 +385,22 @@ describe('updatePaymentHub', () => {
         agreementNumber: 'SFI123456789',
         schedule: 'T4',
         dueDate: '2022-11-09',
-        value: 5000,
+        value: 500000,
         invoiceLines: [
-          {
-            value: 2000,
-            description: 'Test Activity 1',
-            schemeCode: 'ACT001'
-          },
-          {
-            value: 3000,
-            description: 'Test Activity 2',
-            schemeCode: 'ACT002'
-          }
+          [
+            {
+              value: 200000,
+              description:
+                '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
+              schemeCode: 'ACT001'
+            },
+            {
+              value: 300000,
+              description:
+                '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
+              schemeCode: 'ACT002'
+            }
+          ]
         ]
       }
 
@@ -255,21 +414,35 @@ describe('updatePaymentHub', () => {
     it('should handle missing activity details gracefully', async () => {
       const agreementWithMissingDetails = {
         ...mockAgreementData,
-        payments: {
-          activities: [{ code: 'ACT001', description: 'Test Activity' }],
-          yearlyBreakdown: {
-            totalAgreementPayment: 1000,
-            details: [] // Missing details
-          }
+        payment: {
+          parcelItems: {
+            'parcel-item-1': {
+              parcelId: 'PARCEL001',
+              code: 'ACT001',
+              description: 'ACT001: Test Activity',
+              quantity: 10
+            }
+          },
+          agreementLevelItems: {},
+          payments: [
+            {
+              paymentDate: '2022-11-09',
+              lineItems: [
+                {
+                  parcelItemId: 'parcel-item-1',
+                  paymentPence: 100000
+                }
+              ]
+            }
+          ],
+          agreementTotalPence: 100000
         }
       }
 
-      getAgreementData.mockResolvedValue(agreementWithMissingDetails)
+      getAgreementDataById.mockResolvedValue(agreementWithMissingDetails)
 
-      // This should throw an error when trying to find the detail
-      await expect(
-        updatePaymentHub(mockContext, 'SFI123456789')
-      ).rejects.toThrow()
+      const result = await updatePaymentHub(mockContext, 'SFI123456789')
+      expect(result.status).toBe('success')
     })
   })
 
@@ -277,8 +450,8 @@ describe('updatePaymentHub', () => {
     it('should call functions in correct sequence', async () => {
       const callOrder = []
 
-      getAgreementData.mockImplementation(() => {
-        callOrder.push('getAgreementData')
+      getAgreementDataById.mockImplementation(() => {
+        callOrder.push('getAgreementDataById')
         return Promise.resolve(mockAgreementData)
       })
 
@@ -300,7 +473,7 @@ describe('updatePaymentHub', () => {
       await updatePaymentHub(mockContext, 'SFI123456789')
 
       expect(callOrder).toEqual([
-        'getAgreementData',
+        'getAgreementDataById',
         'createInvoice',
         'updateInvoice',
         'sendPaymentHubRequest'

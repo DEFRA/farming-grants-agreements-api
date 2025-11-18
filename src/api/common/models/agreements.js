@@ -1,91 +1,190 @@
 import mongoose from 'mongoose'
+import versionsModel from './versions.js'
+import Boom from '@hapi/boom'
 
 const collection = 'agreements'
-
-const actionSchema = new mongoose.Schema({
-  code: { type: String, required: true },
-  title: { type: String, required: true },
-  startDate: { type: Date, required: true },
-  endDate: { type: Date, required: true },
-  duration: { type: String, required: true }
-})
-
-const parcelActivitySchema = new mongoose.Schema({
-  code: { type: String, required: true },
-  description: { type: String, default: '' },
-  area: { type: Number, required: true },
-  startDate: { type: Date, required: true },
-  endDate: { type: Date, required: true }
-})
-
-const paymentsActivitySchema = new mongoose.Schema({
-  code: { type: String, required: true },
-  description: { type: String, default: '' },
-  quantity: { type: Number, required: true },
-  rate: { type: Number, required: true },
-  measurement: { type: String, required: true },
-  paymentRate: { type: String, required: true },
-  annualPayment: { type: Number, required: true }
-})
-
-const parcelSchema = new mongoose.Schema({
-  parcelNumber: { type: String, required: true },
-  parcelName: { type: String, default: '' },
-  totalArea: { type: Number, required: true },
-  activities: { type: [parcelActivitySchema], default: [] }
-})
-
-const yearlyBreakdownSchema = new mongoose.Schema({
-  details: { type: [Object], default: [] },
-  annualTotals: {
-    year1: { type: Number, required: true },
-    year2: { type: Number, required: true },
-    year3: { type: Number, required: true }
-  },
-  totalAgreementPayment: { type: Number, required: true }
-})
-
-const paymentsSchema = new mongoose.Schema({
-  activities: { type: [paymentsActivitySchema], default: [] },
-  totalAnnualPayment: { type: Number, required: true },
-  yearlyBreakdown: { type: yearlyBreakdownSchema, required: true }
-})
 
 const schema = new mongoose.Schema(
   {
     agreementNumber: { type: String, required: true },
-    agreementName: { type: String, required: true },
-    correlationId: { type: String, required: true },
+    clientRef: { type: String, required: true },
     frn: { type: String, required: true },
     sbi: { type: String, required: true },
-    company: { type: String, required: true },
-    address: { type: String, required: true },
-    postcode: { type: String, required: true },
-    username: { type: String, required: true },
-    agreementStartDate: { type: Date, required: true },
-    agreementEndDate: { type: Date, required: true },
-    status: {
-      type: String,
-      required: true,
-      default: 'offered',
-      enum: ['offered', 'accepted']
-    },
-    signatureDate: { type: Date },
-    terminationDate: { type: Date },
-    actions: { type: [actionSchema], required: true },
-    parcels: { type: [parcelSchema], required: true },
-    payments: { type: paymentsSchema, required: true }
+    versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }]
   },
-  {
-    collection,
-    timestamps: true
-  }
+  { collection, timestamps: true }
 )
 
-// Indexes for common queries
-schema.index({ agreementNumber: 1 }, { unique: true })
+// Helpful indexes
 schema.index({ sbi: 1 })
-schema.index({ agreementStartDate: 1 })
-schema.index({ agreementEndDate: 1 })
+schema.index({ agreementNumber: 1 }, { unique: true })
+schema.index({ clientRef: 1 })
+schema.index({ createdAt: 1 })
+
+function assertValidCreateArgs(agreement, versions) {
+  if (!agreement?.agreementNumber) {
+    throw new Error('agreement.agreementNumber is required')
+  }
+  if (!Array.isArray(versions) || versions.length === 0) {
+    throw new Error(
+      'versions must be a non-empty array of agreement version payloads'
+    )
+  }
+}
+
+schema.statics.createAgreementWithVersions = async function ({
+  agreement,
+  versions
+}) {
+  assertValidCreateArgs(agreement, versions)
+
+  const createdversions = []
+  let agreementId = null
+
+  try {
+    // A) see if parent exists (by unique agreementNumber)
+    const existing = await this.findOne({
+      frn: agreement.frn,
+      sbi: agreement.sbi
+    })
+      .select('_id versions')
+      .lean()
+
+    if (existing) {
+      agreementId = existing._id
+    } else {
+      // create a minimal parent first (no children yet)
+      const newParent = await this.create({
+        agreementNumber: agreement.agreementNumber,
+        clientRef: agreement.clientRef,
+        frn: agreement.frn,
+        sbi: agreement.sbi,
+        versions: []
+      })
+      agreementId = newParent._id
+    }
+
+    // B) insert child docs
+    const inserted = await versionsModel.insertMany(versions)
+    createdversions.push(...inserted)
+    const insertedIds = inserted.map((a) => a._id)
+
+    // C) back-link children → parent
+    await versionsModel.updateMany(
+      { _id: { $in: insertedIds } },
+      { $set: { agreement: agreementId } }
+    )
+
+    // D) append only new ids to parent's versions (de-dup)
+    //    (If parent was newly created, it’s just all insertedIds)
+    let idsToAppend = insertedIds
+    if (existing?.versions?.length) {
+      const existingSet = new Set(existing.versions.map((id) => String(id)))
+      idsToAppend = insertedIds.filter((id) => !existingSet.has(String(id)))
+    }
+
+    if (idsToAppend.length) {
+      await this.updateOne(
+        { _id: agreementId },
+        { $push: { versions: { $each: idsToAppend } } }
+      )
+    }
+
+    // E) return populated agreement
+    return this.findById(agreementId)
+      .populate({
+        path: 'versions',
+        select: 'agreementNumber sbi status createdAt'
+      })
+      .lean()
+  } catch (err) {
+    // best-effort cleanup: if we created a brand new parent this call and then failed, remove it
+    try {
+      if (agreementId) {
+        await this.deleteOne({ _id: agreementId })
+      }
+      if (createdversions.length) {
+        await versionsModel.deleteMany({
+          _id: { $in: createdversions.map((a) => a._id) }
+        })
+      }
+    } catch (_) {
+      // swallow cleanup errors, original error wins
+    }
+    throw err
+  }
+}
+
+/**
+ * Find the latest agreement version.
+ * @param {object} agreementFilter - The filter to find the parent agreement
+ * @returns {Promise<Agreement>} The updated child agreement
+ */
+schema.statics.findLatestAgreementVersion = async function (agreementFilter) {
+  const agreement = await this.findOne(agreementFilter)
+    .select('versions')
+    .lean()
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
+
+  if (!agreement) {
+    throw Boom.notFound(
+      `Agreement not found using filter: ${JSON.stringify(agreementFilter)}`
+    )
+  }
+
+  if (!agreement.versions || agreement.versions.length === 0) {
+    throw Boom.notFound('Agreement has no child versions to update')
+  }
+
+  return versionsModel
+    .findOne({ agreement: agreement._id })
+    .sort({ createdAt: -1, _id: -1 })
+    .lean()
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
+}
+
+/**
+ * Update one child agreement that belongs to a agreement.
+ * @param {object} agreementFilter - The filter to find the parent agreement
+ * @param {object} update - The update to apply to the child agreement
+ * @returns {Promise<Agreement>} The updated child agreement
+ * @throws {Boom} 404 if no parent or child agreement found, 500 on other errors
+ */
+schema.statics.updateOneAgreementVersion = async function (
+  agreementFilter,
+  update
+) {
+  let { agreementNumber, ...filter } = agreementFilter
+
+  if (agreementNumber) {
+    const agreementVersion = await this.findLatestAgreementVersion({
+      agreementNumber
+    })
+
+    filter = { _id: agreementVersion._id, ...filter }
+  }
+
+  const updated = await versionsModel
+    .findOneAndUpdate(filter, update, {
+      new: true,
+      runValidators: true,
+      lean: true
+    })
+    .populate('agreement')
+    .sort({ createdAt: -1, _id: -1 })
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
+
+  if (!updated) {
+    throw Boom.notFound('Failed to update agreement. Agreement not found')
+  }
+
+  return updated
+}
 
 export default mongoose.model(collection, schema)

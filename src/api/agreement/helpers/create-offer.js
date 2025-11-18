@@ -1,6 +1,12 @@
-import crypto from 'crypto'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import crypto from 'node:crypto'
 import { v4 as uuidv4 } from 'uuid'
+import Boom from '@hapi/boom'
+
+import agreementsModel from '~/src/api/common/models/agreements.js'
+import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { config } from '~/src/config/index.js'
+import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
 
 export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
@@ -10,189 +16,216 @@ export const generateAgreementNumber = () => {
 }
 
 /**
- * Groups Parcels by their ID
- * @param {Array<object>} actionApplications - Array of actionApplications
- * @returns {Array<object>} Array of grouped parcels
- */
-export const groupParcelsById = (actionApplications) => {
-  const groupedParcels = new Map()
-
-  actionApplications.forEach((parcel) => {
-    const parcelNumber = `${parcel.sheetId}${parcel.parcelId}`
-    if (groupedParcels.has(parcelNumber)) {
-      const existing = groupedParcels.get(parcelNumber)
-      existing.totalArea =
-        Math.round((existing.totalArea + parcel.appliedFor.quantity) * 100) /
-        100
-    } else {
-      groupedParcels.set(parcelNumber, {
-        parcelNumber,
-        parcelName: parcel.parcelName || '',
-        totalArea: Math.round(parcel.appliedFor.quantity * 100) / 100,
-        activities: groupActivitiesByParcelId(actionApplications, parcelNumber)
-      })
-    }
-  })
-
-  return Array.from(groupedParcels.values())
-}
-
-/**
- * Group activities by parcel ID
- * @param {Array<object>} actionApplications - Array of Action Applications
- * @param {string} parcelNumber - The parcel Number to group by
- * @returns {Array<object>} Array of grouped activities
- */
-export const groupActivitiesByParcelId = (actionApplications, parcelNumber) => {
-  const groupedActivities = new Map()
-
-  // Filter actionApplications by parcelNumber
-  const filteredActionApplications = actionApplications.filter(
-    (parcel) => `${parcel.sheetId}${parcel.parcelId}` === parcelNumber
-  )
-
-  // Iterate over filtered actionApplications
-  filteredActionApplications.forEach((parcel) => {
-    const startDate = parcel.startDate || '2025-05-13'
-    const endDate = parcel.endDate || '2028-05-13'
-
-    if (groupedActivities.has(parcelNumber)) {
-      const existing = groupedActivities.get(parcelNumber)
-      existing.push({
-        code: parcel.code,
-        description: parcel.description || '',
-        area: parcel.appliedFor.quantity,
-        startDate,
-        endDate
-      })
-    } else {
-      groupedActivities.set(parcelNumber, [
-        {
-          code: parcel.code,
-          description: parcel.description || '',
-          area: parcel.appliedFor.quantity,
-          startDate,
-          endDate
-        }
-      ])
-    }
-  })
-
-  // Convert map values to array
-  return Array.from(groupedActivities.values()).flat()
-}
-
-/**
- * Create payment activites
- * @param {Array<object>} actionApplications - Array of action applications
- * @returns {Array<object>} Array of payment activities
- */
-export const createPaymentActivities = (actionApplications) => {
-  const groupedActivities = new Map()
-  actionApplications.forEach((actionApplication) => {
-    const actionCode = `${actionApplication.code}`
-    if (groupedActivities.has(actionCode)) {
-      const existing = groupedActivities.get(actionCode)
-      existing.quantity += actionApplication.appliedFor.quantity
-      existing.measurement = `${existing.quantity} ${actionApplication.appliedFor.unit}`
-      existing.annualPayment = existing.quantity * existing.rate
-    } else {
-      const quantity = actionApplication.appliedFor.quantity
-      const rate = 6.0
-      groupedActivities.set(actionCode, {
-        code: actionApplication.code,
-        description: actionApplication.description || '',
-        quantity,
-        rate,
-        measurement: `${actionApplication.appliedFor.quantity} ${actionApplication.appliedFor.unit}`,
-        paymentRate: `${rate.toFixed(2)}/${actionApplication.appliedFor.unit}`,
-        annualPayment: quantity * rate
-      })
-    }
-  })
-  return Array.from(groupedActivities.values())
-}
-
-/**
- * Calculate yearly payments
- * @param {Array<object>} activities - Array of activities
- * @returns {object} Object containing yearly totals and details
- */
-export const calculateYearlyPayments = (activities) => {
-  const numberOfYears = 3
-  const yearlyTotals = {
-    year1: 0,
-    year2: 0,
-    year3: 0
-  }
-
-  const details = activities.map((activity) => {
-    const annualAmount = activity.annualPayment
-    const totalPayment = annualAmount * numberOfYears
-    yearlyTotals.year1 += annualAmount
-    yearlyTotals.year2 += annualAmount
-    yearlyTotals.year3 += annualAmount
-
-    return {
-      code: activity.code,
-      year1: annualAmount,
-      year2: annualAmount,
-      year3: annualAmount,
-      totalPayment
-    }
-  })
-
-  return {
-    details,
-    annualTotals: yearlyTotals,
-    totalAgreementPayment:
-      yearlyTotals.year1 + yearlyTotals.year2 + yearlyTotals.year3
-  }
-}
-
-/**
  * Create a new offer
+ * @param {string} notificationMessageId - The AWS notification message ID
  * @param {Agreement} agreementData - The agreement data
+ * @param {Request<ReqRefDefaults>['logger']} logger
  * @returns {Promise<Agreement>} The agreement data
  */
-const createOffer = (agreementData) => {
-  if (!agreementData) {
-    throw new Error('Offer data is required')
-  }
+const createOffer = async (notificationMessageId, agreementData, logger) => {
+  await ensureAgreementDataIsValid(notificationMessageId, agreementData)
 
-  const { identifiers, answers } = agreementData
+  const {
+    clientRef,
+    code,
+    identifiers,
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant
+  } = resolveAgreementFields(agreementData)
 
-  const parcels = groupParcelsById(answers.actionApplications)
-  const paymentActivities = createPaymentActivities(answers.actionApplications)
+  const agreementNumber = determineAgreementNumber(agreementData)
 
   const data = {
-    agreementNumber: generateAgreementNumber(),
-    agreementName: agreementData.answers.agreementName || 'Unnamed Agreement',
+    notificationMessageId,
     correlationId: uuidv4(),
-    frn: identifiers.frn,
-    sbi: identifiers.sbi,
-    company: 'Sample Farm Ltd',
-    address: '123 Farm Lane, Farmville',
-    postcode: 'FA12 3RM',
-    username: 'Diana Peart',
-    agreementStartDate: '2025-05-13',
-    agreementEndDate: '2028-05-13',
-    actions: [],
-    parcels,
-    payments: {
-      activities: paymentActivities,
-      totalAnnualPayment: paymentActivities.reduce(
-        (sum, activity) => sum + activity.annualPayment,
-        0
-      ),
-      yearlyBreakdown: calculateYearlyPayments(paymentActivities)
-    }
+    clientRef,
+    code,
+    identifiers,
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant
   }
 
-  // Create the new agreement
-  return agreementsModel.create(data)
+  const agreement = await agreementsModel.createAgreementWithVersions({
+    agreement: {
+      agreementNumber,
+      clientRef,
+      frn: identifiers.frn,
+      sbi: identifiers.sbi
+    },
+    versions: [data] // can pass multiple payloads
+  })
+
+  // Publish event to SNS
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+      time: new Date().toISOString(),
+      data: {
+        agreementNumber: agreement.agreementNumber,
+        correlationId: data?.correlationId,
+        clientRef,
+        status: 'offered',
+        date: new Date().toISOString(),
+        code,
+        endDate: payment?.agreementEndDate
+      }
+    },
+    logger
+  )
+
+  return agreement
 }
 
 export { createOffer }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Request } from '@hapi/hapi' */
+
+async function ensureAgreementDataIsValid(
+  notificationMessageId,
+  agreementData
+) {
+  if (!agreementData) {
+    throw new Error('Offer data is required')
+  }
+
+  if (await doesAgreementExist({ notificationMessageId })) {
+    throw new Error('Agreement has already been created')
+  }
+}
+
+function resolveAgreementFields(agreementData) {
+  const {
+    clientRef,
+    code,
+    identifiers,
+    answers: {
+      scheme,
+      agreementName,
+      actionApplications,
+      payment,
+      applicant
+    } = {}
+  } = agreementData
+
+  const { resolvedActions, resolvedPayment, resolvedApplicant } =
+    buildLegacyAgreementContent(
+      agreementData,
+      actionApplications,
+      payment,
+      applicant
+    )
+
+  return {
+    clientRef,
+    code,
+    identifiers,
+    scheme,
+    agreementName,
+    actionApplications: resolvedActions,
+    payment: resolvedPayment,
+    applicant: resolvedApplicant
+  }
+}
+
+function convertFromLegacyApplicationFormat(agreementData) {
+  // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
+  return buildLegacyPaymentFromApplication(agreementData)
+}
+
+function convertFromAnswersParcelsFormat(agreementData) {
+  // Convert the answers structure to application-like structure for the mapper
+  const answers = agreementData?.answers || {}
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      applicant: answers.applicant,
+      totalAnnualPaymentPence: answers.totalAnnualPaymentPence,
+      parcels: answers.parcels,
+      agreementStartDate: answers.agreementStartDate,
+      agreementEndDate: answers.agreementEndDate,
+      paymentFrequency: answers.paymentFrequency,
+      durationYears: answers.durationYears
+    }
+  }
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function mergeConvertedValues(existing, converted, fieldName) {
+  return existing || converted[fieldName]
+}
+
+function validateResolvedContent(resolvedPayment, resolvedApplicant) {
+  if (!resolvedPayment || !resolvedApplicant) {
+    throw Boom.badRequest('Offer data is missing payment and applicant')
+  }
+}
+
+function buildLegacyAgreementContent(
+  agreementData,
+  actionApplications,
+  payment,
+  applicant
+) {
+  let resolvedActions = actionApplications
+  let resolvedPayment = payment
+  let resolvedApplicant = applicant
+
+  // Check if we need to convert from application format (legacy) or answers.parcels format (new)
+  if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
+    let converted = null
+
+    try {
+      if (agreementData.application) {
+        converted = convertFromLegacyApplicationFormat(agreementData)
+      } else if (agreementData.answers?.parcels) {
+        converted = convertFromAnswersParcelsFormat(agreementData)
+      } else {
+        converted = null
+      }
+    } catch (conversionError) {
+      converted = null
+    }
+
+    if (converted) {
+      resolvedPayment = mergeConvertedValues(
+        resolvedPayment,
+        converted,
+        'payment'
+      )
+      resolvedActions = mergeConvertedValues(
+        resolvedActions,
+        converted,
+        'actionApplications'
+      )
+      resolvedApplicant = mergeConvertedValues(
+        resolvedApplicant,
+        converted,
+        'applicant'
+      )
+    }
+  }
+
+  validateResolvedContent(resolvedPayment, resolvedApplicant)
+
+  return {
+    resolvedActions,
+    resolvedPayment,
+    resolvedApplicant
+  }
+}
+
+function determineAgreementNumber(agreementData) {
+  if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {
+    return agreementData.agreementNumber
+  }
+
+  return generateAgreementNumber()
+}

@@ -1,8 +1,9 @@
 import Boom from '@hapi/boom'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
 import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
+import { config } from '~/src/config/index.js'
 
 /**
  * Sends a payload to the payments hub
@@ -13,44 +14,52 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
  */
 async function updatePaymentHub({ server, logger }, agreementNumber) {
   try {
-    const agreementData = await getAgreementData({
-      agreementNumber
-    })
+    const agreementData = await getAgreementDataById(agreementNumber)
     const invoice = await createInvoice(
       agreementNumber,
       agreementData.correlationId
     )
 
-    if (!agreementData) {
-      throw Boom.notFound(`Agreement not found: ${agreementNumber}`)
-    }
-
     const marketingYear = new Date().getFullYear()
 
-    const { activities, yearlyBreakdown } = agreementData.payments
+    const invoiceLines = agreementData.payment.payments.map((payment) =>
+      payment.lineItems.map((line) => {
+        let description, schemeCode
+        if (line.parcelItemId) {
+          const lineDetails =
+            agreementData.payment.parcelItems[line.parcelItemId]
+          description = `${payment.paymentDate}: Parcel: ${lineDetails.parcelId}: ${lineDetails.description}`
+          schemeCode = lineDetails.code
+        }
+        if (line.agreementLevelItemId) {
+          const lineDetails =
+            agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
+          description = `${payment.paymentDate}: One-off payment per agreement per year for ${lineDetails.description}`
+          schemeCode = lineDetails.code
+        }
 
-    const invoiceLines = activities.map((activity) => ({
-      value: yearlyBreakdown.details.find(
-        (detail) => detail.code === activity.code
-      ).totalPayment,
-      description: activity.description,
-      schemeCode: activity.code
-    }))
+        return {
+          value: line.paymentPence,
+          description,
+          schemeCode
+        }
+      })
+    )
 
     // Construct the request payload based on the agreement data
     /** @type {PaymentHubRequest} */
     const paymentHubRequest = {
       sourceSystem: 'AHWR',
-      frn: agreementData.frn,
-      sbi: agreementData.sbi,
+      frn: agreementData.identifiers.frn,
+      sbi: agreementData.identifiers.sbi,
       marketingYear,
       paymentRequestNumber: 1,
       correlationId: agreementData.correlationId,
       invoiceNumber: invoice.invoiceNumber,
       agreementNumber: agreementData.agreementNumber,
-      schedule: 'T4',
-      dueDate: '2022-11-09',
-      value: yearlyBreakdown.totalAgreementPayment,
+      schedule: agreementData.frequency === 'Quarterly' ? 'T4' : undefined,
+      dueDate: agreementData.payment.payments[0].paymentDate,
+      value: agreementData.payment.agreementTotalPence,
       invoiceLines
     }
 
@@ -59,8 +68,13 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       paymentHubRequest
     })
 
-    // send the payment hub request
-    await sendPaymentHubRequest(server, logger, paymentHubRequest)
+    if (config.get('featureFlags.isPaymentHubEnabled')) {
+      await sendPaymentHubRequest(server, logger, paymentHubRequest)
+    } else {
+      logger.warn(
+        `The PaymentHub feature flag is disabled. The request has not been sent to payment hub:${JSON.stringify(paymentHubRequest, null, 2)}`
+      )
+    }
 
     return {
       status: 'success',

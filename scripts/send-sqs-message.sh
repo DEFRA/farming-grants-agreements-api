@@ -11,7 +11,7 @@ read -r -d '' MESSAGE << EOM
   "id":"xxxx-xxxx-xxxx-xxxx",
   "source":"fg-gas-backend",
   "specVersion":"1.0",
-  "type":"cloud.defra.dev.fg-gas-backend.application.approved",
+  "type":"cloud.defra.test.fg-gas-backend.agreement.create",
   "datacontenttype":"application/json",
   "data":{
     "clientRef":"ref-1234",
@@ -20,7 +20,7 @@ read -r -d '' MESSAGE << EOM
     "submittedAt":"2023-10-01T11:00:00Z",
     "agreementName":"Joe's farm funding 2025",
     "identifiers":{
-      "sbi":"1234567890",
+      "sbi":"106284736",
       "frn":"1234567890",
       "crn":"1234567890",
       "defraId":"1234567890"
@@ -54,4 +54,4 @@ aws sqs send-message \
   --endpoint-url "$AWS_ENDPOINT_URL" \
   --region "$AWS_REGION"
 
-echo "Message sent successfully!" 
+echo "Message sent successfully!"

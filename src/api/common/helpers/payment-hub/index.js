@@ -77,16 +77,7 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
     logger &&
     typeof logger.info === 'function'
   ) {
-    logger.info(
-      `Payload to be sent to payment hub: ${JSON.stringify(body, null, 2)}`
-    )
-  }
-
-  if (config.get('env') === 'development') {
-    return {
-      status: 'success',
-      message: 'Payload sent to payment hub successfully'
-    }
+    logger.info(`Payload to be sent to payment hub: ${JSON.stringify(body)}`)
   }
 
   if (!config.get('paymentHub.keyName') || !config.get('paymentHub.key')) {
@@ -112,6 +103,8 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
   if (!response.ok) {
     throw new Error(`Payment hub request failed: ${response.statusText}`)
   }
+
+  logger.info('The PaymentHub request sent successfully')
 
   return {
     status: 'success',

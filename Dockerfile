@@ -29,9 +29,11 @@ RUN apk update && \
     apk add curl
 USER node
 
+ARG JWT_ENABLED=true
+ENV JWT_ENABLED=${JWT_ENABLED}
+
 COPY --from=development /home/node/package*.json ./
 COPY --from=development /home/node/.server ./.server/
-COPY --from=development /home/node/.public ./.public/
 
 RUN npm ci --omit=dev
 

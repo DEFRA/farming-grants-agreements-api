@@ -6,8 +6,28 @@ import Boom from '@hapi/boom'
 import { v4 as uuidv4 } from 'uuid'
 
 // Mock dependencies
-jest.mock('~/src/api/common/models/invoices.js')
-jest.mock('~/src/api/common/models/counters.js')
+jest.mock('~/src/api/common/models/invoices.js', () => ({
+  __esModule: true,
+  default: {
+    find: jest.fn(),
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findOneAndUpdate: jest.fn(),
+    updateOne: jest.fn(),
+    deleteOne: jest.fn()
+  }
+}))
+jest.mock('~/src/api/common/models/counters.js', () => ({
+  __esModule: true,
+  default: {
+    find: jest.fn(),
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findOneAndUpdate: jest.fn(),
+    updateOne: jest.fn(),
+    deleteOne: jest.fn()
+  }
+}))
 jest.mock('uuid')
 
 describe('createInvoice', () => {

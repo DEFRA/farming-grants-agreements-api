@@ -1,22 +1,47 @@
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
+import { config } from '~/src/config/index.js'
 
 /**
- * Get agreement data for rendering templates
- * @returns {object} The agreement data
- * @param {string} agreementId - The agreement ID to fetch
+ * Accept an agreement offer
+ * @param {agreementNumber} agreementNumber - The agreement Id
+ * @param {Agreement} agreementData - The agreement data
  * @returns {Promise<Agreement>} The agreement data
  */
-async function acceptOffer(agreementId) {
+async function acceptOffer(agreementNumber, agreementData) {
+  if (!agreementNumber || !agreementData) {
+    throw Boom.badRequest('Agreement data is required')
+  }
+
+  const acceptanceTime = new Date().toISOString()
+  const acceptedStatus = 'accepted'
+
+  // Validate PDF service configuration before accepting
+  const bucket = config.get('files.s3.bucket')
+  const region = config.get('files.s3.region')
+
+  if (!bucket) {
+    throw Boom.badImplementation(
+      'PDF service configuration missing: FILES_S3_BUCKET not set'
+    )
+  }
+
+  if (!region) {
+    throw Boom.badImplementation(
+      'PDF service configuration missing: FILES_S3_REGION not set'
+    )
+  }
+
+  // Update the agreement in the database
   const agreement = await agreementsModel
-    .updateOne(
+    .updateOneAgreementVersion(
       {
-        agreementNumber: agreementId
+        agreementNumber
       },
       {
         $set: {
-          status: 'accepted',
-          signatureDate: new Date().toISOString()
+          status: acceptedStatus,
+          signatureDate: acceptanceTime
         }
       }
     )
@@ -25,33 +50,13 @@ async function acceptOffer(agreementId) {
     })
 
   if (!agreement) {
-    throw Boom.notFound(`Offer not found with ID ${agreementId}`)
+    throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
   }
 
-  return agreement
+  return { agreementNumber, ...agreement }
 }
 
-/**
- * Get the first payment date for a given agreement start date
- * The first quarterly payment date is always 3 calendar months + 5 days after the agreement start date
- * @param {string} agreementStartDate - The date to get the next quarterly date for
- * @returns {string} The next quarterly date in 'Month Year' format
- */
-function getFirstPaymentDate(agreementStartDate) {
-  const THREE_MONTHS = 3
-  const FIVE_DAYS = 5
-
-  const nextPaymentDate = new Date(agreementStartDate)
-  nextPaymentDate.setMonth(nextPaymentDate.getMonth() + THREE_MONTHS)
-  nextPaymentDate.setDate(nextPaymentDate.getDate() + FIVE_DAYS)
-
-  const nextPaymentString = nextPaymentDate.toLocaleDateString('en-GB', {
-    month: 'long',
-    year: 'numeric'
-  })
-  return nextPaymentString === 'Invalid Date' ? '' : nextPaymentString
-}
-
-export { acceptOffer, getFirstPaymentDate }
+export { acceptOffer }
 
 /** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Request } from '@hapi/hapi' */

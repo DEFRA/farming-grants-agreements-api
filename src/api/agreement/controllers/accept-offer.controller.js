@@ -1,71 +1,61 @@
-import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import {
-  acceptOffer,
-  getFirstPaymentDate
-} from '~/src/api/agreement/helpers/accept-offer.js'
+import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
+import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import { renderTemplate } from '~/src/api/agreement/helpers/nunjucks-renderer.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { config } from '~/src/config/index.js'
+import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 
 /**
- * Controller to serve HTML agreement document
- * Renders a Nunjucks template with agreement data
+ * Controller to accept agreement offer
+ * Returns JSON data with agreement information
  * @satisfies {Partial<ServerRoute>}
  */
-const acceptOfferController = {
-  handler: async (request, h) => {
+const acceptOfferController = async (request, h) => {
+  // Get the agreement data before accepting
+  let { agreementData } = request.auth.credentials
+  const { agreementNumber } = agreementData
+
+  if (agreementData.status === 'offered') {
+    // Accept the agreement
+    const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
+    agreementData = await acceptOffer(agreementNumber, agreementData)
+
     try {
-      const { agreementId } = request.payload || request.params
-
-      if (!agreementId || agreementId === '') {
-        throw Boom.badRequest('Agreement ID is required')
-      }
-
-      // Get the agreement data before accepting
-      const agreementData = await getAgreementData({
-        agreementNumber: agreementId
-      })
-
-      if (!agreementData) {
-        throw Boom.notFound(`Agreement not found with ID ${agreementId}`)
-      }
-
-      // Accept the agreement
-      await acceptOffer(agreementId)
-
       // Update the payment hub
-      await updatePaymentHub(request, agreementId)
-
-      // Render the offer accepted template with agreement data
-      const offerAcceptedTemplate = renderTemplate('views/offer-accepted.njk', {
-        agreementNumber: agreementData.agreementNumber,
-        grantsProxy: request.headers['defra-grants-proxy'] === 'true',
-        company: agreementData.company,
-        sbi: agreementData.sbi,
-        farmerName: agreementData.username,
-        agreementStartDate: agreementData.agreementStartDate,
-        nearestQuarterlyPaymentDate: getFirstPaymentDate(
-          agreementData.agreementStartDate
-        )
-      })
-
-      // Return the HTML response
-      return h.response(offerAcceptedTemplate).code(statusCodes.ok)
-    } catch (error) {
-      if (error.isBoom) {
-        return error
-      }
-
-      request.logger.error(`Error accepting offer: ${error}`)
-      return h
-        .response({
-          message: 'Failed to accept offer',
-          error: error.message
-        })
-        .code(statusCodes.internalServerError)
+      await updatePaymentHub(request, agreementNumber)
+    } catch (err) {
+      // If payments hub has an error rollback the previous accept offer
+      await unacceptOffer(agreementNumber)
+      throw err
     }
+
+    // Publish event to SNS
+    await publishEvent(
+      {
+        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+        type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+        time: agreementData.signatureDate,
+        data: {
+          agreementNumber,
+          correlationId: agreementData?.correlationId,
+          clientRef: agreementData?.clientRef,
+          version: agreementData?.versions?.length ?? 1,
+          agreementUrl,
+          status: agreementData.status,
+          date: agreementData.signatureDate,
+          code: agreementData?.code,
+          endDate: agreementData?.payment?.agreementEndDate
+        }
+      },
+      request.logger
+    )
   }
+
+  // Return JSON response with agreement data
+  return h
+    .response({ agreementData })
+    .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    .code(statusCodes.ok)
 }
 
 export { acceptOfferController }

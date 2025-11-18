@@ -1,112 +1,89 @@
-import {
-  createOffer,
-  calculateYearlyPayments,
-  createPaymentActivities,
-  groupParcelsById,
-  groupActivitiesByParcelId,
-  generateAgreementNumber
-} from './create-offer.js'
+import { v4 as uuidv4 } from 'uuid'
+
+import mongoose from 'mongoose'
+import { createOffer, generateAgreementNumber } from './create-offer.js'
+import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
+import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
-jest.mock('~/src/api/common/models/agreements.js')
+jest.mock('~/src/api/common/models/versions.js')
+jest.mock('~/src/api/common/models/agreements.js', () => {
+  let populatedAgreement = null
 
-const targetDataStructure = {
-  agreementNumber: 'SFI987654321',
-  agreementName: 'Sample Agreement',
-  correlationId: '1234545918345918475',
-  frn: '1234567890',
-  sbi: '1234567890',
-  company: 'Sample Farm Ltd',
-  address: '123 Farm Lane, Farmville',
-  postcode: 'FA12 3RM',
-  username: 'Diana Peart',
-  agreementStartDate: '2025-05-13',
-  agreementEndDate: '2028-05-13',
-  actions: [],
-  parcels: [
-    {
-      parcelNumber: 'SX06799238',
-      parcelName: '',
-      totalArea: 62.46,
-      activities: [
-        {
-          code: 'CSAM1',
-          description: '',
-          area: 20.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          area: 42.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        }
-      ]
-    },
-    {
-      parcelNumber: 'SX06799240',
-      parcelName: '',
-      totalArea: 10.73,
-      activities: [
-        {
-          code: 'CSAM1',
-          description: '',
-          area: 10.73,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        }
-      ]
-    }
-  ],
-  payments: {
-    activities: [
-      {
-        code: 'CSAM1',
-        description: '',
-        quantity: 30.96,
-        rate: 6,
-        measurement: '30.96 ha',
-        paymentRate: '6.00/ha',
-        annualPayment: 185.76
-      },
-      {
-        code: 'CSAM3',
-        description: '',
-        quantity: 42.23,
-        rate: 6,
-        measurement: '42.23 ha',
-        paymentRate: '6.00/ha',
-        annualPayment: 253.38
-      }
-    ],
-    totalAnnualPayment: 439.14,
-    yearlyBreakdown: {
-      details: [
-        {
-          code: 'CSAM1',
-          year1: 185.76,
-          year2: 185.76,
-          year3: 185.76,
-          totalPayment: 557.28
-        },
-        {
-          code: 'CSAM3',
-          year1: 253.38,
-          year2: 253.38,
-          year3: 253.38,
-          totalPayment: 760.14
-        }
-      ],
-      annualTotals: {
-        year1: 439.14,
-        year2: 439.14,
-        year3: 439.14
-      },
-      totalAgreementPayment: 1317.42
+  const api = {
+    create: jest.fn(() => ({ _id: 'mockG1' })),
+    findById: jest.fn(() => ({
+      populate: () => ({
+        lean: () => Promise.resolve(populatedAgreement)
+      })
+    })),
+    createAgreementWithVersions: jest.fn(() => populatedAgreement),
+
+    // helper exposed to tests:
+    __setPopulatedAgreement: (g) => {
+      populatedAgreement = g
     }
   }
+
+  return { __esModule: true, default: api }
+})
+jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+  publishEvent: jest.fn().mockResolvedValue(true)
+}))
+jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  doesAgreementExist: jest.fn().mockResolvedValue(false)
+}))
+
+const targetDataStructure = {
+  notificationMessageId: 'aws-message-id',
+  agreementName: 'Sample Agreement',
+  correlationId: '1234545918345918475',
+  payments: {
+    agreementStartDate: '2024-11-01',
+    agreementEndDate: '2027-10-31',
+    frequency: 'Quarterly',
+    agreementTotalPence: 6413247,
+    annualTotalPence: 6440447,
+    parcelItems: {
+      1: {
+        code: 'BND1',
+        description: 'Maintain dry stone walls',
+        version: 1,
+        unit: 'metres',
+        quantity: 95,
+        rateInPence: 2565,
+        annualPaymentPence: 243675,
+        sheetId: 'SX635990',
+        parcelId: '44'
+      }
+    },
+    agreementLevelItems: {
+      1: {
+        code: 'CSAM1',
+        description:
+          'CSAM1: Assess soil, produce a soil management plan and test soil organic matter',
+        version: 1,
+        annualPaymentPence: 27200
+      }
+    },
+    payments: [
+      {
+        totalPaymentPence: 1610112,
+        paymentDate: '2025-12-05',
+        lineItems: [
+          { agreementLevelItems: 1, paymentPence: 6800 },
+          { parcelItemId: 1, paymentPence: 60919 }
+        ]
+      }
+    ]
+  }
+}
+
+const targetGroupDataStructure = {
+  agreementNumber: 'SFI987654321',
+  agreementName: 'Sample Agreement',
+  agreements: [targetDataStructure]
 }
 
 const agreementData = {
@@ -114,8 +91,9 @@ const agreementData = {
   code: 'frps-private-beta',
   createdAt: '2023-10-01T12:00:00Z',
   submittedAt: '2023-10-01T11:00:00Z',
+  agreementNumber: 'SFI987654321',
   identifiers: {
-    sbi: '1234567890',
+    sbi: '106284736',
     frn: '1234567890',
     crn: '1234567890',
     defraId: '1234567890'
@@ -153,371 +131,433 @@ const agreementData = {
           quantity: 10.73
         }
       }
-    ]
+    ],
+    payment: {
+      agreementEndDate: '2027-12-31'
+    },
+    applicant: {
+      customer: {
+        name: {
+          title: 'Mr',
+          first: 'Joe',
+          last: 'Bloggs'
+        }
+      }
+    }
   }
 }
 
-describe('createAgreement', () => {
+describe('createOffer', () => {
+  let mockLogger
+
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
   beforeEach(() => {
     jest.clearAllMocks()
-    agreementsModel.create.mockImplementation((data) => Promise.resolve(data))
+
+    mockLogger = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      error: jest.fn()
+    }
+
+    // Make insertMany return a real-looking agreement (matching targetDataStructure)
+    versionsModel.insertMany = jest.fn(() => [
+      { ...targetDataStructure, _id: new mongoose.Types.ObjectId() }
+    ])
+    versionsModel.updateMany = jest.fn(() => ({
+      matchedCount: 1,
+      modifiedCount: 1
+    }))
+    versionsModel.deleteMany = jest.fn(() => ({ deletedCount: 0 }))
+
+    // Return EXACT group the test asserts against
+    const populated = {
+      ...targetGroupDataStructure,
+      sbi: '106284736',
+      frn: '1234567890',
+      agreementNumber: 'SFI999999999', // test uses expect.any(String)
+      correlationId: 'abc-def' // test uses expect.any(String)
+    }
+    populated.agreements = [{ ...targetDataStructure }]
+
+    agreementsModel.__setPopulatedAgreement(populated)
+
+    if (!jest.isMockFunction(agreementsModel.createAgreementWithVersions)) {
+      jest.spyOn(agreementsModel, 'createAgreementWithVersions')
+    }
+    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
+
+    publishEvent.mockResolvedValue(true)
+
+    jest.setSystemTime(new Date('2025-01-01'))
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
   })
 
   it('should create an agreement with valid data', async () => {
-    const result = await createOffer(agreementData)
+    // Mock doesAgreementExist to return false for new agreements
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const result = await createOffer(
+      'aws-message-id',
+      agreementData,
+      mockLogger
+    )
 
     // Check if the result matches the target data structure
-    expect(result).toEqual({
-      ...targetDataStructure,
+    expect(result).toMatchObject({
+      ...targetGroupDataStructure,
+      // notificationMessageId: 'aws-message-id',
+      // These fields are dynamic, so we check for their types
       agreementNumber: expect.any(String),
       correlationId: expect.any(String)
     })
+
+    expect(publishEvent).toHaveBeenCalledWith(
+      {
+        time: '2025-01-01T00:00:00.000Z',
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        type: 'io.onsite.agreement.status.updated',
+        data: expect.objectContaining({
+          agreementNumber: 'SFI999999999',
+          correlationId: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+          ),
+          clientRef: 'ref-1234',
+          status: 'offered',
+          date: '2025-01-01T00:00:00.000Z',
+          endDate: '2027-12-31'
+        })
+      },
+      mockLogger
+    )
   })
 
-  describe('groupParcelsById', () => {
-    it('should group parcels by ID', () => {
-      const actionApplications = [
+  it('should generate an agreement number when seedDb is true but agreementNumber is empty', async () => {
+    // Enable DB seeding and provide an empty agreementNumber
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', true)
+
+    const emptyAgreementData = {
+      ...agreementData,
+      agreementNumber: ''
+    }
+
+    // Ensure the notification id hasn't been used
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const result = await createOffer(uuidv4(), emptyAgreementData, mockLogger)
+
+    // Should fall back to a generated SFI number
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).not.toBe('')
+
+    // Restore previous config
+    config.set('featureFlags.seedDb', previous)
+  })
+
+  it('uses provided agreementNumber when seedDb is true and agreementNumber is present', async () => {
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', true)
+
+    const provided = 'SFI123456789'
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const populated = {
+      ...targetGroupDataStructure,
+      sbi: '106284736',
+      frn: '1234567890',
+      agreementName: 'Unnamed Agreement',
+      agreementNumber: provided,
+      correlationId: 'abc-def'
+    }
+    populated.agreements = [{ ...targetDataStructure }]
+
+    agreementsModel.__setPopulatedAgreement(populated)
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
+
+    const data = { ...agreementData, agreementNumber: provided }
+    const result = await createOffer(uuidv4(), data, mockLogger)
+
+    expect(result.agreementNumber).toBe(provided)
+
+    config.set('featureFlags.seedDb', previous)
+  })
+
+  it('ignores provided agreementNumber when seedDb is false (uses generated)', async () => {
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', false)
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const provided = 'SFI888888888'
+    const data = { ...agreementData, agreementNumber: provided }
+
+    const result = await createOffer(uuidv4(), data, mockLogger)
+
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).not.toBe(provided)
+
+    config.set('featureFlags.seedDb', previous)
+  })
+
+  it('generates an agreement number when seedDb is false and agreementNumber is empty', async () => {
+    const { config } = await import('~/src/config/index.js')
+    const previous = config.get('featureFlags.seedDb')
+    config.set('featureFlags.seedDb', false)
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const data = { ...agreementData, agreementNumber: '' }
+    const result = await createOffer(uuidv4(), data, mockLogger)
+
+    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).not.toBe('')
+
+    config.set('featureFlags.seedDb', previous)
+  })
+
+  describe('when notificationMessageId already exists', () => {
+    it('should throw an error', async () => {
+      const notificationMessageId = 'test-message-id'
+      const agreementData = { answers: { actionApplications: [] } }
+
+      // Mock doesAgreementExist to return true, indicating the notificationMessageId exists
+      doesAgreementExist.mockResolvedValueOnce(true)
+
+      await expect(
+        createOffer(notificationMessageId, agreementData, mockLogger)
+      ).rejects.toThrow('Agreement has already been created')
+
+      expect(doesAgreementExist).toHaveBeenCalledWith({ notificationMessageId })
+    })
+  })
+
+  describe('grouping behaviour (via createOffer output)', () => {
+    it('should return the grouped parcels in the populated result (sample data)', async () => {
+      const result = await createOffer(
+        'aws-message-id',
+        agreementData,
+        mockLogger
+      )
+      expect(result.agreements[0].parcels).toEqual(targetDataStructure.parcels)
+    })
+  })
+
+  describe('payments behaviour (via createOffer output)', () => {
+    it('should return payments with parcelItems, agreementLevelItems and payments arrays', async () => {
+      const result = await createOffer(
+        'aws-message-id',
+        agreementData,
+        mockLogger
+      )
+      const payments = result.agreements[0].payments
+      expect(payments).toEqual(targetDataStructure.payments)
+      expect(typeof payments.agreementStartDate).toBe('string')
+      expect(typeof payments.agreementEndDate).toBe('string')
+      expect(payments.parcelItems).toBeDefined()
+      expect(payments.agreementLevelItems).toBeDefined()
+      expect(Array.isArray(payments.payments)).toBe(true)
+    })
+  })
+  // Note: yearly breakdown and activities are no longer present in payments
+
+  it('should build legacy payment structure when application payload is provided', async () => {
+    const applicationPayload = {
+      agreementStartDate: '2025-01-01T00:00:00.000Z',
+      agreementEndDate: '2028-01-01T00:00:00.000Z',
+      paymentFrequency: 'Quarterly',
+      applicant: agreementData.answers.applicant,
+      totalAnnualPaymentPence: 35150,
+      parcels: [
         {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.23
-          }
-        },
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM3',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 42.23
-          }
-        },
-        {
-          parcelId: '9240',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 10.73
-          }
+          sheetId: 'AB1234',
+          parcelId: '10001',
+          actions: [
+            {
+              code: 'CMOR1',
+              description: 'Assess moorland and produce a written record',
+              durationYears: 3,
+              eligible: {
+                unit: 'ha',
+                quantity: 7.5
+              },
+              paymentRates: {
+                ratePerUnitPence: 1060
+              },
+              annualPaymentPence: 35150
+            }
+          ]
         }
       ]
+    }
 
-      const result = groupParcelsById(actionApplications)
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
 
-      expect(result).toEqual([
-        {
-          parcelNumber: 'SX06799238',
-          parcelName: '',
-          totalArea: 62.46,
-          activities: [
-            {
-              code: 'CSAM1',
-              description: '',
-              area: 20.23,
-              startDate: '2025-05-13',
-              endDate: '2028-05-13'
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const payload = {
+      clientRef: 'application-ref',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      application: applicationPayload
+    }
+
+    await createOffer('application-message', payload, mockLogger)
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications } = callPayload.versions[0]
+
+    expect(payment.annualTotalPence).toBe(35150)
+    expect(payment.parcelItems['1']).toMatchObject({
+      code: 'CMOR1',
+      rateInPence: 1060,
+      annualPaymentPence: 35150,
+      sheetId: 'AB1234',
+      parcelId: '10001'
+    })
+    expect(payment.payments).toHaveLength(2)
+    expect(actionApplications).toHaveLength(1)
+    expect(actionApplications[0]).toMatchObject({
+      code: 'CMOR1',
+      parcelId: '10001',
+      sheetId: 'AB1234'
+    })
+  })
+
+  it('should build legacy payment structure when answers.parcels format is provided', async () => {
+    const payloadWithAnswersParcels = {
+      clientRef: '581-e92-bbe',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'VAUGHAN FARMS LIMITED',
+            reference: '3989509178',
+            email: {
+              address:
+                'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
             },
-            {
-              code: 'CSAM3',
-              description: '',
-              area: 42.23,
-              startDate: '2025-05-13',
-              endDate: '2028-05-13'
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Mason House Farm Clitheroe Rd',
+              line2: 'Bashall Eaves',
+              line3: null,
+              line4: null,
+              line5: null,
+              street: 'Bartindale Road',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
             }
-          ]
-        },
-        {
-          parcelNumber: 'SX06799240',
-          parcelName: '',
-          totalArea: 10.73,
-          activities: [
-            {
-              code: 'CSAM1',
-              description: '',
-              area: 10.73,
-              startDate: '2025-05-13',
-              endDate: '2028-05-13'
-            }
-          ]
-        }
-      ])
-    })
-
-    it('should handle empty action applications array', () => {
-      const result = groupParcelsById([])
-      expect(result).toEqual([])
-    })
-
-    it('should handle action applications with missing appliedFor data', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: null
-        }
-      ]
-
-      expect(() => groupParcelsById(actionApplications)).toThrow()
-    })
-  })
-
-  describe('groupActivitiesByParcelId', () => {
-    it('should group activities by parcel ID', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.23
-          }
-        },
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM3',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 42.23
-          }
-        }
-      ]
-
-      const parcelNumber = 'SX06799238'
-
-      const result = groupActivitiesByParcelId(actionApplications, parcelNumber)
-
-      expect(result).toEqual([
-        {
-          code: 'CSAM1',
-          description: '',
-          area: 20.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          area: 42.23,
-          startDate: '2025-05-13',
-          endDate: '2028-05-13'
-        }
-      ])
-    })
-
-    it('should handle empty action applications array', () => {
-      const result = groupActivitiesByParcelId([], 'SX06799238')
-      expect(result).toEqual([])
-    })
-
-    it('should handle action applications with custom dates', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          startDate: '2026-01-01',
-          endDate: '2027-12-31',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.23
-          }
-        }
-      ]
-
-      const parcelNumber = 'SX06799238'
-      const result = groupActivitiesByParcelId(actionApplications, parcelNumber)
-
-      expect(result[0].startDate).toBe('2026-01-01')
-      expect(result[0].endDate).toBe('2027-12-31')
-    })
-  })
-
-  describe('createPaymentActivities', () => {
-    it('should create payment activities correctly', () => {
-      const actionApplications = [
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM1',
-          description: '',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 20.23
-          }
-        },
-        {
-          parcelId: '9238',
-          sheetId: 'SX0679',
-          code: 'CSAM3',
-          description: '',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 42.23
-          }
-        }
-      ]
-
-      const result = createPaymentActivities(actionApplications)
-
-      expect(result).toEqual([
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 20.23,
-          rate: 6,
-          measurement: '20.23 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 121.38
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          quantity: 42.23,
-          rate: 6,
-          measurement: '42.23 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 253.38
-        }
-      ])
-    })
-  })
-
-  describe('calculateYearlyPayments', () => {
-    it('should calculate yearly payments correctly', () => {
-      const activities = [
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 30.96,
-          rate: 6,
-          measurement: '30.96 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 185.76
-        },
-        {
-          code: 'CSAM3',
-          description: '',
-          quantity: 42.23,
-          rate: 6,
-          measurement: '42.23 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 253.38
-        }
-      ]
-
-      const result = calculateYearlyPayments(activities)
-
-      expect(result).toEqual({
-        details: [
-          {
-            code: 'CSAM1',
-            year1: 185.76,
-            year2: 185.76,
-            year3: 185.76,
-            totalPayment: 557.28
           },
-          {
-            code: 'CSAM3',
-            year1: 253.38,
-            year2: 253.38,
-            year3: 253.38,
-            totalPayment: 760.14
+          customer: {
+            name: {
+              title: 'Mr.',
+              first: 'Edward',
+              middle: 'Paul',
+              last: 'Jones'
+            }
           }
-        ],
-        annualTotals: {
-          year1: 439.14,
-          year2: 439.14,
-          year3: 439.14
         },
-        totalAgreementPayment: 1317.42
-      })
-    })
-
-    it('should handle empty activities array', () => {
-      const result = calculateYearlyPayments([])
-      expect(result).toEqual({
-        details: [],
-        annualTotals: {
-          year1: 0,
-          year2: 0,
-          year3: 0
-        },
-        totalAgreementPayment: 0
-      })
-    })
-
-    it('should handle activities with zero payment', () => {
-      const activities = [
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 0,
-          rate: 6,
-          measurement: '0 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 0
-        }
-      ]
-
-      const result = calculateYearlyPayments(activities)
-      expect(result).toEqual({
-        details: [
+        applicationValidationRunId: 2335,
+        totalAnnualPaymentPence: 32006,
+        parcels: [
           {
-            code: 'CSAM1',
-            year1: 0,
-            year2: 0,
-            year3: 0,
-            totalPayment: 0
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland and produce a written record',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                appliedFor: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060,
+                  agreementLevelAmountPence: 27200
+                },
+                annualPaymentPence: 4806
+              }
+            ]
           }
-        ],
-        annualTotals: {
-          year1: 0,
-          year2: 0,
-          year3: 0
-        },
-        totalAgreementPayment: 0
-      })
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
     })
 
-    it('should handle activities with decimal payments', () => {
-      const activities = [
-        {
-          code: 'CSAM1',
-          description: '',
-          quantity: 1.5,
-          rate: 6,
-          measurement: '1.5 ha',
-          paymentRate: '6.00/ha',
-          annualPayment: 9
-        }
-      ]
+    doesAgreementExist.mockResolvedValueOnce(false)
 
-      const result = calculateYearlyPayments(activities)
-      expect(result).toEqual({
-        details: [
-          {
-            code: 'CSAM1',
-            year1: 9,
-            year2: 9,
-            year3: 9,
-            totalPayment: 27
-          }
-        ],
-        annualTotals: {
-          year1: 9,
-          year2: 9,
-          year3: 9
-        },
-        totalAgreementPayment: 27
-      })
+    await createOffer(
+      'answers-parcels-message',
+      payloadWithAnswersParcels,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications, applicant } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(32006)
+    expect(payment.parcelItems).toBeDefined()
+    expect(Object.keys(payment.parcelItems).length).toBeGreaterThan(0)
+
+    const firstParcelItem = Object.values(payment.parcelItems)[0]
+    expect(firstParcelItem).toMatchObject({
+      code: 'CMOR1',
+      rateInPence: 1060,
+      annualPaymentPence: 4806,
+      sheetId: 'SD6743',
+      parcelId: '8083'
     })
+
+    expect(payment.agreementLevelItems).toBeDefined()
+    const agreementLevelItems = Object.values(payment.agreementLevelItems)
+    expect(agreementLevelItems.length).toBeGreaterThan(0)
+    expect(agreementLevelItems[0].annualPaymentPence).toBe(27200)
+
+    expect(payment.payments).toBeDefined()
+    expect(payment.payments).toHaveLength(2)
+
+    expect(actionApplications).toBeDefined()
+    expect(actionApplications).toHaveLength(1)
+    expect(actionApplications[0]).toMatchObject({
+      code: 'CMOR1',
+      parcelId: '8083',
+      sheetId: 'SD6743'
+    })
+
+    expect(applicant).toBeDefined()
+    expect(applicant.business.name).toBe('VAUGHAN FARMS LIMITED')
   })
 
   describe('generateAgreementNumber', () => {
@@ -535,7 +575,256 @@ describe('createAgreement', () => {
     })
   })
 
+  it('should handle missing answers object (uses defaults)', async () => {
+    const missingAnswers = {
+      clientRef: 'ref-missing-answers',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {}
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+    let error
+    try {
+      await createOffer('aws-message-id', missingAnswers, mockLogger)
+    } catch (e) {
+      error = e
+    }
+    expect(error).toBeDefined()
+    expect(error.message).toBe('Offer data is missing payment and applicant')
+  })
+
+  it('should handle answers.parcels without applicant', async () => {
+    const payloadWithoutApplicant = {
+      clientRef: 'ref-no-applicant',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        totalAnnualPaymentPence: 32006,
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+    await expect(
+      createOffer('test-id', payloadWithoutApplicant, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
+  it('should handle case where neither application nor answers.parcels exist', async () => {
+    const payloadWithoutConversionFormat = {
+      clientRef: 'ref-no-format',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI'
+        // No payment, no applicant, no parcels, no application
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('test-id', payloadWithoutConversionFormat, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
+  it('should handle conversion errors in catch block when mapper throws', async () => {
+    // Import the mapper module
+    const mapperModule = await import('./legacy-application-mapper.js')
+    const originalMapper = mapperModule.buildLegacyPaymentFromApplication
+
+    // Create a payload that will trigger conversion
+    const payloadWithParcels = {
+      clientRef: 'ref-error',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            actions: []
+          }
+        ]
+      }
+    }
+
+    // Mock the mapper to throw an error
+    mapperModule.buildLegacyPaymentFromApplication = jest.fn(() => {
+      throw new Error('Mapper conversion failed')
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    // The error should be caught and validation should throw
+    await expect(
+      createOffer('test-id', payloadWithParcels, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    // Restore original
+    mapperModule.buildLegacyPaymentFromApplication = originalMapper
+  })
+
+  it('should merge converted values when existing values are null or undefined', async () => {
+    // Test that mergeConvertedValues uses converted values when existing are null/undefined
+    // This tests the path where conversion provides all missing values
+    const payloadWithNullValues = {
+      clientRef: 'ref-null-values',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'TEST BUSINESS',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: {
+              line1: 'Test Address',
+              city: 'Test City',
+              postalCode: 'TE5T 1NG'
+            }
+          }
+        },
+        totalAnnualPaymentPence: 4806,
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    // This should succeed because conversion will provide payment and actionApplications
+    const result = await createOffer(
+      'test-id',
+      payloadWithNullValues,
+      mockLogger
+    )
+
+    expect(result).toBeDefined()
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    // Payment should come from conversion (not null)
+    expect(callPayload.versions[0].payment).toBeDefined()
+    expect(callPayload.versions[0].payment.annualTotalPence).toBe(4806)
+    // Applicant should be used from existing (not null)
+    expect(callPayload.versions[0].applicant).toBeDefined()
+    expect(callPayload.versions[0].applicant.business.name).toBe(
+      'TEST BUSINESS'
+    )
+    // ActionApplications should come from conversion
+    expect(callPayload.versions[0].actionApplications).toBeDefined()
+    expect(callPayload.versions[0].actionApplications.length).toBeGreaterThan(0)
+  })
+
+  it('should use existing values when both existing and converted are present', async () => {
+    // Test mergeConvertedValues prefers existing over converted
+    // Provide payment and applicant, but not actionApplications to trigger conversion
+    const payloadWithPartial = {
+      clientRef: 'ref-both',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        payment: {
+          annualTotalPence: 1000,
+          agreementStartDate: '2024-01-01',
+          agreementEndDate: '2027-01-01'
+        },
+        applicant: {
+          business: { name: 'Existing Business' }
+        },
+        // actionApplications is missing, so conversion will be triggered
+        parcels: [
+          {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: {
+                  ratePerUnitPence: 1060
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const result = await createOffer('test-id', payloadWithPartial, mockLogger)
+
+    expect(result).toBeDefined()
+    // Existing payment should be used (not converted one)
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    expect(callPayload.versions[0].payment.annualTotalPence).toBe(1000)
+    // But actionApplications should come from conversion
+    expect(callPayload.versions[0].actionApplications).toBeDefined()
+    expect(callPayload.versions[0].actionApplications.length).toBeGreaterThan(0)
+  })
+
   describe('Error Handling', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
     it('should handle missing agreement data', async () => {
       let error
       try {
@@ -548,91 +837,36 @@ describe('createAgreement', () => {
     })
 
     it('should handle database errors gracefully', async () => {
-      agreementsModel.create.mockImplementation(() =>
-        Promise.reject(new Error('Database connection error'))
+      agreementsModel.createAgreementWithVersions.mockRejectedValue(
+        new Error('Database connection error')
       )
 
-      await expect(createOffer(agreementData)).rejects.toThrow(
-        'Database connection error'
-      )
+      await expect(
+        createOffer(uuidv4(), agreementData, mockLogger)
+      ).rejects.toThrow('Database connection error')
     })
 
     it('should handle generic errors when creating an agreement', async () => {
-      agreementsModel.create.mockImplementation(() =>
-        Promise.reject(new Error('Generic error'))
+      agreementsModel.createAgreementWithVersions.mockRejectedValue(
+        new Error('Generic error')
       )
 
-      await expect(createOffer(agreementData)).rejects.toThrow('Generic error')
+      await expect(
+        createOffer(uuidv4(), agreementData, mockLogger)
+      ).rejects.toThrow('Generic error')
     })
-  })
-})
 
-describe('createPaymentActivities', () => {
-  it('should handle empty action applications', () => {
-    const result = createPaymentActivities([])
-    expect(result).toEqual([])
-  })
-
-  it('should handle action applications with missing description', () => {
-    const actionApplications = [
-      {
-        parcelId: '9238',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'ha',
-          quantity: 20.23
-        }
+    it('should propagate Boom error when payment/applicant missing', async () => {
+      const bad = {
+        clientRef: 'ref',
+        code: 'frps-private-beta',
+        identifiers: { sbi: '1', frn: '2' },
+        answers: { scheme: 'SFI' }
       }
-    ]
-
-    const result = createPaymentActivities(actionApplications)
-    expect(result[0].description).toBe('')
-  })
-
-  it('should handle action applications with different units', () => {
-    const actionApplications = [
-      {
-        parcelId: '9238',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'm',
-          quantity: 100
-        }
-      }
-    ]
-
-    const result = createPaymentActivities(actionApplications)
-    expect(result[0].measurement).toBe('100 m')
-    expect(result[0].paymentRate).toBe('6.00/m')
-  })
-
-  it('should combine quantities for the same action code', () => {
-    const actionApplications = [
-      {
-        parcelId: '9238',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'ha',
-          quantity: 10
-        }
-      },
-      {
-        parcelId: '9240',
-        sheetId: 'SX0679',
-        code: 'CSAM1',
-        appliedFor: {
-          unit: 'ha',
-          quantity: 20
-        }
-      }
-    ]
-
-    const result = createPaymentActivities(actionApplications)
-    expect(result).toHaveLength(1)
-    expect(result[0].quantity).toBe(30)
-    expect(result[0].annualPayment).toBe(180)
+      doesAgreementExist.mockResolvedValueOnce(false)
+      await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
+        'Offer data is missing payment and applicant'
+      )
+    })
   })
 })

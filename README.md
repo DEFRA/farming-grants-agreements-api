@@ -2,28 +2,31 @@
 
 Core delivery platform Node.js Backend Template.
 
-- [Requirements](#requirements)
-  - [Node.js](#nodejs)
-- [Local development](#local-development)
-  - [Setup](#setup)
-  - [Development](#development)
-  - [Testing](#testing)
-  - [Production](#production)
-  - [Npm scripts](#npm-scripts)
-  - [Update dependencies](#update-dependencies)
-  - [Formatting](#formatting)
-    - [Windows prettier issue](#windows-prettier-issue)
-- [API endpoints](#api-endpoints)
-- [Development helpers](#development-helpers)
-  - [MongoDB Locks](#mongodb-locks)
-- [Docker](#docker)
-  - [Development image](#development-image)
-  - [Production image](#production-image)
-  - [Docker Compose](#docker-compose)
-  - [Dependabot](#dependabot)
-  - [SonarCloud](#sonarcloud)
-- [Licence](#licence)
-  - [About the licence](#about-the-licence)
+- [farming-grants-agreements-api](#farming-grants-agreements-api)
+  - [Requirements](#requirements)
+    - [Node.js](#nodejs)
+  - [Local development](#local-development)
+    - [Setup](#setup)
+    - [Development](#development)
+    - [Testing](#testing)
+  - [Testing the SQS queue](#testing-the-sqs-queue)
+    - [Production](#production)
+    - [Npm scripts](#npm-scripts)
+    - [Update dependencies](#update-dependencies)
+    - [Formatting](#formatting)
+      - [Windows prettier issue](#windows-prettier-issue)
+  - [API endpoints](#api-endpoints)
+    - [Proxy](#proxy)
+  - [Docker](#docker)
+    - [Development image](#development-image)
+    - [Production image](#production-image)
+    - [Docker Compose](#docker-compose)
+    - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
+    - [The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)](#the-google-analytics-trackingid-secret-configuration-ga_tracking_idgoogleanalyticstrackingid)
+    - [Dependabot](#dependabot)
+    - [SonarCloud](#sonarcloud)
+  - [Licence](#licence)
+    - [About the licence](#about-the-licence)
 
 ## Requirements
 
@@ -57,10 +60,11 @@ To run the application in `development` mode run:
 npm run dev
 ```
 
-If you'd like to seed the database with a mock agreement (which you can view by using the agreementId `SFI123456789`) you must set the environment variable `SEED_DB` to `true`
+If you'd like to seed the database with a mock agreement (which you can view by using the agreementId `SFI123456789`) you must set the environment variable `SEED_DB` to `true`.
+To run the service without `grants-ui` disable the Jwt authentication by setting the environment variable `JWT_ENABLED=false`
 
 ```bash
-SEED_DB=true npm run dev
+JWT_ENABLED=false SEED_DB=true npm run dev
 ```
 
 ### Testing
@@ -76,7 +80,7 @@ npm run test
 To manually test the listener, run the following to build the required Docker containers:
 
 ```bash
- docker-compose -f compose.yml up
+docker compose -f compose.yml up -d --build
 ```
 
 It might be helpful to use localstack's dashboard to view the SQS queue and any messages: [https://app.localstack.cloud/inst/default/resources/sqs](https://app.localstack.cloud/inst/default/resources/sqs)
@@ -127,12 +131,115 @@ If you are having issues with formatting of line breaks on Windows update your g
 git config --global core.autocrlf false
 ```
 
+### Running the agreements-api service with JWT authentication enabled
+
+1. Ensure JWT is enabled in your .env file:
+   - `JWT_ENABLED=true`
+2. Start the stack (MongoDB, LocalStack and this service):
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. Verify containers are healthy (example output):
+
+   ```
+   NAME                                                           COMMAND                  STATE     PORTS
+   farming-grants-agreements-api-farming-grants-agreements-api-1  "/sbin/tini -- node ."  running   0.0.0.0:3555->3555/tcp, [::]:3555->3555/tcp
+   farming-grants-agreements-api-localstack-1                     "docker-entrypoint.sh"  running   0.0.0.0:4510-4559->4510-4559/tcp, [::]:4510-4559->4510-4559/tcp, 0.0.0.0:4566->4566/tcp, [::]:4566->4566/tcp
+   farming-grants-agreements-api-mongodb-1                        "docker-entrypoint.s…"  running   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+   ```
+
 ## API endpoints
 
-| Endpoint                            | Description                     |
-| :---------------------------------- | :------------------------------ |
-| `GET: /health`                      | Health                          |
-| `GET: /api/agreement/{agreementId}` | Get an agreement in HTML format |
+| Endpoint              | Description                                                   |
+| :-------------------- | :------------------------------------------------------------ |
+| `GET: /health`        | Health                                                        |
+| `GET: /{agreementId}` | Get an agreement in json format based on agreementId          |
+| `GET: /`              | Get an agreement in json format based on the sbi in the token |
+
+Pass the JWT token in the header as `x-encrypted-auth`.
+
+### Generating a JWT for API calls (scripts/gen-auth-header.js)
+
+Use the helper script to generate a valid token that this API will accept.
+
+Requirements:
+
+- Use the same JWT secret as the service (AGREEMENTS_JWT_SECRET). When running with Docker Compose, it defaults to `a-string-secret-at-least-256-bits-long` unless you override it in your environment.
+- The `source` claim must be one of `defra` (farmer) or `entra` (case worker).
+- When `source=defra`, you can include an `sbi` claim to test farmer-scoped endpoints.
+
+Run examples:
+
+- With the secret provided as an argument:
+
+  ```bash
+  node ./scripts/gen-auth-header.js --source defra --sbi 106284777 \
+    --secret "a-string-secret-at-least-256-bits-long"
+  ```
+
+- Or using an environment variable for the secret (recommended):
+
+  ```bash
+  AGREEMENTS_JWT_SECRET="a-string-secret-at-least-256-bits-long" \
+  node ./scripts/gen-auth-header.js --source entra
+  ```
+
+Expected output (example):
+
+```
+UI/API header { 'x-encrypted-auth': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....' }
+```
+
+Copy the token value and use it in your requests. For example:
+
+```bash
+curl -sS http://localhost:3555/ \
+  -H "x-encrypted-auth: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."
+```
+
+Notes:
+
+- On Windows PowerShell, use double quotes around arguments and escape as needed, for example:
+  ```powershell
+  $env:AGREEMENTS_JWT_SECRET="a-string-secret-at-least-256-bits-long"; `
+  node ./scripts/gen-auth-header.js --source defra --sbi 106284777
+  ```
+- The script validates `--source` and will exit with an error if the value is not `defra` or `entra` or if the secret is missing.
+
+Sample token for farmer's (`source=defra`) data:
+
+`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMiwic2JpIjoxMDYyODQ3NzcsInNvdXJjZSI6ImRlZnJhIn0.6QYSh1udNQcOF53kBST-4koc8Dp7jQ2hkMEKvCfmO9U`
+
+Example decoded payload:
+
+```json
+{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "admin": true,
+  "iat": 1516239022,
+  "sbi": 106284777,
+  "source": "defra"
+}
+```
+
+Sample token for case worker's (`source=entra`) data:
+
+`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gQm9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMiwic291cmNlIjoiZW50cmEifQ.aKtZl5K7iTQ-XI0V1Uga4eR_zjPxX41MTJmzR9lBV7I`
+
+Example decoded payload:
+
+```json
+{
+  "sub": "1234567890",
+  "name": "John Boe",
+  "admin": true,
+  "iat": 1516239022,
+  "source": "entra"
+}
+```
 
 ### Proxy
 
@@ -161,13 +268,13 @@ return await fetch(url, {
 Build:
 
 ```bash
-docker build --target development --no-cache --tag farming-grants-agreements-api:development .
+docker build --no-cache -t defradigital/farming-grants-agreements-api:latest .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api:development
+docker run -e PORT=3555 -p 3555:3555 defradigital/farming-grants-agreements-api:latest
 ```
 
 ### Production image
@@ -175,13 +282,13 @@ docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api:development
 Build:
 
 ```bash
-docker build --no-cache --tag farming-grants-agreements-api .
+docker build --no-cache --tag defradigital/farming-grants-agreements-api:latest .
 ```
 
 Run:
 
 ```bash
-docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api
+docker run -e PORT=3555 -p 3555:3555 defradigital/farming-grants-agreements-api:latest
 ```
 
 ### Docker Compose
@@ -189,14 +296,39 @@ docker run -e PORT=3001 -p 3001:3001 farming-grants-agreements-api
 A local environment with:
 
 - Localstack for AWS services (S3, SQS)
-- Redis
 - MongoDB
 - This service.
-- A commented out frontend example.
 
 ```bash
 docker compose up --build -d
 ```
+
+### Viewing messages in LocalStack SQS
+
+By default, our LocalStack monitor only shows **message counts** (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue.
+This is intentional, so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
+
+If you want to **peek at the actual messages** (for debugging or development only), you can run:
+
+```bash
+docker compose exec localstack sh -lc '
+  QURL=$(awslocal sqs get-queue-url \
+    --queue-name record_agreement_status_update \
+    --query QueueUrl --output text)
+
+  awslocal sqs receive-message \
+    --queue-url "$QURL" \
+    --max-number-of-messages 10 \
+    --wait-time-seconds 1 \
+    --message-attribute-names All \
+    --attribute-names All
+'
+```
+
+### The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)
+
+- Development (Dev): GTM-WJ5C78H
+- Production (Prod): GTM-KRJXHHT
 
 ### Dependabot
 

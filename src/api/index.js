@@ -1,7 +1,6 @@
-import path from 'path'
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
-import inert from '@hapi/inert'
+import Boom from '@hapi/boom'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/api/router.js'
@@ -12,7 +11,53 @@ import { pulse } from '~/src/api/common/helpers/pulse.js'
 import { requestTracing } from '~/src/api/common/helpers/request-tracing.js'
 import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
-import { sqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
+import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
+import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import {
+  getAgreementDataById,
+  getAgreementDataBySbi
+} from './agreement/helpers/get-agreement-data.js'
+import { createSqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
+import { handleCreateAgreementEvent } from './common/helpers/sqs-message-processor/create-agreement.js'
+import { handleUpdateAgreementEvent } from './common/helpers/sqs-message-processor/update-agreement.js'
+import { returnDataHandlerPlugin } from './common/helpers/return-data-handler.js'
+
+const customGrantsUiJwtScheme = () => ({
+  authenticate: async (request, h) => {
+    const { agreementId } = request.params
+    let agreementData = null
+    if (agreementId) {
+      agreementData = await getAgreementDataById(agreementId)
+    }
+
+    const authResult = validateJwtAuthentication(
+      request.headers['x-encrypted-auth'],
+      agreementData,
+      request.logger
+    )
+
+    if (!authResult.valid) {
+      throw Boom.unauthorized(
+        'Not authorized to view/accept offer agreement document'
+      )
+    }
+    // Getting Agreement of the farmer based on the SBI number as agreementId not provided
+    if (!agreementData && checkAuthSourceAndSbi(authResult)) {
+      agreementData = await getAgreementDataBySbi(authResult.sbi)
+    }
+
+    return h.authenticated({
+      credentials: {
+        agreementData,
+        source: authResult.source
+      }
+    })
+  }
+})
+
+function checkAuthSourceAndSbi(auth) {
+  return typeof auth.source === 'string' && auth.source === 'defra' && auth.sbi
+}
 
 async function createServer(serverOptions = {}) {
   setupProxy()
@@ -24,9 +69,6 @@ async function createServer(serverOptions = {}) {
           abortEarly: false
         },
         failAction
-      },
-      files: {
-        relativeTo: path.resolve(config.get('root'), '.public')
       },
       security: {
         hsts: {
@@ -52,28 +94,46 @@ async function createServer(serverOptions = {}) {
     ]
   })
 
+  server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
+  server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
+
   const options = {
     disableSQS: false,
     ...serverOptions
   }
 
   // Hapi Plugins:
-  // requestLogger    - automatically logs incoming requests
-  // requestTracing   - trace header logging and propagation
-  // secureContext    - loads CA certificates from environment config
-  // pulse            - provides shutdown handlers
-  // mongooseDb       - sets up mongoose connection pool and attaches to `server` and `request` objects
-  // sqsClientPlugin  - AWS SQS client
-  // router           - routes used in the app
+  // requestLogger      - automatically logs incoming requests
+  // requestTracing     - trace header logging and propagation
+  // secureContext      - loads CA certificates from environment config
+  // pulse              - provides shutdown handlers
+  // mongooseDb         - sets up mongoose connection pool and attaches to `server` and `request` objects
+  // sqsClientPlugin    - AWS SQS client
+  // errorHandlerPlugin - sets up default error handling
+  // router             - routes used in the app
   await server.register(
     [
-      inert,
       requestLogger,
       requestTracing,
       secureContext,
       pulse,
       mongooseDb,
-      options.disableSQS ? null : sqsClientPlugin,
+      ...(!options.disableSQS
+        ? [
+            createSqsClientPlugin(
+              'gas_create_agreement',
+              config.get('sqs.queueUrl'),
+              handleCreateAgreementEvent
+            ),
+            createSqsClientPlugin(
+              'gas_application_updated',
+              config.get('sqs.gasApplicationUpdatedQueueUrl'),
+              handleUpdateAgreementEvent
+            )
+          ]
+        : []),
+      errorHandlerPlugin,
+      returnDataHandlerPlugin,
       router
     ].filter(Boolean)
   )

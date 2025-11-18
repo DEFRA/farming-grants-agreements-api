@@ -8,7 +8,14 @@ export default {
   clearMocks: true,
   silent: false,
   preset: '@shelf/jest-mongodb',
-  watchPathIgnorePatterns: ['globalConfig'],
+  watchPathIgnorePatterns: [
+    'globalConfig',
+    '<rootDir>/.server',
+    '<rootDir>/node_modules',
+    '<rootDir>/coverage',
+    '<rootDir>/.public'
+  ],
+  modulePathIgnorePatterns: ['<rootDir>/.server'],
   testMatch: ['**/src/**/*.test.js'],
   reporters: ['default', ['github-actions', { silent: false }], 'summary'],
   setupFiles: ['<rootDir>/.jest/setup.js'],
