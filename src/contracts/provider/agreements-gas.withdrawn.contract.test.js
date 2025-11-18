@@ -50,7 +50,7 @@ describe.skip('sending updated (withdrawn) events via SNS', () => {
               data: {
                 clientRef: 'client-ref-001',
                 id: '123e4567-e89b-12d3-a456-426614174000',
-                status: 'PRE_AWARD:APPLICATION:APPLICATION_WITHDRAWN',
+                status: 'PRE_AWARD:APPLICATION:WITHDRAWAL_REQUESTED',
                 withdrawnBy: 'Caseworker_ID_123',
                 withdrawnAt: '2025-03-27T14:30:00Z'
               }
