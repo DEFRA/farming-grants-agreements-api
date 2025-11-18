@@ -57,7 +57,7 @@ updates:
     ignore:
       # Upgrade to Node LTS versions only
       - dependency-name: '@types/node'
-        versions: [">=23"]
+        versions: [">=25"]
 
     # Schedule run every Monday, local time
     schedule:
@@ -88,7 +88,7 @@ updates:
     ignore:
       # Upgrade to Node LTS versions only
       - dependency-name: 'node'
-        versions: [">=23"]
+        versions: [">=25"]
 
     # Schedule run every Monday, local time
     schedule:
