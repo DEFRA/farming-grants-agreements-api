@@ -116,6 +116,12 @@ const config = convict({
         : ['req', 'res', 'responseTime']
     }
   },
+  fetchTimeout: {
+    doc: 'Fetch timeout in milliseconds',
+    format: Number,
+    default: 30000,
+    env: 'FETCH_TIMEOUT'
+  },
   aws: {
     region: {
       doc: 'AWS region',

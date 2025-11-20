@@ -1,5 +1,5 @@
 import crypto from 'crypto-js'
-import { ProxyAgent } from 'undici'
+import { proxyFetch } from '~/src/api/common/helpers/fetch.js'
 import { config } from '~/src/config/index.js'
 import { initCache } from '~/src/api/common/helpers/cache.js'
 
@@ -32,32 +32,6 @@ const getCachedToken = (server) => {
     })
   }
   return cache
-}
-
-/**
- * Make fetch requests with proxy support
- * @param {string} url - The URL to fetch
- * @param {object} options - The fetch options
- * @param {string} options.method - The HTTP method (GET, POST, etc.)
- * @param {object} options.headers - The request headers
- * @param {object} options.body - The request body
- * @returns {Promise<Response>} The fetch response
- */
-const proxyFetch = (url, options) => {
-  const proxyUrlConfig = config.get('httpProxy') // bound to HTTP_PROXY
-
-  if (!proxyUrlConfig) {
-    return fetch(url, options)
-  }
-
-  return fetch(url, {
-    ...options,
-    dispatcher: new ProxyAgent({
-      uri: proxyUrlConfig,
-      keepAliveTimeout: 10,
-      keepAliveMaxTimeout: 10
-    })
-  })
 }
 
 /**
