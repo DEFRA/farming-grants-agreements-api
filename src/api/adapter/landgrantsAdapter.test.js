@@ -121,6 +121,10 @@ describe('calculatePaymentsBasedOnActions', () => {
       if (key === 'landGrants.token') {
         return 'config-token'
       }
+
+      if (key === 'fetchTimeout') {
+        return 30000
+      }
       throw new Error(`Unexpected config key ${key}`)
     })
   })
