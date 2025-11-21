@@ -4,6 +4,7 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
+import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/landgrantsAdapter.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
@@ -14,6 +15,9 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataBySbi: jest.fn()
 }))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
+jest.mock('~/src/api/adapter/landgrantsAdapter.js', () => ({
+  calculatePaymentsBasedOnActions: jest.fn()
+}))
 
 describe('getAgreementController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -33,6 +37,16 @@ describe('getAgreementController', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks()
+    calculatePaymentsBasedOnActions.mockResolvedValue({
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2025-12-31',
+      frequency: 'Annual',
+      agreementTotalPence: 1000,
+      annualTotalPence: 1000,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
+    })
 
     // Setup default mock implementations
     jest.spyOn(agreementDataHelper, 'getAgreementDataById')
@@ -58,12 +72,14 @@ describe('getAgreementController', () => {
 
       describe('not yet accepted', () => {
         const agreementId = 'SFI123456789'
+        let mockAgreementData
 
         beforeEach(() => {
-          const mockAgreementData = {
+          mockAgreementData = {
             agreementNumber: agreementId,
             status: 'offered',
             sbi: '106284736',
+            actionApplications: [{ code: 'A1' }],
             payment: {
               agreementStartDate: '2025-12-05',
               annualTotalPence: 0,
@@ -103,14 +119,32 @@ describe('getAgreementController', () => {
           expect(statusCode).toBe(statusCodes.internalServerError)
           expect(result.errorMessage).toContain('Database connection failed')
         })
+
+        test('should fetch updated payments when status is offered', async () => {
+          const { result } = await doGet()
+
+          expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
+            mockAgreementData.actionApplications
+          )
+          expect(result.agreementData.payment).toEqual(
+            expect.objectContaining({
+              agreementStartDate: '2024-01-01',
+              agreementEndDate: '2025-12-31'
+            })
+          )
+        })
       })
 
       describe('already accepted', () => {
+        /** @type {Agreement} */
+        let mockAgreementData
+
         beforeEach(() => {
-          const mockAgreementData = {
+          mockAgreementData = {
             agreementNumber: 'SFI123456789',
             status: 'accepted',
             sbi: '106284736',
+            actionApplications: [{ code: 'A1' }],
             payment: {
               agreementStartDate: '2025-12-05',
               annualTotalPence: 0,
@@ -128,6 +162,11 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet()
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+        })
+
+        test('should not recalculate payments when already accepted', async () => {
+          await doGet()
+          expect(calculatePaymentsBasedOnActions).not.toHaveBeenCalled()
         })
       })
     })
@@ -299,3 +338,7 @@ describe('getAgreementController', () => {
     })
   })
 })
+
+/**
+ * @typedef {import('~/src/api/common/types/agreement.d.js').Agreement} Agreement
+ */
