@@ -277,6 +277,20 @@ const config = convict({
       env: 'GA_TRACKING_ID'
     }
   },
+  landGrants: {
+    uri: {
+      doc: 'URI for landGrants service',
+      format: String,
+      default: 'http://localhost:3001',
+      env: 'LAND_GRANTS_BASE_URL'
+    },
+    token: {
+      doc: 'Authorization Bearer token',
+      format: String,
+      default: '',
+      env: 'LAND_GRANTS_TOKEN'
+    }
+  },
   paymentHub: {
     uri: {
       doc: 'URI for payment hub service bus',

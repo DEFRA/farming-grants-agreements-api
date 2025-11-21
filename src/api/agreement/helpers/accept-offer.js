@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { config } from '~/src/config/index.js'
+import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/landgrantsAdapter.js'
 
 /**
  * Accept an agreement offer
@@ -32,6 +33,10 @@ async function acceptOffer(agreementNumber, agreementData) {
     )
   }
 
+  const expectedPayments = await calculatePaymentsBasedOnActions(
+    agreementData.actionApplications
+  )
+
   // Update the agreement in the database
   const agreement = await agreementsModel
     .updateOneAgreementVersion(
@@ -41,7 +46,8 @@ async function acceptOffer(agreementNumber, agreementData) {
       {
         $set: {
           status: acceptedStatus,
-          signatureDate: acceptanceTime
+          signatureDate: acceptanceTime,
+          payment: expectedPayments
         }
       }
     )

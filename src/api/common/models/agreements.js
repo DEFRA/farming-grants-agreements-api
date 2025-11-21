@@ -32,11 +32,18 @@ function assertValidCreateArgs(agreement, versions) {
   }
 }
 
+function ignorePayments(versions) {
+  versions.forEach((version) => {
+    version.payment = null
+  })
+}
+
 schema.statics.createAgreementWithVersions = async function ({
   agreement,
   versions
 }) {
   assertValidCreateArgs(agreement, versions)
+  ignorePayments(versions)
 
   const createdversions = []
   let agreementId = null
@@ -183,6 +190,8 @@ schema.statics.updateOneAgreementVersion = async function (
   if (!updated) {
     throw Boom.notFound('Failed to update agreement. Agreement not found')
   }
+
+  updated.agreementNumber = agreementNumber
 
   return updated
 }
