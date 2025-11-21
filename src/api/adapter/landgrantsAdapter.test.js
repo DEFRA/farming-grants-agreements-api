@@ -61,7 +61,7 @@ describe('toLandGrantsPayload', () => {
     ])
 
     expect(result).toEqual({
-      landActions: [
+      parcel: [
         {
           sheetId: 'sheet-1',
           parcelId: 'parcel-1',
@@ -158,7 +158,7 @@ describe('calculatePaymentsBasedOnActions', () => {
     expect(request.headers['Content-Type']).toBe('application/json')
     expect(request.body).toEqual(
       JSON.stringify({
-        landActions: [
+        parcel: [
           {
             sheetId: 'brn-01',
             parcelId: 'parcel-123',

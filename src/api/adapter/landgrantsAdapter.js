@@ -38,7 +38,7 @@ export const toLandGrantsPayload = (actions = []) => {
     grouped.set(key, existing)
   }
 
-  return { landActions: Array.from(grouped.values()) }
+  return { parcel: Array.from(grouped.values()) }
 }
 
 const buildAuthHeader = () => {
@@ -79,9 +79,9 @@ const postPaymentCalculation = async (body, options = {}) => {
 }
 
 const calculatePaymentsBasedOnActions = async (actions) => {
-  const { landActions } = toLandGrantsPayload(actions)
+  const { parcel } = toLandGrantsPayload(actions)
 
-  const payload = { landActions }
+  const payload = { parcel }
 
   const response = await postPaymentCalculation(payload, {
     headers: buildAuthHeader()
