@@ -560,6 +560,510 @@ describe('createOffer', () => {
     expect(applicant.business.name).toBe('VAUGHAN FARMS LIMITED')
   })
 
+  it('should build legacy payment structure when answers.application.parcel format is provided', async () => {
+    const payloadWithApplicationParcel = {
+      clientRef: 'b85-c99-323',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106514040',
+        frn: '1101091126',
+        crn: '1103313150',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1101091126',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: {
+              line1: 'Test Address',
+              city: 'Test City',
+              postalCode: 'TE5T 1NG'
+            }
+          },
+          customer: {
+            name: { title: 'Mr', first: 'Test', last: 'User' }
+          }
+        },
+        totalAnnualPaymentPence: 32242,
+        application: {
+          parcel: [
+            {
+              sheetId: 'SK0971',
+              parcelId: '7555',
+              area: { unit: 'ha', quantity: 5.2182 },
+              actions: [
+                {
+                  code: 'CMOR1',
+                  version: 1,
+                  durationYears: 3,
+                  appliedFor: { unit: 'ha', quantity: 4.7575 }
+                }
+              ]
+            }
+          ]
+        },
+        payments: {
+          parcel: [
+            {
+              sheetId: 'SK0971',
+              parcelId: '7555',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  description: 'Assess moorland and produce a written record',
+                  durationYears: 3,
+                  paymentRates: 1060,
+                  annualPaymentPence: 5042,
+                  eligible: { unit: 'ha', quantity: 4.7575 }
+                }
+              ]
+            }
+          ],
+          agreement: [
+            {
+              code: 'CMOR1',
+              description: 'Assess moorland and produce a written record',
+              paymentRates: 27200,
+              annualPaymentPence: 27200
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'application-parcel-message',
+      payloadWithApplicationParcel,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications, applicant } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(32242)
+    expect(payment.parcelItems).toBeDefined()
+    expect(Object.keys(payment.parcelItems).length).toBeGreaterThan(0)
+
+    const firstParcelItem = Object.values(payment.parcelItems)[0]
+    expect(firstParcelItem).toMatchObject({
+      code: 'CMOR1',
+      description: 'Assess moorland and produce a written record',
+      annualPaymentPence: 5042,
+      sheetId: 'SK0971',
+      parcelId: '7555'
+    })
+
+    expect(actionApplications).toBeDefined()
+    expect(actionApplications).toHaveLength(1)
+    expect(applicant).toBeDefined()
+  })
+
+  it('should handle answers.application.parcel as single object (not array)', async () => {
+    const payloadWithSingleParcel = {
+      clientRef: 'single-parcel',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        application: {
+          parcel: {
+            sheetId: 'SD6743',
+            parcelId: '8083',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Test action',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: { ratePerUnitPence: 1060 },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'single-parcel-message',
+      payloadWithSingleParcel,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.parcelItems).toBeDefined()
+  })
+
+  it('should handle paymentRates as object (not number) when merging payments', async () => {
+    const payloadWithObjectPaymentRates = {
+      clientRef: 'object-rates',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        application: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [{ code: 'CMOR1', version: 1 }]
+            }
+          ]
+        },
+        payments: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  paymentRates: { ratePerUnitPence: 1060 }
+                }
+              ]
+            }
+          ],
+          agreement: [
+            {
+              code: 'CMOR1',
+              paymentRates: { agreementLevelAmountPence: 27200 }
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'object-rates-message',
+      payloadWithObjectPaymentRates,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+  })
+
+  it('should handle parcel without matching payment parcel', async () => {
+    const payloadWithoutMatchingPayment = {
+      clientRef: 'no-match',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        application: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  description: 'Test action',
+                  durationYears: 3,
+                  eligible: { unit: 'ha', quantity: 4.5341 },
+                  paymentRates: { ratePerUnitPence: 1060 },
+                  annualPaymentPence: 4806
+                }
+              ]
+            }
+          ]
+        },
+        payments: {
+          parcel: [
+            {
+              sheetId: 'DIFFERENT',
+              parcelId: 'DIFFERENT',
+              actions: [{ code: 'CMOR1' }]
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'no-match-message',
+      payloadWithoutMatchingPayment,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+  })
+
+  it('should handle action without matching payment action', async () => {
+    const payloadWithoutMatchingAction = {
+      clientRef: 'no-action-match',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        application: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  description: 'Test action',
+                  durationYears: 3,
+                  eligible: { unit: 'ha', quantity: 4.5341 },
+                  paymentRates: { ratePerUnitPence: 1060 },
+                  annualPaymentPence: 4806
+                }
+              ]
+            }
+          ]
+        },
+        payments: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [{ code: 'DIFFERENT_CODE' }]
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'no-action-match-message',
+      payloadWithoutMatchingAction,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+  })
+
+  it('should handle non-array paymentParcels and agreementLevelPayments', async () => {
+    const payloadWithNonArrayPayments = {
+      clientRef: 'non-array',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        application: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  description: 'Test action',
+                  durationYears: 3,
+                  eligible: { unit: 'ha', quantity: 4.5341 },
+                  paymentRates: { ratePerUnitPence: 1060 },
+                  annualPaymentPence: 4806
+                }
+              ]
+            }
+          ]
+        },
+        payments: {
+          parcel: 'not-an-array',
+          agreement: 'not-an-array'
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'non-array-message',
+      payloadWithNonArrayPayments,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+  })
+
+  it('should handle when normalizedPaymentRates is falsy', async () => {
+    const payloadWithFalsyPaymentRates = {
+      clientRef: 'falsy-rates',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '106284736', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.com' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        application: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [{ code: 'CMOR1', version: 1 }]
+            }
+          ]
+        },
+        payments: {
+          parcel: [
+            {
+              sheetId: 'SD6743',
+              parcelId: '8083',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  paymentRates: null,
+                  annualPaymentPence: 4806
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'falsy-rates-message',
+      payloadWithFalsyPaymentRates,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+  })
+
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()

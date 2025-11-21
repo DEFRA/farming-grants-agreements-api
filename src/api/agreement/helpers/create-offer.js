@@ -143,12 +143,29 @@ function convertFromLegacyApplicationFormat(agreementData) {
 function convertFromAnswersParcelsFormat(agreementData) {
   // Convert the answers structure to application-like structure for the mapper
   const answers = agreementData?.answers || {}
+
+  let parcels =
+    answers.parcels ||
+    (answers.application?.parcel
+      ? Array.isArray(answers.application.parcel)
+        ? answers.application.parcel
+        : [answers.application.parcel]
+      : null)
+
+  if (parcels && answers.payments?.parcel) {
+    parcels = mergePaymentDataIntoParcels(
+      parcels,
+      answers.payments.parcel,
+      answers.payments.agreement
+    )
+  }
+
   const applicationLikeData = {
     ...agreementData,
     application: {
       applicant: answers.applicant,
       totalAnnualPaymentPence: answers.totalAnnualPaymentPence,
-      parcels: answers.parcels,
+      parcels: parcels,
       agreementStartDate: answers.agreementStartDate,
       agreementEndDate: answers.agreementEndDate,
       paymentFrequency: answers.paymentFrequency,
@@ -156,6 +173,91 @@ function convertFromAnswersParcelsFormat(agreementData) {
     }
   }
   return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function mergePaymentDataIntoParcels(
+  parcels,
+  paymentParcels,
+  agreementLevelPayments
+) {
+  // Create a map of payment parcels by sheetId+parcelId for quick lookup
+  const paymentMap = new Map()
+  if (Array.isArray(paymentParcels)) {
+    paymentParcels.forEach((paymentParcel) => {
+      const key = `${paymentParcel.sheetId || ''}_${paymentParcel.parcelId || ''}`
+      paymentMap.set(key, paymentParcel)
+    })
+  }
+
+  // Create a map of agreement-level payments by code
+  const agreementPaymentMap = new Map()
+  if (Array.isArray(agreementLevelPayments)) {
+    agreementLevelPayments.forEach((agreementPayment) => {
+      agreementPaymentMap.set(agreementPayment.code, agreementPayment)
+    })
+  }
+
+  // Merge payment data into parcels
+  return parcels.map((parcel) => {
+    const key = `${parcel.sheetId || ''}_${parcel.parcelId || ''}`
+    const paymentParcel = paymentMap.get(key)
+
+    if (!paymentParcel) {
+      return parcel
+    }
+
+    // Merge actions from payment parcel into parcel actions
+    const mergedActions = (parcel.actions || []).map((action) => {
+      // Find matching action in payment parcel by code
+      const paymentAction = (paymentParcel.actions || []).find(
+        (pa) => pa.code === action.code
+      )
+
+      if (paymentAction) {
+        // Normalize paymentRates if it's a number
+        let normalizedPaymentRates = paymentAction.paymentRates
+        if (typeof normalizedPaymentRates === 'number') {
+          normalizedPaymentRates = {
+            ratePerUnitPence: normalizedPaymentRates
+          }
+        }
+
+        // Check for agreement-level payment for this action code
+        const agreementPayment = agreementPaymentMap.get(action.code)
+        if (agreementPayment) {
+          // Merge agreement-level paymentRates
+          if (typeof agreementPayment.paymentRates === 'number') {
+            normalizedPaymentRates = {
+              ...normalizedPaymentRates,
+              agreementLevelAmountPence: agreementPayment.paymentRates
+            }
+          } else if (agreementPayment.paymentRates) {
+            normalizedPaymentRates = {
+              ...normalizedPaymentRates,
+              ...agreementPayment.paymentRates
+            }
+          }
+        }
+
+        // Merge payment data into action
+        return {
+          ...action,
+          ...paymentAction,
+          // Normalize paymentRates structure
+          paymentRates: normalizedPaymentRates || paymentAction.paymentRates,
+          // Preserve version from original action if present
+          version: action.version ?? paymentAction.version
+        }
+      }
+
+      return action
+    })
+
+    return {
+      ...parcel,
+      actions: mergedActions
+    }
+  })
 }
 
 function mergeConvertedValues(existing, converted, fieldName) {
@@ -185,7 +287,10 @@ function buildLegacyAgreementContent(
     try {
       if (agreementData.application) {
         converted = convertFromLegacyApplicationFormat(agreementData)
-      } else if (agreementData.answers?.parcels) {
+      } else if (
+        agreementData.answers?.parcels ||
+        agreementData.answers?.application?.parcel
+      ) {
         converted = convertFromAnswersParcelsFormat(agreementData)
       } else {
         converted = null
