@@ -78,14 +78,27 @@ const postPaymentCalculation = async (body, options = {}) => {
   return res.text()
 }
 
-const calculatePaymentsBasedOnActions = async (actions) => {
+const calculatePaymentsBasedOnActions = async (actions, logger) => {
   const { parcel } = toLandGrantsPayload(actions)
 
   const payload = { parcel }
 
+  if (logger) {
+    logger.info(
+      `Sending Land Grants payment calculation request ${JSON.stringify(payload, null, 2)}`
+    )
+  }
+
   const response = await postPaymentCalculation(payload, {
     headers: buildAuthHeader()
   })
+
+  if (logger) {
+    logger.info(
+      `Successfully called Land Grants payment calculation, response received is
+      ${JSON.stringify(response, null, 2)}`
+    )
+  }
 
   const payment = response?.payment
   if (!payment) {
