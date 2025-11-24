@@ -124,7 +124,10 @@ describe('getAgreementController', () => {
           const { result } = await doGet()
 
           expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
-            mockAgreementData.actionApplications
+            mockAgreementData.actionApplications,
+            expect.objectContaining({
+              info: expect.any(Function)
+            })
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
