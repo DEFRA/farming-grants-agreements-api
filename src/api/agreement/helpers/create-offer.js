@@ -148,7 +148,7 @@ function convertFromAnswersParcelsFormat(agreementData) {
     application: {
       applicant: answers.applicant,
       totalAnnualPaymentPence: answers.totalAnnualPaymentPence,
-      parcels: answers.parcels,
+      parcels: answers.parcels || answers.parcel || [],
       agreementStartDate: answers.agreementStartDate,
       agreementEndDate: answers.agreementEndDate,
       paymentFrequency: answers.paymentFrequency,
@@ -185,7 +185,10 @@ function buildLegacyAgreementContent(
     try {
       if (agreementData.application) {
         converted = convertFromLegacyApplicationFormat(agreementData)
-      } else if (agreementData.answers?.parcels) {
+      } else if (
+        agreementData.answers?.parcels ||
+        agreementData.answers?.parcel
+      ) {
         converted = convertFromAnswersParcelsFormat(agreementData)
       } else {
         converted = null
