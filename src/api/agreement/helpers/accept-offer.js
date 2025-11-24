@@ -7,9 +7,10 @@ import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/landgrantsAda
  * Accept an agreement offer
  * @param {agreementNumber} agreementNumber - The agreement Id
  * @param {Agreement} agreementData - The agreement data
+ * @param {Logger} logger - The logger
  * @returns {Promise<Agreement>} The agreement data
  */
-async function acceptOffer(agreementNumber, agreementData) {
+async function acceptOffer(agreementNumber, agreementData, logger) {
   if (!agreementNumber || !agreementData) {
     throw Boom.badRequest('Agreement data is required')
   }
@@ -34,7 +35,8 @@ async function acceptOffer(agreementNumber, agreementData) {
   }
 
   const expectedPayments = await calculatePaymentsBasedOnActions(
-    agreementData.actionApplications
+    agreementData.actionApplications,
+    logger
   )
 
   // Update the agreement in the database
