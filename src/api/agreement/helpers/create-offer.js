@@ -143,18 +143,24 @@ function convertFromLegacyApplicationFormat(agreementData) {
 function convertFromAnswersParcelsFormat(agreementData) {
   // Convert the answers structure to application-like structure for the mapper
   const answers = agreementData?.answers || {}
+
+  // Support both answers.parcels (array) and answers.parcel (singular) in a backwards compatible way
+  const parcels =
+    answers.parcels || (answers.parcel ? [answers.parcel].flat() : [])
+
   const applicationLikeData = {
     ...agreementData,
     application: {
       applicant: answers.applicant,
       totalAnnualPaymentPence: answers.totalAnnualPaymentPence,
-      parcels: answers.parcels,
+      parcels,
       agreementStartDate: answers.agreementStartDate,
       agreementEndDate: answers.agreementEndDate,
       paymentFrequency: answers.paymentFrequency,
       durationYears: answers.durationYears
     }
   }
+
   return buildLegacyPaymentFromApplication(applicationLikeData)
 }
 
@@ -178,14 +184,17 @@ function buildLegacyAgreementContent(
   let resolvedPayment = payment
   let resolvedApplicant = applicant
 
-  // Check if we need to convert from application format (legacy) or answers.parcels format (new)
+  // Check if we need to convert from application format (legacy) or answers.parcels/answers.parcel format (new)
   if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
     let converted = null
 
     try {
       if (agreementData.application) {
         converted = convertFromLegacyApplicationFormat(agreementData)
-      } else if (agreementData.answers?.parcels) {
+      } else if (
+        agreementData.answers?.parcels ||
+        agreementData.answers?.parcel
+      ) {
         converted = convertFromAnswersParcelsFormat(agreementData)
       } else {
         converted = null
