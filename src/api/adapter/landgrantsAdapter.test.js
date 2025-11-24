@@ -104,6 +104,11 @@ describe('calculatePaymentsBasedOnActions', () => {
     ...overrides
   })
 
+  const mockLogger = {
+    error: jest.fn(),
+    info: jest.fn()
+  }
+
   beforeAll(() => {
     global.fetch = jest.fn()
   })
@@ -147,7 +152,7 @@ describe('calculatePaymentsBasedOnActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnActions(actions)
+    const result = await calculatePaymentsBasedOnActions(actions, mockLogger)
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
     const [url, request] = global.fetch.mock.calls[0]
@@ -178,6 +183,61 @@ describe('calculatePaymentsBasedOnActions', () => {
       agreementLevelItems: payment.agreementLevelItems,
       payments: payment.payments
     })
+
+    expect(mockLogger.info).toHaveBeenCalledTimes(2)
+  })
+
+  test('sends grouped payload and returns the payment fields without logs', async () => {
+    const payment = {
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2025-01-01',
+      frequency: 'Quarterly',
+      agreementTotalPence: 12300,
+      annualTotalPence: 4100,
+      parcelItems: [{ id: 'parcel' }],
+      agreementLevelItems: [{ id: 'agreement-level' }],
+      payments: [{ dueDate: '2024-03-01', amount: 1025 }],
+      extraneous: 'ignore-me'
+    }
+
+    const fetchResponse = buildFetchResponse({
+      json: jest.fn().mockResolvedValue({ payment })
+    })
+    global.fetch.mockResolvedValue(fetchResponse)
+
+    const result = await calculatePaymentsBasedOnActions(actions, null)
+
+    expect(global.fetch).toHaveBeenCalledTimes(1)
+    const [url, request] = global.fetch.mock.calls[0]
+    expect(url.toString()).toBe(
+      'https://land-grants.example/payments/calculate'
+    )
+    expect(request.headers.Authorization).toBe('Bearer config-token')
+    expect(request.headers['Content-Type']).toBe('application/json')
+    expect(request.body).toEqual(
+      JSON.stringify({
+        parcel: [
+          {
+            sheetId: 'brn-01',
+            parcelId: 'parcel-123',
+            actions: [{ code: 'FG1', quantity: 3 }]
+          }
+        ]
+      })
+    )
+
+    expect(result).toEqual({
+      agreementStartDate: payment.agreementStartDate,
+      agreementEndDate: payment.agreementEndDate,
+      frequency: payment.frequency,
+      agreementTotalPence: payment.agreementTotalPence,
+      annualTotalPence: payment.annualTotalPence,
+      parcelItems: payment.parcelItems,
+      agreementLevelItems: payment.agreementLevelItems,
+      payments: payment.payments
+    })
+
+    expect(mockLogger.info).toHaveBeenCalledTimes(0)
   })
 
   test('throws when Land Grants request does not include payment', async () => {
@@ -186,9 +246,11 @@ describe('calculatePaymentsBasedOnActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    await expect(calculatePaymentsBasedOnActions(actions)).rejects.toThrow(
-      'Land Grants response missing "payment" field'
-    )
+    await expect(
+      calculatePaymentsBasedOnActions(actions, mockLogger)
+    ).rejects.toThrow('Land Grants response missing "payment" field')
+
+    expect(mockLogger.info).toHaveBeenCalledTimes(2)
   })
 
   test('throws when Land Grants request fails', async () => {
@@ -200,8 +262,12 @@ describe('calculatePaymentsBasedOnActions', () => {
     }
     global.fetch.mockResolvedValue(fetchResponse)
 
-    await expect(calculatePaymentsBasedOnActions(actions)).rejects.toThrow(
+    await expect(
+      calculatePaymentsBasedOnActions(actions, mockLogger)
+    ).rejects.toThrow(
       'Land Grants Payment calculate request failed: 502 Bad Gateway gateway down'
     )
+
+    expect(mockLogger.info).toHaveBeenCalledTimes(1)
   })
 })

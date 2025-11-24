@@ -19,7 +19,8 @@ const getAgreementController =
 
     if (agreementData.status === 'offered') {
       agreementData.payment = await calculatePaymentsBasedOnActions(
-        agreementData.actionApplications
+        agreementData.actionApplications,
+        request.logger
       )
       request.logger.info(
         'Successfully called Land Grants service for payments calculation.'
