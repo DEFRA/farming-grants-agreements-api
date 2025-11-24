@@ -560,6 +560,193 @@ describe('createOffer', () => {
     expect(applicant.business.name).toBe('Example Ridge Farm Ltd')
   })
 
+  it('should handle answers.parcel (singular) format', async () => {
+    const payloadWithParcel = {
+      clientRef: 'parcel-singular',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '900000005', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.test' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        parcel: [
+          {
+            sheetId: 'AA0006',
+            parcelId: '0006',
+            area: { unit: 'ha', quantity: 4.5341 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Test action',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: { ratePerUnitPence: 1060 },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer('parcel-singular-message', payloadWithParcel, mockLogger)
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications, applicant } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.parcelItems).toBeDefined()
+    expect(actionApplications).toBeDefined()
+    expect(actionApplications).toHaveLength(1)
+    expect(actionApplications[0]).toMatchObject({
+      code: 'CMOR1',
+      parcelId: '0006',
+      sheetId: 'AA0006',
+      appliedFor: { unit: 'ha', quantity: 4.5341 }
+    })
+    expect(applicant).toBeDefined()
+  })
+
+  it('should prefer answers.parcels over answers.parcel when both exist', async () => {
+    const payloadWithBoth = {
+      clientRef: 'both-parcels',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '900000005', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.test' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        parcels: [
+          {
+            sheetId: 'AA0006',
+            parcelId: '0006',
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'From parcels',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 4.5341 },
+                paymentRates: { ratePerUnitPence: 1060 },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ],
+        parcel: [
+          {
+            sheetId: 'DIFFERENT',
+            parcelId: 'DIFFERENT',
+            actions: [{ code: 'SHOULD_NOT_USE' }]
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer('both-parcels-message', payloadWithBoth, mockLogger)
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { actionApplications } = callPayload.versions[0]
+
+    expect(actionApplications).toBeDefined()
+    expect(actionApplications).toHaveLength(1)
+    expect(actionApplications[0].code).toBe('CMOR1')
+    expect(actionApplications[0].sheetId).toBe('AA0006')
+    expect(actionApplications[0].parcelId).toBe('8083')
+  })
+
+  it('should handle empty parcels array when neither parcels nor parcel provided', async () => {
+    const payloadWithoutParcels = {
+      clientRef: 'no-parcels',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '900000005', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.test' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000
+        // No parcels, no parcel
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('no-parcels-message', payloadWithoutParcels, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
+  it('should handle null parcels', async () => {
+    const payloadWithNullParcels = {
+      clientRef: 'null-parcels',
+      code: 'frps-private-beta',
+      identifiers: { sbi: '900000005', frn: '1234567890' },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'Test Business',
+            reference: '1234567890',
+            email: { address: 'test@example.test' },
+            phone: { mobile: '01234567890' },
+            address: { line1: 'Test', city: 'Test', postalCode: 'TE5T 1NG' }
+          },
+          customer: { name: { title: 'Mr', first: 'Test', last: 'User' } }
+        },
+        totalAnnualPaymentPence: 10000,
+        parcels: null,
+        parcel: null
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('null-parcels-message', payloadWithNullParcels, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()
@@ -837,6 +1024,7 @@ describe('createOffer', () => {
     })
 
     it('should handle database errors gracefully', async () => {
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.createAgreementWithVersions.mockRejectedValue(
         new Error('Database connection error')
       )
@@ -847,6 +1035,7 @@ describe('createOffer', () => {
     })
 
     it('should handle generic errors when creating an agreement', async () => {
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.createAgreementWithVersions.mockRejectedValue(
         new Error('Generic error')
       )
