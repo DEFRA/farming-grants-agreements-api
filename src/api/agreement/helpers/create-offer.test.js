@@ -560,6 +560,121 @@ describe('createOffer', () => {
     expect(applicant.business.name).toBe('VAUGHAN FARMS LIMITED')
   })
 
+  it('should build legacy payment structure when answers.parcel format is provided', async () => {
+    const payloadWithAnswersParcel = {
+      clientRef: 'parcel-format-ref',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'PARCEL BUSINESS LTD',
+            reference: '3989509178',
+            email: {
+              address: 'farmer@example.com'
+            },
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Farm Lane',
+              line2: 'Village',
+              line3: null,
+              line4: null,
+              line5: null,
+              street: 'Farm Street',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
+            }
+          },
+          customer: {
+            name: {
+              title: 'Mr.',
+              first: 'Edward',
+              middle: 'Paul',
+              last: 'Jones'
+            }
+          }
+        },
+        applicationValidationRunId: 2335,
+        totalAnnualPaymentPence: 32006,
+        parcel: {
+          sheetId: 'SD9999',
+          parcelId: '9999',
+          area: { unit: 'ha', quantity: 1.2345 },
+          actions: [
+            {
+              code: 'CMOR1',
+              description: 'Assess moorland and produce a written record',
+              durationYears: 3,
+              eligible: { unit: 'ha', quantity: 1.2345 },
+              appliedFor: { unit: 'ha', quantity: 1.2345 },
+              paymentRates: {
+                ratePerUnitPence: 1060,
+                agreementLevelAmountPence: 27200
+              },
+              annualPaymentPence: 4806
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'answers-parcel-message',
+      payloadWithAnswersParcel,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications, applicant } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(32006)
+    expect(payment.parcelItems).toBeDefined()
+    expect(Object.keys(payment.parcelItems).length).toBeGreaterThan(0)
+
+    const firstParcelItem = Object.values(payment.parcelItems)[0]
+    expect(firstParcelItem).toMatchObject({
+      code: 'CMOR1',
+      rateInPence: 1060,
+      annualPaymentPence: 4806,
+      sheetId: 'SD9999',
+      parcelId: '9999'
+    })
+
+    expect(payment.agreementLevelItems).toBeDefined()
+    const agreementLevelItems = Object.values(payment.agreementLevelItems)
+    expect(agreementLevelItems.length).toBeGreaterThan(0)
+    expect(agreementLevelItems[0].annualPaymentPence).toBe(27200)
+
+    expect(payment.payments).toBeDefined()
+    expect(payment.payments).toHaveLength(2)
+
+    expect(actionApplications).toBeDefined()
+    expect(actionApplications).toHaveLength(1)
+    expect(actionApplications[0]).toMatchObject({
+      code: 'CMOR1',
+      parcelId: '9999',
+      sheetId: 'SD9999'
+    })
+
+    expect(applicant).toBeDefined()
+    expect(applicant.business.name).toBe('PARCEL BUSINESS LTD')
+  })
+
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()
