@@ -119,6 +119,9 @@ describe('acceptOfferDocumentController', () => {
       expect.objectContaining({
         agreementNumber: agreementId,
         status: 'offered'
+      }),
+      expect.objectContaining({
+        info: expect.any(Function)
       })
     )
     expect(updatePaymentHub).toHaveBeenCalledWith(
