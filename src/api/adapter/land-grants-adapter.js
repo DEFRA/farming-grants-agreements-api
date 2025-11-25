@@ -47,14 +47,12 @@ const buildAuthHeader = () => {
 }
 
 const postPaymentCalculation = async (body, options = {}) => {
-  // Default to globalThis.fetch so tests can stub global.fetch and
-  // production uses the built-in Fetch API (Node >= 18)
-  const { headers: extraHeaders = {}, fetchImpl = fetchWithTimeout } = options
+  const { headers: extraHeaders = {} } = options
 
   const landGrantsBaseUrl = config.get('landGrants.uri')
   const url = new URL('/payments/calculate', landGrantsBaseUrl)
 
-  const res = await fetchImpl(url, {
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
