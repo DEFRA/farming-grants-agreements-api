@@ -131,7 +131,7 @@ function resolveAgreementFields(agreementData) {
     agreementName,
     actionApplications: resolvedActions,
     payment: resolvedPayment,
-    applicant: resolvedApplicant
+    applicant: normaliseApplicant(resolvedApplicant, agreementData?.answers)
   }
 }
 
@@ -237,4 +237,70 @@ function determineAgreementNumber(agreementData) {
   }
 
   return generateAgreementNumber()
+}
+
+function normaliseApplicant(applicant, answers = {}) {
+  if (!applicant) {
+    return applicant
+  }
+
+  const businessDetails = applicant?.business
+    ? { ...applicant.business }
+    : undefined
+
+  const address =
+    (businessDetails && buildBusinessAddress(businessDetails)) || undefined
+
+  const customer = applicant?.customer || answers?.customer
+
+  return {
+    ...(applicant || {}),
+    ...(businessDetails
+      ? {
+          business: {
+            ...businessDetails,
+            ...(address ? { address } : {})
+          }
+        }
+      : {}),
+    ...(customer ? { customer } : {})
+  }
+}
+
+function buildBusinessAddress(business = {}) {
+  if (business.address) {
+    return business.address
+  }
+
+  const extracted = extractAddressFields(business)
+
+  return extracted
+}
+
+const addressKeys = [
+  'line1',
+  'line2',
+  'line3',
+  'line4',
+  'line5',
+  'street',
+  'city',
+  'postalCode'
+]
+
+function extractAddressFields(source = {}) {
+  const hasAddressField = addressKeys.some(
+    (key) => source[key] !== undefined && source[key] !== null
+  )
+
+  if (!hasAddressField) {
+    return undefined
+  }
+
+  return addressKeys.reduce((acc, key) => {
+    if (source[key] !== undefined && source[key] !== null) {
+      acc[key] = source[key]
+    }
+    return acc
+  }, {})
 }
