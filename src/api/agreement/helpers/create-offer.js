@@ -233,6 +233,47 @@ function validateResolvedContent(resolvedPayment, resolvedApplicant) {
   }
 }
 
+function attemptConversion(agreementData) {
+  try {
+    const answersApplication = agreementData.answers?.application
+    if (agreementData.application) {
+      return convertFromLegacyApplicationFormat(agreementData)
+    }
+    if (answersApplication) {
+      return convertFromAnswersApplicationFormat(agreementData)
+    }
+    if (agreementData.answers?.parcels || agreementData.answers?.parcel) {
+      return convertFromAnswersParcelsFormat(agreementData)
+    }
+    if (agreementData.payments || agreementData.answers?.payments) {
+      return convertFromAnswersPaymentsFormat(agreementData)
+    }
+  } catch (conversionError) {
+    return null
+  }
+  return null
+}
+
+function applyConvertedValues(resolved, converted) {
+  return {
+    resolvedActions: mergeConvertedValues(
+      resolved.resolvedActions,
+      converted,
+      'actionApplications'
+    ),
+    resolvedPayment: mergeConvertedValues(
+      resolved.resolvedPayment,
+      converted,
+      'payment'
+    ),
+    resolvedApplicant: mergeConvertedValues(
+      resolved.resolvedApplicant,
+      converted,
+      'applicant'
+    )
+  }
+}
+
 function buildLegacyAgreementContent(
   agreementData,
   actionApplications,
@@ -245,49 +286,15 @@ function buildLegacyAgreementContent(
 
   // Check if we need to convert from application format (legacy) or answers.parcels/answers.parcel format (new)
   if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
-    let converted = null
-
-    try {
-      const answersApplication = agreementData.answers?.application
-      if (agreementData.application) {
-        converted = convertFromLegacyApplicationFormat(agreementData)
-      } else if (answersApplication) {
-        converted = convertFromAnswersApplicationFormat(agreementData)
-      }
-
-      if (
-        !converted &&
-        (agreementData.answers?.parcels || agreementData.answers?.parcel)
-      ) {
-        converted = convertFromAnswersParcelsFormat(agreementData)
-      }
-
-      if (
-        !converted &&
-        (agreementData.payments || agreementData.answers?.payments)
-      ) {
-        converted = convertFromAnswersPaymentsFormat(agreementData)
-      }
-    } catch (conversionError) {
-      converted = null
-    }
-
+    const converted = attemptConversion(agreementData)
     if (converted) {
-      resolvedPayment = mergeConvertedValues(
-        resolvedPayment,
-        converted,
-        'payment'
+      const updated = applyConvertedValues(
+        { resolvedActions, resolvedPayment, resolvedApplicant },
+        converted
       )
-      resolvedActions = mergeConvertedValues(
-        resolvedActions,
-        converted,
-        'actionApplications'
-      )
-      resolvedApplicant = mergeConvertedValues(
-        resolvedApplicant,
-        converted,
-        'applicant'
-      )
+      resolvedActions = updated.resolvedActions
+      resolvedPayment = updated.resolvedPayment
+      resolvedApplicant = updated.resolvedApplicant
     }
   }
 
