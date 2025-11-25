@@ -242,6 +242,152 @@ describe('createOffer', () => {
     )
   })
 
+  it('normalises applicant customer and address from answers payload', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const payload = {
+      ...agreementData,
+      answers: {
+        ...agreementData.answers,
+        applicant: {
+          business: {
+            reference: '9000000501',
+            name: 'HireContracting',
+            email: { address: 'test@test.com' },
+            phone: { mobile: '07700900301' },
+            line1: '5 Example Lane',
+            line2: 'Example Village',
+            city: 'Exampleton',
+            postalCode: 'ZZ99 5ZZ'
+          }
+        },
+        customer: {
+          name: {
+            title: 'Mr',
+            first: 'Morgan',
+            middle: 'Test',
+            last: 'Example'
+          }
+        }
+      }
+    }
+
+    await createOffer('aws-message-id', payload, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].applicant).toEqual(
+      expect.objectContaining({
+        business: expect.objectContaining({
+          name: 'HireContracting',
+          address: expect.objectContaining({
+            line1: '5 Example Lane',
+            line2: 'Example Village',
+            city: 'Exampleton',
+            postalCode: 'ZZ99 5ZZ'
+          })
+        }),
+        customer: expect.objectContaining({
+          name: expect.objectContaining({
+            first: 'Morgan',
+            last: 'Example'
+          })
+        })
+      })
+    )
+  })
+
+  it('keeps existing applicant customer and address when already structured correctly', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const payload = {
+      ...agreementData,
+      answers: {
+        ...agreementData.answers,
+        applicant: {
+          business: {
+            name: 'Structured Business',
+            email: { address: 'structured@test.com' },
+            phone: { mobile: '01234567890' },
+            address: {
+              line1: 'Existing line 1',
+              postalCode: 'AB1 2CD'
+            }
+          },
+          customer: {
+            name: {
+              title: 'Mrs',
+              first: 'Existing',
+              last: 'Customer'
+            }
+          }
+        },
+        customer: {
+          name: {
+            title: 'Mr',
+            first: 'Different',
+            last: 'Customer'
+          }
+        }
+      }
+    }
+
+    await createOffer('aws-message-id', payload, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].applicant).toEqual(
+      expect.objectContaining({
+        business: expect.objectContaining({
+          name: 'Structured Business',
+          address: expect.objectContaining({
+            line1: 'Existing line 1',
+            postalCode: 'AB1 2CD'
+          })
+        }),
+        customer: expect.objectContaining({
+          name: expect.objectContaining({
+            title: 'Mrs',
+            first: 'Existing',
+            last: 'Customer'
+          })
+        })
+      })
+    )
+  })
+
+  it('does not attach an address when none of the address fields are provided', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const payload = {
+      ...agreementData,
+      answers: {
+        ...agreementData.answers,
+        applicant: {
+          business: {
+            name: 'No Address Business',
+            email: { address: 'noaddress@test.com' },
+            phone: { mobile: '07700900000' }
+          }
+        }
+      }
+    }
+
+    await createOffer('aws-message-id', payload, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].applicant.business).toEqual(
+      expect.objectContaining({
+        name: 'No Address Business'
+      })
+    )
+    expect(lastCallArgs.versions[0].applicant.business.address).toBeUndefined()
+  })
+
   it('should generate an agreement number when seedDb is true but agreementNumber is empty', async () => {
     // Enable DB seeding and provide an empty agreementNumber
     const { config } = await import('~/src/config/index.js')
