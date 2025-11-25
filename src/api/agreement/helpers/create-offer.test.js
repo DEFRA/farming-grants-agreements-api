@@ -748,25 +748,27 @@ describe('createOffer', () => {
         },
         applicationValidationRunId: 2335,
         totalAnnualPaymentPence: 32006,
-        parcel: {
-          sheetId: 'AA0114',
-          parcelId: '0120',
-          area: { unit: 'ha', quantity: 1.2345 },
-          actions: [
-            {
-              code: 'CMOR1',
-              description: 'Assess moorland and produce a written record',
-              durationYears: 3,
-              eligible: { unit: 'ha', quantity: 1.2345 },
-              appliedFor: { unit: 'ha', quantity: 1.2345 },
-              paymentRates: {
-                ratePerUnitPence: 1060,
-                agreementLevelAmountPence: 27200
-              },
-              annualPaymentPence: 4806
-            }
-          ]
-        }
+        parcel: [
+          {
+            sheetId: 'AA0114',
+            parcelId: '0120',
+            area: { unit: 'ha', quantity: 1.2345 },
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland and produce a written record',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 1.2345 },
+                appliedFor: { unit: 'ha', quantity: 1.2345 },
+                paymentRates: {
+                  ratePerUnitPence: 1060,
+                  agreementLevelAmountPence: 27200
+                },
+                annualPaymentPence: 4806
+              }
+            ]
+          }
+        ]
       }
     }
 
@@ -1098,6 +1100,7 @@ describe('createOffer', () => {
     })
 
     it('should handle database errors gracefully', async () => {
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.createAgreementWithVersions.mockRejectedValue(
         new Error('Database connection error')
       )

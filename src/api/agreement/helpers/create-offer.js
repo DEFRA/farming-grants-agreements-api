@@ -143,17 +143,12 @@ function convertFromLegacyApplicationFormat(agreementData) {
 function convertFromAnswersParcelsFormat(agreementData) {
   // Convert the answers structure to application-like structure for the mapper
   const answers = agreementData?.answers || {}
-
-  // Support both answers.parcels (array) and answers.parcel (singular) in a backwards compatible way
-  const parcels =
-    answers.parcels || (answers.parcel ? [answers.parcel].flat() : [])
-
   const applicationLikeData = {
     ...agreementData,
     application: {
       applicant: answers.applicant,
       totalAnnualPaymentPence: answers.totalAnnualPaymentPence,
-      parcels,
+      parcels: answers.parcels || answers.parcel || [],
       agreementStartDate: answers.agreementStartDate,
       agreementEndDate: answers.agreementEndDate,
       paymentFrequency: answers.paymentFrequency,
