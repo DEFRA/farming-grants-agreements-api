@@ -1306,6 +1306,149 @@ describe('createOffer', () => {
     ).rejects.toThrow('Offer data is missing payment and applicant')
   })
 
+  it('should handle answers.application being null gracefully', async () => {
+    const payloadWithNullApplication = {
+      clientRef: 'null-application-ref',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'NULL APPLICATION LTD',
+            reference: '3989509178',
+            email: { address: 'null@example.com' },
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Null Lane',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
+            }
+          }
+        },
+        application: null
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer(
+        'null-application-message',
+        payloadWithNullApplication,
+        mockLogger
+      )
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
+  it('should handle payments.parcel as a single object (not array)', async () => {
+    const payloadWithSingleParcel = {
+      clientRef: 'single-parcel-ref',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'SINGLE PARCEL LTD',
+            reference: '3989509178',
+            email: { address: 'single@example.com' },
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Single Lane',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
+            }
+          }
+        },
+        totalAnnualPaymentPence: 8000,
+        payments: {
+          parcel: {
+            sheetId: 'SD12000',
+            parcelId: '6000',
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 1 },
+                paymentRates: { ratePerUnitPence: 1060 },
+                annualPaymentPence: 8000
+              }
+            ]
+          }
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'single-parcel-message',
+      payloadWithSingleParcel,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(8000)
+  })
+
+  it('should handle payments.parcel being null or undefined', async () => {
+    const payloadWithNullParcel = {
+      clientRef: 'null-parcel-ref',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'NULL PARCEL LTD',
+            reference: '3989509178',
+            email: { address: 'nullparcel@example.com' },
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Null Parcel Lane',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
+            }
+          }
+        },
+        payments: {
+          parcel: null
+        }
+      }
+    }
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('null-parcel-message', payloadWithNullParcel, mockLogger)
+    ).rejects.toThrow('Offer data is missing payment and applicant')
+  })
+
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()
