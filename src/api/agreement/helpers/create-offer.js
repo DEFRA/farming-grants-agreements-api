@@ -159,6 +159,70 @@ function convertFromAnswersParcelsFormat(agreementData) {
   return buildLegacyPaymentFromApplication(applicationLikeData)
 }
 
+function convertFromAnswersApplicationFormat(agreementData) {
+  const answersApplication = agreementData.answers?.application
+  if (!answersApplication) {
+    return null
+  }
+
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      ...answersApplication
+    }
+  }
+
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function normalizeToArray(value) {
+  if (!value) {
+    return []
+  }
+
+  return Array.isArray(value) ? value : [value]
+}
+
+function convertFromAnswersPaymentsFormat(agreementData) {
+  const answers = agreementData?.answers || {}
+  // Support both data.payments and data.answers.payments
+  const payments = agreementData.payments || answers.payments || {}
+  const parcelPayments = payments.parcel || payments.parcels
+  const parcels = normalizeToArray(parcelPayments)
+
+  if (!parcels.length) {
+    return null
+  }
+
+  const totalAnnualPaymentPence =
+    answers.totalAnnualPaymentPence ??
+    payments.totalAnnualPaymentPence ??
+    parcels.reduce(
+      (sum, parcel) =>
+        sum +
+        (parcel.actions || []).reduce(
+          (acc, action) => acc + Number(action.annualPaymentPence || 0),
+          0
+        ),
+      0
+    )
+
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      applicant: answers.applicant,
+      totalAnnualPaymentPence,
+      parcels,
+      agreementStartDate: answers.agreementStartDate,
+      agreementEndDate: answers.agreementEndDate,
+      paymentFrequency: answers.paymentFrequency,
+      durationYears: answers.durationYears
+    }
+  }
+
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
 function mergeConvertedValues(existing, converted, fieldName) {
   return existing || converted[fieldName]
 }
@@ -184,15 +248,25 @@ function buildLegacyAgreementContent(
     let converted = null
 
     try {
+      const answersApplication = agreementData.answers?.application
       if (agreementData.application) {
         converted = convertFromLegacyApplicationFormat(agreementData)
-      } else if (
-        agreementData.answers?.parcels ||
-        agreementData.answers?.parcel
+      } else if (answersApplication) {
+        converted = convertFromAnswersApplicationFormat(agreementData)
+      }
+
+      if (
+        !converted &&
+        (agreementData.answers?.parcels || agreementData.answers?.parcel)
       ) {
         converted = convertFromAnswersParcelsFormat(agreementData)
-      } else {
-        converted = null
+      }
+
+      if (
+        !converted &&
+        (agreementData.payments || agreementData.answers?.payments)
+      ) {
+        converted = convertFromAnswersPaymentsFormat(agreementData)
       }
     } catch (conversionError) {
       converted = null

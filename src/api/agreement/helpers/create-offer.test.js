@@ -823,6 +823,241 @@ describe('createOffer', () => {
     expect(applicant.business.name).toBe('PARCEL BUSINESS LTD')
   })
 
+  it('should build legacy payment structure when answers.application format is provided', async () => {
+    const payloadWithAnswersApplication = {
+      clientRef: 'answers-application-ref',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        application: {
+          applicant: {
+            business: {
+              name: 'ANSWERS APPLICATION LTD',
+              reference: '3989509178',
+              email: {
+                address: 'applicant@example.com'
+              },
+              phone: { mobile: '01234031670' },
+              address: {
+                line1: 'Answers Lane',
+                line2: 'Village',
+                city: 'Clitheroe',
+                postalCode: 'BB7 3DD'
+              }
+            }
+          },
+          totalAnnualPaymentPence: 15000,
+          parcels: [
+            {
+              sheetId: 'SD9998',
+              parcelId: '8888',
+              area: { unit: 'ha', quantity: 2.5 },
+              actions: [
+                {
+                  code: 'CMOR1',
+                  description: 'Assess moorland',
+                  durationYears: 3,
+                  eligible: { unit: 'ha', quantity: 2.5 },
+                  paymentRates: {
+                    ratePerUnitPence: 1060
+                  },
+                  annualPaymentPence: 5000
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'answers-application-message',
+      payloadWithAnswersApplication,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications, applicant } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(15000)
+    expect(actionApplications).toHaveLength(1)
+    expect(applicant).toBeDefined()
+    expect(applicant.business.name).toBe('ANSWERS APPLICATION LTD')
+  })
+
+  it('should build legacy payment structure when answers.payments format is provided', async () => {
+    const payloadWithAnswersPayments = {
+      clientRef: 'answers-payments-ref',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'ANSWERS PAYMENTS LTD',
+            reference: '3989509178',
+            email: {
+              address: 'payments@example.com'
+            },
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Payments Lane',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
+            }
+          }
+        },
+        totalAnnualPaymentPence: 22000,
+        payments: {
+          parcel: [
+            {
+              sheetId: 'SD7000',
+              parcelId: '1000',
+              actions: [
+                {
+                  code: 'CMOR1',
+                  description: 'Assess moorland',
+                  durationYears: 3,
+                  eligible: { unit: 'ha', quantity: 2 },
+                  paymentRates: { ratePerUnitPence: 1060 },
+                  annualPaymentPence: 6000
+                }
+              ]
+            }
+          ],
+          agreement: [
+            {
+              code: 'CMOR1',
+              description: 'Assess moorland',
+              durationYears: 3,
+              paymentRates: 27200,
+              annualPaymentPence: 27200
+            }
+          ]
+        }
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'answers-payments-message',
+      payloadWithAnswersPayments,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(22000)
+    expect(actionApplications).toHaveLength(1)
+  })
+
+  it('should build legacy payment structure when root-level payments format is provided', async () => {
+    const payloadWithRootPayments = {
+      clientRef: 'root-payments-ref',
+      code: 'frps-private-beta',
+      identifiers: {
+        sbi: '106284736',
+        frn: '3989509178',
+        crn: '1102838829',
+        defraId: 'defraId'
+      },
+      answers: {
+        scheme: 'SFI',
+        applicant: {
+          business: {
+            name: 'ROOT PAYMENTS LTD',
+            reference: '3989509178',
+            email: {
+              address: 'rootpayments@example.com'
+            },
+            phone: { mobile: '01234031670' },
+            address: {
+              line1: 'Root Payments Lane',
+              city: 'Clitheroe',
+              postalCode: 'BB7 3DD'
+            }
+          }
+        },
+        totalAnnualPaymentPence: 15000
+      },
+      payments: {
+        parcel: [
+          {
+            sheetId: 'SD8000',
+            parcelId: '2000',
+            actions: [
+              {
+                code: 'CMOR1',
+                description: 'Assess moorland',
+                durationYears: 3,
+                eligible: { unit: 'ha', quantity: 1.5 },
+                paymentRates: { ratePerUnitPence: 1060 },
+                annualPaymentPence: 5000
+              }
+            ]
+          }
+        ],
+        agreement: [
+          {
+            code: 'CMOR1',
+            description: 'Assess moorland',
+            durationYears: 3,
+            paymentRates: 27200,
+            annualPaymentPence: 27200
+          }
+        ]
+      }
+    }
+
+    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+      agreementNumber: 'SFI123456789',
+      agreements: []
+    })
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'root-payments-message',
+      payloadWithRootPayments,
+      mockLogger
+    )
+
+    const callPayload =
+      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const { payment, actionApplications } = callPayload.versions[0]
+
+    expect(payment).toBeDefined()
+    expect(payment.annualTotalPence).toBe(15000)
+    expect(actionApplications).toHaveLength(1)
+  })
+
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()
