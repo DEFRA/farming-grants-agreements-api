@@ -82,7 +82,7 @@ describe('UI sending a POST request to accept an agreement', () => {
     provider: 'payment-hub-rest',
     dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
     pactfileWriteMode: 'update',
-    logLevel: 'info'
+    logLevel: process.env.CI ? 'warn' : 'info'
   })
 
   beforeAll(async () => {
