@@ -76,6 +76,55 @@ const postPaymentCalculation = async (body, options = {}) => {
   return res.text()
 }
 
+const parseQuantity = (raw) => {
+  if (raw == null) {
+    return null
+  }
+  const value = typeof raw === 'string' ? Number.parseFloat(raw) : Number(raw)
+  return Number.isFinite(value) && value > 0 ? value : null
+}
+
+export const convertParcelsToLandGrantsPayload = (parcels = []) => {
+  if (!Array.isArray(parcels)) {
+    throw new TypeError('parcels must be an array')
+  }
+
+  const grouped = new Map()
+
+  for (const parcel of parcels) {
+    if (!parcel?.sheetId || !parcel?.parcelId) {
+      continue
+    }
+
+    if (!Array.isArray(parcel.actions)) {
+      throw new TypeError('parcel actions must be an array')
+    }
+
+    const key = `${parcel.sheetId}|${parcel.parcelId}`
+    const existing = grouped.get(key) ?? {
+      sheetId: parcel.sheetId,
+      parcelId: parcel.parcelId,
+      actions: []
+    }
+
+    for (const action of parcel.actions) {
+      const quantity = parseQuantity(action.appliedFor?.quantity)
+      if (quantity == null) {
+        grouped.set(key, existing)
+        continue
+      }
+
+      existing.actions.push({
+        code: action.code,
+        quantity
+      })
+    }
+    grouped.set(key, existing)
+  }
+
+  return { parcel: Array.from(grouped.values()) }
+}
+
 const calculatePaymentsBasedOnActions = async (actions, logger) => {
   const { parcel } = toLandGrantsPayload(actions)
 
@@ -126,4 +175,57 @@ const calculatePaymentsBasedOnActions = async (actions, logger) => {
   }
 }
 
-export { calculatePaymentsBasedOnActions }
+const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
+  const { parcel } = convertParcelsToLandGrantsPayload(parcels)
+
+  const payload = { parcel }
+
+  if (logger) {
+    logger.info(
+      `Sending Land Grants payment calculation request ${JSON.stringify(payload, null, 2)}`
+    )
+  }
+
+  const response = await postPaymentCalculation(payload, {
+    headers: buildAuthHeader()
+  })
+
+  if (logger) {
+    logger.info(
+      `Successfully called Land Grants payment calculation, response received is
+      ${JSON.stringify(response, null, 2)}`
+    )
+  }
+
+  const payment = response?.payment
+  if (!payment) {
+    throw new Error('Land Grants response missing "payment" field')
+  }
+
+  const {
+    agreementStartDate,
+    agreementEndDate,
+    frequency,
+    agreementTotalPence,
+    annualTotalPence,
+    parcelItems,
+    agreementLevelItems,
+    payments
+  } = payment
+
+  return {
+    agreementStartDate,
+    agreementEndDate,
+    frequency,
+    agreementTotalPence,
+    annualTotalPence,
+    parcelItems,
+    agreementLevelItems,
+    payments
+  }
+}
+
+export {
+  calculatePaymentsBasedOnActions,
+  calculatePaymentsBasedOnParcelsWithActions
+}
