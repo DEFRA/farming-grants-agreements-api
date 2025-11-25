@@ -1,5 +1,5 @@
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
 import Boom from '@hapi/boom'
 
 /**
@@ -18,8 +18,8 @@ const getAgreementController =
     }
 
     if (agreementData.status === 'offered') {
-      agreementData.payment = await calculatePaymentsBasedOnActions(
-        agreementData.actionApplications,
+      agreementData.payment = await calculatePaymentsBasedOnParcelsWithActions(
+        agreementData.application.parcel,
         request.logger
       )
       request.logger.info(

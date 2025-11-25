@@ -1,6 +1,7 @@
 import {
-  calculatePaymentsBasedOnActions,
-  toLandGrantsPayload
+  calculatePaymentsBasedOnParcelsWithActions,
+  toLandGrantsPayload,
+  convertParcelsToLandGrantsPayload
 } from './land-grants-adapter.js'
 import { config } from '~/src/config/index.js'
 
@@ -78,62 +79,210 @@ describe('toLandGrantsPayload', () => {
       ]
     })
   })
+
+  test('converts Decimal128-like values to numbers', () => {
+    const decimalLike = { toString: () => '4.25' }
+    const result = toLandGrantsPayload([
+      {
+        sheetId: 'sheet-3',
+        parcelId: 'parcel-9',
+        code: 'DX1',
+        appliedFor: { quantity: decimalLike }
+      }
+    ])
+
+    expect(result).toEqual({
+      parcel: [
+        {
+          sheetId: 'sheet-3',
+          parcelId: 'parcel-9',
+          actions: [{ code: 'DX1', quantity: 4.25 }]
+        }
+      ]
+    })
+  })
 })
 
-describe('calculatePaymentsBasedOnActions', () => {
-  const actions = [
-    {
-      code: 'FG1',
-      sheetId: 'brn-01',
-      parcelId: 'parcel-123',
-      appliedFor: { quantity: 3 }
-    }
-  ]
-
-  const globalFetch = global.fetch
-
-  const buildFetchResponse = (overrides = {}) => ({
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    headers: {
-      get: () => 'application/json'
-    },
-    json: jest.fn().mockResolvedValue({}),
-    text: jest.fn().mockResolvedValue(''),
-    ...overrides
-  })
-
-  const mockLogger = {
-    error: jest.fn(),
-    info: jest.fn()
-  }
-
-  beforeAll(() => {
-    global.fetch = jest.fn()
-  })
-
-  afterAll(() => {
-    global.fetch = globalFetch
-  })
-
+describe('convertParcelsToLandGrantsPayload', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockConfig.get.mockImplementation((key) => {
-      if (key === 'landGrants.uri') {
-        return 'https://land-grants.example'
-      }
-      if (key === 'landGrants.token') {
-        return 'config-token'
-      }
+  })
 
-      if (key === 'fetchTimeout') {
-        return 30000
+  test('throws when parcels argument is not an array', () => {
+    expect(() => convertParcelsToLandGrantsPayload(null)).toThrow(TypeError)
+  })
+
+  test('throws when parcel actions is not an array', () => {
+    const parcel = { sheetId: 'A', parcelId: '1', actions: null }
+    expect(() => convertParcelsToLandGrantsPayload([parcel])).toThrow(
+      'parcel actions must be an array'
+    )
+  })
+
+  test('skips invalid parcels and quantities while grouping valid entries', () => {
+    const result = convertParcelsToLandGrantsPayload([
+      {
+        sheetId: 'sheet-1',
+        parcelId: 'parcel-1',
+        actions: [
+          { code: 'X1', appliedFor: { quantity: '2.5' } },
+          { code: 'X2', appliedFor: { quantity: '0' } },
+          { code: 'X3', appliedFor: { quantity: 'pineapple' } }
+        ]
+      },
+      {
+        parcelId: 'parcel-2',
+        actions: [{ code: 'INVALID', appliedFor: { quantity: 5 } }]
+      },
+      {
+        sheetId: 'sheet-3',
+        parcelId: 'parcel-9',
+        actions: [{ code: 'Z1', appliedFor: { quantity: 1 } }]
       }
-      throw new Error(`Unexpected config key ${key}`)
+    ])
+
+    expect(result).toEqual({
+      parcel: [
+        {
+          sheetId: 'sheet-1',
+          parcelId: 'parcel-1',
+          actions: [{ code: 'X1', quantity: 2.5 }]
+        },
+        {
+          sheetId: 'sheet-3',
+          parcelId: 'parcel-9',
+          actions: [{ code: 'Z1', quantity: 1 }]
+        }
+      ]
     })
   })
 
+  test('parses Decimal128-like values from parcels', () => {
+    const decimalLike = { toString: () => '3.14' }
+    const result = convertParcelsToLandGrantsPayload([
+      {
+        sheetId: 'sheet-5',
+        parcelId: 'parcel-3',
+        actions: [{ code: 'PIE', appliedFor: { quantity: decimalLike } }]
+      }
+    ])
+
+    expect(result).toEqual({
+      parcel: [
+        {
+          sheetId: 'sheet-5',
+          parcelId: 'parcel-3',
+          actions: [{ code: 'PIE', quantity: 3.14 }]
+        }
+      ]
+    })
+  })
+})
+
+const parcelsWithActions = [
+  {
+    sheetId: 'SK0971',
+    parcelId: '7555',
+    area: {
+      unit: 'ha',
+      quantity: 5.2182
+    },
+    actions: [
+      {
+        code: 'CMOR1',
+        version: 1,
+        durationYears: 3,
+        appliedFor: {
+          unit: 'ha',
+          quantity: 4.7575
+        }
+      },
+      {
+        code: 'UPL3',
+        version: 1,
+        durationYears: 3,
+        appliedFor: {
+          unit: 'ha',
+          quantity: 4.7575
+        }
+      }
+    ]
+  },
+  {
+    sheetId: 'SK0971',
+    parcelId: '9194',
+    area: {
+      unit: 'ha',
+      quantity: 2.1703
+    },
+    actions: [
+      {
+        code: 'CMOR1',
+        version: 1,
+        durationYears: 3,
+        appliedFor: {
+          unit: 'ha',
+          quantity: 2.1705
+        }
+      },
+      {
+        code: 'UPL1',
+        version: 1,
+        durationYears: 3,
+        appliedFor: {
+          unit: 'ha',
+          quantity: 2.1705
+        }
+      }
+    ]
+  }
+]
+
+const globalFetch = global.fetch
+
+const buildFetchResponse = (overrides = {}) => ({
+  ok: true,
+  status: 200,
+  statusText: 'OK',
+  headers: {
+    get: () => 'application/json'
+  },
+  json: jest.fn().mockResolvedValue({}),
+  text: jest.fn().mockResolvedValue(''),
+  ...overrides
+})
+
+const mockLogger = {
+  error: jest.fn(),
+  info: jest.fn()
+}
+
+beforeAll(() => {
+  global.fetch = jest.fn()
+})
+
+afterAll(() => {
+  global.fetch = globalFetch
+})
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  mockConfig.get.mockImplementation((key) => {
+    if (key === 'landGrants.uri') {
+      return 'https://land-grants.example'
+    }
+    if (key === 'landGrants.token') {
+      return 'config-token'
+    }
+
+    if (key === 'fetchTimeout') {
+      return 30000
+    }
+    throw new Error(`Unexpected config key ${key}`)
+  })
+})
+
+describe('calculatePaymentsBasedOnParcelsWithActions', () => {
   test('sends grouped payload and returns the payment fields', async () => {
     const payment = {
       agreementStartDate: '2024-01-01',
@@ -152,7 +301,10 @@ describe('calculatePaymentsBasedOnActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnActions(actions, mockLogger)
+    const result = await calculatePaymentsBasedOnParcelsWithActions(
+      parcelsWithActions,
+      mockLogger
+    )
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
     const [url, request] = global.fetch.mock.calls[0]
@@ -165,9 +317,20 @@ describe('calculatePaymentsBasedOnActions', () => {
       JSON.stringify({
         parcel: [
           {
-            sheetId: 'brn-01',
-            parcelId: 'parcel-123',
-            actions: [{ code: 'FG1', quantity: 3 }]
+            sheetId: 'SK0971',
+            parcelId: '7555',
+            actions: [
+              { code: 'CMOR1', quantity: 4.7575 },
+              { code: 'UPL3', quantity: 4.7575 }
+            ]
+          },
+          {
+            sheetId: 'SK0971',
+            parcelId: '9194',
+            actions: [
+              { code: 'CMOR1', quantity: 2.1705 },
+              { code: 'UPL1', quantity: 2.1705 }
+            ]
           }
         ]
       })
@@ -187,17 +350,16 @@ describe('calculatePaymentsBasedOnActions', () => {
     expect(mockLogger.info).toHaveBeenCalledTimes(2)
   })
 
-  test('sends grouped payload and returns the payment fields without logs', async () => {
+  test('handles calls without a logger provided', async () => {
     const payment = {
-      agreementStartDate: '2024-01-01',
-      agreementEndDate: '2025-01-01',
-      frequency: 'Quarterly',
-      agreementTotalPence: 12300,
-      annualTotalPence: 4100,
-      parcelItems: [{ id: 'parcel' }],
-      agreementLevelItems: [{ id: 'agreement-level' }],
-      payments: [{ dueDate: '2024-03-01', amount: 1025 }],
-      extraneous: 'ignore-me'
+      agreementStartDate: '2026-01-01',
+      agreementEndDate: '2027-01-01',
+      frequency: 'Annually',
+      agreementTotalPence: 999,
+      annualTotalPence: 999,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
     }
 
     const fetchResponse = buildFetchResponse({
@@ -205,25 +367,9 @@ describe('calculatePaymentsBasedOnActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnActions(actions, null)
-
-    expect(global.fetch).toHaveBeenCalledTimes(1)
-    const [url, request] = global.fetch.mock.calls[0]
-    expect(url.toString()).toBe(
-      'https://land-grants.example/payments/calculate'
-    )
-    expect(request.headers.Authorization).toBe('Bearer config-token')
-    expect(request.headers['Content-Type']).toBe('application/json')
-    expect(request.body).toEqual(
-      JSON.stringify({
-        parcel: [
-          {
-            sheetId: 'brn-01',
-            parcelId: 'parcel-123',
-            actions: [{ code: 'FG1', quantity: 3 }]
-          }
-        ]
-      })
+    const result = await calculatePaymentsBasedOnParcelsWithActions(
+      parcelsWithActions,
+      null
     )
 
     expect(result).toEqual({
@@ -237,7 +383,7 @@ describe('calculatePaymentsBasedOnActions', () => {
       payments: payment.payments
     })
 
-    expect(mockLogger.info).toHaveBeenCalledTimes(0)
+    expect(mockLogger.info).not.toHaveBeenCalled()
   })
 
   test('throws when Land Grants request does not include payment', async () => {
@@ -247,7 +393,7 @@ describe('calculatePaymentsBasedOnActions', () => {
     global.fetch.mockResolvedValue(fetchResponse)
 
     await expect(
-      calculatePaymentsBasedOnActions(actions, mockLogger)
+      calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions, mockLogger)
     ).rejects.toThrow('Land Grants response missing "payment" field')
 
     expect(mockLogger.info).toHaveBeenCalledTimes(2)
@@ -263,7 +409,7 @@ describe('calculatePaymentsBasedOnActions', () => {
     global.fetch.mockResolvedValue(fetchResponse)
 
     await expect(
-      calculatePaymentsBasedOnActions(actions, mockLogger)
+      calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions, mockLogger)
     ).rejects.toThrow(
       'Land Grants Payment calculate request failed: 502 Bad Gateway gateway down'
     )
