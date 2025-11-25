@@ -18,7 +18,11 @@ const acceptOfferController = async (request, h) => {
   if (agreementData.status === 'offered') {
     // Accept the agreement
     const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
-    agreementData = await acceptOffer(agreementNumber, agreementData)
+    agreementData = await acceptOffer(
+      agreementNumber,
+      agreementData,
+      request.logger
+    )
 
     try {
       // Update the payment hub

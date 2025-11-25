@@ -195,16 +195,12 @@ describe('acceptOffer', () => {
     )
 
     // Act
-    const result = await acceptOffer(
-      agreementId,
-      agreementData,
-      'http://localhost:3555/SFI123456789',
-      mockLogger
-    )
+    const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
     expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
-      agreementData.actionApplications
+      agreementData.actionApplications,
+      mockLogger
     )
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
@@ -233,16 +229,12 @@ describe('acceptOffer', () => {
     }
 
     // Act
-    const result = await acceptOffer(
-      agreementId,
-      agreementData,
-      'http://localhost:3555/sample',
-      mockLogger
-    )
+    const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
     expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
-      agreementData.actionApplications
+      agreementData.actionApplications,
+      mockLogger
     )
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
