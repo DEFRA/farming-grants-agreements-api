@@ -240,10 +240,6 @@ function determineAgreementNumber(agreementData) {
 }
 
 function normaliseApplicant(applicant, answers = {}) {
-  if (!applicant) {
-    return applicant
-  }
-
   const businessDetails = applicant?.business
     ? { ...applicant.business }
     : undefined
