@@ -170,7 +170,7 @@ function mergeConvertedValues(existing, converted, fieldName) {
 
 function validateResolvedContent(resolvedPayment, resolvedApplicant) {
   if (!resolvedPayment || !resolvedApplicant) {
-    throw Boom.badRequest('Offer data is missing payment and applicant')
+    throw Boom.badRequest(`Offer data is missing payment: ${resolvedPayment} or application: ${resolvedApplicant}`)
   }
 }
 
