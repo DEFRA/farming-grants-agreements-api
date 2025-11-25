@@ -298,6 +298,66 @@ describe('createOffer', () => {
     )
   })
 
+  it('keeps existing applicant customer and address when already structured correctly', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const payload = {
+      ...agreementData,
+      answers: {
+        ...agreementData.answers,
+        applicant: {
+          business: {
+            name: 'Structured Business',
+            email: { address: 'structured@test.com' },
+            phone: { mobile: '01234567890' },
+            address: {
+              line1: 'Existing line 1',
+              postalCode: 'AB1 2CD'
+            }
+          },
+          customer: {
+            name: {
+              title: 'Mrs',
+              first: 'Existing',
+              last: 'Customer'
+            }
+          }
+        },
+        customer: {
+          name: {
+            title: 'Mr',
+            first: 'Different',
+            last: 'Customer'
+          }
+        }
+      }
+    }
+
+    await createOffer('aws-message-id', payload, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].applicant).toEqual(
+      expect.objectContaining({
+        business: expect.objectContaining({
+          name: 'Structured Business',
+          address: expect.objectContaining({
+            line1: 'Existing line 1',
+            postalCode: 'AB1 2CD'
+          })
+        }),
+        customer: expect.objectContaining({
+          name: expect.objectContaining({
+            title: 'Mrs',
+            first: 'Existing',
+            last: 'Customer'
+          })
+        })
+      })
+    )
+  })
+
   it('should generate an agreement number when seedDb is true but agreementNumber is empty', async () => {
     // Enable DB seeding and provide an empty agreementNumber
     const { config } = await import('~/src/config/index.js')
