@@ -1,5 +1,6 @@
 import {
   calculatePaymentsBasedOnActions,
+  calculatePaymentsBasedOnParcelsWithActions,
   toLandGrantsPayload
 } from './land-grants-adapter.js'
 import { config } from '~/src/config/index.js'
@@ -90,6 +91,65 @@ describe('calculatePaymentsBasedOnActions', () => {
     }
   ]
 
+  const parcelsWithActions = [
+    {
+      sheetId: 'AA0108',
+      parcelId: '0114',
+      area: {
+        unit: 'ha',
+        quantity: 5.2182
+      },
+      actions: [
+        {
+          code: 'CMOR1',
+          version: 1,
+          durationYears: 3,
+          appliedFor: {
+            unit: 'ha',
+            quantity: 4.7575
+          }
+        },
+        {
+          code: 'UPL3',
+          version: 1,
+          durationYears: 3,
+          appliedFor: {
+            unit: 'ha',
+            quantity: 4.7575
+          }
+        }
+      ]
+    },
+    {
+      sheetId: 'AA0108',
+      parcelId: '0116',
+      area: {
+        unit: 'ha',
+        quantity: 2.1703
+      },
+      actions: [
+        {
+          code: 'CMOR1',
+          version: 1,
+          durationYears: 3,
+          appliedFor: {
+            unit: 'ha',
+            quantity: 2.1705
+          }
+        },
+        {
+          code: 'UPL1',
+          version: 1,
+          durationYears: 3,
+          appliedFor: {
+            unit: 'ha',
+            quantity: 2.1705
+          }
+        }
+      ]
+    }
+  ]
+
   const globalFetch = global.fetch
 
   const buildFetchResponse = (overrides = {}) => ({
@@ -152,7 +212,10 @@ describe('calculatePaymentsBasedOnActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnActions(actions, mockLogger)
+    const result = await calculatePaymentsBasedOnParcelsWithActions(
+      parcelsWithActions,
+      mockLogger
+    )
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
     const [url, request] = global.fetch.mock.calls[0]
@@ -165,9 +228,20 @@ describe('calculatePaymentsBasedOnActions', () => {
       JSON.stringify({
         parcel: [
           {
-            sheetId: 'brn-01',
-            parcelId: 'parcel-123',
-            actions: [{ code: 'FG1', quantity: 3 }]
+            sheetId: 'AA0108',
+            parcelId: '0114',
+            actions: [
+              { code: 'CMOR1', quantity: 4.7575 },
+              { code: 'UPL3', quantity: 4.7575 }
+            ]
+          },
+          {
+            sheetId: 'AA0108',
+            parcelId: '0116',
+            actions: [
+              { code: 'CMOR1', quantity: 2.1705 },
+              { code: 'UPL1', quantity: 2.1705 }
+            ]
           }
         ]
       })
