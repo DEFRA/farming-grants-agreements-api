@@ -358,6 +358,36 @@ describe('createOffer', () => {
     )
   })
 
+  it('does not attach an address when none of the address fields are provided', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const payload = {
+      ...agreementData,
+      answers: {
+        ...agreementData.answers,
+        applicant: {
+          business: {
+            name: 'No Address Business',
+            email: { address: 'noaddress@test.com' },
+            phone: { mobile: '07700900000' }
+          }
+        }
+      }
+    }
+
+    await createOffer('aws-message-id', payload, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].applicant.business).toEqual(
+      expect.objectContaining({
+        name: 'No Address Business'
+      })
+    )
+    expect(lastCallArgs.versions[0].applicant.business.address).toBeUndefined()
+  })
+
   it('should generate an agreement number when seedDb is true but agreementNumber is empty', async () => {
     // Enable DB seeding and provide an empty agreementNumber
     const { config } = await import('~/src/config/index.js')
