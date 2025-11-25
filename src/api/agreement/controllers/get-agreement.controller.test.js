@@ -4,7 +4,7 @@ import { createServer } from '~/src/api/index.js'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
 
 // Mock the modules
 jest.mock('~/src/api/common/helpers/sqs-client.js')
@@ -16,7 +16,7 @@ jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
 }))
 jest.mock('~/src/api/common/helpers/jwt-auth.js')
 jest.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnActions: jest.fn()
+  calculatePaymentsBasedOnParcelsWithActions: jest.fn()
 }))
 
 describe('getAgreementController', () => {
@@ -37,7 +37,7 @@ describe('getAgreementController', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks()
-    calculatePaymentsBasedOnActions.mockResolvedValue({
+    calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue({
       agreementStartDate: '2024-01-01',
       agreementEndDate: '2025-12-31',
       frequency: 'Annual',
@@ -79,7 +79,9 @@ describe('getAgreementController', () => {
             agreementNumber: agreementId,
             status: 'offered',
             sbi: '106284736',
-            actionApplications: [{ code: 'A1' }],
+            application: {
+              parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
+            },
             payment: {
               agreementStartDate: '2025-12-05',
               annualTotalPence: 0,
@@ -123,8 +125,10 @@ describe('getAgreementController', () => {
         test('should fetch updated payments when status is offered', async () => {
           const { result } = await doGet()
 
-          expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
-            mockAgreementData.actionApplications,
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).toHaveBeenCalledWith(
+            mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
             })
@@ -147,7 +151,9 @@ describe('getAgreementController', () => {
             agreementNumber: 'SFI123456789',
             status: 'accepted',
             sbi: '106284736',
-            actionApplications: [{ code: 'A1' }],
+            application: {
+              parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
+            },
             payment: {
               agreementStartDate: '2025-12-05',
               annualTotalPence: 0,
@@ -169,7 +175,9 @@ describe('getAgreementController', () => {
 
         test('should not recalculate payments when already accepted', async () => {
           await doGet()
-          expect(calculatePaymentsBasedOnActions).not.toHaveBeenCalled()
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
         })
       })
     })
@@ -185,6 +193,7 @@ describe('getAgreementController', () => {
           agreementNumber: 'SFI123456789',
           status: 'offered',
           sbi: '106284736',
+          application: { parcel: [] },
           payment: {
             agreementStartDate: '2025-12-05',
             annualTotalPence: 0,
@@ -233,6 +242,9 @@ describe('getAgreementController', () => {
             agreementNumber: agreementId,
             status: 'offered',
             sbi: '106284736',
+            application: {
+              parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
+            },
             payment: {
               agreementStartDate: '2025-12-05',
               annualTotalPence: 0,
@@ -280,6 +292,9 @@ describe('getAgreementController', () => {
             agreementNumber: agreementId,
             status: 'accepted',
             sbi: '106284736',
+            application: {
+              parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
+            },
             payment: {
               agreementStartDate: '2025-12-05',
               annualTotalPence: 0,
@@ -320,6 +335,7 @@ describe('getAgreementController', () => {
           agreementNumber: 'SFI123456789',
           status: 'offered',
           sbi: '106284736',
+          application: { parcel: [] },
           payment: {
             agreementStartDate: '2025-12-05',
             annualTotalPence: 0,
