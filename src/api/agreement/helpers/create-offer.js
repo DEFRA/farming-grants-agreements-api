@@ -159,6 +159,70 @@ function convertFromAnswersParcelsFormat(agreementData) {
   return buildLegacyPaymentFromApplication(applicationLikeData)
 }
 
+function convertFromAnswersApplicationFormat(agreementData) {
+  const answersApplication = agreementData.answers?.application
+  if (!answersApplication) {
+    return null
+  }
+
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      ...answersApplication
+    }
+  }
+
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function normalizeToArray(value) {
+  if (!value) {
+    return []
+  }
+
+  return Array.isArray(value) ? value : [value]
+}
+
+function convertFromAnswersPaymentsFormat(agreementData) {
+  const answers = agreementData?.answers || {}
+  // Support both data.payments and data.answers.payments
+  const payments = agreementData.payments || answers.payments || {}
+  const parcelPayments = payments.parcel || payments.parcels
+  const parcels = normalizeToArray(parcelPayments)
+
+  if (!parcels.length) {
+    return null
+  }
+
+  const totalAnnualPaymentPence =
+    answers.totalAnnualPaymentPence ??
+    payments.totalAnnualPaymentPence ??
+    parcels.reduce(
+      (sum, parcel) =>
+        sum +
+        (parcel.actions || []).reduce(
+          (acc, action) => acc + Number(action.annualPaymentPence || 0),
+          0
+        ),
+      0
+    )
+
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      applicant: answers.applicant,
+      totalAnnualPaymentPence,
+      parcels,
+      agreementStartDate: answers.agreementStartDate,
+      agreementEndDate: answers.agreementEndDate,
+      paymentFrequency: answers.paymentFrequency,
+      durationYears: answers.durationYears
+    }
+  }
+
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
 function mergeConvertedValues(existing, converted, fieldName) {
   return existing || converted[fieldName]
 }
@@ -166,6 +230,47 @@ function mergeConvertedValues(existing, converted, fieldName) {
 function validateResolvedContent(resolvedPayment, resolvedApplicant) {
   if (!resolvedPayment || !resolvedApplicant) {
     throw Boom.badRequest('Offer data is missing payment and applicant')
+  }
+}
+
+function attemptConversion(agreementData) {
+  try {
+    const answersApplication = agreementData.answers?.application
+    if (agreementData.application) {
+      return convertFromLegacyApplicationFormat(agreementData)
+    }
+    if (answersApplication) {
+      return convertFromAnswersApplicationFormat(agreementData)
+    }
+    if (agreementData.answers?.parcels || agreementData.answers?.parcel) {
+      return convertFromAnswersParcelsFormat(agreementData)
+    }
+    if (agreementData.payments || agreementData.answers?.payments) {
+      return convertFromAnswersPaymentsFormat(agreementData)
+    }
+  } catch (conversionError) {
+    return null
+  }
+  return null
+}
+
+function applyConvertedValues(resolved, converted) {
+  return {
+    resolvedActions: mergeConvertedValues(
+      resolved.resolvedActions,
+      converted,
+      'actionApplications'
+    ),
+    resolvedPayment: mergeConvertedValues(
+      resolved.resolvedPayment,
+      converted,
+      'payment'
+    ),
+    resolvedApplicant: mergeConvertedValues(
+      resolved.resolvedApplicant,
+      converted,
+      'applicant'
+    )
   }
 }
 
@@ -181,39 +286,15 @@ function buildLegacyAgreementContent(
 
   // Check if we need to convert from application format (legacy) or answers.parcels/answers.parcel format (new)
   if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
-    let converted = null
-
-    try {
-      if (agreementData.application) {
-        converted = convertFromLegacyApplicationFormat(agreementData)
-      } else if (
-        agreementData.answers?.parcels ||
-        agreementData.answers?.parcel
-      ) {
-        converted = convertFromAnswersParcelsFormat(agreementData)
-      } else {
-        converted = null
-      }
-    } catch (conversionError) {
-      converted = null
-    }
-
+    const converted = attemptConversion(agreementData)
     if (converted) {
-      resolvedPayment = mergeConvertedValues(
-        resolvedPayment,
-        converted,
-        'payment'
+      const updated = applyConvertedValues(
+        { resolvedActions, resolvedPayment, resolvedApplicant },
+        converted
       )
-      resolvedActions = mergeConvertedValues(
-        resolvedActions,
-        converted,
-        'actionApplications'
-      )
-      resolvedApplicant = mergeConvertedValues(
-        resolvedApplicant,
-        converted,
-        'applicant'
-      )
+      resolvedActions = updated.resolvedActions
+      resolvedPayment = updated.resolvedPayment
+      resolvedApplicant = updated.resolvedApplicant
     }
   }
 
