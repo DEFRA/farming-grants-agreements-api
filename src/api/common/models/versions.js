@@ -179,7 +179,7 @@ const schema = new mongoose.Schema(
     actionApplications: { type: [ActionApplications], required: true },
     payment: { type: Payment, required: false },
     applicant: { type: Applicant, required: true },
-    application: { type: Application }
+    application: { type: Application, required: true }
   },
   {
     collection,
