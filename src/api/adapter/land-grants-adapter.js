@@ -1,20 +1,37 @@
 import { config } from '~/src/config/index.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 
+const coerceNumber = (raw) => {
+  if (raw == null) {
+    return null
+  }
+
+  // Convert bigint safely
+  if (typeof raw === 'bigint') {
+    return Number(raw)
+  }
+
+  // Fast path for numbers
+  if (typeof raw === 'number') {
+    return raw
+  }
+
+  // Try parsing anything else as a float
+  const parsed = Number.parseFloat(raw)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
+const parseQuantity = (raw) => {
+  const value = coerceNumber(raw)
+  return Number.isFinite(value) && value > 0 ? value : null
+}
+
 export const toLandGrantsPayload = (actions = []) => {
   if (!Array.isArray(actions)) {
     throw new TypeError('actions must be an array')
   }
 
   const grouped = new Map()
-
-  const parseQuantity = (raw) => {
-    if (raw == null) {
-      return null
-    }
-    const value = typeof raw === 'string' ? Number.parseFloat(raw) : Number(raw)
-    return Number.isFinite(value) && value > 0 ? value : null
-  }
 
   for (const action of actions) {
     if (!action?.sheetId || !action?.parcelId || !action?.code) {
@@ -76,8 +93,49 @@ const postPaymentCalculation = async (body, options = {}) => {
   return res.text()
 }
 
-const calculatePaymentsBasedOnActions = async (actions, logger) => {
-  const { parcel } = toLandGrantsPayload(actions)
+export const convertParcelsToLandGrantsPayload = (parcels = []) => {
+  if (!Array.isArray(parcels)) {
+    throw new TypeError('parcels must be an array')
+  }
+
+  const grouped = new Map()
+
+  for (const parcel of parcels) {
+    if (!parcel?.sheetId || !parcel?.parcelId) {
+      continue
+    }
+
+    if (!Array.isArray(parcel.actions)) {
+      throw new TypeError('parcel actions must be an array')
+    }
+
+    const key = `${parcel.sheetId}|${parcel.parcelId}`
+    const existing = grouped.get(key) ?? {
+      sheetId: parcel.sheetId,
+      parcelId: parcel.parcelId,
+      actions: []
+    }
+
+    for (const action of parcel.actions) {
+      const quantity = parseQuantity(action.appliedFor?.quantity)
+      if (quantity == null) {
+        grouped.set(key, existing)
+        continue
+      }
+
+      existing.actions.push({
+        code: action.code,
+        quantity
+      })
+    }
+    grouped.set(key, existing)
+  }
+
+  return { parcel: Array.from(grouped.values()) }
+}
+
+const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
+  const { parcel } = convertParcelsToLandGrantsPayload(parcels)
 
   const payload = { parcel }
 
@@ -126,4 +184,4 @@ const calculatePaymentsBasedOnActions = async (actions, logger) => {
   }
 }
 
-export { calculatePaymentsBasedOnActions }
+export { calculatePaymentsBasedOnParcelsWithActions }

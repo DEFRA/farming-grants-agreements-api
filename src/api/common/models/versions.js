@@ -34,6 +34,45 @@ const ParcelItems = new mongoose.Schema({
   parcelId: { type: String, required: true }
 })
 
+const ParcelActions = new mongoose.Schema({
+  code: { type: String, required: true },
+  version: { type: Number, required: true },
+  durationYears: { type: Number, required: true },
+  appliedFor: {
+    type: new mongoose.Schema({
+      unit: { type: String, required: true },
+      quantity: { type: Decimal128, required: true }
+    }),
+    required: true
+  }
+})
+
+const ParcelItem = new mongoose.Schema({
+  sheetId: { type: String },
+  parcelId: { type: String, required: true },
+  area: {
+    type: new mongoose.Schema({
+      unit: { type: String, required: true },
+      quantity: { type: Decimal128, required: true }
+    }),
+    required: true
+  },
+  actions: { type: [ParcelActions], required: true }
+})
+
+const AgreementItem = new mongoose.Schema({
+  code: { type: String, required: true },
+  description: { type: String, required: true },
+  durationYears: { type: Number, required: true },
+  paymentRates: { type: Number, required: true },
+  annualPaymentPence: { type: Number, required: true }
+})
+
+const Application = new mongoose.Schema({
+  parcel: { type: [ParcelItem], required: true },
+  agreement: { type: [AgreementItem] }
+})
+
 const AgreementLevelItems = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
@@ -54,17 +93,6 @@ const Payments = new mongoose.Schema({
     ],
     required: true
   }
-})
-
-const Payment = new mongoose.Schema({
-  agreementStartDate: { type: String, required: true },
-  agreementEndDate: { type: String, required: true },
-  frequency: { type: String, required: true },
-  agreementTotalPence: { type: Number, required: true },
-  annualTotalPence: { type: Number, required: true },
-  parcelItems: { type: Map, of: ParcelItems, required: true },
-  agreementLevelItems: { type: Map, of: AgreementLevelItems, required: true },
-  payments: { type: [Payments], required: true }
 })
 
 const Applicant = new mongoose.Schema({
@@ -115,6 +143,17 @@ const Applicant = new mongoose.Schema({
   }
 })
 
+const Payment = new mongoose.Schema({
+  agreementStartDate: { type: String, required: true },
+  agreementEndDate: { type: String, required: true },
+  frequency: { type: String, required: true },
+  agreementTotalPence: { type: Number, required: true },
+  annualTotalPence: { type: Number, required: true },
+  parcelItems: { type: Map, of: ParcelItems, required: true },
+  agreementLevelItems: { type: Map, of: AgreementLevelItems, required: true },
+  payments: { type: [Payments], required: true }
+})
+
 const schema = new mongoose.Schema(
   {
     notificationMessageId: { type: String, required: true },
@@ -139,7 +178,8 @@ const schema = new mongoose.Schema(
     scheme: { type: String },
     actionApplications: { type: [ActionApplications], required: true },
     payment: { type: Payment, required: false },
-    applicant: { type: Applicant, required: true }
+    applicant: { type: Applicant, required: true },
+    application: { type: Application, required: true }
   },
   {
     collection,

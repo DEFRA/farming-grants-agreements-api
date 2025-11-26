@@ -33,7 +33,8 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     agreementName,
     actionApplications,
     payment,
-    applicant
+    applicant,
+    application
   } = resolveAgreementFields(agreementData)
 
   const agreementNumber = determineAgreementNumber(agreementData)
@@ -48,7 +49,8 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     agreementName,
     actionApplications,
     payment,
-    applicant
+    applicant,
+    application
   }
 
   const agreement = await agreementsModel.createAgreementWithVersions({
@@ -112,7 +114,8 @@ function resolveAgreementFields(agreementData) {
       actionApplications,
       payment,
       applicant
-    } = {}
+    } = {},
+    application
   } = agreementData
 
   const { resolvedActions, resolvedPayment, resolvedApplicant } =
@@ -131,7 +134,8 @@ function resolveAgreementFields(agreementData) {
     agreementName,
     actionApplications: resolvedActions,
     payment: resolvedPayment,
-    applicant: normaliseApplicant(resolvedApplicant, agreementData?.answers)
+    applicant: normaliseApplicant(resolvedApplicant, agreementData?.answers),
+    application
   }
 }
 
