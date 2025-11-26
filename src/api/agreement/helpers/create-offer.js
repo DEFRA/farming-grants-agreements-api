@@ -113,9 +113,9 @@ function resolveAgreementFields(agreementData) {
       agreementName,
       actionApplications,
       payment,
-      applicant
-    } = {},
-    application
+      applicant,
+      application
+    } = {}
   } = agreementData
 
   const { resolvedActions, resolvedPayment, resolvedApplicant } =
