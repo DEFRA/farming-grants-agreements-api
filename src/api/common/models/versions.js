@@ -22,18 +22,6 @@ const ActionApplications = new mongoose.Schema({
   }
 })
 
-// const ParcelItemsOld = new mongoose.Schema({
-//   code: { type: String, required: true },
-//   description: { type: String, required: true },
-//   version: { type: Number, required: true },
-//   unit: { type: String, required: true },
-//   quantity: { type: Decimal128, required: true },
-//   rateInPence: { type: Number, required: true },
-//   annualPaymentPence: { type: Number, required: true },
-//   sheetId: { type: String },
-//   parcelId: { type: String, required: true }
-// })
-
 const ParcelItems = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
@@ -191,7 +179,7 @@ const schema = new mongoose.Schema(
     actionApplications: { type: [ActionApplications], required: true },
     payment: { type: Payment, required: false },
     applicant: { type: Applicant, required: true },
-    application: { type: Application }
+    application: { type: Application, required: true }
   },
   {
     collection,
