@@ -3,7 +3,7 @@ import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { acceptOffer } from './accept-offer.js'
 import { config } from '~/src/config/index.js'
-import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
 
 jest.mock('~/src/api/common/models/agreements.js', () => ({
   __esModule: true,
@@ -26,7 +26,7 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
 }))
 jest.mock('~/src/config/index.js')
 jest.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnActions: jest.fn()
+  calculatePaymentsBasedOnParcelsWithActions: jest.fn()
 }))
 
 describe('acceptOffer', () => {
@@ -61,7 +61,7 @@ describe('acceptOffer', () => {
       agreementLevelItems: [],
       payments: []
     }
-    calculatePaymentsBasedOnActions.mockResolvedValue(mockPayments)
+    calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(mockPayments)
 
     // Mock config values
     config.get = jest.fn((key) => {
@@ -185,6 +185,7 @@ describe('acceptOffer', () => {
           agreementEndDate: '2027-10-31'
         }
       },
+      application: { parcel: [{ sheetId: '1', parcelId: '2', actions: [] }] },
       actionApplications: [{ code: 'CMOR1' }]
     }
 
@@ -198,8 +199,8 @@ describe('acceptOffer', () => {
     const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
-    expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
-      agreementData.actionApplications,
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+      agreementData.application.parcel,
       mockLogger
     )
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
@@ -225,6 +226,7 @@ describe('acceptOffer', () => {
     )
     const agreementData = {
       agreementNumber: agreementId,
+      application: { parcel: [] },
       actionApplications: []
     }
 
@@ -232,8 +234,8 @@ describe('acceptOffer', () => {
     const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
-    expect(calculatePaymentsBasedOnActions).toHaveBeenCalledWith(
-      agreementData.actionApplications,
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+      agreementData.application.parcel,
       mockLogger
     )
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
@@ -261,7 +263,11 @@ describe('acceptOffer', () => {
     await expect(
       acceptOffer(
         agreementId,
-        { agreementNumber: agreementId, actionApplications: [] },
+        {
+          agreementNumber: agreementId,
+          application: { parcel: [] },
+          actionApplications: []
+        },
         'http://localhost:3555/SFI999999999',
         mockLogger
       )
@@ -278,7 +284,11 @@ describe('acceptOffer', () => {
     await expect(
       acceptOffer(
         agreementId,
-        { agreementNumber: agreementId, actionApplications: [] },
+        {
+          agreementNumber: agreementId,
+          application: { parcel: [] },
+          actionApplications: []
+        },
         'http://localhost:3555/SFI123456789',
         mockLogger
       )
@@ -295,7 +305,11 @@ describe('acceptOffer', () => {
     await expect(
       acceptOffer(
         agreementId,
-        { agreementNumber: agreementId, actionApplications: [] },
+        {
+          agreementNumber: agreementId,
+          application: { parcel: [] },
+          actionApplications: []
+        },
         'http://localhost:3555/SFI123456789',
         mockLogger
       )
