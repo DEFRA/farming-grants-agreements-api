@@ -2,13 +2,19 @@ import { config } from '~/src/config/index.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 
 const coerceNumber = (raw) => {
-  if (raw == null) return null
+  if (raw == null) {
+    return null
+  }
 
   // Convert bigint safely
-  if (typeof raw === 'bigint') return Number(raw)
+  if (typeof raw === 'bigint') {
+    return Number(raw)
+  }
 
   // Fast path for numbers
-  if (typeof raw === 'number') return raw
+  if (typeof raw === 'number') {
+    return raw
+  }
 
   // Try parsing anything else as a float
   const parsed = parseFloat(raw)
