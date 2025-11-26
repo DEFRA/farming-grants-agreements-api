@@ -1,20 +1,57 @@
 import { config } from '~/src/config/index.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 
+const coerceNumber = (raw) => {
+  if (raw == null) {
+    return null
+  }
+
+  if (typeof raw === 'number') {
+    return raw
+  }
+
+  if (typeof raw === 'string') {
+    const parsed = Number.parseFloat(raw)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+
+  if (typeof raw === 'bigint') {
+    return Number(raw)
+  }
+
+  if (typeof raw === 'object') {
+    const valueOfResult =
+      typeof raw.valueOf === 'function' ? raw.valueOf() : undefined
+    if (valueOfResult !== undefined && valueOfResult !== raw) {
+      const coerced = coerceNumber(valueOfResult)
+      if (coerced != null) {
+        return coerced
+      }
+    }
+
+    if (typeof raw.toString === 'function') {
+      const asString = raw.toString()
+      if (typeof asString === 'string') {
+        const parsed = Number.parseFloat(asString)
+        return Number.isNaN(parsed) ? null : parsed
+      }
+    }
+  }
+
+  return null
+}
+
+const parseQuantity = (raw) => {
+  const value = coerceNumber(raw)
+  return Number.isFinite(value) && value > 0 ? value : null
+}
+
 export const toLandGrantsPayload = (actions = []) => {
   if (!Array.isArray(actions)) {
     throw new TypeError('actions must be an array')
   }
 
   const grouped = new Map()
-
-  const parseQuantity = (raw) => {
-    if (raw == null) {
-      return null
-    }
-    const value = typeof raw === 'string' ? Number.parseFloat(raw) : Number(raw)
-    return Number.isFinite(value) && value > 0 ? value : null
-  }
 
   for (const action of actions) {
     if (!action?.sheetId || !action?.parcelId || !action?.code) {
@@ -76,14 +113,6 @@ const postPaymentCalculation = async (body, options = {}) => {
   return res.text()
 }
 
-const parseQuantity = (raw) => {
-  if (raw == null) {
-    return null
-  }
-  const value = typeof raw === 'string' ? Number.parseFloat(raw) : Number(raw)
-  return Number.isFinite(value) && value > 0 ? value : null
-}
-
 export const convertParcelsToLandGrantsPayload = (parcels = []) => {
   if (!Array.isArray(parcels)) {
     throw new TypeError('parcels must be an array')
@@ -123,56 +152,6 @@ export const convertParcelsToLandGrantsPayload = (parcels = []) => {
   }
 
   return { parcel: Array.from(grouped.values()) }
-}
-
-const calculatePaymentsBasedOnActions = async (actions, logger) => {
-  const { parcel } = toLandGrantsPayload(actions)
-
-  const payload = { parcel }
-
-  if (logger) {
-    logger.info(
-      `Sending Land Grants payment calculation request ${JSON.stringify(payload, null, 2)}`
-    )
-  }
-
-  const response = await postPaymentCalculation(payload, {
-    headers: buildAuthHeader()
-  })
-
-  if (logger) {
-    logger.info(
-      `Successfully called Land Grants payment calculation, response received is
-      ${JSON.stringify(response, null, 2)}`
-    )
-  }
-
-  const payment = response?.payment
-  if (!payment) {
-    throw new Error('Land Grants response missing "payment" field')
-  }
-
-  const {
-    agreementStartDate,
-    agreementEndDate,
-    frequency,
-    agreementTotalPence,
-    annualTotalPence,
-    parcelItems,
-    agreementLevelItems,
-    payments
-  } = payment
-
-  return {
-    agreementStartDate,
-    agreementEndDate,
-    frequency,
-    agreementTotalPence,
-    annualTotalPence,
-    parcelItems,
-    agreementLevelItems,
-    payments
-  }
 }
 
 const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
@@ -225,7 +204,4 @@ const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
   }
 }
 
-export {
-  calculatePaymentsBasedOnActions,
-  calculatePaymentsBasedOnParcelsWithActions
-}
+export { calculatePaymentsBasedOnParcelsWithActions }
