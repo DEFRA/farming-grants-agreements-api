@@ -70,21 +70,24 @@ describe('UI sending a POST request to accept an agreement', () => {
     const calculatedPayment = {
       message: like('success'),
       payment: {
-        agreementStartDate: iso8601Date('2025-12-01'),
-        agreementEndDate: iso8601Date('2028-12-01'),
+        agreementStartDate: iso8601Date('2025-09-01'),
+        agreementEndDate: iso8601Date('2028-09-01'),
         frequency: like('Quarterly'),
-        agreementTotalPence: like(242298),
-        annualTotalPence: like(80766),
+        agreementTotalPence: like(96018),
+        annualTotalPence: like(32006),
 
         parcelItems: like({
           1: {
             code: like('CMOR1'),
-            description: like('Assess moorland'),
+            description: like(
+              'CMOR1: Assess moorland and produce a written record'
+            ),
             unit: like('ha'),
-            quantity: like(50.53),
+            quantity: like(4.53411078),
             rateInPence: like(1060),
-            annualPaymentPence: like(53566),
-            parcelId: like('SE12 3456 7890'),
+            annualPaymentPence: like(4806),
+            parcelId: like('8083'),
+            sheetId: like('SD6743'),
             version: like(1)
           }
         }),
@@ -92,18 +95,19 @@ describe('UI sending a POST request to accept an agreement', () => {
         agreementLevelItems: like({
           1: {
             code: like('CMOR1'),
-            description: like('Agreement-level item'),
+            description: like(
+              'CMOR1: Assess moorland and produce a written record'
+            ),
             annualPaymentPence: like(27200),
             version: like(1)
           }
         }),
 
         payments: eachLike({
-          paymentDate: iso8601Date('2026-03-05'),
-          totalPaymentPence: like(20197),
+          paymentDate: iso8601Date('2025-12-05'),
+          totalPaymentPence: like(8007),
           lineItems: eachLike({
-            agreementLevelItemId: like(1),
-            paymentPence: like(20197)
+            paymentPence: like(1204)
           })
         })
       }
@@ -123,11 +127,23 @@ describe('UI sending a POST request to accept an agreement', () => {
             {
               sheetId: 'SD6743',
               parcelId: '8083',
-              actions: [{ code: 'CMOR1', quantity: 4.53411078 }]
+              actions: [
+                { code: 'CMOR1', quantity: 4.7575 },
+                { code: 'UPL3', quantity: 4.7575 }
+              ]
+            },
+            {
+              sheetId: 'SD4842',
+              parcelId: '4495',
+              actions: [
+                { code: 'CMOR1', quantity: 2.1705 },
+                { code: 'UPL1', quantity: 2.1705 }
+              ]
             }
           ]
         })
       })
+
       .willRespondWith(200, (builder) => {
         builder.headers({ 'Content-Type': 'application/json; charset=utf-8' })
         builder.jsonBody(calculatedPayment)
@@ -145,7 +161,7 @@ describe('UI sending a POST request to accept an agreement', () => {
 
         expect(statusCode).toBe(200)
         expect(result.agreementData.agreementNumber).toContain('SFI')
-        expect(result.agreementData.payment.agreementTotalPence).toBe(242298)
+        expect(result.agreementData.payment.agreementTotalPence).toBe(96018)
       })
   })
 })
