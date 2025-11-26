@@ -2,43 +2,17 @@ import { config } from '~/src/config/index.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 
 const coerceNumber = (raw) => {
-  if (raw == null) {
-    return null
-  }
+  if (raw == null) return null
 
-  if (typeof raw === 'number') {
-    return raw
-  }
+  // Convert bigint safely
+  if (typeof raw === 'bigint') return Number(raw)
 
-  if (typeof raw === 'string') {
-    const parsed = Number.parseFloat(raw)
-    return Number.isNaN(parsed) ? null : parsed
-  }
+  // Fast path for numbers
+  if (typeof raw === 'number') return raw
 
-  if (typeof raw === 'bigint') {
-    return Number(raw)
-  }
-
-  if (typeof raw === 'object') {
-    const valueOfResult =
-      typeof raw.valueOf === 'function' ? raw.valueOf() : undefined
-    if (valueOfResult !== undefined && valueOfResult !== raw) {
-      const coerced = coerceNumber(valueOfResult)
-      if (coerced != null) {
-        return coerced
-      }
-    }
-
-    if (typeof raw.toString === 'function') {
-      const asString = raw.toString()
-      if (typeof asString === 'string') {
-        const parsed = Number.parseFloat(asString)
-        return Number.isNaN(parsed) ? null : parsed
-      }
-    }
-  }
-
-  return null
+  // Try parsing anything else as a float
+  const parsed = parseFloat(raw)
+  return Number.isNaN(parsed) ? null : parsed
 }
 
 const parseQuantity = (raw) => {
