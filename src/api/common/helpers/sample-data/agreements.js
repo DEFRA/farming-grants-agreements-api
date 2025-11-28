@@ -876,17 +876,7 @@ export default [
       agreementName: 'Example agreement 2',
       scheme: 'SFI',
       year: 2025,
-      actionApplications: [
-        {
-          code: 'CMOR1',
-          sheetId: 'AA0006',
-          parcelId: '0006',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 4.53411078
-          }
-        }
-      ],
+      actionApplications: [],
       payment: {
         agreementStartDate: '2025-09-01',
         agreementEndDate: '2028-09-01',
@@ -1136,24 +1126,13 @@ export default [
                   _id: 'f00000000000000000000005'
                 },
                 _id: 'f00000000000000000000004'
-              },
-              {
-                code: 'UPL3',
-                version: 1,
-                durationYears: 3,
-                appliedFor: {
-                  unit: 'ha',
-                  quantity: 4.7575,
-                  _id: 'f00000000000000000000021'
-                },
-                _id: 'f00000000000000000000020'
               }
             ],
             _id: 'f00000000000000000000002'
           },
           {
-            sheetId: 'AA0101',
-            parcelId: '0108',
+            sheetId: 'AA0006',
+            parcelId: '0303',
             area: {
               unit: 'ha',
               quantity: 2.1703,
@@ -1170,17 +1149,6 @@ export default [
                   _id: 'f00000000000000000000009'
                 },
                 _id: 'f00000000000000000000008'
-              },
-              {
-                code: 'UPL1',
-                version: 1,
-                durationYears: 3,
-                appliedFor: {
-                  unit: 'ha',
-                  quantity: 2.1705,
-                  _id: 'f00000000000000000000023'
-                },
-                _id: 'f00000000000000000000022'
               }
             ],
             _id: 'f00000000000000000000006'
