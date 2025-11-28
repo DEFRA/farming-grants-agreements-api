@@ -115,7 +115,12 @@ describe('UI sending a POST request to accept an agreement', () => {
 
     return await provider
       .addInteraction()
-      .given('A customer has an agreement offer')
+      .given('has parcels', {
+        parcels: [
+          { sheetId: 'SD6743', parcelId: '8083' },
+          { sheetId: 'SD6743', parcelId: '8084' }
+        ]
+      })
       .uponReceiving('a request from the customer to view their offer')
       .withRequest('POST', '/payments/calculate', (builder) => {
         builder.headers({
@@ -127,18 +132,12 @@ describe('UI sending a POST request to accept an agreement', () => {
             {
               sheetId: 'SD6743',
               parcelId: '8083',
-              actions: [
-                { code: 'CMOR1', quantity: 4.7575 },
-                { code: 'UPL3', quantity: 4.7575 }
-              ]
+              actions: [{ code: 'CMOR1', quantity: 4.7575 }]
             },
             {
-              sheetId: 'SD4842',
-              parcelId: '4495',
-              actions: [
-                { code: 'CMOR1', quantity: 2.1705 },
-                { code: 'UPL1', quantity: 2.1705 }
-              ]
+              sheetId: 'SD6743',
+              parcelId: '8084',
+              actions: [{ code: 'CMOR1', quantity: 2.1705 }]
             }
           ]
         })

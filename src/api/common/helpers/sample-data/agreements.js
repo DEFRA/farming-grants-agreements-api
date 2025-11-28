@@ -1136,24 +1136,13 @@ export default [
                   _id: '69262bb2331fd3b45b76ee94'
                 },
                 _id: '69262bb2331fd3b45b76ee93'
-              },
-              {
-                code: 'UPL3',
-                version: 1,
-                durationYears: 3,
-                appliedFor: {
-                  unit: 'ha',
-                  quantity: 4.7575,
-                  _id: '69262bb2331fd3b45b76ee96'
-                },
-                _id: '69262bb2331fd3b45b76ee95'
               }
             ],
             _id: '69262bb2331fd3b45b76ee91'
           },
           {
-            sheetId: 'SD4842',
-            parcelId: '4495',
+            sheetId: 'SD6743',
+            parcelId: '8084',
             area: {
               unit: 'ha',
               quantity: 2.1703,
@@ -1170,17 +1159,6 @@ export default [
                   _id: '69262bb2331fd3b45b76ee9a'
                 },
                 _id: '69262bb2331fd3b45b76ee99'
-              },
-              {
-                code: 'UPL1',
-                version: 1,
-                durationYears: 3,
-                appliedFor: {
-                  unit: 'ha',
-                  quantity: 2.1705,
-                  _id: '69262bb2331fd3b45b76ee9c'
-                },
-                _id: '69262bb2331fd3b45b76ee9b'
               }
             ],
             _id: '69262bb2331fd3b45b76ee97'
