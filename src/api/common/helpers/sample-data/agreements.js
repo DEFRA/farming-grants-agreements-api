@@ -876,17 +876,7 @@ export default [
       agreementName: 'Example agreement 2',
       scheme: 'SFI',
       year: 2025,
-      actionApplications: [
-        {
-          code: 'CMOR1',
-          sheetId: 'SD6743',
-          parcelId: '8083',
-          appliedFor: {
-            unit: 'ha',
-            quantity: 4.53411078
-          }
-        }
-      ],
+      actionApplications: [],
       payment: {
         agreementStartDate: '2025-09-01',
         agreementEndDate: '2028-09-01',
