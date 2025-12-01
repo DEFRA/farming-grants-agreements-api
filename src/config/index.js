@@ -195,8 +195,7 @@ const config = convict({
     gasApplicationUpdatedQueueUrl: {
       doc: 'Grants Application Service Queue URL',
       format: String,
-      default:
-        'http://localhost:4566/000000000000/gas_application_status_updated',
+      default: 'http://localhost:4566/000000000000/update_agreement',
       env: 'SQS_GAS_APPLICATION_STATUS_UPDATED_QUEUE_URL'
     },
     interval: {
