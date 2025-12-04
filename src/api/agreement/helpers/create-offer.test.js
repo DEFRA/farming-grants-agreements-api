@@ -1480,7 +1480,7 @@ describe('createOffer', () => {
       error = e
     }
     expect(error).toBeDefined()
-    expect(error.message).toBe('Offer data is missing payment and applicant')
+    expect(error.message).toBe('Offer data is missing payment, applicant')
   })
 
   it('should handle answers.parcels without applicant', async () => {
@@ -1516,7 +1516,7 @@ describe('createOffer', () => {
     doesAgreementExist.mockResolvedValueOnce(false)
     await expect(
       createOffer('test-id', payloadWithoutApplicant, mockLogger)
-    ).rejects.toThrow('Offer data is missing payment and applicant')
+    ).rejects.toThrow('Offer data is missing applicant')
   })
 
   it('should handle case where neither application nor answers.parcels exist', async () => {
@@ -1534,7 +1534,7 @@ describe('createOffer', () => {
 
     await expect(
       createOffer('test-id', payloadWithoutConversionFormat, mockLogger)
-    ).rejects.toThrow('Offer data is missing payment and applicant')
+    ).rejects.toThrow('Offer data is missing payment, applicant')
   })
 
   it('should handle conversion errors in catch block when mapper throws', async () => {
@@ -1569,7 +1569,7 @@ describe('createOffer', () => {
     // The error should be caught and validation should throw
     await expect(
       createOffer('test-id', payloadWithParcels, mockLogger)
-    ).rejects.toThrow('Offer data is missing payment and applicant')
+    ).rejects.toThrow('Offer data is missing applicant')
 
     // Restore original
     mapperModule.buildLegacyPaymentFromApplication = originalMapper
@@ -1755,8 +1755,26 @@ describe('createOffer', () => {
       }
       doesAgreementExist.mockResolvedValueOnce(false)
       await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
-        'Offer data is missing payment and applicant'
+        'Offer data is missing payment, applicant'
       )
+    })
+
+    it('should propagate Boom error when only payment is missing', async () => {
+      const missingPayment = {
+        clientRef: 'ref',
+        code: 'frps-private-beta',
+        identifiers: { sbi: '1', frn: '2' },
+        answers: {
+          scheme: 'SFI',
+          applicant: {
+            business: { name: 'Test Business' }
+          }
+        }
+      }
+      doesAgreementExist.mockResolvedValueOnce(false)
+      await expect(
+        createOffer(uuidv4(), missingPayment, mockLogger)
+      ).rejects.toThrow('Offer data is missing payment')
     })
   })
 })
