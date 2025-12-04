@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { MessageConsumerPact, MatchersV2 } from '@pact-foundation/pact'
+import { MatchersV2, MessageConsumerPact } from '@pact-foundation/pact'
 
 import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/update-agreement.js'
 import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
@@ -8,7 +8,7 @@ import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/
 jest.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
-const { like, iso8601DateTime } = MatchersV2
+const { like } = MatchersV2
 
 describe('receiving events from the GAS SQS queue and processing them', () => {
   const messagePact = new MessageConsumerPact({
@@ -41,10 +41,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
         datacontenttype: 'application/json',
         data: {
           clientRef: like('client-ref-002'),
-          id: like('123e4567-e89b-12d3-a456-426614174000'),
-          status: like('PRE_AWARD:APPLICATION:WITHDRAWAL_REQUESTED'),
-          withdrawnBy: like('Caseworker_ID_123'),
-          withdrawnAt: iso8601DateTime('2025-03-27T14:30:00Z')
+          status: like('withdrawn')
         }
       })
       .verify(async (message) => {
