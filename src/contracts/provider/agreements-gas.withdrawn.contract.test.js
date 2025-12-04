@@ -23,7 +23,7 @@ describe.skip('sending updated (withdrawn) events via SNS', () => {
     consumerVersionSelectors: [{ latest: true }],
     pactBrokerUsername: process.env.PACT_BROKER_USERNAME,
     pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
-    publishVerificationResult: true,
+    publishVerificationResult: process.env.PACT_PUBLISH_VERIFICATION === 'true',
     providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
     messageProviders: {
       'agreement withdrawn': async () => {
