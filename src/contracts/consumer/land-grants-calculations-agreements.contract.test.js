@@ -118,7 +118,7 @@ describe('UI sending a POST request to accept an agreement', () => {
       .given('has parcels', {
         parcels: [
           { sheetId: 'AA0006', parcelId: '0006' },
-          { sheetId: 'AA0006', parcelId: '0303' }
+          { sheetId: 'AA0006', parcelId: '0007' }
         ]
       })
       .uponReceiving('a request from the customer to view their offer')
@@ -136,7 +136,7 @@ describe('UI sending a POST request to accept an agreement', () => {
             },
             {
               sheetId: 'AA0006',
-              parcelId: '0303',
+              parcelId: '0007',
               actions: [{ code: 'CMOR1', quantity: 2.1705 }]
             }
           ]
