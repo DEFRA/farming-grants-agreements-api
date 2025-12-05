@@ -84,6 +84,9 @@ jobs:
         run: |
           # Use bash to upload pacts manually since Azure Application Gateway blocks /contracts/publish
 
+          # Create base64 encoded auth header
+          auth_header=$(echo -n "${PACT_BROKER_USERNAME}:${PACT_BROKER_PASSWORD}" | base64 -w 0)
+
           # Loop through all pact files
           for pact_file in src/contracts/consumer/pacts/*.json; do
               if [[ -f "$pact_file" ]]; then
@@ -100,15 +103,15 @@ jobs:
                   echo "Publishing pact: $consumer -> $provider (version: $version)"
 
                   # Upload the pact using curl
-                  if curl --silent --fail --request PUT \
-                    --url "$uri" \
-                    --user "${PACT_BROKER_USERNAME}:${PACT_BROKER_PASSWORD}" \
-                    --header "content-type: application/json" \
-                    --data "@${pact_file}" > /dev/null; then
-                    echo "✓ Successfully published pact for $consumer -> $provider"
+                  if curl -s -X PUT \
+                      -H "Content-Type: application/json" \
+                      -H "Authorization: Basic ${auth_header}" \
+                      -d "@${pact_file}" \
+                      "$uri" > /dev/null; then
+                      echo "✓ Successfully published pact for $consumer -> $provider"
                   else
-                    echo "❌ Failed to publish pact for $consumer -> $provider"
-                    exit 1
+                      echo "❌ Failed to publish pact for $consumer -> $provider"
+                      exit 1
                   fi
               fi
           done
