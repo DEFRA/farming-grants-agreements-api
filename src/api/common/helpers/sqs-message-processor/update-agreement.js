@@ -16,15 +16,11 @@ export const handleUpdateAgreementEvent = async (
 ) => {
   const { data = {} } = payload || {}
   let updatedVersion
-  if (
-    data.clientRef &&
-    (data.status?.endsWith?.(':WITHDRAWAL_REQUESTED') ||
-      data.status?.includes?.('APPLICATION_WITHDRAWN'))
-  ) {
+  if (data.clientRef && data.agreementNumber && data.status === 'withdrawn') {
     logger.info(
       `Received application withdrawn from event: ${notificationMessageId}`
     )
-    updatedVersion = await withdrawOffer(data.clientRef)
+    updatedVersion = await withdrawOffer(data.clientRef, data.agreementNumber)
     logger.info(`Offer withdrawn: ${updatedVersion.agreement.agreementNumber}`)
   } else {
     const status = data.status ? ` (${data.status})` : ''
