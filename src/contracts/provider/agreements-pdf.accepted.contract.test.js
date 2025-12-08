@@ -78,14 +78,25 @@ describe('sending updated (accepted) events via SNS', () => {
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api-sns',
     consumer: 'farming-grants-agreements-pdf-sqs',
-    pactBrokerUrl:
-      process.env.PACT_BROKER_URL ??
-      'https://ffc-pact-broker.azure.defra.cloud',
-    consumerVersionSelectors: [{ latest: true }],
-    pactBrokerUsername: process.env.PACT_BROKER_USERNAME,
-    pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
-    publishVerificationResult: process.env.PACT_PUBLISH_VERIFICATION === 'true',
-    providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
+    ...(process.env.CI
+      ? {
+          pactBrokerUrl:
+            process.env.PACT_BROKER_URL ??
+            'https://ffc-pact-broker.azure.defra.cloud',
+          consumerVersionSelectors: [{ latest: true }],
+          pactBrokerUsername: process.env.PACT_BROKER_USERNAME,
+          pactBrokerPassword: process.env.PACT_BROKER_PASSWORD,
+          publishVerificationResult:
+            process.env.PACT_PUBLISH_VERIFICATION === 'true',
+          providerVersion: process.env.SERVICE_VERSION ?? '1.0.0'
+        }
+      : {
+          logLevel: 'debug',
+          // Hard coded path for local testing
+          pactUrls: [
+            '../farming-grants-agreements-pdf/src/contracts/consumer/pacts/farming-grants-agreements-pdf-sqs-farming-grants-agreements-api-sns.json'
+          ]
+        }),
     // Consumer.given
     stateHandlers: {
       'an agreement offer has been accepted': async () => {
