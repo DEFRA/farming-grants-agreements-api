@@ -28,7 +28,8 @@ describe('SQS message processor', () => {
         type: 'gas-backend.agreement.update',
         data: {
           status: 'withdrawn',
-          clientRef: 'SFI123456789'
+          clientRef: 'client-ref-001',
+          agreementNumber: 'SFI123456789'
         }
       }
       const message = {
@@ -38,7 +39,10 @@ describe('SQS message processor', () => {
 
       await processMessage(handleUpdateAgreementEvent, message, mockLogger)
 
-      expect(withdrawOffer).toHaveBeenCalledWith('SFI123456789')
+      expect(withdrawOffer).toHaveBeenCalledWith(
+        'client-ref-001',
+        'SFI123456789'
+      )
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           data: {
@@ -91,7 +95,8 @@ describe('SQS message processor', () => {
         type: 'cloud.defra.test.fg-gas-backend.agreement.update',
         data: {
           status: 'withdrawn',
-          clientRef: 'SFI123456789'
+          clientRef: 'client-ref-001',
+          agreementNumber: 'SFI123456789'
         }
       }
 
@@ -104,7 +109,10 @@ describe('SQS message processor', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Received application withdrawn from event')
       )
-      expect(withdrawOffer).toHaveBeenCalledWith('SFI123456789')
+      expect(withdrawOffer).toHaveBeenCalledWith(
+        'client-ref-001',
+        'SFI123456789'
+      )
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           data: {

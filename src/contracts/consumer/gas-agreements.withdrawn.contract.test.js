@@ -41,6 +41,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
         datacontenttype: 'application/json',
         data: {
           clientRef: like('client-ref-002'),
+          agreementNumber: like('SFI123456789'),
           status: like('withdrawn')
         }
       })
@@ -59,7 +60,10 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
           2,
           'Offer withdrawn: mockAgreementNumber'
         )
-        expect(mockWithdrawOffer).toHaveBeenCalledWith('client-ref-002')
+        expect(mockWithdrawOffer).toHaveBeenCalledWith(
+          'client-ref-002',
+          'SFI123456789'
+        )
       })
   })
 })
