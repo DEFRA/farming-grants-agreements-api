@@ -267,7 +267,7 @@ describe('updatePaymentHub', () => {
       getAgreementDataById.mockRejectedValue(notFoundError)
 
       await expect(updatePaymentHub(mockContext, 'INVALID')).rejects.toThrow(
-        'Agreement not found'
+        'Failed to setup payment schedule. Agreement not found'
       )
     })
 
@@ -280,6 +280,9 @@ describe('updatePaymentHub', () => {
         updatePaymentHub(mockContext, 'SFI123456789')
       ).rejects.toThrow('Internal server error')
 
+      expect(dbError.message).toBe(
+        'Failed to setup payment schedule. Database error'
+      )
       expect(Boom.internal).toHaveBeenCalledWith(dbError)
     })
 
@@ -292,6 +295,9 @@ describe('updatePaymentHub', () => {
         updatePaymentHub(mockContext, 'SFI123456789')
       ).rejects.toThrow('Internal server error')
 
+      expect(updateError.message).toBe(
+        'Failed to setup payment schedule. Update failed'
+      )
       expect(Boom.internal).toHaveBeenCalledWith(updateError)
     })
 
@@ -304,6 +310,9 @@ describe('updatePaymentHub', () => {
         updatePaymentHub(mockContext, 'SFI123456789')
       ).rejects.toThrow('Internal server error')
 
+      expect(hubError.message).toBe(
+        'Failed to setup payment schedule. Payment hub error'
+      )
       expect(Boom.internal).toHaveBeenCalledWith(hubError)
     })
 
@@ -314,7 +323,7 @@ describe('updatePaymentHub', () => {
 
       await expect(
         updatePaymentHub(mockContext, 'SFI123456789')
-      ).rejects.toThrow('Boom error')
+      ).rejects.toThrow('Failed to setup payment schedule. Boom error')
 
       expect(Boom.internal).not.toHaveBeenCalled()
     })

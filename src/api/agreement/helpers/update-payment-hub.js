@@ -81,6 +81,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       message: 'Payload sent to payment hub successfully'
     }
   } catch (error) {
+    error.message = `Failed to setup payment schedule. ${error.message}`
     if (error.isBoom) {
       throw error
     }
