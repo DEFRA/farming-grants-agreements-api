@@ -180,6 +180,68 @@ describe('getAgreementController', () => {
           ).not.toHaveBeenCalled()
         })
       })
+
+      describe('withdrawn', () => {
+        let mockAgreementData
+
+        beforeEach(() => {
+          mockAgreementData = {
+            agreementNumber: 'SFI123456789',
+            status: 'withdrawn',
+            sbi: '106284736',
+            application: {
+              parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
+            }
+          }
+
+          jest
+            .spyOn(agreementDataHelper, 'getAgreementDataBySbi')
+            .mockResolvedValue(mockAgreementData)
+        })
+
+        test('should return withdrawn data', async () => {
+          const { statusCode, result } = await doGet()
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.status).toBe('withdrawn')
+        })
+
+        test('should fetch updated payments when status is withdrawn and payment does not exist', async () => {
+          const { result } = await doGet()
+
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).toHaveBeenCalledWith(
+            mockAgreementData.application.parcel,
+            expect.objectContaining({
+              info: expect.any(Function)
+            })
+          )
+          expect(result.agreementData.payment).toEqual(
+            expect.objectContaining({
+              agreementStartDate: '2024-01-01',
+              agreementEndDate: '2025-12-31'
+            })
+          )
+        })
+
+        test('should not recalculate payments when status is withdrawn and payment exists', async () => {
+          mockAgreementData.payment = {
+            agreementStartDate: '2025-12-05',
+            annualTotalPence: 0,
+            parcelItems: {},
+            agreementLevelItems: {}
+          }
+
+          const { result } = await doGet()
+
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+          expect(result.agreementData.payment).toEqual(
+            mockAgreementData.payment
+          )
+        })
+      })
     })
 
     describe('Case worker', () => {
@@ -320,6 +382,68 @@ describe('getAgreementController', () => {
           })
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+        })
+      })
+
+      describe('withdrawn', () => {
+        let mockAgreementData
+
+        beforeEach(() => {
+          mockAgreementData = {
+            agreementNumber: agreementId,
+            status: 'withdrawn',
+            sbi: '106284736',
+            application: {
+              parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
+            }
+          }
+
+          jest
+            .spyOn(agreementDataHelper, 'getAgreementDataById')
+            .mockResolvedValue(mockAgreementData)
+        })
+
+        test('should return withdrawn data', async () => {
+          const { statusCode, result } = await doGet(agreementId)
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.status).toBe('withdrawn')
+        })
+
+        test('should fetch updated payments when status is withdrawn and payment does not exist', async () => {
+          const { result } = await doGet(agreementId)
+
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).toHaveBeenCalledWith(
+            mockAgreementData.application.parcel,
+            expect.objectContaining({
+              info: expect.any(Function)
+            })
+          )
+          expect(result.agreementData.payment).toEqual(
+            expect.objectContaining({
+              agreementStartDate: '2024-01-01',
+              agreementEndDate: '2025-12-31'
+            })
+          )
+        })
+
+        test('should not recalculate payments when status is withdrawn and payment exists', async () => {
+          mockAgreementData.payment = {
+            agreementStartDate: '2025-12-05',
+            annualTotalPence: 0,
+            parcelItems: {},
+            agreementLevelItems: {}
+          }
+
+          const { result } = await doGet(agreementId)
+
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+          expect(result.agreementData.payment).toEqual(
+            mockAgreementData.payment
+          )
         })
       })
     })
