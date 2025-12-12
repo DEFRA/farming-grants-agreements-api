@@ -9,8 +9,8 @@ describe('agreements.createAgreementWithVersions', () => {
   const AGREEMENT_BASE = {
     agreementNumber: 'SFI123456789',
     clientRef: 'TEST-CLIENT-REF',
-    frn: '1234567890',
-    sbi: '106284736'
+    sbi: '106284736',
+    frn: '1234567890'
   }
 
   const VERSION_PAYLOADS = [
@@ -32,7 +32,7 @@ describe('agreements.createAgreementWithVersions', () => {
     // Test missing agreementNumber - should throw asynchronously
     await expect(
       agreementsModel.createAgreementWithVersions({
-        agreement: { frn: 'x', sbi: 'y' }, // missing agreementNumber
+        agreement: { sbi: 'y', frn: 'x' }, // missing agreementNumber
         versions: VERSION_PAYLOADS
       })
     ).rejects.toThrow('agreement.agreementNumber is required')

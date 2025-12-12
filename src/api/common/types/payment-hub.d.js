@@ -1,8 +1,8 @@
 /**
  * @typedef {object} PaymentHubRequest
  * @property {string} sourceSystem - The source system identifier.
- * @property {number} frn - The firm reference number.
  * @property {number} sbi - The single business identifier.
+ * @property {number} frn - The farm reference number.
  * @property {number} marketingYear - The marketing year.
  * @property {number} paymentRequestNumber - The payment request number.
  * @property {number} paymentType - The payment type.

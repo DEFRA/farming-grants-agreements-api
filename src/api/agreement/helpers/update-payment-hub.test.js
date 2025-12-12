@@ -35,8 +35,8 @@ describe('updatePaymentHub', () => {
     agreementNumber: 'SFI123456789',
     correlationId: 'test-correlation-id',
     identifiers: {
-      frn: '1234567890',
-      sbi: '106284736'
+      sbi: '106284736',
+      frn: '1234567890'
     },
     frequency: 'Quarterly',
     payment: {
@@ -116,8 +116,8 @@ describe('updatePaymentHub', () => {
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
           sourceSystem: 'AHWR',
-          frn: '1234567890',
           sbi: '106284736',
+          frn: '1234567890',
           marketingYear: 2024,
           paymentRequestNumber: 1,
           correlationId: 'test-correlation-id',
@@ -178,8 +178,8 @@ describe('updatePaymentHub', () => {
 
       const paymentHubRequestData = {
         sourceSystem: 'AHWR',
-        frn: '1234567890',
         sbi: '106284736',
+        frn: '1234567890',
         marketingYear: 2024,
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
@@ -385,8 +385,8 @@ describe('updatePaymentHub', () => {
 
       const expectedPaymentRequest = {
         sourceSystem: 'AHWR',
-        frn: '1234567890',
         sbi: '106284736',
+        frn: '1234567890',
         marketingYear: 2024,
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
