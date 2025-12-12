@@ -177,8 +177,8 @@ describe('acceptOffer', () => {
       agreementNumber: 'SFI123456789',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
-      frn: 'test-frn',
       sbi: 'test-sbi',
+      frn: 'test-frn',
       version: 1,
       answers: {
         payment: {

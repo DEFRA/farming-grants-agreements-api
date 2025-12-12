@@ -50,8 +50,8 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
     /** @type {PaymentHubRequest} */
     const paymentHubRequest = {
       sourceSystem: 'AHWR',
-      frn: agreementData.identifiers.frn,
       sbi: agreementData.identifiers.sbi,
+      frn: agreementData.identifiers.frn,
       marketingYear,
       paymentRequestNumber: 1,
       correlationId: agreementData.correlationId,

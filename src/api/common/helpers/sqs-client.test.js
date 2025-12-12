@@ -78,8 +78,8 @@ describe('SQS Client', () => {
     createOffer.mockResolvedValue({
       agreementNumber: 'SFI123456789',
       notificationMessageId: 'test-message-id',
-      frn: '123456789',
-      sbi: '123456789'
+      sbi: '123456789',
+      frn: '123456789'
     })
   })
 
