@@ -99,6 +99,7 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet()
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('offered')
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should handle agreement not found', async () => {
@@ -139,6 +140,7 @@ describe('getAgreementController', () => {
               agreementEndDate: '2025-12-31'
             })
           )
+          expect(result.auth.source).toBe('defra')
         })
       })
 
@@ -171,6 +173,7 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet()
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should not recalculate payments when already accepted', async () => {
@@ -203,6 +206,7 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet()
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toBe('withdrawn')
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should fetch updated payments when status is withdrawn and payment does not exist', async () => {
@@ -222,6 +226,7 @@ describe('getAgreementController', () => {
               agreementEndDate: '2025-12-31'
             })
           )
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should not recalculate payments when status is withdrawn and payment exists', async () => {
@@ -240,6 +245,7 @@ describe('getAgreementController', () => {
           expect(result.agreementData.payment).toEqual(
             mockAgreementData.payment
           )
+          expect(result.auth.source).toBe('defra')
         })
       })
     })
@@ -324,6 +330,7 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet(agreementId)
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('offered')
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should handle agreement not found', async () => {
@@ -374,6 +381,7 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet(agreementId)
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should return accepted agreement data with base URL when already accepted', async () => {
@@ -382,6 +390,7 @@ describe('getAgreementController', () => {
           })
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+          expect(result.auth.source).toBe('defra')
         })
       })
 
@@ -407,6 +416,7 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet(agreementId)
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toBe('withdrawn')
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should fetch updated payments when status is withdrawn and payment does not exist', async () => {
@@ -426,6 +436,7 @@ describe('getAgreementController', () => {
               agreementEndDate: '2025-12-31'
             })
           )
+          expect(result.auth.source).toBe('defra')
         })
 
         test('should not recalculate payments when status is withdrawn and payment exists', async () => {
@@ -444,6 +455,7 @@ describe('getAgreementController', () => {
           expect(result.agreementData.payment).toEqual(
             mockAgreementData.payment
           )
+          expect(result.auth.source).toBe('defra')
         })
       })
     })
@@ -477,6 +489,7 @@ describe('getAgreementController', () => {
         const { statusCode, result } = await doGet('SFI123456789')
         expect(statusCode).toBe(statusCodes.ok)
         expect(result.agreementData.status).toContain('offered')
+        expect(result.auth.source).toBe('entra')
       })
     })
   })
