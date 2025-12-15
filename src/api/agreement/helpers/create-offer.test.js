@@ -1709,6 +1709,69 @@ describe('createOffer', () => {
     expect(callPayload.versions[0].actionApplications.length).toBeGreaterThan(0)
   })
 
+  it('calls createAgreementWithVersions and publishEvent with the correct args', async () => {
+    // Arrange
+    doesAgreementExist.mockResolvedValueOnce(false)
+    const notificationMessageId = 'aws-message-id'
+
+    // Act
+    await createOffer(notificationMessageId, agreementData, mockLogger)
+
+    // Assert
+    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalledWith({
+      agreement: {
+        agreementNumber: expect.any(String),
+        clientRef: agreementData.clientRef,
+        sbi: agreementData.identifiers.sbi
+      },
+      versions: [
+        expect.objectContaining({
+          notificationMessageId,
+          clientRef: agreementData.clientRef,
+          code: agreementData.code,
+          identifiers: agreementData.identifiers,
+          scheme: agreementData.answers.scheme,
+          agreementName: agreementData.answers.agreementName,
+          actionApplications: expect.arrayContaining([
+            expect.objectContaining({
+              parcelId: '9238',
+              sheetId: 'SX0679',
+              code: 'CSAM1'
+            })
+          ]),
+          payment: expect.objectContaining({
+            agreementEndDate: agreementData.answers.payment.agreementEndDate
+          }),
+          applicant: expect.objectContaining({
+            customer: expect.objectContaining({
+              name: expect.objectContaining({
+                first: 'Joe'
+              })
+            })
+          })
+        })
+      ]
+    })
+
+    expect(publishEvent).toHaveBeenCalledWith(
+      {
+        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        type: 'io.onsite.agreement.status.updated',
+        time: expect.any(String),
+        data: expect.objectContaining({
+          agreementNumber: expect.any(String),
+          correlationId: expect.any(String),
+          clientRef: agreementData.clientRef,
+          status: 'offered',
+          date: expect.any(String),
+          code: agreementData.code,
+          endDate: agreementData.answers.payment.agreementEndDate
+        })
+      },
+      mockLogger
+    )
+  })
+
   describe('Error Handling', () => {
     beforeEach(() => {
       jest.clearAllMocks()
