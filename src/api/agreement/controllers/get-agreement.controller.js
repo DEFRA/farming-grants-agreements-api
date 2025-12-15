@@ -31,7 +31,7 @@ const getAgreementController =
     }
 
     // Return JSON response with agreement data
-    return h.response({ agreementData }).code(statusCodes.ok)
+    return h.response({ agreementData, auth: { source } }).code(statusCodes.ok)
   }
 
 export { getAgreementController }
