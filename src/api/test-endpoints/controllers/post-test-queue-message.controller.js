@@ -6,24 +6,21 @@ import { config } from '~/src/config/index.js'
 
 const maxDelay = 8000
 
-const checkAgreementWithBackoff = async (sbi, frn, delay, logger) => {
+const checkAgreementWithBackoff = async (sbi, delay, logger) => {
   if (delay > maxDelay) {
     throw Boom.internal(
-      `Failed to retrieve agreement data after multiple attempts for SBI: ${sbi}, FRN: ${frn}`
+      `Failed to retrieve agreement data after multiple attempts for SBI: ${sbi}`
     )
   }
 
   // Attempt to get the agreement data
   try {
-    return await getAgreementData({ sbi, frn })
+    return await getAgreementData({ sbi })
   } catch (error) {
-    logger.error(
-      error,
-      `Failed to retrieve agreement data for SBI: ${sbi}, FRN: ${frn}`
-    )
+    logger.error(error, `Failed to retrieve agreement data for SBI: ${sbi}`)
     if (isBoom(error) && error.output.statusCode === statusCodes.notFound) {
       await new Promise((resolve) => setTimeout(resolve, delay))
-      return checkAgreementWithBackoff(sbi, frn, delay * 2, logger)
+      return checkAgreementWithBackoff(sbi, delay * 2, logger)
     }
     throw error
   }
@@ -65,10 +62,9 @@ const postTestQueueMessageController = {
 
       let agreementData
       if (queueName === 'create_agreement') {
-        // Get the agreement from the database by SBI and FRN
+        // Get the agreement from the database by SBI
         agreementData = await checkAgreementWithBackoff(
           queueMessage.data.identifiers.sbi,
-          queueMessage.data.identifiers.frn,
           1000,
           request.logger
         )

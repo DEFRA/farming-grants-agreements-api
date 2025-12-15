@@ -9,14 +9,13 @@ const schema = new mongoose.Schema(
     agreementNumber: { type: String, required: true },
     clientRef: { type: String, required: true },
     sbi: { type: String, required: true },
-    frn: { type: String, required: true },
+    frn: { type: String },
     versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }]
   },
   { collection, timestamps: true }
 )
 
 schema.index({ sbi: 1 })
-schema.index({ frn: 1 })
 schema.index({ agreementNumber: 1 }, { unique: true })
 schema.index({ clientRef: 1 })
 schema.index({ createdAt: 1 })
@@ -50,10 +49,7 @@ schema.statics.createAgreementWithVersions = async function ({
 
   try {
     // A) see if parent exists (by unique agreementNumber)
-    const existing = await this.findOne({
-      sbi: agreement.sbi,
-      frn: agreement.frn
-    })
+    const existing = await this.findOne({ sbi: agreement.sbi })
       .select('_id versions')
       .lean()
 
