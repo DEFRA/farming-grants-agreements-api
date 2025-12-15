@@ -49,6 +49,7 @@ describe('postTestQueueMessageController', () => {
   })
 
   const payload = {
+    type: 'gas-backend.agreement.create',
     data: { identifiers: { sbi: '123456789', frn: '9999999999' } }
   }
 
@@ -140,8 +141,7 @@ describe('postTestQueueMessageController', () => {
     expect(res.statusCode).toBe(statusCodes.ok)
     expect(res.payload.agreementData).toEqual(mockAgreementData)
     expect(getAgreementData).toHaveBeenCalledWith({
-      sbi: '123456789',
-      frn: '9999999999'
+      sbi: '123456789'
     })
   })
 
@@ -196,7 +196,7 @@ describe('postTestQueueMessageController', () => {
 
     expect(res).toEqual(
       new Error(
-        'Failed to retrieve agreement data after multiple attempts for SBI: 123456789, FRN: 9999999999'
+        'Failed to retrieve agreement data after multiple attempts for SBI: 123456789'
       )
     )
 

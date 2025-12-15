@@ -190,7 +190,6 @@ const schema = new mongoose.Schema(
 // Indexes for common queries
 schema.index({ notificationMessageId: 1 }, { unique: true })
 schema.index({ 'identifiers.sbi': 1 })
-schema.index({ 'identifiers.frn': 1 })
 schema.index({ clientRef: 1 })
 schema.index({ 'payment.agreementStartDate': 1 })
 schema.index({ 'payment.agreementEndDate': 1 })
