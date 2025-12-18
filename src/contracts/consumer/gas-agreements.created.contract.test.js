@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { MessageConsumerPact, Matchers } from '@pact-foundation/pact'
+import { MessageConsumerPact, MatchersV2 } from '@pact-foundation/pact'
 
 import { handleCreateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/create-agreement.js'
 import { createOffer as mockCreateOffer } from '~/src/api/agreement/helpers/create-offer.js'
@@ -8,6 +8,10 @@ import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 
 jest.mock('~/src/api/agreement/helpers/create-offer.js')
 jest.mock('~/src/api/common/helpers/sns-publisher.js')
+
+const { like, uuid, iso8601DateTimeWithMillis } = MatchersV2
+
+const mockAgreement = sampleData.agreements[1]
 
 describe('receiving events from the GAS SQS queue and processing them', () => {
   const messagePact = new MessageConsumerPact({
@@ -31,12 +35,13 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
       .given('agreement created event')
       .expectsToReceive('an agreement created message')
       .withContent({
-        id: '12-34-56-78-90',
-        source: Matchers.like('fg-gas-backend'),
-        specVersion: '1.0',
+        id: uuid('12345678-1234-1234-1234-123456789012'),
+        source: like('fg-gas-backend'),
+        time: iso8601DateTimeWithMillis('2025-12-15T10:19:06.519Z'),
+        specversion: '1.0',
         type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         datacontenttype: 'application/json',
-        data: sampleData.agreements[1]
+        data: like(mockAgreement)
       })
       .verify(async (message) => {
         await handleCreateAgreementEvent(
@@ -47,7 +52,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
 
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           1,
-          'Creating agreement from event: 12-34-56-78-90'
+          'Creating agreement from event: 12345678-1234-1234-1234-123456789012'
         )
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           2,
@@ -60,8 +65,8 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
           'Agreement created: mockAgreementNumber'
         )
         expect(mockCreateOffer).toHaveBeenCalledWith(
-          '12-34-56-78-90',
-          sampleData.agreements[1],
+          '12345678-1234-1234-1234-123456789012',
+          mockAgreement,
           mockLogger
         )
       })
