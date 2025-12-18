@@ -8,7 +8,7 @@ import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/
 jest.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 jest.mock('~/src/api/common/helpers/sns-publisher.js')
 
-const { like } = MatchersV2
+const { like, uuid } = MatchersV2
 
 describe('receiving events from the GAS SQS queue and processing them', () => {
   const messagePact = new MessageConsumerPact({
@@ -34,9 +34,9 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
       .given('agreement offer withdrawn event')
       .expectsToReceive('an agreement withdrawn message')
       .withContent({
-        id: like('12-34-56-78-90'),
+        id: uuid('12345678-1234-1234-1234-123456789012'),
         source: like('fg-gas-backend'),
-        specVersion: '1.0',
+        specversion: '1.0',
         type: 'cloud.defra.test.fg-gas-backend.agreement.withdraw',
         datacontenttype: 'application/json',
         data: {
@@ -54,7 +54,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
 
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           1,
-          'Received application withdrawn from event: 12-34-56-78-90'
+          'Received application withdrawn from event: 12345678-1234-1234-1234-123456789012'
         )
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           2,
