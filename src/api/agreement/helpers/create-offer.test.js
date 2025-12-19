@@ -32,7 +32,9 @@ jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: jest.fn().mockResolvedValue(true)
 }))
 jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  doesAgreementExist: jest.fn().mockResolvedValue(false)
+  doesAgreementExist: jest.fn().mockResolvedValue(false),
+  // Added explicit mock for getAgreementDataById to satisfy tests that import this module
+  getAgreementDataById: jest.fn().mockResolvedValue({})
 }))
 
 const targetDataStructure = {
