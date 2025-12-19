@@ -5,7 +5,10 @@ import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
-import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import {
+  doesAgreementExist,
+  getAgreementDataById
+} from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
 
 export const generateAgreementNumber = () => {
@@ -80,6 +83,9 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     },
     logger
   )
+
+  logger.info(`Successfully created the agreement
+      ${JSON.stringify(await getAgreementDataById(agreementNumber), null, 2)}`)
 
   return agreement
 }
