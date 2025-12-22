@@ -50,6 +50,7 @@ schema.statics.createAgreementWithVersions = async function ({
   try {
     // A) see if parent exists (by unique agreementNumber)
     const existing = await this.findOne({ sbi: agreement.sbi })
+      .sort({ createdAt: -1, _id: -1 })
       .select('_id versions')
       .lean()
 

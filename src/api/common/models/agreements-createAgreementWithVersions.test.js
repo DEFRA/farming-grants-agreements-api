@@ -87,6 +87,62 @@ describe('agreements.createAgreementWithVersions', () => {
     findOneSpy.mockRestore()
     createSpy.mockRestore()
   })
+
+  it('should attempt to find existing agreement with correct sort order', async () => {
+    // Mock the chainable methods
+    const mockFindOne = {
+      sort: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(null)
+    }
+
+    const findOneSpy = jest
+      .spyOn(agreementsModel, 'findOne')
+      .mockReturnValue(mockFindOne)
+
+    // Mock create to avoid actual DB write and return a valid-looking mocked ID
+    const mockId = '507f1f77bcf86cd799439011'
+    const createSpy = jest
+      .spyOn(agreementsModel, 'create')
+      .mockResolvedValue({ _id: mockId })
+
+    const versionsInsertSpy = jest
+      .spyOn(versionsModel, 'insertMany')
+      .mockResolvedValue([])
+
+    // Spy on updateMany to avoid real DB calls
+    const versionsUpdateManySpy = jest
+      .spyOn(versionsModel, 'updateMany')
+      .mockResolvedValue({})
+
+    // Spy on updateOne and findById to avoid real DB calls and CastErrors
+    const updateOneSpy = jest
+      .spyOn(agreementsModel, 'updateOne')
+      .mockResolvedValue({})
+
+    const findByIdSpy = jest
+      .spyOn(agreementsModel, 'findById')
+      .mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue({ _id: mockId })
+      })
+
+    await agreementsModel.createAgreementWithVersions({
+      agreement: AGREEMENT_BASE,
+      versions: VERSION_PAYLOADS
+    })
+
+    expect(findOneSpy).toHaveBeenCalledWith({ sbi: AGREEMENT_BASE.sbi })
+    expect(mockFindOne.sort).toHaveBeenCalledWith({ createdAt: -1, _id: -1 })
+
+    // Restore mocks
+    findOneSpy.mockRestore()
+    createSpy.mockRestore()
+    versionsInsertSpy.mockRestore()
+    versionsUpdateManySpy.mockRestore()
+    updateOneSpy.mockRestore()
+    findByIdSpy.mockRestore()
+  })
 })
 
 describe('agreements.findLatestAgreementVersion', () => {
