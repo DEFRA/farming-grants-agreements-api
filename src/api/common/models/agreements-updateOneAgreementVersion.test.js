@@ -31,16 +31,20 @@ jest.mock('./agreements.js', () => ({
 }))
 
 const mockSelectLean = (value) => ({
-  select: jest.fn(() => ({
-    lean: jest.fn(() => Promise.resolve(value))
+  sort: jest.fn(() => ({
+    select: jest.fn(() => ({
+      lean: jest.fn(() => Promise.resolve(value))
+    }))
   }))
 })
 
 const mockSelectLeanReject = (err) => ({
-  select: jest.fn(() => ({
-    lean: jest.fn(() => {
-      throw err
-    })
+  sort: jest.fn(() => ({
+    select: jest.fn(() => ({
+      lean: jest.fn(() => {
+        throw err
+      })
+    }))
   }))
 })
 
@@ -110,6 +114,7 @@ describe('agreements.updateOneAgreementVersion', () => {
         // Parent exists with versions
         const parent = await agreementsModel
           .findOne(agreementFilter)
+          .sort({ createdAt: -1, _id: -1 })
           .select('versions')
           .lean()
         if (!parent) {
@@ -174,6 +179,7 @@ describe('agreements.updateOneAgreementVersion', () => {
       async (agreementFilter) => {
         const parent = await agreementsModel
           .findOne(agreementFilter)
+          .sort({ createdAt: -1, _id: -1 })
           .select('versions')
           .lean()
         if (!parent) {
@@ -206,6 +212,7 @@ describe('agreements.updateOneAgreementVersion', () => {
       async (agreementFilter) => {
         const parent = await agreementsModel
           .findOne(agreementFilter)
+          .sort({ createdAt: -1, _id: -1 })
           .select('versions')
           .lean()
         if (!parent) {
@@ -242,6 +249,7 @@ describe('agreements.updateOneAgreementVersion', () => {
       async (agreementFilter) => {
         const parent = await agreementsModel
           .findOne(agreementFilter)
+          .sort({ createdAt: -1, _id: -1 })
           .select('versions')
           .lean()
         if (!parent) {
@@ -291,6 +299,7 @@ describe('agreements.updateOneAgreementVersion', () => {
       async (agreementFilter, update) => {
         const parent = await agreementsModel
           .findOne(agreementFilter)
+          .sort({ createdAt: -1, _id: -1 })
           .select('versions')
           .lean()
         if (!parent) {
@@ -341,7 +350,11 @@ describe('agreements.updateOneAgreementVersion', () => {
     agreementsModel.updateOneAgreementVersion.mockImplementation(
       async (agreementFilter) => {
         // This will throw the error
-        await agreementsModel.findOne(agreementFilter).select('versions').lean()
+        await agreementsModel
+          .findOne(agreementFilter)
+          .sort({ createdAt: -1, _id: -1 })
+          .select('versions')
+          .lean()
       }
     )
 

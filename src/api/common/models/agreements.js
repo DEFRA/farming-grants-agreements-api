@@ -50,6 +50,7 @@ schema.statics.createAgreementWithVersions = async function ({
   try {
     // A) see if parent exists (by unique agreementNumber)
     const existing = await this.findOne({ sbi: agreement.sbi })
+      .sort({ createdAt: -1, _id: -1 })
       .select('_id versions')
       .lean()
 
@@ -97,7 +98,8 @@ schema.statics.createAgreementWithVersions = async function ({
     return this.findById(agreementId)
       .populate({
         path: 'versions',
-        select: 'agreementNumber sbi status createdAt'
+        select: 'agreementNumber sbi status createdAt',
+        options: { sort: { createdAt: -1, _id: -1 } }
       })
       .lean()
   } catch (err) {
@@ -125,6 +127,7 @@ schema.statics.createAgreementWithVersions = async function ({
  */
 schema.statics.findLatestAgreementVersion = async function (agreementFilter) {
   const agreement = await this.findOne(agreementFilter)
+    .sort({ createdAt: -1, _id: -1 })
     .select('versions')
     .lean()
     .catch((err) => {

@@ -51,7 +51,7 @@ describe('unacceptOfferController', () => {
     })
 
     // Assert
-    expect(unacceptOffer).toHaveBeenCalledWith(agreementId, { all: true })
+    expect(unacceptOffer).toHaveBeenCalledWith(agreementId)
     expect(statusCode).toBe(200)
     expect(result).toEqual({
       message: 'Offer unaccepted'
