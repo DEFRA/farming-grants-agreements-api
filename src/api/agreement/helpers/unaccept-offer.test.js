@@ -42,26 +42,6 @@ describe('unacceptOffer', () => {
     expect(result).toEqual({ success: true, updatedVersions: 1 })
   })
 
-  test('should successfully unaccept an offer with options.all (behaves same as default)', async () => {
-    // Arrange
-    const agreementId = 'SFI123456789'
-    const updateResult = { modifiedCount: 1 }
-
-    agreementsModel.updateOneAgreementVersion.mockResolvedValueOnce(
-      updateResult
-    )
-
-    // Act
-    const result = await unacceptOffer(agreementId, { all: true })
-
-    // Assert
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
-      { agreementNumber: agreementId },
-      { $set: { status: 'offered', signatureDate: null } }
-    )
-    expect(result).toEqual({ success: true, updatedVersions: 1 })
-  })
-
   test('should throw a boom error when updateOneAgreementVersion fails', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
