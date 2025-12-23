@@ -163,8 +163,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     }
 
     agreementsModel.findOne = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        lean: jest.fn().mockResolvedValue(mockAgreement)
+      sort: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue(mockAgreement)
+        })
       })
     })
 
@@ -186,8 +188,10 @@ describe('agreements.findLatestAgreementVersion', () => {
 
   it('should throw 404 when agreement not found', async () => {
     agreementsModel.findOne = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        lean: jest.fn().mockResolvedValue(null)
+      sort: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue(null)
+        })
       })
     })
 
@@ -203,8 +207,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     }
 
     agreementsModel.findOne = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        lean: jest.fn().mockResolvedValue(mockAgreement)
+      sort: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue(mockAgreement)
+        })
       })
     })
 
@@ -220,8 +226,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     }
 
     agreementsModel.findOne = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        lean: jest.fn().mockResolvedValue(mockAgreement)
+      sort: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue(mockAgreement)
+        })
       })
     })
 
@@ -232,8 +240,10 @@ describe('agreements.findLatestAgreementVersion', () => {
 
   it('should handle database errors', async () => {
     agreementsModel.findOne = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        lean: jest.fn().mockRejectedValue(new Error('Database error'))
+      sort: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockRejectedValue(new Error('Database error'))
+        })
       })
     })
 
