@@ -67,6 +67,12 @@ To run the service without `grants-ui` disable the Jwt authentication by setting
 JWT_ENABLED=false SEED_DB=true npm run dev
 ```
 
+If you want to be able to run the app without dependencies on external service like land grants you can generate the mock data by running `npm run test:contracts:consumer` and then set the environment variable `LAND_GRANTS_BASE_URL="http://mock-server:8081"` (or `LAND_GRANTS_BASE_URL="http://localhost:8081"` if you are running the farming-grants-agreements-api outside of Docker) and start Docker compose with the mock profile:
+
+```bash
+docker compose --profile mock up
+```
+
 ### Testing
 
 To test the application run:

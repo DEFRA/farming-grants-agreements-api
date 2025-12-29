@@ -87,6 +87,19 @@ services:
 
 ################################################################################
 
+  mock-server:
+    image: pactfoundation/pact-stub-server:0.7.0
+    profiles:
+      - mock
+    restart: unless-stopped
+    ports:
+      - '8081:8081'
+    volumes:
+      - ./src/contracts/consumer/pacts:/app/pacts
+    command: ["-p", "8081", "-d", "pacts"]
+    networks:
+      - cdp-tenant
+
 volumes:
   mongodb-data:
 
