@@ -5,6 +5,7 @@ import agreementModel from '~/src/api/common/models/agreements.js'
 // Import the module after setting up the mocks
 import { withdrawOffer } from './withdraw-offer.js'
 
+vi.mock('@hapi/boom')
 vi.mock('~/src/api/common/models/agreements.js', () => ({
   __esModule: true,
   default: {
@@ -15,6 +16,13 @@ vi.mock('~/src/api/common/models/agreements.js', () => ({
 describe('withdrawOffer', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Setup Boom mocks
+    Boom.internal = vi.fn((message) => {
+      const boomError = new Error(message)
+      boomError.isBoom = true
+      return boomError
+    })
   })
 
   test('should successfully withdraw an offer', async () => {
@@ -51,11 +59,20 @@ describe('withdrawOffer', () => {
     const error = new Error('Database error')
 
     agreementModel.updateOneAgreementVersion.mockRejectedValueOnce(error)
+    Boom.internal.mockReturnValue(
+      new Error(
+        'Offer is not in the correct state to be withdrawn or was not found'
+      )
+    )
 
     // Act & Assert
     await expect(withdrawOffer(clientRef, agreementNumber)).rejects.toThrow(
+      'Offer is not in the correct state to be withdrawn or was not found'
+    )
+
+    expect(Boom.internal).toHaveBeenCalledWith(
       'Offer is not in the correct state to be withdrawn or was not found',
-      Boom.internal(error)
+      error
     )
   })
 

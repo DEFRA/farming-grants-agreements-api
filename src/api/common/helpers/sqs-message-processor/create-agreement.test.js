@@ -41,9 +41,16 @@ describe('SQS message processor', () => {
         Body: 'invalid json'
       }
 
-      await expect(
-        processMessage(handleCreateAgreementEvent, message, mockLogger)
-      ).rejects.toThrow('Invalid message format')
+      let caughtError
+      try {
+        await processMessage(handleCreateAgreementEvent, message, mockLogger)
+      } catch (error) {
+        caughtError = error
+      }
+
+      expect(caughtError).toBeDefined()
+      expect(caughtError.message).toContain('Invalid message format')
+      expect(caughtError.message).toContain('invalid json')
     })
 
     it('should info log non-SyntaxError', async () => {
@@ -205,11 +212,13 @@ describe('SQS message processor', () => {
         data: { id: '123' }
       }
 
-      await handleCreateAgreementEvent(
+      // Execute the function and verify it completes successfully (positive assertion)
+      const result = await handleCreateAgreementEvent(
         'aws-message-id',
         mockPayload,
         loggerWithoutInfo
       )
+      expect(result).toBeUndefined()
 
       expect(createOffer).not.toHaveBeenCalled()
       expect(loggerWithoutInfo.error).not.toHaveBeenCalled()

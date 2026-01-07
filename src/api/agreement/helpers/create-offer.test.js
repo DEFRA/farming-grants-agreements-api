@@ -2,12 +2,14 @@ import { vi } from 'vitest'
 import { v4 as uuidv4 } from 'uuid'
 
 import mongoose from 'mongoose'
+import Boom from '@hapi/boom'
 import { createOffer, generateAgreementNumber } from './create-offer.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
+vi.mock('@hapi/boom')
 vi.mock('~/src/api/common/models/versions.js')
 vi.mock('~/src/api/common/models/agreements.js', () => {
   let populatedAgreement = null
@@ -165,6 +167,13 @@ describe('createOffer', () => {
       debug: vi.fn(),
       error: vi.fn()
     }
+
+    // Setup Boom mocks
+    Boom.badRequest = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
 
     // Make insertMany return a real-looking agreement (matching targetDataStructure)
     versionsModel.insertMany = vi.fn(() => [
@@ -1307,6 +1316,10 @@ describe('createOffer', () => {
         mockLogger
       )
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle answers.application being null gracefully', async () => {
@@ -1347,6 +1360,10 @@ describe('createOffer', () => {
         mockLogger
       )
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle payments.parcel as a single object (not array)', async () => {
@@ -1450,6 +1467,10 @@ describe('createOffer', () => {
     await expect(
       createOffer('null-parcel-message', payloadWithNullParcel, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   describe('generateAgreementNumber', () => {
@@ -1520,6 +1541,10 @@ describe('createOffer', () => {
     await expect(
       createOffer('test-id', payloadWithoutApplicant, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle case where neither application nor answers.parcels exist', async () => {
@@ -1538,6 +1563,10 @@ describe('createOffer', () => {
     await expect(
       createOffer('test-id', payloadWithoutConversionFormat, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle conversion errors in catch block when mapper throws', async () => {
@@ -1581,6 +1610,10 @@ describe('createOffer', () => {
     await expect(
       createOfferUnderTest('test-id', payloadWithParcels, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
 
     // Clear the mocked modules so other tests use the original implementations
     vi.resetModules()
@@ -1808,9 +1841,12 @@ describe('createOffer', () => {
       await expect(
         createOffer(uuidv4(), agreementData, mockLogger)
       ).rejects.toThrow('Database connection error')
+
+      expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
     })
 
     it('should handle generic errors when creating an agreement', async () => {
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.createAgreementWithVersions.mockRejectedValue(
         new Error('Generic error')
       )
@@ -1818,6 +1854,8 @@ describe('createOffer', () => {
       await expect(
         createOffer(uuidv4(), agreementData, mockLogger)
       ).rejects.toThrow('Generic error')
+
+      expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
     })
 
     it('should propagate Boom error when payment/applicant missing', async () => {
@@ -1829,6 +1867,10 @@ describe('createOffer', () => {
       }
       doesAgreementExist.mockResolvedValueOnce(false)
       await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
+        'Offer data is missing payment and applicant'
+      )
+
+      expect(Boom.badRequest).toHaveBeenCalledWith(
         'Offer data is missing payment and applicant'
       )
     })

@@ -29,6 +29,7 @@ vi.mock('~/src/api/common/models/counters.js', () => ({
   }
 }))
 vi.mock('uuid')
+vi.mock('@hapi/boom')
 
 describe('createInvoice', () => {
   const mockUuid = '123e4567-e89b-12d3-a456-426614174000'
@@ -42,6 +43,18 @@ describe('createInvoice', () => {
 
     // Default mock for invoicesModel.find
     invoicesModel.find.mockResolvedValue([{}, {}, {}]) // 3 existing invoices
+
+    // Setup Boom mocks
+    Boom.internal = vi.fn((error) => {
+      const boomError = new Error(error.message || 'Internal server error')
+      boomError.isBoom = true
+      return boomError
+    })
+    Boom.notFound = vi.fn((message) => {
+      const boomError = new Error(message)
+      boomError.isBoom = true
+      return boomError
+    })
   })
 
   it('should create a new invoice with correct data', async () => {
@@ -103,21 +116,27 @@ describe('createInvoice', () => {
     // Arrange
     const mockError = new Error('Database error')
     invoicesModel.create.mockRejectedValue(mockError)
+    Boom.internal.mockReturnValue(new Error('Database error'))
 
     // Act & Assert
     await expect(createInvoice(mockAgreementId, mockUuid)).rejects.toThrow(
-      Boom.internal(mockError).message
+      'Database error'
     )
+
+    expect(Boom.internal).toHaveBeenCalledWith(mockError)
   })
 
   it('should throw Boom.notFound if invoicesModel.create returns falsy value', async () => {
     // Arrange
     invoicesModel.create.mockResolvedValue(null)
+    const expectedMessage = `Invoice not created for Agreement ID ${mockAgreementId}`
+    Boom.notFound.mockReturnValue(new Error(expectedMessage))
 
     // Act & Assert
     await expect(createInvoice(mockAgreementId, mockUuid)).rejects.toThrow(
-      Boom.notFound(`Invoice not created for Agreement ID ${mockAgreementId}`)
-        .message
+      expectedMessage
     )
+
+    expect(Boom.notFound).toHaveBeenCalledWith(expectedMessage)
   })
 })

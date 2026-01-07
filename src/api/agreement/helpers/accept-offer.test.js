@@ -83,18 +83,22 @@ describe('acceptOffer', () => {
   })
 
   test('throws Boom.badRequest if agreementNumber is missing', async () => {
+    // Test with undefined agreementNumber
     await expect(
       acceptOffer(undefined, {}, 'http://localhost:3555/undefined', mockLogger)
     ).rejects.toThrow('Agreement data is required')
 
+    // Test with empty string agreementNumber
     await expect(
       acceptOffer('', {}, 'http://localhost:3555/', mockLogger)
     ).rejects.toThrow('Agreement data is required')
 
+    // Test with null agreementNumber
     await expect(
       acceptOffer(null, {}, 'http://localhost:3555/null', mockLogger)
     ).rejects.toThrow('Agreement data is required')
 
+    // Test with undefined agreementData
     await expect(
       acceptOffer(
         'SFI123456789',
@@ -104,6 +108,7 @@ describe('acceptOffer', () => {
       )
     ).rejects.toThrow('Agreement data is required')
 
+    // Test with null agreementData
     await expect(
       acceptOffer(
         'SFI123456789',
@@ -113,14 +118,20 @@ describe('acceptOffer', () => {
       )
     ).rejects.toThrow('Agreement data is required')
 
-    await expect(
-      acceptOffer(
+    // Test with both undefined - verify error was thrown (positive assertion)
+    let error
+    try {
+      await acceptOffer(
         undefined,
         undefined,
         'http://localhost:3555/undefined',
         mockLogger
       )
-    ).rejects.toThrow('Agreement data is required')
+    } catch (e) {
+      error = e
+    }
+    expect(error).toBeDefined()
+    expect(error.message).toBe('Agreement data is required')
   })
 
   test('should throw error when S3 bucket config is missing', async () => {
@@ -146,6 +157,8 @@ describe('acceptOffer', () => {
     ).rejects.toThrow(
       'PDF service configuration missing: FILES_S3_BUCKET not set'
     )
+
+    expect(config.get).toHaveBeenCalledWith('files.s3.bucket')
   })
 
   test('should throw error when S3 region config is missing', async () => {
@@ -171,6 +184,9 @@ describe('acceptOffer', () => {
     ).rejects.toThrow(
       'PDF service configuration missing: FILES_S3_REGION not set'
     )
+
+    expect(config.get).toHaveBeenCalledWith('files.s3.bucket')
+    expect(config.get).toHaveBeenCalledWith('files.s3.region')
   })
 
   test('should successfully accept an agreement', async () => {
@@ -273,6 +289,8 @@ describe('acceptOffer', () => {
         mockLogger
       )
     ).rejects.toThrow(Boom.notFound('Offer not found with ID SFI999999999'))
+
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
   })
 
   test('should handle database errors and log them', async () => {
@@ -294,6 +312,8 @@ describe('acceptOffer', () => {
         mockLogger
       )
     ).rejects.toThrow(Boom.internal('Database connection failed'))
+
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
   })
 
   test('should rethrow Boom errors without wrapping', async () => {
@@ -315,5 +335,7 @@ describe('acceptOffer', () => {
         mockLogger
       )
     ).rejects.toEqual(boomError)
+
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
   })
 })

@@ -197,6 +197,8 @@ describe('agreements.updateOneAgreementVersion', () => {
       `Agreement not found using filter: ${JSON.stringify(AGREEMENT_FILTER)}`
     )
 
+    // Verify findOne was called to look up the parent
+    expect(agreementsModel.findOne).toHaveBeenCalledWith(AGREEMENT_FILTER)
     // child lookups should not be called
     expect(versionsModel.findOne).not.toHaveBeenCalled()
     expect(versionsModel.findOneAndUpdate).not.toHaveBeenCalled()
@@ -231,6 +233,8 @@ describe('agreements.updateOneAgreementVersion', () => {
       agreementsModel.updateOneAgreementVersion(AGREEMENT_FILTER, UPDATE)
     ).rejects.toThrow('Agreement has no child versions to update')
 
+    // Verify findOne was called to look up the parent
+    expect(agreementsModel.findOne).toHaveBeenCalledWith(AGREEMENT_FILTER)
     expect(versionsModel.findOne).not.toHaveBeenCalled()
     expect(versionsModel.findOneAndUpdate).not.toHaveBeenCalled()
   })
@@ -273,6 +277,9 @@ describe('agreements.updateOneAgreementVersion', () => {
       agreementsModel.updateOneAgreementVersion(AGREEMENT_FILTER, UPDATE)
     ).rejects.toThrow('db fail during child lookup')
 
+    // Verify findOne was called for both parent and child lookups
+    expect(agreementsModel.findOne).toHaveBeenCalledWith(AGREEMENT_FILTER)
+    expect(versionsModel.findOne).toHaveBeenCalled()
     expect(versionsModel.findOneAndUpdate).not.toHaveBeenCalled()
   })
 
@@ -339,6 +346,9 @@ describe('agreements.updateOneAgreementVersion', () => {
     await expect(
       agreementsModel.updateOneAgreementVersion(AGREEMENT_FILTER, UPDATE)
     ).rejects.toThrow('Failed to update agreement. Agreement not found')
+
+    // Verify findOneAndUpdate was called
+    expect(versionsModel.findOneAndUpdate).toHaveBeenCalled()
   })
 
   it('wraps parent lookup errors with Boom.internal', async () => {
@@ -362,6 +372,8 @@ describe('agreements.updateOneAgreementVersion', () => {
       agreementsModel.updateOneAgreementVersion(AGREEMENT_FILTER, UPDATE)
     ).rejects.toThrow('parent find error')
 
+    // Verify findOne was called to look up the parent
+    expect(agreementsModel.findOne).toHaveBeenCalledWith(AGREEMENT_FILTER)
     expect(versionsModel.findOne).not.toHaveBeenCalled()
     expect(versionsModel.findOneAndUpdate).not.toHaveBeenCalled()
   })

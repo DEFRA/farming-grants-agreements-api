@@ -175,6 +175,8 @@ describe('mongooseDb', () => {
       await expect(
         mongooseDb.plugin.register(mockServer, mockOptions)
       ).rejects.toThrow('Connection failed')
+
+      expect(mockMongoose.connect).toHaveBeenCalled()
     })
   })
 })

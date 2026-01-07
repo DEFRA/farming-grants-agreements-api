@@ -138,6 +138,8 @@ describe('Payment Hub Helper', () => {
       await expect(
         sendPaymentHubRequest(server, logger, payload)
       ).rejects.toThrow(`Payment hub request failed: ${errorMessage}`)
+
+      expect(global.fetch).toHaveBeenCalled()
     })
 
     it('should throw an error when fetch fails', async () => {
@@ -149,6 +151,8 @@ describe('Payment Hub Helper', () => {
       await expect(
         sendPaymentHubRequest(server, logger, payload)
       ).rejects.toThrow(networkError)
+
+      expect(global.fetch).toHaveBeenCalled()
     })
 
     it('should throw an error if the keyname or key is not set', async () => {
@@ -164,6 +168,8 @@ describe('Payment Hub Helper', () => {
       await expect(
         sendPaymentHubRequest(server, logger, payload)
       ).rejects.toThrow('Payment Hub keyname or key is not set')
+
+      expect(config.get).toHaveBeenCalled()
     })
   })
 

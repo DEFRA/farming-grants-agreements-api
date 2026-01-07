@@ -71,6 +71,7 @@ describe('fetch helpers', () => {
 
       await expect(fetchPromise).rejects.toThrow('Aborted request')
 
+      expect(fetch).toHaveBeenCalled()
       expect(abortSpy).toHaveBeenCalledWith(expect.any(Error))
       expect(abortSpy.mock.calls[0][0].message).toBe(
         'Network timed out while fetching data'
@@ -85,6 +86,7 @@ describe('fetch helpers', () => {
       // Advance time past the timeout
       vi.advanceTimersByTime(6000)
 
+      expect(fetch).toHaveBeenCalled()
       // Abort should not have been called because the timer should have been cleared
       expect(abortSpy).not.toHaveBeenCalled()
     })

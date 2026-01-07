@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import Boom from '@hapi/boom'
 import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import {
@@ -7,6 +8,7 @@ import {
   getAgreementDataBySbi
 } from './get-agreement-data.js'
 
+vi.mock('@hapi/boom')
 vi.mock('~/src/api/common/models/versions.js')
 vi.mock('~/src/api/common/models/agreements.js')
 
@@ -34,12 +36,33 @@ describe('getAgreementDataById', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Setup Boom mocks
+    Boom.badRequest = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.notFound = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.internal = vi.fn((error) => {
+      const boomError = new Error(error?.message || 'Internal server error')
+      boomError.isBoom = true
+      return boomError
+    })
   })
 
   test('should throw Boom.badRequest when agreementId is undefined', async () => {
+    Boom.badRequest.mockReturnValue(new Error('Agreement ID is required'))
+
     await expect(getAgreementDataById(undefined)).rejects.toThrow(
       'Agreement ID is required'
     )
+
+    expect(Boom.badRequest).toHaveBeenCalledWith('Agreement ID is required')
   })
 
   test('should throw Boom.notFound when agreement group is not found', async () => {
@@ -114,11 +137,18 @@ describe('getAgreementDataById', () => {
     })
 
     // Act & Assert
-    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
-      `Agreement not found using search terms: ${JSON.stringify({
+    const expectedMessage = `Agreement not found using search terms: ${JSON.stringify(
+      {
         agreementNumber: agreementId
-      })}`
+      }
+    )}`
+    Boom.notFound.mockReturnValue(new Error(expectedMessage))
+
+    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
+      expectedMessage
     )
+
+    expect(Boom.notFound).toHaveBeenCalledWith(expectedMessage)
   })
 
   test('should handle missing logger gracefully', async () => {
@@ -174,12 +204,33 @@ describe('getAgreementDataBySbi', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Setup Boom mocks
+    Boom.badRequest = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.notFound = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.internal = vi.fn((error) => {
+      const boomError = new Error(error?.message || 'Internal server error')
+      boomError.isBoom = true
+      return boomError
+    })
   })
 
   test('should throw Boom.badRequest when sbi is undefined getAgreementDataBySbi', async () => {
+    Boom.badRequest.mockReturnValue(new Error('SBI is required'))
+
     await expect(getAgreementDataBySbi(undefined)).rejects.toThrow(
       'SBI is required'
     )
+
+    expect(Boom.badRequest).toHaveBeenCalledWith('SBI is required')
   })
 
   test('should throw Boom.notFound when agreement group is not found getAgreementDataBySbi', async () => {
@@ -260,11 +311,16 @@ describe('getAgreementDataBySbi', () => {
     })
 
     // Act & Assert
-    await expect(getAgreementDataBySbi(sbi)).rejects.toThrow(
-      `Agreement not found using search terms: ${JSON.stringify({
+    const expectedMessage = `Agreement not found using search terms: ${JSON.stringify(
+      {
         sbi
-      })}`
-    )
+      }
+    )}`
+    Boom.notFound.mockReturnValue(new Error(expectedMessage))
+
+    await expect(getAgreementDataBySbi(sbi)).rejects.toThrow(expectedMessage)
+
+    expect(Boom.notFound).toHaveBeenCalledWith(expectedMessage)
   })
 
   test('should handle missing logger gracefully getAgreementDataBySbi', async () => {
@@ -306,6 +362,13 @@ describe('doesAgreementExist', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Setup Boom mocks
+    Boom.internal = vi.fn((error) => {
+      const boomError = new Error(error?.message || 'Internal server error')
+      boomError.isBoom = true
+      return boomError
+    })
   })
 
   test('should return true when agreement exists', async () => {
@@ -352,14 +415,21 @@ describe('doesAgreementExist', () => {
     // Arrange
     const searchTerms = { notificationMessageId: 'test-message-id' }
     const mockError = new Error('Database connection error')
+    const boomError = new Error('Database connection error')
     agreementsModel.aggregate.mockReturnValue({
-      catch: vi.fn().mockRejectedValue(mockError)
+      catch: vi.fn((callback) => {
+        return Promise.reject(callback(mockError))
+      })
     })
 
     // Act & Assert
+    Boom.internal.mockReturnValue(boomError)
+
     await expect(doesAgreementExist(searchTerms)).rejects.toThrow(
       'Database connection error'
     )
+
+    expect(Boom.internal).toHaveBeenCalledWith(mockError)
   })
 
   test('should throw Boom.internal when aggregate throws', async () => {
@@ -374,7 +444,13 @@ describe('doesAgreementExist', () => {
     })
 
     // Act & Assert
-    await expect(doesAgreementExist(searchTerms)).rejects.toThrow(Boom.Boom)
+    const boomError = new Error('Boom error')
+    boomError.isBoom = true
+    Boom.internal.mockReturnValue(boomError)
+
+    await expect(doesAgreementExist(searchTerms)).rejects.toThrow('Boom error')
+
+    expect(Boom.internal).toHaveBeenCalled()
   })
 
   test('should work with different search terms', async () => {

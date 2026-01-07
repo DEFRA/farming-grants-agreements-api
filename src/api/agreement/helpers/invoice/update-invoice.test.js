@@ -130,10 +130,13 @@ describe('updateInvoice', () => {
 
   describe('Error Handling', () => {
     it('should throw Boom.internal when database operation fails', async () => {
+      const dbError = new Error('Database error')
       const boomError = new Error('Internal server error')
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: vi.fn().mockRejectedValue(boomError)
+        catch: vi.fn((callback) => {
+          return Promise.reject(callback(dbError))
+        })
       }))
 
       Boom.internal.mockReturnValue(boomError)
@@ -141,13 +144,18 @@ describe('updateInvoice', () => {
       await expect(updateInvoice('FRPS0000', { amount: 100 })).rejects.toThrow(
         'Internal server error'
       )
+
+      expect(Boom.internal).toHaveBeenCalledWith(dbError)
     })
 
     it('should handle MongoDB validation errors', async () => {
+      const dbError = new Error('Validation error')
       const boomError = new Error('Internal server error')
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: vi.fn().mockRejectedValue(boomError)
+        catch: vi.fn((callback) => {
+          return Promise.reject(callback(dbError))
+        })
       }))
 
       Boom.internal.mockReturnValue(boomError)
@@ -155,13 +163,18 @@ describe('updateInvoice', () => {
       await expect(
         updateInvoice('FRPS0000', { amount: 'invalid' })
       ).rejects.toThrow('Internal server error')
+
+      expect(Boom.internal).toHaveBeenCalledWith(dbError)
     })
 
     it('should handle network timeout errors', async () => {
+      const dbError = new Error('Network timeout')
       const boomError = new Error('Internal server error')
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: vi.fn().mockRejectedValue(boomError)
+        catch: vi.fn((callback) => {
+          return Promise.reject(callback(dbError))
+        })
       }))
 
       Boom.internal.mockReturnValue(boomError)
@@ -169,6 +182,8 @@ describe('updateInvoice', () => {
       await expect(
         updateInvoice('FRPSTIMEOUT', { amount: 100 })
       ).rejects.toThrow('Internal server error')
+
+      expect(Boom.internal).toHaveBeenCalledWith(dbError)
     })
   })
 

@@ -67,9 +67,16 @@ describe('SQS message processor', () => {
         Body: 'invalid json'
       }
 
-      await expect(
-        processMessage(handleUpdateAgreementEvent, message, mockLogger)
-      ).rejects.toThrow('Invalid message format')
+      let caughtError
+      try {
+        await processMessage(handleUpdateAgreementEvent, message, mockLogger)
+      } catch (error) {
+        caughtError = error
+      }
+
+      expect(caughtError).toBeDefined()
+      expect(caughtError.message).toContain('Invalid message format')
+      expect(caughtError.message).toContain('invalid json')
     })
 
     it('should handle non-SyntaxError with Boom.boomify', async () => {

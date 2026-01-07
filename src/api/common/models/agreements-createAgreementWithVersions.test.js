@@ -31,30 +31,37 @@ describe('agreements.createAgreementWithVersions', () => {
 
   it('should validate input parameters and throw async errors', async () => {
     // Test missing agreementNumber - should throw asynchronously
-    await expect(
-      agreementsModel.createAgreementWithVersions({
-        agreement: { sbi: 'y', frn: 'x' }, // missing agreementNumber
-        versions: VERSION_PAYLOADS
-      })
-    ).rejects.toThrow('agreement.agreementNumber is required')
+    const invalidAgreement = { sbi: 'y', frn: 'x' } // missing agreementNumber
+    const promise1 = agreementsModel.createAgreementWithVersions({
+      agreement: invalidAgreement,
+      versions: VERSION_PAYLOADS
+    })
+
+    // Verify it returns a promise
+    expect(promise1).toBeInstanceOf(Promise)
+    await expect(promise1).rejects.toThrow(
+      'agreement.agreementNumber is required'
+    )
 
     // Test empty versions array - should throw asynchronously
-    await expect(
-      agreementsModel.createAgreementWithVersions({
-        agreement: AGREEMENT_BASE,
-        versions: []
-      })
-    ).rejects.toThrow(
+    const promise2 = agreementsModel.createAgreementWithVersions({
+      agreement: AGREEMENT_BASE,
+      versions: []
+    })
+    // Verify it returns a promise
+    expect(promise2).toBeInstanceOf(Promise)
+    await expect(promise2).rejects.toThrow(
       'versions must be a non-empty array of agreement version payloads'
     )
 
     // Test non-array versions
-    await expect(
-      agreementsModel.createAgreementWithVersions({
-        agreement: AGREEMENT_BASE,
-        versions: 'not-an-array'
-      })
-    ).rejects.toThrow(
+    const promise3 = agreementsModel.createAgreementWithVersions({
+      agreement: AGREEMENT_BASE,
+      versions: 'not-an-array'
+    })
+    // Verify it returns a promise
+    expect(promise3).toBeInstanceOf(Promise)
+    await expect(promise3).rejects.toThrow(
       'versions must be a non-empty array of agreement version payloads'
     )
   })
@@ -83,6 +90,10 @@ describe('agreements.createAgreementWithVersions', () => {
     // The promise should be rejected with a database operation error
     // This confirms we're using the real implementation, not a mock
     await expect(result).rejects.toThrow('Database connection failed')
+
+    // Verify that findOne was called (create won't be called because findOne throws first)
+    expect(findOneSpy).toHaveBeenCalled()
+    // Note: create is not called because findOne throws synchronously before reaching create
 
     // Restore original methods
     findOneSpy.mockRestore()
@@ -197,6 +208,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Agreement not found using filter')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 
   it('should throw 404 when agreement has no versions', async () => {
@@ -216,6 +231,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Agreement has no child versions to update')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 
   it('should throw 404 when agreement has null versions', async () => {
@@ -235,6 +254,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Agreement has no child versions to update')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 
   it('should handle database errors', async () => {
@@ -249,6 +272,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Database error')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 })
 
@@ -342,6 +369,8 @@ describe('agreements.updateOneAgreementVersion', () => {
         { status: 'accepted' }
       )
     ).rejects.toThrow('Failed to update agreement. Agreement not found')
+
+    expect(versionsModel.findOneAndUpdate).toHaveBeenCalled()
   })
 
   it('should handle database errors', async () => {
@@ -361,5 +390,7 @@ describe('agreements.updateOneAgreementVersion', () => {
         { status: 'accepted' }
       )
     ).rejects.toThrow('Database error')
+
+    expect(versionsModel.findOneAndUpdate).toHaveBeenCalled()
   })
 })

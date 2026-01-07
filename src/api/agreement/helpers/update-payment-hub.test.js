@@ -270,6 +270,8 @@ describe('updatePaymentHub', () => {
       await expect(updatePaymentHub(mockContext, 'INVALID')).rejects.toThrow(
         'Failed to setup payment schedule. Agreement not found'
       )
+
+      expect(getAgreementDataById).toHaveBeenCalledWith('INVALID')
     })
 
     it('should throw Boom.internal when createInvoice fails', async () => {
@@ -318,6 +320,7 @@ describe('updatePaymentHub', () => {
     })
 
     it('should re-throw Boom errors without wrapping', async () => {
+      config.set('featureFlags.isPaymentHubEnabled', true)
       const boomError = new Error('Boom error')
       boomError.isBoom = true
       sendPaymentHubRequest.mockRejectedValue(boomError)
@@ -326,6 +329,7 @@ describe('updatePaymentHub', () => {
         updatePaymentHub(mockContext, 'SFI123456789')
       ).rejects.toThrow('Failed to setup payment schedule. Boom error')
 
+      expect(sendPaymentHubRequest).toHaveBeenCalled()
       expect(Boom.internal).not.toHaveBeenCalled()
     })
   })
