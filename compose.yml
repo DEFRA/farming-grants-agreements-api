@@ -65,7 +65,7 @@ services:
       AWS_ENDPOINT: http://localstack:4566
       SQS_ENDPOINT: http://localstack:4566
       QUEUE_URL: http://localstack:4566/000000000000/create_agreement
-      S3_ENDPOINT: http://localstack:4566
+      S3_ENDPOINT: http://host.docker.internal:4568
       GA_TRACKING_ID: ${GA_TRACKING_ID}
       QUEUE_NAME: ${QUEUE_NAME:-create_agreement}
       ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-true}

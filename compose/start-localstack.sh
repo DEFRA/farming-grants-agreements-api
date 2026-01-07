@@ -3,9 +3,6 @@ set -e
 
 echo "🚀 Initializing SNS + SQS in LocalStack..."
 
-# Define S3 bucket for generated PDFs
-declare S3_BUCKET="s3://farming-grants-agreements-pdf-bucket"
-
 # SQS Queues we listen to
 declare -A QUEUES=(
   [grant_application_approved]="create_agreement" # Grants UI has approved an application, we need to create the agreement in response
@@ -100,9 +97,5 @@ for key in "${!QUEUES[@]}"; do
     --attributes '{ "RawMessageDelivery": "true"}'
   echo "🔗 Subscribed queue ${QUEUE_ARNS[$key]} to topic: ${TOPIC_ARNS[$key]}"
 done
-
-# Create S3 bucket
-awslocal --endpoint-url=$AWS_ENDPOINT s3 mb ${S3_BUCKET}
-echo "✅ Created S3 bucket: ${S3_BUCKET}"
 
 echo "✅ SNS and SQS setup complete."
