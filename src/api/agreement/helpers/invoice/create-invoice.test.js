@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import { createInvoice } from './create-invoice.js'
 import invoicesModel from '~/src/api/common/models/invoices.js'
 import countersModel from '~/src/api/common/models/counters.js'
@@ -6,36 +6,36 @@ import Boom from '@hapi/boom'
 import { v4 as uuidv4 } from 'uuid'
 
 // Mock dependencies
-jest.mock('~/src/api/common/models/invoices.js', () => ({
+vi.mock('~/src/api/common/models/invoices.js', () => ({
   __esModule: true,
   default: {
-    find: jest.fn(),
-    create: jest.fn(),
-    findOne: jest.fn(),
-    findOneAndUpdate: jest.fn(),
-    updateOne: jest.fn(),
-    deleteOne: jest.fn()
+    find: vi.fn(),
+    create: vi.fn(),
+    findOne: vi.fn(),
+    findOneAndUpdate: vi.fn(),
+    updateOne: vi.fn(),
+    deleteOne: vi.fn()
   }
 }))
-jest.mock('~/src/api/common/models/counters.js', () => ({
+vi.mock('~/src/api/common/models/counters.js', () => ({
   __esModule: true,
   default: {
-    find: jest.fn(),
-    create: jest.fn(),
-    findOne: jest.fn(),
-    findOneAndUpdate: jest.fn(),
-    updateOne: jest.fn(),
-    deleteOne: jest.fn()
+    find: vi.fn(),
+    create: vi.fn(),
+    findOne: vi.fn(),
+    findOneAndUpdate: vi.fn(),
+    updateOne: vi.fn(),
+    deleteOne: vi.fn()
   }
 }))
-jest.mock('uuid')
+vi.mock('uuid')
 
 describe('createInvoice', () => {
   const mockUuid = '123e4567-e89b-12d3-a456-426614174000'
   const mockAgreementId = 'SFI123456789'
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Mock uuid generation
     uuidv4.mockReturnValue(mockUuid)

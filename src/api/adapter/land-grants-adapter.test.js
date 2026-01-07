@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import {
   calculatePaymentsBasedOnParcelsWithActions,
   toLandGrantsPayload,
@@ -5,9 +6,9 @@ import {
 } from './land-grants-adapter.js'
 import { config } from '~/src/config/index.js'
 
-jest.mock('~/src/config/index.js', () => ({
+vi.mock('~/src/config/index.js', () => ({
   config: {
-    get: jest.fn()
+    get: vi.fn()
   }
 }))
 
@@ -15,7 +16,7 @@ const mockConfig = config
 
 describe('toLandGrantsPayload', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('throws when actions is not an array', () => {
@@ -105,7 +106,7 @@ describe('toLandGrantsPayload', () => {
 
 describe('convertParcelsToLandGrantsPayload', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('throws when parcels argument is not an array', () => {
@@ -247,18 +248,18 @@ const buildFetchResponse = (overrides = {}) => ({
   headers: {
     get: () => 'application/json'
   },
-  json: jest.fn().mockResolvedValue({}),
-  text: jest.fn().mockResolvedValue(''),
+  json: vi.fn().mockResolvedValue({}),
+  text: vi.fn().mockResolvedValue(''),
   ...overrides
 })
 
 const mockLogger = {
-  error: jest.fn(),
-  info: jest.fn()
+  error: vi.fn(),
+  info: vi.fn()
 }
 
 beforeAll(() => {
-  global.fetch = jest.fn()
+  global.fetch = vi.fn()
 })
 
 afterAll(() => {
@@ -266,7 +267,7 @@ afterAll(() => {
 })
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockConfig.get.mockImplementation((key) => {
     if (key === 'landGrants.uri') {
       return 'https://land-grants.example'
@@ -296,8 +297,10 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
       extraneous: 'ignore-me'
     }
 
+    const responseBody = { payment }
     const fetchResponse = buildFetchResponse({
-      json: jest.fn().mockResolvedValue({ payment })
+      json: vi.fn().mockResolvedValue(responseBody),
+      text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
@@ -362,8 +365,10 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
       payments: []
     }
 
+    const responseBody = { payment }
     const fetchResponse = buildFetchResponse({
-      json: jest.fn().mockResolvedValue({ payment })
+      json: vi.fn().mockResolvedValue(responseBody),
+      text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
@@ -387,8 +392,10 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
   })
 
   test('throws when Land Grants request does not include payment', async () => {
+    const responseBody = {}
     const fetchResponse = buildFetchResponse({
-      json: jest.fn().mockResolvedValue({})
+      json: vi.fn().mockResolvedValue(responseBody),
+      text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
@@ -404,7 +411,7 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
       ok: false,
       status: 502,
       statusText: 'Bad Gateway',
-      text: jest.fn().mockResolvedValue('gateway down')
+      text: vi.fn().mockResolvedValue('gateway down')
     }
     global.fetch.mockResolvedValue(fetchResponse)
 

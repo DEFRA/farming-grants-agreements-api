@@ -1,16 +1,16 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import { handleCreateAgreementEvent } from './create-agreement.js'
 import { processMessage } from '../sqs-client.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 
-jest.mock('~/src/api/agreement/helpers/create-offer.js')
+vi.mock('~/src/api/agreement/helpers/create-offer.js')
 
 describe('SQS message processor', () => {
   let mockLogger
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() }
+    vi.clearAllMocks()
+    mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn() }
     createOffer.mockResolvedValue({
       agreementNumber: 'SFI123456789'
     })
@@ -86,7 +86,7 @@ describe('SQS message processor', () => {
     })
 
     it('should not call info when logger does not have info method', async () => {
-      const loggerWithoutInfo = { error: jest.fn() }
+      const loggerWithoutInfo = { error: vi.fn() }
       const mockPayload = {
         type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         data: { id: '123', status: 'approved' }
@@ -114,7 +114,7 @@ describe('SQS message processor', () => {
 
       // Mock JSON.stringify to throw
       const originalStringify = JSON.stringify
-      JSON.stringify = jest.fn(() => {
+      JSON.stringify = vi.fn(() => {
         throw new Error('Circular reference')
       })
 
@@ -199,7 +199,7 @@ describe('SQS message processor', () => {
     })
 
     it('should not call info in else branch when logger does not have info method', async () => {
-      const loggerWithoutInfo = { error: jest.fn() }
+      const loggerWithoutInfo = { error: vi.fn() }
       const mockPayload = {
         type: 'some-other-event',
         data: { id: '123' }
@@ -216,7 +216,7 @@ describe('SQS message processor', () => {
     })
 
     it('should not call info after createOffer when logger does not have info method', async () => {
-      const loggerWithoutInfo = { error: jest.fn() }
+      const loggerWithoutInfo = { error: vi.fn() }
       const mockPayload = {
         type: 'cloud.defra.test.fg-gas-backend.agreement.create',
         data: { id: '123', status: 'approved' }

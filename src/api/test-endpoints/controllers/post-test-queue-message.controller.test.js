@@ -5,13 +5,13 @@ import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { __mockSend as sendMock } from '@aws-sdk/client-sqs'
 
-jest.mock('@aws-sdk/client-sqs', () => {
-  const mockSend = jest.fn()
+vi.mock('@aws-sdk/client-sqs', () => {
+  const mockSend = vi.fn()
   return {
-    SQSClient: jest.fn().mockImplementation(() => ({
+    SQSClient: vi.fn().mockImplementation(() => ({
       send: mockSend
     })),
-    SendMessageCommand: jest.fn().mockImplementation((input) => ({
+    SendMessageCommand: vi.fn().mockImplementation((input) => ({
       input
     })),
     __mockSend: mockSend // Export the mock for use in tests
@@ -19,9 +19,9 @@ jest.mock('@aws-sdk/client-sqs', () => {
 })
 
 // Mock config BEFORE importing module under test
-jest.mock('~/src/config/index.js', () => ({
+vi.mock('~/src/config/index.js', () => ({
   config: {
-    get: jest.fn((key) => {
+    get: vi.fn((key) => {
       if (key === 'aws.region') return 'eu-west-2'
       if (key === 'sqs.endpoint') return 'http://localhost:4566'
       if (key === 'sqs.queueUrl')
@@ -32,20 +32,20 @@ jest.mock('~/src/config/index.js', () => ({
 }))
 
 // Mock agreement helper and backoff behavior
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  getAgreementData: jest.fn()
+vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  getAgreementData: vi.fn()
 }))
 
 describe('postTestQueueMessageController', () => {
   const h = {
-    response: jest.fn((payload) => ({
-      code: jest.fn((status) => ({ payload, statusCode: status }))
+    response: vi.fn((payload) => ({
+      code: vi.fn((status) => ({ payload, statusCode: status }))
     }))
   }
-  const logger = { info: jest.fn(), error: jest.fn() }
+  const logger = { info: vi.fn(), error: vi.fn() }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   const payload = {
@@ -184,7 +184,7 @@ describe('postTestQueueMessageController', () => {
   test('handles maximum delay exceeded in backoff', async () => {
     sendMock.mockResolvedValueOnce({})
     // Mock setTimeout to not actually wait
-    jest.spyOn(global, 'setTimeout').mockImplementation((fn) => fn())
+    vi.spyOn(global, 'setTimeout').mockImplementation((fn) => fn())
 
     // Mock getAgreementData to always return 404
     getAgreementData.mockRejectedValue(Boom.notFound('Not found'))

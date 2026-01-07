@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import crypto from 'node:crypto'
 
 import { Verifier } from '@pact-foundation/pact'
@@ -10,14 +11,14 @@ import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
 
-jest.unmock('mongoose')
+vi.unmock('mongoose')
 
-jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
-  publishEvent: jest.fn().mockResolvedValue(true)
+vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+  publishEvent: vi.fn().mockResolvedValue(true)
 }))
 
-jest.mock('~/src/api/common/helpers/fetch.js', () => ({
-  fetchWithTimeout: jest.fn()
+vi.mock('~/src/api/common/helpers/fetch.js', () => ({
+  fetchWithTimeout: vi.fn()
 }))
 
 let server
@@ -38,7 +39,7 @@ describe('UI sending a GET request to get an agreement', () => {
     const sbi = 'mock-sbi'
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+    vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
       source: 'defra',
       sbi
@@ -50,7 +51,7 @@ describe('UI sending a GET request to get an agreement', () => {
       headers: {
         get: () => 'application/json'
       },
-      json: jest.fn().mockResolvedValue({ payment })
+      json: vi.fn().mockResolvedValue({ payment })
     })
 
     // Create and start the server

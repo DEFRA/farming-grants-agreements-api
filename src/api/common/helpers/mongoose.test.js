@@ -1,34 +1,46 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import mongoose from 'mongoose'
 import { config } from '~/src/config/index.js'
 import { seedDatabase } from './seed-database.js'
 import { mongooseDb } from './mongoose.js'
 
 // Mock dependencies
-jest.mock('mongoose', () => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  connection: {}
-}))
-
-jest.mock('~/src/config/index.js', () => ({
-  config: {
-    get: jest.fn()
+vi.mock('mongoose', () => ({
+  __esModule: true,
+  default: {
+    connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+    connection: {}
   }
 }))
 
-jest.mock('./seed-database.js', () => ({
-  seedDatabase: jest.fn().mockResolvedValue(undefined)
+vi.mock('~/src/config/index.js', () => ({
+  config: {
+    get: vi.fn()
+  }
 }))
 
-jest.mock('~/src/api/common/models/agreements.js', () => ({}))
-jest.mock('~/src/api/common/models/versions.js', () => ({}))
-jest.mock('~/src/api/common/models/index.js', () => ({}))
+vi.mock('./seed-database.js', () => ({
+  seedDatabase: vi.fn().mockResolvedValue(undefined)
+}))
+
+vi.mock('~/src/api/common/models/agreements.js', () => ({
+  __esModule: true,
+  default: {}
+}))
+vi.mock('~/src/api/common/models/versions.js', () => ({
+  __esModule: true,
+  default: {}
+}))
+vi.mock('~/src/api/common/models/index.js', () => ({
+  __esModule: true,
+  default: {}
+}))
 
 // Get the mocked functions with proper typing
-const mockMongoose = jest.mocked(mongoose)
-const mockConfig = jest.mocked(config)
-const mockSeedDatabase = jest.mocked(seedDatabase)
+const mockMongoose = vi.mocked(mongoose)
+const mockConfig = vi.mocked(config)
+const mockSeedDatabase = vi.mocked(seedDatabase)
 
 describe('mongooseDb', () => {
   let mockServer
@@ -37,16 +49,16 @@ describe('mongooseDb', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn()
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn()
     }
 
     mockServer = {
       logger: mockLogger,
-      decorate: jest.fn(),
+      decorate: vi.fn(),
       events: {
-        on: jest.fn()
+        on: vi.fn()
       }
     }
 
@@ -56,7 +68,7 @@ describe('mongooseDb', () => {
     }
 
     // Reset mocks
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('plugin registration', () => {

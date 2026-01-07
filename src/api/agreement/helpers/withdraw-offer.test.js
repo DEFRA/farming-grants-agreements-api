@@ -1,17 +1,20 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 import agreementModel from '~/src/api/common/models/agreements.js'
 
 // Import the module after setting up the mocks
 import { withdrawOffer } from './withdraw-offer.js'
 
-jest.mock('~/src/api/common/models/agreements.js', () => ({
-  updateOneAgreementVersion: jest.fn()
+vi.mock('~/src/api/common/models/agreements.js', () => ({
+  __esModule: true,
+  default: {
+    updateOneAgreementVersion: vi.fn()
+  }
 }))
 
 describe('withdrawOffer', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('should successfully withdraw an offer', async () => {

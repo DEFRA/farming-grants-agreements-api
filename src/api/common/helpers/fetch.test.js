@@ -1,14 +1,15 @@
+import { vi } from 'vitest'
 import { ProxyAgent } from 'undici'
 import { config } from '~/src/config/index.js'
 import { fetchWithTimeout, proxyFetch } from './fetch.js'
 
-jest.mock('undici', () => ({
-  ProxyAgent: jest.fn()
+vi.mock('undici', () => ({
+  ProxyAgent: vi.fn()
 }))
 
-jest.mock('~/src/config/index.js', () => ({
+vi.mock('~/src/config/index.js', () => ({
   config: {
-    get: jest.fn()
+    get: vi.fn()
   }
 }))
 
@@ -17,8 +18,8 @@ describe('fetch helpers', () => {
   const mockOptions = { method: 'GET' }
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.restoreAllMocks()
+    vi.clearAllMocks()
+    vi.restoreAllMocks()
     fetch.resetMocks()
     fetch.mockResponse(JSON.stringify({ ok: true }))
 
@@ -31,11 +32,11 @@ describe('fetch helpers', () => {
 
   describe('fetchWithTimeout', () => {
     beforeEach(() => {
-      jest.useFakeTimers()
+      vi.useFakeTimers()
     })
 
     afterEach(() => {
-      jest.useRealTimers()
+      vi.useRealTimers()
     })
 
     it('should call fetch with the correct arguments and signal', async () => {
@@ -51,7 +52,7 @@ describe('fetch helpers', () => {
     })
 
     it('should abort the request when timeout is reached', async () => {
-      const abortSpy = jest.spyOn(AbortController.prototype, 'abort')
+      const abortSpy = vi.spyOn(AbortController.prototype, 'abort')
 
       // Mock fetch to hang until aborted
       fetch.mockImplementationOnce((url, options) => {
@@ -66,7 +67,7 @@ describe('fetch helpers', () => {
 
       const fetchPromise = fetchWithTimeout(mockUrl, mockOptions)
 
-      jest.advanceTimersByTime(6000)
+      vi.advanceTimersByTime(6000)
 
       await expect(fetchPromise).rejects.toThrow('Aborted request')
 
@@ -77,12 +78,12 @@ describe('fetch helpers', () => {
     })
 
     it('should clear the timeout on success', async () => {
-      const abortSpy = jest.spyOn(AbortController.prototype, 'abort')
+      const abortSpy = vi.spyOn(AbortController.prototype, 'abort')
 
       await fetchWithTimeout(mockUrl, mockOptions)
 
       // Advance time past the timeout
-      jest.advanceTimersByTime(6000)
+      vi.advanceTimersByTime(6000)
 
       // Abort should not have been called because the timer should have been cleared
       expect(abortSpy).not.toHaveBeenCalled()

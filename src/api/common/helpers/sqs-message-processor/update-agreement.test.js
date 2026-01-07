@@ -1,18 +1,18 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import { handleUpdateAgreementEvent } from './update-agreement.js'
 import { processMessage } from '../sqs-client.js'
 import { withdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
 import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 
-jest.mock('~/src/api/agreement/helpers/withdraw-offer.js')
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
+vi.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('SQS message processor', () => {
   let mockLogger
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockLogger = { info: jest.fn(), error: jest.fn() }
+    vi.clearAllMocks()
+    mockLogger = { info: vi.fn(), error: vi.fn() }
     withdrawOffer.mockResolvedValue({
       clientRef: 'mockClientRef',
       correlationId: 'mockCorrelationId',

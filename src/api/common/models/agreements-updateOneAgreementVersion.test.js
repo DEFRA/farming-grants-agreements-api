@@ -1,47 +1,47 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 
-jest.mock('./versions.js', () => ({
+vi.mock('./versions.js', () => ({
   __esModule: true,
   default: {
-    findOne: jest.fn(),
-    findOneAndUpdate: jest.fn()
+    findOne: vi.fn(),
+    findOneAndUpdate: vi.fn()
   }
 }))
 
-jest.mock('./agreements.js', () => ({
+vi.mock('./agreements.js', () => ({
   __esModule: true,
   default: {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    findById: jest.fn(),
-    create: jest.fn(),
-    updateOne: jest.fn(),
-    updateMany: jest.fn(),
-    deleteOne: jest.fn(),
-    deleteMany: jest.fn(),
-    countDocuments: jest.fn(),
-    aggregate: jest.fn(),
-    distinct: jest.fn(),
-    findOneAndUpdate: jest.fn(),
-    updateOneAgreementVersion: jest.fn(),
-    createAgreementWithVersions: jest.fn()
+    find: vi.fn(),
+    findOne: vi.fn(),
+    findById: vi.fn(),
+    create: vi.fn(),
+    updateOne: vi.fn(),
+    updateMany: vi.fn(),
+    deleteOne: vi.fn(),
+    deleteMany: vi.fn(),
+    countDocuments: vi.fn(),
+    aggregate: vi.fn(),
+    distinct: vi.fn(),
+    findOneAndUpdate: vi.fn(),
+    updateOneAgreementVersion: vi.fn(),
+    createAgreementWithVersions: vi.fn()
   }
 }))
 
 const mockSelectLean = (value) => ({
-  sort: jest.fn(() => ({
-    select: jest.fn(() => ({
-      lean: jest.fn(() => Promise.resolve(value))
+  sort: vi.fn(() => ({
+    select: vi.fn(() => ({
+      lean: vi.fn(() => Promise.resolve(value))
     }))
   }))
 })
 
 const mockSelectLeanReject = (err) => ({
-  sort: jest.fn(() => ({
-    select: jest.fn(() => ({
-      lean: jest.fn(() => {
+  sort: vi.fn(() => ({
+    select: vi.fn(() => ({
+      lean: vi.fn(() => {
         throw err
       })
     }))
@@ -49,16 +49,16 @@ const mockSelectLeanReject = (err) => ({
 })
 
 // versions.findOne(...).sort(...).lean() -> resolves `value`
-const mockSortLean = (value, sortSpy = jest.fn()) => ({
+const mockSortLean = (value, sortSpy = vi.fn()) => ({
   sort: sortSpy.mockImplementation(() => ({
-    lean: jest.fn(() => Promise.resolve(value))
+    lean: vi.fn(() => Promise.resolve(value))
   }))
 })
 
 // versions.findOne(...).sort(...).lean() -> rejects `err`
-const mockSortLeanReject = (err, sortSpy = jest.fn()) => ({
+const mockSortLeanReject = (err, sortSpy = vi.fn()) => ({
   sort: sortSpy.mockImplementation(() => ({
-    lean: jest.fn(() => {
+    lean: vi.fn(() => {
       throw err
     })
   }))
@@ -71,15 +71,15 @@ describe('agreements.updateOneAgreementVersion', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // We'll replace these per-test; here just ensure they exist.
-    agreementsModel.findOne = jest.fn()
+    agreementsModel.findOne = vi.fn()
     versionsModel.findOne.mockReset()
     versionsModel.findOneAndUpdate.mockReset()
 
     // Make sure the static methods are properly mocked
-    agreementsModel.updateOneAgreementVersion = jest.fn()
+    agreementsModel.updateOneAgreementVersion = vi.fn()
   })
 
   it('updates the most recent version and returns the updated document (happy path)', async () => {
@@ -89,7 +89,7 @@ describe('agreements.updateOneAgreementVersion', () => {
     )
 
     // Latest version doc
-    const sortSpy = jest.fn()
+    const sortSpy = vi.fn()
     versionsModel.findOne.mockReturnValue(
       mockSortLean({ _id: 'v2', status: 'offered' }, sortSpy)
     )
@@ -101,9 +101,9 @@ describe('agreements.updateOneAgreementVersion', () => {
       signatureDate: '2025-08-30T12:00:00Z'
     }
     versionsModel.findOneAndUpdate.mockReturnValue({
-      populate: jest.fn().mockReturnValue({
-        sort: jest.fn().mockReturnValue({
-          catch: jest.fn().mockResolvedValue(UPDATED)
+      populate: vi.fn().mockReturnValue({
+        sort: vi.fn().mockReturnValue({
+          catch: vi.fn().mockResolvedValue(UPDATED)
         })
       })
     })
@@ -287,9 +287,9 @@ describe('agreements.updateOneAgreementVersion', () => {
 
     // Simulate no doc updated
     versionsModel.findOneAndUpdate.mockReturnValue({
-      populate: jest.fn().mockReturnValue({
-        sort: jest.fn().mockReturnValue({
-          catch: jest.fn().mockResolvedValue(null)
+      populate: vi.fn().mockReturnValue({
+        sort: vi.fn().mockReturnValue({
+          catch: vi.fn().mockResolvedValue(null)
         })
       })
     })

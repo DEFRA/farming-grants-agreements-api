@@ -1,32 +1,33 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { acceptOffer } from './accept-offer.js'
 import { config } from '~/src/config/index.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
 
-jest.mock('~/src/api/common/models/agreements.js', () => ({
+vi.mock('~/src/api/common/models/agreements.js', () => ({
   __esModule: true,
   default: {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    findById: jest.fn(),
-    create: jest.fn(),
-    updateOne: jest.fn(),
-    updateMany: jest.fn(),
-    deleteOne: jest.fn(),
-    deleteMany: jest.fn(),
-    countDocuments: jest.fn(),
-    aggregate: jest.fn(),
-    distinct: jest.fn(),
-    findOneAndUpdate: jest.fn(),
-    updateOneAgreementVersion: jest.fn(),
-    createAgreementWithVersions: jest.fn()
+    find: vi.fn(),
+    findOne: vi.fn(),
+    findById: vi.fn(),
+    create: vi.fn(),
+    updateOne: vi.fn(),
+    updateMany: vi.fn(),
+    deleteOne: vi.fn(),
+    deleteMany: vi.fn(),
+    countDocuments: vi.fn(),
+    aggregate: vi.fn(),
+    distinct: vi.fn(),
+    findOneAndUpdate: vi.fn(),
+    updateOneAgreementVersion: vi.fn(),
+    createAgreementWithVersions: vi.fn()
   }
 }))
-jest.mock('~/src/config/index.js')
-jest.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: jest.fn()
+vi.mock('~/src/config/index.js')
+vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
 
 describe('acceptOffer', () => {
@@ -44,13 +45,13 @@ describe('acceptOffer', () => {
   let mockPayments
 
   beforeAll(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.setSystemTime(new Date('2024-01-01'))
-    mockLogger = { info: jest.fn(), error: jest.fn() }
+    vi.clearAllMocks()
+    vi.setSystemTime(new Date('2024-01-01'))
+    mockLogger = { info: vi.fn(), error: vi.fn() }
     mockPayments = {
       agreementStartDate: '2024-01-01',
       agreementEndDate: '2025-01-01',
@@ -64,7 +65,7 @@ describe('acceptOffer', () => {
     calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(mockPayments)
 
     // Mock config values
-    config.get = jest.fn((key) => {
+    config.get = vi.fn((key) => {
       const configValues = {
         'files.s3.bucket': 'test-bucket',
         'files.s3.region': 'eu-west-2',
@@ -78,7 +79,7 @@ describe('acceptOffer', () => {
   })
 
   afterAll(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   test('throws Boom.badRequest if agreementNumber is missing', async () => {

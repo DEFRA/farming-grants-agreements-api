@@ -1,25 +1,29 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 
 // Import the module after setting up the mocks
 import { unacceptOffer } from './unaccept-offer.js'
 
-jest.mock('~/src/api/common/models/agreements.js', () => ({
-  updateOneAgreementVersion: jest.fn()
+vi.mock('~/src/api/common/models/agreements.js', () => ({
+  __esModule: true,
+  default: {
+    updateOneAgreementVersion: vi.fn()
+  }
 }))
 
 describe('unacceptOffer', () => {
   beforeAll(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
   })
 
   beforeEach(() => {
-    jest.setSystemTime(new Date('2024-01-01'))
+    vi.setSystemTime(new Date('2024-01-01'))
   })
 
   afterAll(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   test('should successfully unaccept an offer', async () => {

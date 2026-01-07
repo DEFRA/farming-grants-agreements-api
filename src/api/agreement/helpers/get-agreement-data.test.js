@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import {
@@ -7,8 +7,8 @@ import {
   getAgreementDataBySbi
 } from './get-agreement-data.js'
 
-jest.mock('~/src/api/common/models/versions.js')
-jest.mock('~/src/api/common/models/agreements.js')
+vi.mock('~/src/api/common/models/versions.js')
+vi.mock('~/src/api/common/models/agreements.js')
 
 describe('getAgreementDataById', () => {
   const mockAgreement = {
@@ -33,7 +33,7 @@ describe('getAgreementDataById', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('should throw Boom.badRequest when agreementId is undefined', async () => {
@@ -46,7 +46,7 @@ describe('getAgreementDataById', () => {
     const agreementId = 'SFI999999999'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([])
+      catch: vi.fn().mockResolvedValue([])
     })
 
     await expect(getAgreementDataById(agreementId)).rejects.toThrow(
@@ -69,7 +69,7 @@ describe('getAgreementDataById', () => {
     const agreementId = 'SFI123456789'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([
+      catch: vi.fn().mockResolvedValue([
         {
           ...mockGroup,
           invoice: [{ test: 'invoice' }],
@@ -110,7 +110,7 @@ describe('getAgreementDataById', () => {
     const agreementId = 'SFI999999999'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([])
+      catch: vi.fn().mockResolvedValue([])
     })
 
     // Act & Assert
@@ -126,7 +126,7 @@ describe('getAgreementDataById', () => {
     const agreementId = 'SFI123456789'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
+      catch: vi.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
     })
 
     versionsModel.findOne.mockReturnValue({
@@ -173,7 +173,7 @@ describe('getAgreementDataBySbi', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('should throw Boom.badRequest when sbi is undefined getAgreementDataBySbi', async () => {
@@ -186,7 +186,7 @@ describe('getAgreementDataBySbi', () => {
     const sbi = '106284736'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([])
+      catch: vi.fn().mockResolvedValue([])
     })
 
     await expect(getAgreementDataBySbi(sbi)).rejects.toThrow(
@@ -209,7 +209,7 @@ describe('getAgreementDataBySbi', () => {
     const sbi = '106284736'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([
+      catch: vi.fn().mockResolvedValue([
         {
           ...mockGroup,
           invoice: [{ test: 'invoice' }],
@@ -256,7 +256,7 @@ describe('getAgreementDataBySbi', () => {
     const sbi = '106284736'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([])
+      catch: vi.fn().mockResolvedValue([])
     })
 
     // Act & Assert
@@ -272,7 +272,7 @@ describe('getAgreementDataBySbi', () => {
     const sbi = '106284736'
 
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
+      catch: vi.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
     })
 
     versionsModel.findOne.mockReturnValue({
@@ -305,14 +305,14 @@ describe('doesAgreementExist', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('should return true when agreement exists', async () => {
     // Arrange
     const searchTerms = { notificationMessageId: 'test-message-id' }
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([{ id: 'existing-agreement' }])
+      catch: vi.fn().mockResolvedValue([{ id: 'existing-agreement' }])
     })
 
     // Act
@@ -332,7 +332,7 @@ describe('doesAgreementExist', () => {
     // Arrange
     const searchTerms = { notificationMessageId: 'non-existent-message-id' }
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([])
+      catch: vi.fn().mockResolvedValue([])
     })
 
     // Act
@@ -353,7 +353,7 @@ describe('doesAgreementExist', () => {
     const searchTerms = { notificationMessageId: 'test-message-id' }
     const mockError = new Error('Database connection error')
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockRejectedValue(mockError)
+      catch: vi.fn().mockRejectedValue(mockError)
     })
 
     // Act & Assert
@@ -368,7 +368,7 @@ describe('doesAgreementExist', () => {
     const searchTerms = { notificationMessageId: 'boom-test-id' }
     const mockError = new Error('Boom error')
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockImplementation((cb) => {
+      catch: vi.fn().mockImplementation((cb) => {
         throw cb(mockError)
       })
     })
@@ -381,7 +381,7 @@ describe('doesAgreementExist', () => {
     // Arrange
     const searchTerms = { agreementNumber: 'SFI123456789' }
     agreementsModel.aggregate.mockReturnValue({
-      catch: jest.fn().mockResolvedValue([{ id: 'existing-agreement' }])
+      catch: vi.fn().mockResolvedValue([{ id: 'existing-agreement' }])
     })
 
     // Act

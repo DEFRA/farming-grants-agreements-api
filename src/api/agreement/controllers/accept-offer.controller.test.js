@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 
 import { createServer } from '~/src/api/index.js'
@@ -11,24 +12,26 @@ import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
 import { config } from '~/src/config/index.js'
 import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/land-grants-adapter.js'
 
-jest.mock('~/src/api/agreement/helpers/accept-offer.js')
-jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
-jest.mock('~/src/api/agreement/helpers/update-payment-hub.js')
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  __esModule: true,
-  ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
-  getAgreementDataBySbi: jest.fn()
-}))
-jest.mock('~/src/api/common/helpers/jwt-auth.js')
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
-jest.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnActions: jest.fn()
+vi.mock('~/src/api/agreement/helpers/accept-offer.js')
+vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
+vi.mock('~/src/api/agreement/helpers/update-payment-hub.js')
+vi.mock(
+  '~/src/api/agreement/helpers/get-agreement-data.js',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return { __esModule: true, ...actual, getAgreementDataBySbi: vi.fn() }
+  }
+)
+vi.mock('~/src/api/common/helpers/jwt-auth.js')
+vi.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+  calculatePaymentsBasedOnActions: vi.fn()
 }))
 
 describe('acceptOfferDocumentController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
-  const mockLogger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() }
+  const mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn() }
 
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
@@ -56,7 +59,7 @@ describe('acceptOfferDocumentController', () => {
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     calculatePaymentsBasedOnActions.mockResolvedValue({
       agreementStartDate: '2024-01-01',
       agreementEndDate: '2025-12-31',
@@ -86,7 +89,7 @@ describe('acceptOfferDocumentController', () => {
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+    vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
       source: 'defra',
       sbi: '106284736'

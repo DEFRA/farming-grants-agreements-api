@@ -1,8 +1,9 @@
+import { vi } from 'vitest'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { config } from '~/src/config/index.js'
 
 // use the manual mock in src/api/health/__mocks__/mongoose.js
-jest.mock('mongoose')
+vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'))
 
 describe('#healthController', () => {
   /** @type {Server} */

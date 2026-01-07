@@ -3,10 +3,10 @@ import { PublishCommand } from '@aws-sdk/client-sns'
 import { v4 as uuidv4 } from 'uuid'
 import { config } from '~/src/config/index.js'
 
-jest.mock('@aws-sdk/client-sns')
-jest.mock('uuid')
-jest.mock('~/src/config/index.js', () => ({
-  config: { get: jest.fn() }
+vi.mock('@aws-sdk/client-sns')
+vi.mock('uuid')
+vi.mock('~/src/config/index.js', () => ({
+  config: { get: vi.fn() }
 }))
 
 // Mock setTimeout to use shorter delays for faster tests
@@ -21,14 +21,14 @@ afterAll(() => {
 })
 
 describe('publishEvent', () => {
-  const mockSend = jest.fn()
-  const logger = { info: jest.fn(), error: jest.fn() }
+  const mockSend = vi.fn()
+  const logger = { info: vi.fn(), error: vi.fn() }
 
   const mockClient = { send: mockSend }
 
   beforeEach(() => {
     uuidv4.mockReturnValue('mock-uuid')
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     config.get.mockImplementation((key) => {
       switch (key) {
         case 'aws.region':
