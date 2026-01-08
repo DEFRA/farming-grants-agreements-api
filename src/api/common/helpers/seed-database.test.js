@@ -1,69 +1,70 @@
 describe('seedDatabase', () => {
   describe('processMessage', () => {
-    const mockProcessMessage = jest.fn()
-    const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+    const mockProcessMessage = vi.fn()
+    const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
     let prevEnv
 
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
       prevEnv = process.env.NODE_ENV
       process.env.NODE_ENV = 'production'
 
       // mocks required for this test
-      jest.doMock(
+      vi.doMock(
         '~/src/api/common/helpers/sqs-message-processor/create-agreement.js',
         () => ({
           handleCreateAgreementEvent: mockProcessMessage
         })
       )
 
-      jest.doMock('mongoose', () => {
-        const mockSchema = jest.fn().mockImplementation(() => ({
-          add: jest.fn(),
-          pre: jest.fn(),
-          post: jest.fn(),
+      vi.doMock('mongoose', () => {
+        const mockSchema = vi.fn().mockImplementation(() => ({
+          add: vi.fn(),
+          pre: vi.fn(),
+          post: vi.fn(),
           methods: {},
           statics: {},
           virtuals: {},
           indexes: [],
-          index: jest.fn()
+          index: vi.fn()
         }))
         mockSchema.Types = {
-          ObjectId: jest.fn()
+          ObjectId: vi.fn()
         }
-        return {
+        const mock = {
           connection: { readyState: 1 },
           STATES: { connected: 1 },
           Schema: mockSchema,
-          model: jest.fn().mockImplementation(() => ({
-            find: jest.fn(),
-            findOne: jest.fn(),
-            findById: jest.fn(),
-            create: jest.fn(),
-            updateOne: jest.fn(),
-            updateMany: jest.fn(),
-            deleteOne: jest.fn(),
-            deleteMany: jest.fn(),
-            countDocuments: jest.fn(),
-            aggregate: jest.fn(),
-            distinct: jest.fn()
+          model: vi.fn().mockImplementation(() => ({
+            find: vi.fn(),
+            findOne: vi.fn(),
+            findById: vi.fn(),
+            create: vi.fn(),
+            updateOne: vi.fn(),
+            updateMany: vi.fn(),
+            deleteOne: vi.fn(),
+            deleteMany: vi.fn(),
+            countDocuments: vi.fn(),
+            aggregate: vi.fn(),
+            distinct: vi.fn()
           }))
         }
+        return { __esModule: true, default: mock }
       })
 
-      jest.doMock('~/src/api/common/models/index.js', () => ({
+      vi.doMock('~/src/api/common/models/index.js', () => ({
         __esModule: true,
         default: {
           agreements: {
             db: {
-              dropCollection: jest.fn().mockResolvedValue(true)
+              dropCollection: vi.fn().mockResolvedValue(true)
             }
           }
         }
       }))
 
-      jest.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
+      vi.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
         __esModule: true,
         default: {
           agreements: [{ id: 'abc123', foo: 'bar' }]
@@ -77,7 +78,7 @@ describe('seedDatabase', () => {
 
     it('calls processMessage with correct values via seedDatabase', async () => {
       // Reset modules to ensure mocks are applied
-      jest.resetModules()
+      vi.resetModules()
 
       const { seedDatabase } = await import('./seed-database.js')
       await seedDatabase(logger)
@@ -108,70 +109,77 @@ describe('seedDatabase', () => {
     let prevEnv
 
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
 
       prevEnv = process.env.NODE_ENV
       process.env.NODE_ENV = 'production'
 
       mockLogger = {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn()
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn()
       }
 
-      // default mocks (tests can override behavior via mock.*.mockRejectedValueOnce or by calling jest.doMock again)
-      mockDropCollection = jest.fn().mockResolvedValue(true)
-      mockPublishEvent = jest.fn().mockResolvedValue(true)
+      // default mocks (tests can override behavior via mock.*.mockRejectedValueOnce or by calling vi.doMock again)
+      mockDropCollection = vi.fn().mockResolvedValue(true)
+      mockPublishEvent = vi.fn().mockResolvedValue(true)
 
-      // default mongoose mock (tests that need custom readyState can override with their own jest.doMock)
-      jest.doMock('mongoose', () => {
-        const mockSchema = jest.fn().mockImplementation(() => ({
-          add: jest.fn(),
-          pre: jest.fn(),
-          post: jest.fn(),
+      // default mongoose mock (tests that need custom readyState can override with their own vi.doMock)
+      vi.doMock('mongoose', () => {
+        const mockSchema = vi.fn().mockImplementation(() => ({
+          add: vi.fn(),
+          pre: vi.fn(),
+          post: vi.fn(),
           methods: {},
           statics: {},
           virtuals: {},
           indexes: [],
-          index: jest.fn()
+          index: vi.fn()
         }))
         mockSchema.Types = {
-          ObjectId: jest.fn()
+          ObjectId: vi.fn()
         }
-        return {
+        const mock = {
           connection: { readyState: 1 },
           STATES: { connected: 1 },
           Schema: mockSchema,
-          model: jest.fn().mockImplementation(() => ({
-            find: jest.fn(),
-            findOne: jest.fn(),
-            findById: jest.fn(),
-            create: jest.fn(),
-            updateOne: jest.fn(),
-            updateMany: jest.fn(),
-            deleteOne: jest.fn(),
-            deleteMany: jest.fn(),
-            countDocuments: jest.fn(),
-            aggregate: jest.fn(),
-            distinct: jest.fn()
+          model: vi.fn().mockImplementation(() => ({
+            find: vi.fn(),
+            findOne: vi.fn(),
+            findById: vi.fn(),
+            create: vi.fn(),
+            updateOne: vi.fn(),
+            updateMany: vi.fn(),
+            deleteOne: vi.fn(),
+            deleteMany: vi.fn(),
+            countDocuments: vi.fn(),
+            aggregate: vi.fn(),
+            distinct: vi.fn()
           }))
         }
+        return { __esModule: true, default: mock }
       })
 
-      jest.doMock('~/src/api/common/models/index.js', () => ({
-        agreements: {
-          db: {
-            dropCollection: mockDropCollection
+      vi.doMock('~/src/api/common/models/index.js', () => ({
+        __esModule: true,
+        default: {
+          agreements: {
+            db: {
+              dropCollection: mockDropCollection
+            }
           }
         }
       }))
 
-      jest.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
-        agreements: [{ agreementNumber: 'SFI123456789' }]
+      vi.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
+        __esModule: true,
+        default: {
+          agreements: [{ agreementNumber: 'SFI123456789' }]
+        }
       }))
 
-      jest.doMock('~/src/api/common/helpers/sns-publisher.js', () => ({
+      vi.doMock('~/src/api/common/helpers/sns-publisher.js', () => ({
         publishEvent: mockPublishEvent
       }))
     })
@@ -181,26 +189,29 @@ describe('seedDatabase', () => {
     })
 
     test('waits for mongoose to connect when readyState is not connected (mocks time)', async () => {
-      jest.useFakeTimers()
+      vi.useFakeTimers()
       // Dynamically mock readyState to simulate connection
       let readyState = 0
       // override the default mongoose mock to use a dynamic readyState getter
-      jest.doMock('mongoose', () => ({
-        connection: {
-          get readyState() {
-            return readyState
-          }
-        },
-        STATES: { connected: 1 }
+      vi.doMock('mongoose', () => ({
+        __esModule: true,
+        default: {
+          connection: {
+            get readyState() {
+              return readyState
+            }
+          },
+          STATES: { connected: 1 }
+        }
       }))
       // Re-import after mocking
       const { seedDatabase } = await import('./seed-database.js')
-      const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
       // Start the seedDatabase call (it will wait for connection)
       const promise = seedDatabase(logger)
       // Fast-forward timers to trigger the wait
       await Promise.resolve()
-      jest.advanceTimersByTime(1000)
+      vi.advanceTimersByTime(1000)
       await Promise.resolve()
       // Should have logged waiting message
       expect(logger.info).toHaveBeenCalledWith(
@@ -209,9 +220,9 @@ describe('seedDatabase', () => {
       // Now set readyState to connected
       readyState = 1
       // Fast-forward again to let the loop exit and finish
-      jest.advanceTimersByTime(1000)
+      vi.advanceTimersByTime(1000)
       await promise
-      jest.useRealTimers()
+      vi.useRealTimers()
     })
 
     test('publishes events for agreements sample data and logs success', async () => {
@@ -305,35 +316,38 @@ describe('seedDatabase', () => {
   describe('contract test data seeding', () => {
     let prevEnv
     let mockLogger
-    const mockProcessMessage = jest.fn()
+    const mockProcessMessage = vi.fn()
 
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
 
       prevEnv = process.env.NODE_ENV
       process.env.NODE_ENV = 'test'
 
       mockLogger = {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn()
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn()
       }
 
-      jest.doMock(
+      vi.doMock(
         '~/src/api/common/helpers/sqs-message-processor/create-agreement.js',
         () => ({
           handleCreateAgreementEvent: mockProcessMessage
         })
       )
 
-      jest.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
-        agreements: [
-          {
-            notificationMessageId: 'mockNotificationMessageId',
-            agreementNumber: 'SFI123456789'
-          }
-        ]
+      vi.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
+        __esModule: true,
+        default: {
+          agreements: [
+            {
+              notificationMessageId: 'mockNotificationMessageId',
+              agreementNumber: 'SFI123456789'
+            }
+          ]
+        }
       }))
     })
 

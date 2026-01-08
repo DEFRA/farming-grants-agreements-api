@@ -2,21 +2,21 @@ import Boom from '@hapi/boom'
 import { getTestAgreementController } from './get-test-agreement.controller.js'
 import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  getAgreementDataById: jest.fn()
+vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  getAgreementDataById: vi.fn()
 }))
 
 describe('getTestAgreementController', () => {
   const h = {
-    response: jest.fn((payload) => ({
-      code: jest.fn((status) => ({ payload, statusCode: status }))
+    response: vi.fn((payload) => ({
+      code: vi.fn((status) => ({ payload, statusCode: status }))
     }))
   }
 
-  const logger = { error: jest.fn() }
+  const logger = { error: vi.fn() }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('returns 200 with found agreements for single id', async () => {

@@ -1,20 +1,22 @@
-const mockPing = jest.fn()
-const mockModel = jest.fn().mockImplementation((_collection, schema) => {
+import { vi } from 'vitest'
+
+const mockPing = vi.fn()
+const mockModel = vi.fn().mockImplementation((_collection, schema) => {
   // Create a base mock with standard mongoose methods
   const mock = {
-    find: jest.fn().mockReturnThis(),
-    findOne: jest.fn().mockReturnThis(),
-    findById: jest.fn().mockReturnThis(),
-    create: jest.fn().mockReturnThis(),
-    updateOne: jest.fn().mockReturnThis(),
-    updateMany: jest.fn().mockReturnThis(),
-    deleteOne: jest.fn().mockReturnThis(),
-    deleteMany: jest.fn().mockReturnThis(),
-    countDocuments: jest.fn().mockReturnThis(),
-    aggregate: jest.fn().mockReturnThis(),
-    distinct: jest.fn().mockReturnThis(),
-    findOneAndUpdate: jest.fn().mockReturnThis(),
-    lean: jest.fn().mockReturnThis()
+    find: vi.fn().mockReturnThis(),
+    findOne: vi.fn().mockReturnThis(),
+    findById: vi.fn().mockReturnThis(),
+    create: vi.fn().mockReturnThis(),
+    updateOne: vi.fn().mockReturnThis(),
+    updateMany: vi.fn().mockReturnThis(),
+    deleteOne: vi.fn().mockReturnThis(),
+    deleteMany: vi.fn().mockReturnThis(),
+    countDocuments: vi.fn().mockReturnThis(),
+    aggregate: vi.fn().mockReturnThis(),
+    distinct: vi.fn().mockReturnThis(),
+    findOneAndUpdate: vi.fn().mockReturnThis(),
+    lean: vi.fn().mockReturnThis()
   }
 
   // Preserve static methods from the schema if they exist
@@ -61,9 +63,9 @@ class MockSchema {
   // minimal virtual API (chainable)
   virtual() {
     return {
-      get: jest.fn(),
-      set: jest.fn(),
-      applyGetters: jest.fn()
+      get: vi.fn(),
+      set: vi.fn(),
+      applyGetters: vi.fn()
     }
   }
 
@@ -81,8 +83,19 @@ class MockSchema {
 
 // Provide Schema.Types so code that accesses mongoose.Schema.Types.ObjectId works
 MockSchema.Types = {
-  ObjectId: jest.fn(),
+  ObjectId: vi.fn(),
   Mixed: class MockMixed {}
+}
+
+// Provide a basic Decimal128 mock for schema type usage
+class MockDecimal128 {
+  constructor(value) {
+    this._v = value
+  }
+
+  static fromString(v) {
+    return new MockDecimal128(v)
+  }
 }
 
 const mockConnection = {
@@ -90,23 +103,30 @@ const mockConnection = {
     admin: () => ({ ping: mockPing })
   },
   readyState: 1, // Connected state
-  on: jest.fn(),
-  once: jest.fn(),
-  close: jest.fn()
+  on: vi.fn(),
+  once: vi.fn(),
+  close: vi.fn()
 }
 
 const mongooseDefault = {
-  connect: jest.fn().mockResolvedValue(mockConnection),
-  disconnect: jest.fn(),
+  connect: vi.fn().mockResolvedValue(mockConnection),
+  disconnect: vi.fn(),
   connection: mockConnection,
   Schema: MockSchema,
   model: mockModel,
-  Types: { ObjectId: jest.fn() },
-  set: jest.fn()
+  Types: { ObjectId: vi.fn() },
+  // common mongoose numeric type used across schemas
+  Decimal128: MockDecimal128,
+  set: vi.fn()
 }
 
 // default export is the mock mongoose API
 export default mongooseDefault
 
 // named exports so tests can control behavior via dynamic import('mongoose')
-export { mockPing as __mockPing, mockModel as __mockModel }
+// also expose Decimal128 as a named export so `import { Decimal128 } from 'mongoose'` works
+export {
+  mockPing as __mockPing,
+  mockModel as __mockModel,
+  MockDecimal128 as Decimal128
+}

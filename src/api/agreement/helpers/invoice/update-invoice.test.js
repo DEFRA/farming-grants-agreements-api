@@ -1,19 +1,19 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 import { updateInvoice } from './update-invoice.js'
 import invoicesModel from '~/src/api/common/models/invoices.js'
 
 // Mock dependencies
-jest.mock('@hapi/boom')
-jest.mock('~/src/api/common/models/invoices.js')
+vi.mock('@hapi/boom')
+vi.mock('~/src/api/common/models/invoices.js')
 
 describe('updateInvoice', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Mock the updateOne method to return a promise directly
     invoicesModel.updateOne.mockImplementation(() => ({
-      catch: jest.fn().mockResolvedValue({
+      catch: vi.fn().mockResolvedValue({
         acknowledged: true,
         modifiedCount: 1
       })
@@ -84,7 +84,7 @@ describe('updateInvoice', () => {
     it('should return result even when modifiedCount is 0', async () => {
       // Current function behavior - it doesn't check modifiedCount
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockResolvedValue({
+        catch: vi.fn().mockResolvedValue({
           acknowledged: true,
           modifiedCount: 0
         })
@@ -99,7 +99,7 @@ describe('updateInvoice', () => {
   describe('Not Found Cases', () => {
     it('should throw Boom.notFound when invoice result is null', async () => {
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockResolvedValue(null)
+        catch: vi.fn().mockResolvedValue(null)
       }))
       Boom.notFound.mockReturnValue(new Error('Invoice not found'))
 
@@ -114,7 +114,7 @@ describe('updateInvoice', () => {
 
     it('should throw Boom.notFound when invoice result is undefined', async () => {
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockResolvedValue(undefined)
+        catch: vi.fn().mockResolvedValue(undefined)
       }))
       Boom.notFound.mockReturnValue(new Error('Invoice not found'))
 
@@ -130,10 +130,13 @@ describe('updateInvoice', () => {
 
   describe('Error Handling', () => {
     it('should throw Boom.internal when database operation fails', async () => {
+      const dbError = new Error('Database error')
       const boomError = new Error('Internal server error')
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockRejectedValue(boomError)
+        catch: vi.fn((callback) => {
+          return Promise.reject(callback(dbError))
+        })
       }))
 
       Boom.internal.mockReturnValue(boomError)
@@ -141,13 +144,18 @@ describe('updateInvoice', () => {
       await expect(updateInvoice('FRPS0000', { amount: 100 })).rejects.toThrow(
         'Internal server error'
       )
+
+      expect(Boom.internal).toHaveBeenCalledWith(dbError)
     })
 
     it('should handle MongoDB validation errors', async () => {
+      const dbError = new Error('Validation error')
       const boomError = new Error('Internal server error')
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockRejectedValue(boomError)
+        catch: vi.fn((callback) => {
+          return Promise.reject(callback(dbError))
+        })
       }))
 
       Boom.internal.mockReturnValue(boomError)
@@ -155,13 +163,18 @@ describe('updateInvoice', () => {
       await expect(
         updateInvoice('FRPS0000', { amount: 'invalid' })
       ).rejects.toThrow('Internal server error')
+
+      expect(Boom.internal).toHaveBeenCalledWith(dbError)
     })
 
     it('should handle network timeout errors', async () => {
+      const dbError = new Error('Network timeout')
       const boomError = new Error('Internal server error')
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockRejectedValue(boomError)
+        catch: vi.fn((callback) => {
+          return Promise.reject(callback(dbError))
+        })
       }))
 
       Boom.internal.mockReturnValue(boomError)
@@ -169,6 +182,8 @@ describe('updateInvoice', () => {
       await expect(
         updateInvoice('FRPSTIMEOUT', { amount: 100 })
       ).rejects.toThrow('Internal server error')
+
+      expect(Boom.internal).toHaveBeenCalledWith(dbError)
     })
   })
 
@@ -224,7 +239,7 @@ describe('updateInvoice', () => {
       }
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockResolvedValue(expectedResult)
+        catch: vi.fn().mockResolvedValue(expectedResult)
       }))
 
       const result = await updateInvoice('FRPSRETURN', { amount: 750 })
@@ -242,7 +257,7 @@ describe('updateInvoice', () => {
       }
 
       invoicesModel.updateOne.mockImplementation(() => ({
-        catch: jest.fn().mockResolvedValue(mongoResult)
+        catch: vi.fn().mockResolvedValue(mongoResult)
       }))
 
       const result = await updateInvoice('FRPSPROPS', { amount: 1250 })

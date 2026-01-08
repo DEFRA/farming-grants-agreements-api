@@ -1,9 +1,10 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+import { fetch as undiciFetch } from 'undici'
+
 import path from 'node:path'
 import crypto from 'node:crypto'
 
 import { Pact, MatchersV2 } from '@pact-foundation/pact'
-import fetchMock from 'jest-fetch-mock'
 
 import { createServer } from '~/src/api/index.js'
 import { config } from '~/src/config/index.js'
@@ -13,13 +14,14 @@ import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 
 const { like, iso8601Date, eachLike } = MatchersV2
 
-jest.unmock('mongoose')
+vi.unmock('mongoose')
 
-jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
-  publishEvent: jest.fn().mockResolvedValue(true)
+vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+  publishEvent: vi.fn().mockResolvedValue(true)
 }))
 
 let server
+let originalFetch
 
 describe('UI sending a POST request to accept an agreement', () => {
   const provider = new Pact({
@@ -31,7 +33,10 @@ describe('UI sending a POST request to accept an agreement', () => {
   })
 
   beforeAll(async () => {
-    fetchMock.disableMocks()
+    // Restore real fetch to allow Pact to make real HTTP requests
+    // Save the mocked fetch and replace with real implementation
+    originalFetch = global.fetch
+    global.fetch = undiciFetch
 
     // Use the MongoDB URI provided by @shelf/jest-mongodb
     const mongoUri = globalThis.__MONGO_URI__
@@ -46,7 +51,7 @@ describe('UI sending a POST request to accept an agreement', () => {
     config.set('landGrants.token', 'mock-token')
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+    vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
       source: 'defra',
       sbi: '106284736'
@@ -62,8 +67,10 @@ describe('UI sending a POST request to accept an agreement', () => {
     if (server) {
       await server.stop({ timeout: 0 })
     }
-
-    fetchMock.enableFetchMocks()
+    // Restore the mocked fetch for other tests
+    if (originalFetch) {
+      global.fetch = originalFetch
+    }
   })
 
   it('should send a GET request to land grants to get the calculations', async () => {

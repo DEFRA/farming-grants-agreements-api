@@ -1,4 +1,5 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+
 import Boom from '@hapi/boom'
 import { updatePaymentHub } from './update-payment-hub.js'
 import { getAgreementDataById } from './get-agreement-data.js'
@@ -8,20 +9,20 @@ import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/inde
 import { config } from '~/src/config/index.js'
 
 // Mock all dependencies
-jest.mock('./get-agreement-data.js')
-jest.mock('./invoice/create-invoice.js')
-jest.mock('./invoice/update-invoice.js')
-jest.mock('~/src/api/common/helpers/payment-hub/index.js')
-jest.mock('@hapi/boom')
-jest.mock('./get-agreement-data.js', () => ({
-  getAgreementDataById: jest.fn()
+vi.mock('./get-agreement-data.js')
+vi.mock('./invoice/create-invoice.js')
+vi.mock('./invoice/update-invoice.js')
+vi.mock('~/src/api/common/helpers/payment-hub/index.js')
+vi.mock('@hapi/boom')
+vi.mock('./get-agreement-data.js', () => ({
+  getAgreementDataById: vi.fn()
 }))
-jest.mock('~/src/config/index.js', () => {
+vi.mock('~/src/config/index.js', () => {
   const store = { 'featureFlags.isPaymentHubEnabled': false }
   return {
     config: {
-      get: jest.fn((key) => store[key]),
-      set: jest.fn((key, value) => {
+      get: vi.fn((key) => store[key]),
+      set: vi.fn((key, value) => {
         store[key] = value
       })
     }
@@ -79,10 +80,10 @@ describe('updatePaymentHub', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     mockServer = { mock: 'server' }
-    mockLogger = { mock: 'logger', warn: jest.fn() }
+    mockLogger = { mock: 'logger', warn: vi.fn() }
     mockContext = { server: mockServer, logger: mockLogger }
 
     // Setup successful mocks by default
@@ -92,13 +93,13 @@ describe('updatePaymentHub', () => {
     sendPaymentHubRequest.mockResolvedValue({ success: true })
 
     // Mock Date to ensure consistent testing
-    jest.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2024)
+    vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2024)
 
     config.set('featureFlags.isPaymentHubEnabled', true)
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   describe('Successful Payment Hub Updates', () => {
@@ -269,6 +270,8 @@ describe('updatePaymentHub', () => {
       await expect(updatePaymentHub(mockContext, 'INVALID')).rejects.toThrow(
         'Failed to setup payment schedule. Agreement not found'
       )
+
+      expect(getAgreementDataById).toHaveBeenCalledWith('INVALID')
     })
 
     it('should throw Boom.internal when createInvoice fails', async () => {
@@ -317,6 +320,7 @@ describe('updatePaymentHub', () => {
     })
 
     it('should re-throw Boom errors without wrapping', async () => {
+      config.set('featureFlags.isPaymentHubEnabled', true)
       const boomError = new Error('Boom error')
       boomError.isBoom = true
       sendPaymentHubRequest.mockRejectedValue(boomError)
@@ -325,6 +329,7 @@ describe('updatePaymentHub', () => {
         updatePaymentHub(mockContext, 'SFI123456789')
       ).rejects.toThrow('Failed to setup payment schedule. Boom error')
 
+      expect(sendPaymentHubRequest).toHaveBeenCalled()
       expect(Boom.internal).not.toHaveBeenCalled()
     })
   })

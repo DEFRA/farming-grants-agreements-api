@@ -5,8 +5,8 @@ import { MatchersV2, MessageConsumerPact } from '@pact-foundation/pact'
 import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/update-agreement.js'
 import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
 
-jest.mock('~/src/api/agreement/helpers/withdraw-offer.js')
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
+vi.mock('~/src/api/common/helpers/sns-publisher.js')
 
 const { like, uuid } = MatchersV2
 
@@ -19,8 +19,8 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
   })
 
   const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn()
+    info: vi.fn(),
+    error: vi.fn()
   }
 
   it('should withdraw an agreement offer when receiving an AWS SQS event from GAS', () => {

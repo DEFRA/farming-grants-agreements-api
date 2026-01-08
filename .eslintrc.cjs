@@ -129,30 +129,45 @@ module.exports = {
     },
     {
       env: {
-        'jest/globals': true
+        node: true
       },
       globals: {
-        fetchMock: true
+        fetchMock: true,
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly'
       },
-      extends: [
-        'plugin:jest-formatting/recommended',
-        'plugin:jest/recommended',
-        'plugin:jest/style'
-      ],
       files: ['**/*.test.{cjs,js}', '**/__mocks__/**'],
-      plugins: ['jest'],
+      plugins: ['vitest'],
       rules: {
-        // Allow Jest to assert on mocked unbound methods
+        // Allow Vitest to assert on mocked unbound methods
         '@typescript-eslint/unbound-method': 'off',
-        'jest/unbound-method': 'error',
+
+        // Allow console in tests
+        'no-console': 'off',
 
         // Allow import devDependencies
         'n/no-unpublished-import': [
           'error',
           {
-            allowModules: []
+            allowModules: ['vitest']
           }
         ]
+      }
+    },
+    {
+      env: {
+        node: true
+      },
+      files: ['vitest.*.config.js'],
+      globals: {
+        __dirname: 'readonly'
       }
     }
   ],

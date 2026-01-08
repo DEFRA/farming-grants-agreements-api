@@ -1,6 +1,7 @@
+import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 
-export const acceptAgreement = jest.fn().mockImplementation((agreementId) => {
+export const acceptAgreement = vi.fn().mockImplementation((agreementId) => {
   if (agreementId === 'SFI123456789') {
     return {
       acknowledged: true,

@@ -1,9 +1,9 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+
 import path from 'node:path'
 import crypto from 'node:crypto'
 
 import { Pact } from '@pact-foundation/pact'
-import fetchMock from 'jest-fetch-mock'
 
 import { createServer } from '~/src/api/index.js'
 import { config } from '~/src/config/index.js'
@@ -11,7 +11,7 @@ import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 
-jest.unmock('mongoose')
+vi.unmock('mongoose')
 
 const calculatedPayment = {
   message: 'success',
@@ -69,8 +69,8 @@ const calculatedPayment = {
   }
 }
 
-jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
-  publishEvent: jest.fn().mockResolvedValue(true)
+vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+  publishEvent: vi.fn().mockResolvedValue(true)
 }))
 
 let server
@@ -87,23 +87,17 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
   })
 
   beforeAll(async () => {
-    // Turn off jest-fetch-mock for this test file
-    fetchMock.disableMocks()
-
-    // Save and replace global.fetch with a Jest mock
+    // Replace global.fetch with a Vitest spy for the duration of this test
     originalFetch = global.fetch
-    // Mock Land Grants payment calculation HTTP call to avoid real network fetches
-    // Return the structure that landgrantsAdapter expects, including headers
-    global.fetch = jest.fn((url, options) => {
+    global.fetch = vi.fn((url, options) => {
       const urlStr = String(url)
       if (urlStr.includes('/payments/calculate')) {
         return Promise.resolve({
           ok: true,
-          headers: { get: jest.fn().mockReturnValue('application/json') },
-          json: jest.fn().mockResolvedValue(calculatedPayment)
+          headers: { get: vi.fn().mockReturnValue('application/json') },
+          json: vi.fn().mockResolvedValue(calculatedPayment)
         })
       }
-      // Delegate all other requests (e.g., Payment Hub) to the real fetch
       return originalFetch(url, options)
     })
 
@@ -119,7 +113,7 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
     config.set('featureFlags.seedDb', false)
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+    vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
       source: 'defra',
       sbi: '106284736'
@@ -136,10 +130,8 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
       await server.stop({ timeout: 0 })
     }
     config.set('featureFlags.isPaymentHubEnabled', false)
-
-    // Restore original fetch and re-enable jest-fetch-mock for other tests
+    // Restore original fetch
     global.fetch = originalFetch
-    fetchMock.enableMocks()
   })
 
   it('should send a request to payment hub to setup a new payment schedule', async () => {

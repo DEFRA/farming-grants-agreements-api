@@ -1,21 +1,24 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 import { sendPaymentHubRequest } from './index.js'
 import { config } from '~/src/config/index.js'
 import { initCache } from '~/src/api/common/helpers/cache.js'
 import crypto from 'crypto'
 
-jest.mock('~/src/config/index.js')
-jest.mock('~/src/api/common/helpers/cache.js')
-jest.mock('crypto', () => ({
-  HmacSHA256: jest.fn().mockReturnValue({
-    toString: jest.fn().mockReturnValue('mockedHash')
-  }),
-  enc: {
-    Base64: 'base64'
+vi.mock('~/src/config/index.js')
+vi.mock('~/src/api/common/helpers/cache.js')
+vi.mock('crypto', () => ({
+  __esModule: true,
+  default: {
+    HmacSHA256: vi.fn().mockReturnValue({
+      toString: vi.fn().mockReturnValue('mockedHash')
+    }),
+    enc: {
+      Base64: 'base64'
+    }
   }
 }))
 
-jest.mock('~/src/api/common/helpers/logging/logger-options.js', () => ({
+vi.mock('~/src/api/common/helpers/logging/logger-options.js', () => ({
   loggerOptions: {
     enabled: true,
     ignorePaths: ['/health'],
@@ -25,12 +28,12 @@ jest.mock('~/src/api/common/helpers/logging/logger-options.js', () => ({
   }
 }))
 
-jest.mock('~/src/api/common/helpers/logging/logger.js', () => ({
-  createLogger: jest.fn().mockReturnValue({
-    info: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    warn: jest.fn()
+vi.mock('~/src/api/common/helpers/logging/logger.js', () => ({
+  createLogger: vi.fn().mockReturnValue({
+    info: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn()
   })
 }))
 
@@ -43,14 +46,14 @@ describe('Payment Hub Helper', () => {
   let cachedToken
 
   beforeAll(() => {
-    global.fetch = jest.fn()
+    global.fetch = vi.fn()
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Setup config mock
-    config.get = jest.fn((key) => {
+    config.get = vi.fn((key) => {
       const configValues = {
         'paymentHub.uri': 'https://payment-hub.example.com',
         'paymentHub.ttl': '3600',
@@ -69,27 +72,27 @@ describe('Payment Hub Helper', () => {
     // Setup cache mock
     cachedToken = 'test-access-token'
     mockCache = {
-      get: jest.fn().mockResolvedValue(cachedToken)
+      get: vi.fn().mockResolvedValue(cachedToken)
     }
     initCache.mockReturnValue(mockCache)
 
     // Setup server mock
     server = {
-      cache: jest.fn().mockReturnValue({ policy: jest.fn() })
+      cache: vi.fn().mockReturnValue({ policy: vi.fn() })
     }
 
     // Setup logger mock
     logger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn()
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn()
     }
 
     // Setup fetch mock
     global.fetch.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({ success: true })
+      json: vi.fn().mockResolvedValue({ success: true })
     })
   })
 
@@ -135,6 +138,8 @@ describe('Payment Hub Helper', () => {
       await expect(
         sendPaymentHubRequest(server, logger, payload)
       ).rejects.toThrow(`Payment hub request failed: ${errorMessage}`)
+
+      expect(global.fetch).toHaveBeenCalled()
     })
 
     it('should throw an error when fetch fails', async () => {
@@ -146,6 +151,8 @@ describe('Payment Hub Helper', () => {
       await expect(
         sendPaymentHubRequest(server, logger, payload)
       ).rejects.toThrow(networkError)
+
+      expect(global.fetch).toHaveBeenCalled()
     })
 
     it('should throw an error if the keyname or key is not set', async () => {
@@ -161,6 +168,8 @@ describe('Payment Hub Helper', () => {
       await expect(
         sendPaymentHubRequest(server, logger, payload)
       ).rejects.toThrow('Payment Hub keyname or key is not set')
+
+      expect(config.get).toHaveBeenCalled()
     })
   })
 

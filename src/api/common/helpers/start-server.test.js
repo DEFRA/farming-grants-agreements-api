@@ -1,24 +1,28 @@
+import { vi } from 'vitest'
 import hapi from '@hapi/hapi'
 
-const mockLoggerInfo = jest.fn()
-const mockLoggerWarn = jest.fn()
-const mockLoggerError = jest.fn()
+const mockLoggerInfo = vi.fn()
+const mockLoggerWarn = vi.fn()
+const mockLoggerError = vi.fn()
 
-const mockHapiLoggerInfo = jest.fn()
-const mockHapiLoggerWarn = jest.fn()
-const mockHapiLoggerError = jest.fn()
+const mockHapiLoggerInfo = vi.fn()
+const mockHapiLoggerWarn = vi.fn()
+const mockHapiLoggerError = vi.fn()
 
-jest.mock('hapi-pino', () => ({
-  register: (server) => {
-    server.decorate('server', 'logger', {
-      info: mockHapiLoggerInfo,
-      warn: mockHapiLoggerWarn,
-      error: mockHapiLoggerError
-    })
-  },
-  name: 'mock-hapi-pino'
+vi.mock('hapi-pino', () => ({
+  __esModule: true,
+  default: {
+    register: (server) => {
+      server.decorate('server', 'logger', {
+        info: mockHapiLoggerInfo,
+        warn: mockHapiLoggerWarn,
+        error: mockHapiLoggerError
+      })
+    },
+    name: 'mock-hapi-pino'
+  }
 }))
-jest.mock('~/src/api/common/helpers/logging/logger.js', () => ({
+vi.mock('~/src/api/common/helpers/logging/logger.js', () => ({
   createLogger: () => ({
     info: (...args) => mockLoggerInfo(...args),
     warn: (...args) => mockLoggerWarn(...args),
@@ -44,8 +48,8 @@ describe('#startServer', () => {
     createServerImport = await import('~/src/api/index.js')
     startServerImport = await import('~/src/api/common/helpers/start-server.js')
 
-    createServerSpy = jest.spyOn(createServerImport, 'createServer')
-    hapiServerSpy = jest.spyOn(hapi, 'server')
+    createServerSpy = vi.spyOn(createServerImport, 'createServer')
+    hapiServerSpy = vi.spyOn(hapi, 'server')
   })
 
   afterAll(() => {

@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { MessageProviderPact } from '@pact-foundation/pact'
 
 import { createServer } from '~/src/api/index.js'
@@ -8,16 +9,18 @@ import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 
-jest.mock('~/src/api/agreement/helpers/accept-offer.js')
-jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
-jest.mock('~/src/api/agreement/helpers/update-payment-hub.js')
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  __esModule: true,
-  ...jest.requireActual('~/src/api/agreement/helpers/get-agreement-data.js'),
-  getAgreementDataBySbi: jest.fn()
-}))
-jest.mock('~/src/api/common/helpers/jwt-auth.js')
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('~/src/api/agreement/helpers/accept-offer.js')
+vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
+vi.mock('~/src/api/agreement/helpers/update-payment-hub.js')
+vi.mock(
+  '~/src/api/agreement/helpers/get-agreement-data.js',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return { __esModule: true, ...actual, getAgreementDataBySbi: vi.fn() }
+  }
+)
+vi.mock('~/src/api/common/helpers/jwt-auth.js')
+vi.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('sending updated (accepted) events via SNS', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -48,7 +51,7 @@ describe('sending updated (accepted) events via SNS', () => {
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Reset mock implementations
     acceptOffer.mockReset()
@@ -68,7 +71,7 @@ describe('sending updated (accepted) events via SNS', () => {
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
 
     // Mock JWT auth functions to return valid authorization by default
-    jest.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+    vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
       source: 'defra',
       sbi: '106284736'

@@ -1,25 +1,37 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+
 import Boom from '@hapi/boom'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 
 // Import the module after setting up the mocks
 import { unacceptOffer } from './unaccept-offer.js'
 
-jest.mock('~/src/api/common/models/agreements.js', () => ({
-  updateOneAgreementVersion: jest.fn()
+vi.mock('@hapi/boom')
+vi.mock('~/src/api/common/models/agreements.js', () => ({
+  __esModule: true,
+  default: {
+    updateOneAgreementVersion: vi.fn()
+  }
 }))
 
 describe('unacceptOffer', () => {
   beforeAll(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
   })
 
   beforeEach(() => {
-    jest.setSystemTime(new Date('2024-01-01'))
+    vi.setSystemTime(new Date('2024-01-01'))
+
+    // Setup Boom mocks
+    Boom.internal = vi.fn((error) => {
+      const boomError = new Error(error)
+      boomError.isBoom = true
+      return boomError
+    })
   })
 
   afterAll(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   test('should successfully unaccept an offer', async () => {
@@ -45,14 +57,14 @@ describe('unacceptOffer', () => {
   test('should throw a boom error when updateOneAgreementVersion fails', async () => {
     // Arrange
     const agreementId = 'SFI123456789'
+    const mockError = 'Mock error'
 
-    agreementsModel.updateOneAgreementVersion.mockRejectedValueOnce(
-      'Mock error'
-    )
+    agreementsModel.updateOneAgreementVersion.mockRejectedValueOnce(mockError)
+    Boom.internal.mockReturnValue(new Error('Mock error'))
 
     // Act
-    await expect(unacceptOffer(agreementId)).rejects.toThrow(
-      Boom.internal('Mock error')
-    )
+    await expect(unacceptOffer(agreementId)).rejects.toThrow('Mock error')
+
+    expect(Boom.internal).toHaveBeenCalledWith(mockError)
   })
 })
