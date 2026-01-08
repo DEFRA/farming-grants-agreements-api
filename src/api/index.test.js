@@ -1,14 +1,15 @@
+import { vi } from 'vitest'
 import { createServer } from './index.js'
 import { validateJwtAuthentication } from './common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
 import { Decimal128 } from 'mongodb'
 
 // Mock the dependencies
-jest.mock('./common/helpers/jwt-auth.js', () => ({
-  validateJwtAuthentication: jest.fn()
+vi.mock('./common/helpers/jwt-auth.js', () => ({
+  validateJwtAuthentication: vi.fn()
 }))
-jest.mock('./agreement/helpers/get-agreement-data.js', () => ({
-  getAgreementDataById: jest.fn()
+vi.mock('./agreement/helpers/get-agreement-data.js', () => ({
+  getAgreementDataById: vi.fn()
 }))
 
 describe('Custom Grants UI JWT Authentication Scheme', () => {
@@ -26,7 +27,7 @@ describe('Custom Grants UI JWT Authentication Scheme', () => {
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('authentication via route', () => {

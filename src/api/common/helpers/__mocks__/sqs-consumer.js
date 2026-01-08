@@ -1,3 +1,5 @@
+import { vi } from 'vitest'
+
 class Consumer {
   constructor(options) {
     this.options = options
@@ -6,21 +8,21 @@ class Consumer {
     this.calls = []
   }
 
-  on = jest.fn((event, handler) => {
+  on = vi.fn((event, handler) => {
     this.handlers.set(event, handler)
   })
 
-  start = jest.fn(() => {
+  start = vi.fn(() => {
     this.isRunning = true
   })
 
-  stop = jest.fn(() => {
+  stop = vi.fn(() => {
     this.isRunning = false
     return Promise.resolve()
   })
 }
 
-Consumer.create = jest.fn((options) => {
+Consumer.create = vi.fn((options) => {
   return new Consumer(options)
 })
 

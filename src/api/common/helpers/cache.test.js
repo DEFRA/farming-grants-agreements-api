@@ -6,13 +6,13 @@ describe('initCache', () => {
 
   beforeEach(() => {
     mockServer = {
-      cache: jest.fn()
+      cache: vi.fn()
     }
-    mockGenerateFunc = jest.fn()
+    mockGenerateFunc = vi.fn()
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('initializes cache with default options', () => {

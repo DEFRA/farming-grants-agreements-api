@@ -4,12 +4,12 @@ import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-p
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  doesAgreementExist: jest.fn(false)
+vi.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  doesAgreementExist: vi.fn(false)
 }))
-jest.mock('~/src/api/common/models/agreements.js', () => ({
-  createAgreementWithVersions: jest.fn().mockResolvedValue({
+vi.mock('~/src/api/common/models/agreements.js', () => ({
+  createAgreementWithVersions: vi.fn().mockResolvedValue({
     agreementNumber: 'mockAgreementNumber'
   })
 }))
@@ -17,8 +17,8 @@ jest.mock('~/src/api/common/models/agreements.js', () => ({
 // Reason: Pact consumer tests need to be setup in fg-gas-backend
 describe.skip('sending updated (created) event via SNS', () => {
   const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn()
+    info: vi.fn(),
+    error: vi.fn()
   }
 
   const messagePact = new MessageProviderPact({

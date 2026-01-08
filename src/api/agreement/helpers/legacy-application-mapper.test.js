@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import {
   buildLegacyPaymentFromApplication,
   __private__ as mapperPrivateExports
@@ -7,7 +8,7 @@ const { addMonths, addYears } = mapperPrivateExports
 
 describe('legacy-application-mapper', () => {
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('returns empty object when application payload missing', () => {
@@ -94,7 +95,7 @@ describe('legacy-application-mapper', () => {
   })
 
   it('derives totals and placeholders when optional fields missing', () => {
-    jest.useFakeTimers().setSystemTime(new Date('2025-04-10T00:00:00.000Z'))
+    vi.useFakeTimers().setSystemTime(new Date('2025-04-10T00:00:00.000Z'))
 
     const payload = {
       application: {
@@ -141,7 +142,7 @@ describe('legacy-application-mapper', () => {
   })
 
   it('falls back when rate data invalid and dates missing', () => {
-    jest.useFakeTimers().setSystemTime(new Date('2026-01-15T00:00:00.000Z'))
+    vi.useFakeTimers().setSystemTime(new Date('2026-01-15T00:00:00.000Z'))
 
     const payload = {
       application: {

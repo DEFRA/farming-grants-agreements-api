@@ -4,17 +4,17 @@ import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
 import { testEndpoints } from '~/src/api/test-endpoints/index.js'
 
 // Mock config
-jest.mock('~/src/config/index.js', () => ({
-  get: jest.fn().mockImplementation((key) => {
+vi.mock('~/src/config/index.js', () => ({
+  get: vi.fn().mockImplementation((key) => {
     if (key === 'featureFlags.testEndpoints') return true
     if (key === 'port') return 0
     return ''
   })
 }))
 
-jest.mock('~/src/api/common/helpers/sqs-client.js')
-jest.mock('~/src/api/agreement/helpers/unaccept-offer.js')
-jest.mock('~/src/api/agreement/helpers/update-payment-hub.js')
+vi.mock('~/src/api/common/helpers/sqs-client.js')
+vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
+vi.mock('~/src/api/agreement/helpers/update-payment-hub.js')
 
 describe('unacceptOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -36,7 +36,7 @@ describe('unacceptOfferController', () => {
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test('should successfully unaccept an agreement and return 200 OK', async () => {

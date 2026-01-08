@@ -25,7 +25,7 @@ describe('errorHandlerPlugin', () => {
 
     test('should register onPreResponse extension', () => {
       const mockServer = {
-        ext: jest.fn()
+        ext: vi.fn()
       }
 
       errorHandlerPlugin.register(mockServer)
@@ -205,9 +205,9 @@ describe('errorHandlerPlugin', () => {
   })
 
   describe('onPreResponse extension continue to next handler', () => {
-    const response = jest.fn().mockReturnThis()
-    const code = jest.fn().mockReturnThis()
-    const header = jest.fn().mockReturnThis()
+    const response = vi.fn().mockReturnThis()
+    const code = vi.fn().mockReturnThis()
+    const header = vi.fn().mockReturnThis()
 
     const mockH = {
       continue: Symbol('continue'),
@@ -227,7 +227,7 @@ describe('errorHandlerPlugin', () => {
       }
 
       const mockServer = {
-        ext: jest.fn()
+        ext: vi.fn()
       }
       errorHandlerPlugin.register(mockServer)
       const extensionHandler = mockServer.ext.mock.calls[0][1]
@@ -247,7 +247,7 @@ describe('errorHandlerPlugin', () => {
           },
           message: 'Unauthorized'
         },
-        server: { logger: { info: jest.fn(), error: jest.fn() } }
+        server: { logger: { info: vi.fn(), error: vi.fn() } }
       }
 
       const error = new Error('Response creation failed')
@@ -255,7 +255,7 @@ describe('errorHandlerPlugin', () => {
         throw error
       })
 
-      const mockServer = { ext: jest.fn() }
+      const mockServer = { ext: vi.fn() }
       errorHandlerPlugin.register(mockServer)
       const extensionHandler = mockServer.ext.mock.calls[0][1]
 

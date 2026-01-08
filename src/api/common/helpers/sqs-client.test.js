@@ -1,4 +1,5 @@
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 import { createSqsClientPlugin } from './sqs-client.js'
@@ -6,7 +7,7 @@ import { handleCreateAgreementEvent } from './sqs-message-processor/create-agree
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
 
 // Mock AWS SDK credential provider
-jest.mock('@aws-sdk/credential-provider-node', () => ({
+vi.mock('@aws-sdk/credential-provider-node', () => ({
   defaultProvider: () => () =>
     Promise.resolve({
       accessKeyId: 'test',
@@ -14,11 +15,18 @@ jest.mock('@aws-sdk/credential-provider-node', () => ({
     })
 }))
 
-jest.mock('~/src/api/agreement/helpers/create-offer.js')
-jest.mock('@aws-sdk/client-sqs')
-jest.mock('~/src/config/index.js', () => ({
+// Ensure Consumer.create is a mockable function
+vi.mock('sqs-consumer', () => ({
+  Consumer: {
+    create: vi.fn()
+  }
+}))
+
+vi.mock('~/src/api/agreement/helpers/create-offer.js')
+vi.mock('@aws-sdk/client-sqs')
+vi.mock('~/src/config/index.js', () => ({
   config: {
-    get: jest.fn((key) => {
+    get: vi.fn((key) => {
       switch (key) {
         case 'sqs.maxMessages':
           return 10
@@ -42,18 +50,18 @@ describe('SQS Client', () => {
   let mockConsumer
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Setup logger mock
     mockLogger = {
-      info: jest.fn(),
-      error: jest.fn()
+      info: vi.fn(),
+      error: vi.fn()
     }
 
     // Setup SQS client mock
     mockSqsClient = {
-      send: jest.fn(),
-      destroy: jest.fn()
+      send: vi.fn(),
+      destroy: vi.fn()
     }
     SQSClient.mockImplementation(() => mockSqsClient)
 
@@ -61,16 +69,16 @@ describe('SQS Client', () => {
     server = {
       logger: mockLogger,
       events: {
-        on: jest.fn(),
-        emit: jest.fn()
+        on: vi.fn(),
+        emit: vi.fn()
       }
     }
 
     // Setup Consumer mock
     mockConsumer = {
-      start: jest.fn(),
-      stop: jest.fn().mockResolvedValue(undefined),
-      on: jest.fn()
+      start: vi.fn(),
+      stop: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn()
     }
     Consumer.create.mockReturnValue(mockConsumer)
 
@@ -84,7 +92,7 @@ describe('SQS Client', () => {
   })
 
   afterEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   describe('handleEvent', () => {
@@ -140,7 +148,7 @@ describe('SQS Client', () => {
       const sqsClientPlugin = createSqsClientPlugin(
         'test',
         options.queueUrl,
-        jest.fn()
+        vi.fn()
       )
       sqsClientPlugin.plugin.register(server, options)
 
@@ -187,7 +195,7 @@ describe('SQS Client', () => {
       const sqsClientPlugin = createSqsClientPlugin(
         'test',
         options.queueUrl,
-        jest.fn()
+        vi.fn()
       )
       sqsClientPlugin.plugin.register(server, options)
 
@@ -212,7 +220,7 @@ describe('SQS Client', () => {
       const sqsClientPlugin = createSqsClientPlugin(
         'test',
         options.queueUrl,
-        jest.fn()
+        vi.fn()
       )
       sqsClientPlugin.plugin.register(server, options)
 
@@ -237,7 +245,7 @@ describe('SQS Client', () => {
       const sqsClientPlugin = createSqsClientPlugin(
         'test',
         options.queueUrl,
-        jest.fn()
+        vi.fn()
       )
       sqsClientPlugin.plugin.register(server, options)
 
@@ -260,7 +268,7 @@ describe('SQS Client', () => {
       const sqsClientPlugin = createSqsClientPlugin(
         'test',
         options.queueUrl,
-        jest.fn()
+        vi.fn()
       )
       sqsClientPlugin.plugin.register(server, options)
 
@@ -283,7 +291,7 @@ describe('SQS Client', () => {
       const sqsClientPlugin = createSqsClientPlugin(
         'test',
         options.queueUrl,
-        jest.fn()
+        vi.fn()
       )
       sqsClientPlugin.plugin.register(server, options)
 

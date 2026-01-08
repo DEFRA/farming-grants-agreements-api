@@ -1,24 +1,27 @@
+import { vi } from 'vitest'
 import { v4 as uuidv4 } from 'uuid'
 
 import mongoose from 'mongoose'
+import Boom from '@hapi/boom'
 import { createOffer, generateAgreementNumber } from './create-offer.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
 import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
-jest.mock('~/src/api/common/models/versions.js')
-jest.mock('~/src/api/common/models/agreements.js', () => {
+vi.mock('@hapi/boom')
+vi.mock('~/src/api/common/models/versions.js')
+vi.mock('~/src/api/common/models/agreements.js', () => {
   let populatedAgreement = null
 
   const api = {
-    create: jest.fn(() => ({ _id: 'mockG1' })),
-    findById: jest.fn(() => ({
+    create: vi.fn(() => ({ _id: 'mockG1' })),
+    findById: vi.fn(() => ({
       populate: () => ({
         lean: () => Promise.resolve(populatedAgreement)
       })
     })),
-    createAgreementWithVersions: jest.fn(() => populatedAgreement),
+    createAgreementWithVersions: vi.fn(() => populatedAgreement),
 
     // helper exposed to tests:
     __setPopulatedAgreement: (g) => {
@@ -28,13 +31,13 @@ jest.mock('~/src/api/common/models/agreements.js', () => {
 
   return { __esModule: true, default: api }
 })
-jest.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
-  publishEvent: jest.fn().mockResolvedValue(true)
+vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+  publishEvent: vi.fn().mockResolvedValue(true)
 }))
-jest.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
-  doesAgreementExist: jest.fn().mockResolvedValue(false),
+vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+  doesAgreementExist: vi.fn().mockResolvedValue(false),
   // Added explicit mock for getAgreementDataById to satisfy tests that import this module
-  getAgreementDataById: jest.fn().mockResolvedValue({})
+  getAgreementDataById: vi.fn().mockResolvedValue({})
 }))
 
 const targetDataStructure = {
@@ -153,27 +156,34 @@ describe('createOffer', () => {
   let mockLogger
 
   beforeAll(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     mockLogger = {
-      info: jest.fn(),
-      debug: jest.fn(),
-      error: jest.fn()
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn()
     }
 
+    // Setup Boom mocks
+    Boom.badRequest = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+
     // Make insertMany return a real-looking agreement (matching targetDataStructure)
-    versionsModel.insertMany = jest.fn(() => [
+    versionsModel.insertMany = vi.fn(() => [
       { ...targetDataStructure, _id: new mongoose.Types.ObjectId() }
     ])
-    versionsModel.updateMany = jest.fn(() => ({
+    versionsModel.updateMany = vi.fn(() => ({
       matchedCount: 1,
       modifiedCount: 1
     }))
-    versionsModel.deleteMany = jest.fn(() => ({ deletedCount: 0 }))
+    versionsModel.deleteMany = vi.fn(() => ({ deletedCount: 0 }))
 
     // Return EXACT group the test asserts against
     const populated = {
@@ -187,22 +197,22 @@ describe('createOffer', () => {
 
     agreementsModel.__setPopulatedAgreement(populated)
 
-    if (!jest.isMockFunction(agreementsModel.createAgreementWithVersions)) {
-      jest.spyOn(agreementsModel, 'createAgreementWithVersions')
+    if (!vi.isMockFunction(agreementsModel.createAgreementWithVersions)) {
+      vi.spyOn(agreementsModel, 'createAgreementWithVersions')
     }
     agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
 
     publishEvent.mockResolvedValue(true)
 
-    jest.setSystemTime(new Date('2025-01-01'))
+    vi.setSystemTime(new Date('2025-01-01'))
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   afterAll(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('should create an agreement with valid data', async () => {
@@ -1306,6 +1316,10 @@ describe('createOffer', () => {
         mockLogger
       )
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle answers.application being null gracefully', async () => {
@@ -1346,6 +1360,10 @@ describe('createOffer', () => {
         mockLogger
       )
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle payments.parcel as a single object (not array)', async () => {
@@ -1449,6 +1467,10 @@ describe('createOffer', () => {
     await expect(
       createOffer('null-parcel-message', payloadWithNullParcel, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   describe('generateAgreementNumber', () => {
@@ -1519,6 +1541,10 @@ describe('createOffer', () => {
     await expect(
       createOffer('test-id', payloadWithoutApplicant, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle case where neither application nor answers.parcels exist', async () => {
@@ -1537,12 +1563,29 @@ describe('createOffer', () => {
     await expect(
       createOffer('test-id', payloadWithoutConversionFormat, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
+
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
   })
 
   it('should handle conversion errors in catch block when mapper throws', async () => {
-    // Import the mapper module
-    const mapperModule = await import('./legacy-application-mapper.js')
-    const originalMapper = mapperModule.buildLegacyPaymentFromApplication
+    // Re-import a fresh module with the mapper mocked to throw
+    vi.resetModules()
+    vi.doMock('./legacy-application-mapper.js', async () => {
+      const original = await vi.importActual('./legacy-application-mapper.js')
+      return {
+        __esModule: true,
+        ...original,
+        buildLegacyPaymentFromApplication: vi.fn(() => {
+          throw new Error('Mapper conversion failed')
+        })
+      }
+    })
+
+    const { createOffer: createOfferUnderTest } = await import(
+      './create-offer.js'
+    )
 
     // Create a payload that will trigger conversion
     const payloadWithParcels = {
@@ -1561,20 +1604,19 @@ describe('createOffer', () => {
       }
     }
 
-    // Mock the mapper to throw an error
-    mapperModule.buildLegacyPaymentFromApplication = jest.fn(() => {
-      throw new Error('Mapper conversion failed')
-    })
-
     doesAgreementExist.mockResolvedValueOnce(false)
 
     // The error should be caught and validation should throw
     await expect(
-      createOffer('test-id', payloadWithParcels, mockLogger)
+      createOfferUnderTest('test-id', payloadWithParcels, mockLogger)
     ).rejects.toThrow('Offer data is missing payment and applicant')
 
-    // Restore original
-    mapperModule.buildLegacyPaymentFromApplication = originalMapper
+    expect(Boom.badRequest).toHaveBeenCalledWith(
+      'Offer data is missing payment and applicant'
+    )
+
+    // Clear the mocked modules so other tests use the original implementations
+    vi.resetModules()
   })
 
   it('should merge converted values when existing values are null or undefined', async () => {
@@ -1776,7 +1818,7 @@ describe('createOffer', () => {
 
   describe('Error Handling', () => {
     beforeEach(() => {
-      jest.clearAllMocks()
+      vi.clearAllMocks()
     })
 
     it('should handle missing agreement data', async () => {
@@ -1799,9 +1841,12 @@ describe('createOffer', () => {
       await expect(
         createOffer(uuidv4(), agreementData, mockLogger)
       ).rejects.toThrow('Database connection error')
+
+      expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
     })
 
     it('should handle generic errors when creating an agreement', async () => {
+      doesAgreementExist.mockResolvedValueOnce(false)
       agreementsModel.createAgreementWithVersions.mockRejectedValue(
         new Error('Generic error')
       )
@@ -1809,6 +1854,8 @@ describe('createOffer', () => {
       await expect(
         createOffer(uuidv4(), agreementData, mockLogger)
       ).rejects.toThrow('Generic error')
+
+      expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
     })
 
     it('should propagate Boom error when payment/applicant missing', async () => {
@@ -1820,6 +1867,10 @@ describe('createOffer', () => {
       }
       doesAgreementExist.mockResolvedValueOnce(false)
       await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
+        'Offer data is missing payment and applicant'
+      )
+
+      expect(Boom.badRequest).toHaveBeenCalledWith(
         'Offer data is missing payment and applicant'
       )
     })

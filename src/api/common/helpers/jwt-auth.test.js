@@ -6,19 +6,19 @@ import {
 import Jwt from '@hapi/jwt'
 import { config } from '~/src/config/index.js'
 
-jest.mock('@hapi/jwt')
-jest.mock('~/src/config/index.js')
+vi.mock('@hapi/jwt')
+vi.mock('~/src/config/index.js')
 
 describe('jwt-auth', () => {
   const mockLogger = {
-    error: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn()
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn()
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    config.get = jest.fn().mockReturnValue('mock-jwt-secret')
+    vi.clearAllMocks()
+    config.get = vi.fn().mockReturnValue('mock-jwt-secret')
   })
 
   describe('extractJwtPayload', () => {
@@ -44,8 +44,8 @@ describe('jwt-auth', () => {
         }
       }
 
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecoded)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
+      Jwt.token.decode = vi.fn().mockReturnValue(mockDecoded)
+      Jwt.token.verify = vi.fn().mockImplementation(() => Promise.resolve())
 
       const result = extractJwtPayload('valid-token', mockLogger)
 
@@ -66,8 +66,8 @@ describe('jwt-auth', () => {
 
       const mockError = new Error('Invalid signature')
 
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecoded)
-      Jwt.token.verify = jest.fn().mockImplementation(() => {
+      Jwt.token.decode = vi.fn().mockReturnValue(mockDecoded)
+      Jwt.token.verify = vi.fn().mockImplementation(() => {
         throw mockError
       })
 
@@ -262,21 +262,21 @@ describe('jwt-auth', () => {
     }
 
     beforeEach(() => {
-      jest.clearAllMocks()
-      config.get = jest.fn().mockReturnValue('mock-jwt-secret')
+      vi.clearAllMocks()
+      config.get = vi.fn().mockReturnValue('mock-jwt-secret')
     })
 
     test('should return {valid:true, source:null} when JWT feature flag is disabled', () => {
-      config.get = jest.fn((key) => {
+      config.get = vi.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return false
         if (key === 'jwtSecret') return 'mock-jwt-secret'
         return 'mock-jwt-secret'
       })
 
       const mockLogger = {
-        info: jest.fn(),
-        error: jest.fn(),
-        warn: jest.fn()
+        info: vi.fn(),
+        error: vi.fn(),
+        warn: vi.fn()
       }
 
       // Act
@@ -297,7 +297,7 @@ describe('jwt-auth', () => {
     })
 
     test('should validate and return object when feature flag enabled and JWT is valid (defra)', () => {
-      config.get = jest.fn((key) => {
+      config.get = vi.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return true
         if (key === 'jwtSecret') return 'mock-jwt-secret'
         return 'mock-jwt-secret'
@@ -310,12 +310,12 @@ describe('jwt-auth', () => {
         }
       }
 
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecoded)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
+      Jwt.token.decode = vi.fn().mockReturnValue(mockDecoded)
+      Jwt.token.verify = vi.fn().mockImplementation(() => Promise.resolve())
 
       const mockLogger = {
-        info: jest.fn(),
-        error: jest.fn()
+        info: vi.fn(),
+        error: vi.fn()
       }
 
       const result = validateJwtAuthentication(
@@ -332,11 +332,11 @@ describe('jwt-auth', () => {
     })
 
     test('should throw 400 when feature flag is disabled and neither agreement data is provided', () => {
-      config.get = jest.fn((key) => {
+      config.get = vi.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return false
       })
 
-      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const mockLogger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
 
       expect(() => validateJwtAuthentication(null, null, mockLogger)).toThrow(
         /Bad request, Neither JWT is enabled nor agreementId is provided/i
@@ -344,11 +344,11 @@ describe('jwt-auth', () => {
     })
 
     test('should throw 400 when feature flag is enabled and no token provided', () => {
-      config.get = jest.fn((key) => {
+      config.get = vi.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return true
       })
 
-      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const mockLogger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
 
       expect(() =>
         validateJwtAuthentication('', mockAgreementData, mockLogger)
@@ -358,7 +358,7 @@ describe('jwt-auth', () => {
     })
 
     test('should return {valid:true, source:"entra", sbi:<payload sbi>} for Entra users when feature flag is enabled', () => {
-      config.get = jest.fn((key) => {
+      config.get = vi.fn((key) => {
         if (key === 'featureFlags.isJwtEnabled') return true
         if (key === 'jwtSecret') return 'mock-jwt-secret'
         return 'mock-jwt-secret'
@@ -367,10 +367,10 @@ describe('jwt-auth', () => {
       const mockPayload = { sbi: 'different-sbi', source: 'entra' }
       const mockDecoded = { decoded: { payload: mockPayload } }
 
-      Jwt.token.decode = jest.fn().mockReturnValue(mockDecoded)
-      Jwt.token.verify = jest.fn().mockImplementation(() => Promise.resolve())
+      Jwt.token.decode = vi.fn().mockReturnValue(mockDecoded)
+      Jwt.token.verify = vi.fn().mockImplementation(() => Promise.resolve())
 
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = { info: vi.fn(), error: vi.fn() }
 
       const result = validateJwtAuthentication(
         'valid-token',
@@ -390,7 +390,7 @@ describe('jwt-auth', () => {
 describe('validateJwtAuthentication - payload extraction failure path', () => {
   test('returns { valid: false, source: null, sbi: null } when extractJwtPayload returns null', () => {
     // Enable JWT feature flag
-    config.get = jest.fn((key) => {
+    config.get = vi.fn((key) => {
       if (key === 'featureFlags.isJwtEnabled') return true
       if (key === 'jwtSecret') return 'mock-jwt-secret'
       return 'mock-jwt-secret'
@@ -401,10 +401,10 @@ describe('validateJwtAuthentication - payload extraction failure path', () => {
       agreementNumber: 'SFI123456789'
     }
 
-    const logger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+    const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
 
     // Force extractJwtPayload to return null by making decode throw
-    Jwt.token.decode = jest.fn(() => {
+    Jwt.token.decode = vi.fn(() => {
       throw new Error('decode error')
     })
 

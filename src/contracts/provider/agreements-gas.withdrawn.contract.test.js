@@ -4,14 +4,14 @@ import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-p
 import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
 import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/update-agreement.js'
 
-jest.mock('~/src/api/common/helpers/sns-publisher.js')
-jest.mock('~/src/api/agreement/helpers/withdraw-offer.js')
+vi.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 
 // Reason: Pact consumer tests need to be setup in fg-gas-backend
 describe.skip('sending updated (withdrawn) events via SNS', () => {
   const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn()
+    info: vi.fn(),
+    error: vi.fn()
   }
 
   const messagePact = new MessageProviderPact({

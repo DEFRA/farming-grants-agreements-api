@@ -1,9 +1,10 @@
 // Disable the mongoose mock for this test file to test the real implementation
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
+
 import agreementsModel from '~/src/api/common/models/agreements.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 
-jest.unmock('mongoose')
+vi.unmock('mongoose')
 
 describe('agreements.createAgreementWithVersions', () => {
   const AGREEMENT_BASE = {
@@ -30,42 +31,49 @@ describe('agreements.createAgreementWithVersions', () => {
 
   it('should validate input parameters and throw async errors', async () => {
     // Test missing agreementNumber - should throw asynchronously
-    await expect(
-      agreementsModel.createAgreementWithVersions({
-        agreement: { sbi: 'y', frn: 'x' }, // missing agreementNumber
-        versions: VERSION_PAYLOADS
-      })
-    ).rejects.toThrow('agreement.agreementNumber is required')
+    const invalidAgreement = { sbi: 'y', frn: 'x' } // missing agreementNumber
+    const promise1 = agreementsModel.createAgreementWithVersions({
+      agreement: invalidAgreement,
+      versions: VERSION_PAYLOADS
+    })
+
+    // Verify it returns a promise
+    expect(promise1).toBeInstanceOf(Promise)
+    await expect(promise1).rejects.toThrow(
+      'agreement.agreementNumber is required'
+    )
 
     // Test empty versions array - should throw asynchronously
-    await expect(
-      agreementsModel.createAgreementWithVersions({
-        agreement: AGREEMENT_BASE,
-        versions: []
-      })
-    ).rejects.toThrow(
+    const promise2 = agreementsModel.createAgreementWithVersions({
+      agreement: AGREEMENT_BASE,
+      versions: []
+    })
+    // Verify it returns a promise
+    expect(promise2).toBeInstanceOf(Promise)
+    await expect(promise2).rejects.toThrow(
       'versions must be a non-empty array of agreement version payloads'
     )
 
     // Test non-array versions
-    await expect(
-      agreementsModel.createAgreementWithVersions({
-        agreement: AGREEMENT_BASE,
-        versions: 'not-an-array'
-      })
-    ).rejects.toThrow(
+    const promise3 = agreementsModel.createAgreementWithVersions({
+      agreement: AGREEMENT_BASE,
+      versions: 'not-an-array'
+    })
+    // Verify it returns a promise
+    expect(promise3).toBeInstanceOf(Promise)
+    await expect(promise3).rejects.toThrow(
       'versions must be a non-empty array of agreement version payloads'
     )
   })
 
   it('should return a promise and attempt real database operations', async () => {
     // Mock the database operations to simulate a connection error
-    const findOneSpy = jest
+    const findOneSpy = vi
       .spyOn(agreementsModel, 'findOne')
       .mockImplementation(() => {
         throw new Error('Database connection failed')
       })
-    const createSpy = jest
+    const createSpy = vi
       .spyOn(agreementsModel, 'create')
       .mockImplementation(() => {
         throw new Error('Database connection failed')
@@ -83,6 +91,10 @@ describe('agreements.createAgreementWithVersions', () => {
     // This confirms we're using the real implementation, not a mock
     await expect(result).rejects.toThrow('Database connection failed')
 
+    // Verify that findOne was called (create won't be called because findOne throws first)
+    expect(findOneSpy).toHaveBeenCalled()
+    // Note: create is not called because findOne throws synchronously before reaching create
+
     // Restore original methods
     findOneSpy.mockRestore()
     createSpy.mockRestore()
@@ -91,41 +103,39 @@ describe('agreements.createAgreementWithVersions', () => {
   it('should attempt to find existing agreement with correct sort order', async () => {
     // Mock the chainable methods
     const mockFindOne = {
-      sort: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      lean: jest.fn().mockResolvedValue(null)
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(null)
     }
 
-    const findOneSpy = jest
+    const findOneSpy = vi
       .spyOn(agreementsModel, 'findOne')
       .mockReturnValue(mockFindOne)
 
     // Mock create to avoid actual DB write and return a valid-looking mocked ID
     const mockId = '507f1f77bcf86cd799439011'
-    const createSpy = jest
+    const createSpy = vi
       .spyOn(agreementsModel, 'create')
       .mockResolvedValue({ _id: mockId })
 
-    const versionsInsertSpy = jest
+    const versionsInsertSpy = vi
       .spyOn(versionsModel, 'insertMany')
       .mockResolvedValue([])
 
     // Spy on updateMany to avoid real DB calls
-    const versionsUpdateManySpy = jest
+    const versionsUpdateManySpy = vi
       .spyOn(versionsModel, 'updateMany')
       .mockResolvedValue({})
 
     // Spy on updateOne and findById to avoid real DB calls and CastErrors
-    const updateOneSpy = jest
+    const updateOneSpy = vi
       .spyOn(agreementsModel, 'updateOne')
       .mockResolvedValue({})
 
-    const findByIdSpy = jest
-      .spyOn(agreementsModel, 'findById')
-      .mockReturnValue({
-        populate: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue({ _id: mockId })
-      })
+    const findByIdSpy = vi.spyOn(agreementsModel, 'findById').mockReturnValue({
+      populate: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ _id: mockId })
+    })
 
     await agreementsModel.createAgreementWithVersions({
       agreement: AGREEMENT_BASE,
@@ -147,7 +157,7 @@ describe('agreements.createAgreementWithVersions', () => {
 
 describe('agreements.findLatestAgreementVersion', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('should find latest agreement version successfully', async () => {
@@ -162,17 +172,17 @@ describe('agreements.findLatestAgreementVersion', () => {
       createdAt: new Date()
     }
 
-    agreementsModel.findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue(mockAgreement)
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue(mockAgreement)
         })
       })
     })
 
-    versionsModel.findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        lean: jest.fn().mockResolvedValue(mockVersion)
+    versionsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(mockVersion)
       })
     })
 
@@ -187,10 +197,10 @@ describe('agreements.findLatestAgreementVersion', () => {
   })
 
   it('should throw 404 when agreement not found', async () => {
-    agreementsModel.findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue(null)
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue(null)
         })
       })
     })
@@ -198,6 +208,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Agreement not found using filter')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 
   it('should throw 404 when agreement has no versions', async () => {
@@ -206,10 +220,10 @@ describe('agreements.findLatestAgreementVersion', () => {
       versions: []
     }
 
-    agreementsModel.findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue(mockAgreement)
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue(mockAgreement)
         })
       })
     })
@@ -217,6 +231,10 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Agreement has no child versions to update')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 
   it('should throw 404 when agreement has null versions', async () => {
@@ -225,10 +243,10 @@ describe('agreements.findLatestAgreementVersion', () => {
       versions: null
     }
 
-    agreementsModel.findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue(mockAgreement)
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue(mockAgreement)
         })
       })
     })
@@ -236,13 +254,17 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Agreement has no child versions to update')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 
   it('should handle database errors', async () => {
-    agreementsModel.findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          lean: jest.fn().mockRejectedValue(new Error('Database error'))
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          lean: vi.fn().mockRejectedValue(new Error('Database error'))
         })
       })
     })
@@ -250,12 +272,16 @@ describe('agreements.findLatestAgreementVersion', () => {
     await expect(
       agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
     ).rejects.toThrow('Database error')
+
+    expect(agreementsModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'SFI123'
+    })
   })
 })
 
 describe('agreements.updateOneAgreementVersion', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('should update agreement version with agreementNumber filter', async () => {
@@ -266,19 +292,19 @@ describe('agreements.updateOneAgreementVersion', () => {
       agreement: { _id: 'agreement123' }
     }
 
-    agreementsModel.findLatestAgreementVersion = jest
+    agreementsModel.findLatestAgreementVersion = vi
       .fn()
       .mockResolvedValue(mockLatestVersion)
 
     // Mock the complete chain with catch
     const mockChain = {
-      populate: jest.fn().mockReturnThis(),
-      sort: jest.fn().mockReturnThis(),
-      lean: jest.fn().mockResolvedValue(mockUpdatedVersion),
-      catch: jest.fn().mockResolvedValue(mockUpdatedVersion)
+      populate: vi.fn().mockReturnThis(),
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockUpdatedVersion),
+      catch: vi.fn().mockResolvedValue(mockUpdatedVersion)
     }
 
-    versionsModel.findOneAndUpdate = jest.fn().mockReturnValue(mockChain)
+    versionsModel.findOneAndUpdate = vi.fn().mockReturnValue(mockChain)
 
     const result = await agreementsModel.updateOneAgreementVersion(
       { agreementNumber: 'SFI123', sbi: '123456' },
@@ -305,13 +331,13 @@ describe('agreements.updateOneAgreementVersion', () => {
 
     // Mock the complete chain with catch
     const mockChain = {
-      populate: jest.fn().mockReturnThis(),
-      sort: jest.fn().mockReturnThis(),
-      lean: jest.fn().mockResolvedValue(mockUpdatedVersion),
-      catch: jest.fn().mockResolvedValue(mockUpdatedVersion)
+      populate: vi.fn().mockReturnThis(),
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockUpdatedVersion),
+      catch: vi.fn().mockResolvedValue(mockUpdatedVersion)
     }
 
-    versionsModel.findOneAndUpdate = jest.fn().mockReturnValue(mockChain)
+    versionsModel.findOneAndUpdate = vi.fn().mockReturnValue(mockChain)
 
     const result = await agreementsModel.updateOneAgreementVersion(
       { _id: 'version123', sbi: '123456' },
@@ -329,13 +355,13 @@ describe('agreements.updateOneAgreementVersion', () => {
   it('should throw 404 when update fails', async () => {
     // Mock the complete chain with catch returning null
     const mockChain = {
-      populate: jest.fn().mockReturnThis(),
-      sort: jest.fn().mockReturnThis(),
-      lean: jest.fn().mockResolvedValue(null),
-      catch: jest.fn().mockResolvedValue(null)
+      populate: vi.fn().mockReturnThis(),
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(null),
+      catch: vi.fn().mockResolvedValue(null)
     }
 
-    versionsModel.findOneAndUpdate = jest.fn().mockReturnValue(mockChain)
+    versionsModel.findOneAndUpdate = vi.fn().mockReturnValue(mockChain)
 
     await expect(
       agreementsModel.updateOneAgreementVersion(
@@ -343,18 +369,20 @@ describe('agreements.updateOneAgreementVersion', () => {
         { status: 'accepted' }
       )
     ).rejects.toThrow('Failed to update agreement. Agreement not found')
+
+    expect(versionsModel.findOneAndUpdate).toHaveBeenCalled()
   })
 
   it('should handle database errors', async () => {
     // Mock the complete chain with catch throwing error
     const mockChain = {
-      populate: jest.fn().mockReturnThis(),
-      sort: jest.fn().mockReturnThis(),
-      lean: jest.fn().mockRejectedValue(new Error('Database error')),
-      catch: jest.fn().mockRejectedValue(new Error('Database error'))
+      populate: vi.fn().mockReturnThis(),
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockRejectedValue(new Error('Database error')),
+      catch: vi.fn().mockRejectedValue(new Error('Database error'))
     }
 
-    versionsModel.findOneAndUpdate = jest.fn().mockReturnValue(mockChain)
+    versionsModel.findOneAndUpdate = vi.fn().mockReturnValue(mockChain)
 
     await expect(
       agreementsModel.updateOneAgreementVersion(
@@ -362,5 +390,7 @@ describe('agreements.updateOneAgreementVersion', () => {
         { status: 'accepted' }
       )
     ).rejects.toThrow('Database error')
+
+    expect(versionsModel.findOneAndUpdate).toHaveBeenCalled()
   })
 })
