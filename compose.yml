@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   localstack:
     image: localstack/localstack:3.0.2
@@ -17,7 +16,7 @@ services:
       - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
       - ./compose/monitor-sqs.sh:/etc/localstack/init/ready.d/monitor-sqs.sh
     healthcheck:
-      test: [ 'CMD', 'curl', 'localhost:4566' ]
+      test: ['CMD', 'curl', 'localhost:4566']
       interval: 5s
       start_period: 5s
       retries: 3
@@ -35,7 +34,7 @@ services:
     restart: always
     healthcheck:
       test:
-        [ 'CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 }).ok' ]
+        ['CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 }).ok']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -43,7 +42,9 @@ services:
   ################################################################################
 
   farming-grants-agreements-api:
-    build: ./
+    build:
+      context: ./
+      target: development
     ports:
       - '3555:3555'
     depends_on:
@@ -52,7 +53,13 @@ services:
       mongodb:
         condition: service_healthy
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
+    command:
+      [
+        '/bin/sh',
+        '-c',
+        "echo 'Waiting 10 seconds for localstack and mongodb to fully initialize...' && sleep 10 && echo 'Starting farming-grants-agreements-api...' && npm run docker:dev"
+      ]
     env_file:
       - 'compose/aws.env'
     environment:
@@ -66,7 +73,7 @@ services:
       SQS_ENDPOINT: http://localstack:4566
       QUEUE_URL: http://localstack:4566/000000000000/create_agreement
       S3_ENDPOINT: http://host.docker.internal:4568
-      GA_TRACKING_ID: ${GA_TRACKING_ID}
+      GA_TRACKING_ID: ${GA_TRACKING_ID:-''}
       QUEUE_NAME: ${QUEUE_NAME:-create_agreement}
       ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-true}
       JWT_ENABLED: ${JWT_ENABLED:-true}
@@ -99,7 +106,7 @@ services:
       - '8081:8081'
     volumes:
       - ./src/contracts/consumer/pacts:/app/pacts
-    command: [ "-p", "8081", "-d", "pacts" ]
+    command: ['-p', '8081', '-d', 'pacts']
     networks:
       - cdp-tenant
 
