@@ -63,7 +63,9 @@ describe('SQS Client', () => {
       send: vi.fn(),
       destroy: vi.fn()
     }
-    SQSClient.mockImplementation(() => mockSqsClient)
+    SQSClient.mockImplementation(function () {
+      return mockSqsClient
+    })
 
     // Setup server mock
     server = {

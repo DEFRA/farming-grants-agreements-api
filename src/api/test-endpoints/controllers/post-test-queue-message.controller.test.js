@@ -8,12 +8,14 @@ import { __mockSend as sendMock } from '@aws-sdk/client-sqs'
 vi.mock('@aws-sdk/client-sqs', () => {
   const mockSend = vi.fn()
   return {
-    SQSClient: vi.fn().mockImplementation(() => ({
-      send: mockSend
-    })),
-    SendMessageCommand: vi.fn().mockImplementation((input) => ({
-      input
-    })),
+    SQSClient: vi.fn().mockImplementation(function () {
+      this.send = mockSend
+      return this
+    }),
+    SendMessageCommand: vi.fn().mockImplementation(function (input) {
+      this.input = input
+      return this
+    }),
     __mockSend: mockSend // Export the mock for use in tests
   }
 })
@@ -194,10 +196,9 @@ describe('postTestQueueMessageController', () => {
       h
     )
 
-    expect(res).toEqual(
-      new Error(
-        'Failed to retrieve agreement data after multiple attempts for SBI: 123456789'
-      )
+    expect(Boom.isBoom(res)).toBe(true)
+    expect(res.message).toBe(
+      'Failed to retrieve agreement data after multiple attempts for SBI: 123456789'
     )
 
     // Restore setTimeout
