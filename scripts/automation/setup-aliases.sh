@@ -53,6 +53,7 @@ ALIAS_BLOCK="
 alias defra-up='$SCRIPT_DIR/defra-up.sh'
 alias defra-pull='$SCRIPT_DIR/defra-pull.sh'
 alias defra-down='$SCRIPT_DIR/defra-down.sh'
+alias defra-diff='$SCRIPT_DIR/defra-diff.sh'
 "
 
 # Add to .bashrc if it exists and doesn't have aliases
@@ -77,3 +78,4 @@ echo "Available aliases:"
 echo -e "  ${BLUE}defra-up${NC}       - Start all Defra services"
 echo -e "  ${BLUE}defra-pull${NC}     - Update all repositories"
 echo -e "  ${BLUE}defra-down${NC}     - Stop all Defra services (use 'defra-down -rm' to remove volumes)"
+echo -e "  ${BLUE}defra-diff${NC}     - Show git changes between two tags"

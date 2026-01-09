@@ -83,6 +83,49 @@ defra-down -rm
 
 ---
 
+### `defra-diff.sh`
+
+Shows git log differences between two tags for a specific repository.
+
+**Usage:**
+
+```bash
+./scripts/automation/defra-diff.sh <repository-name> <from-tag> <to-tag>
+# or using the alias:
+defra-diff <repository-name> <from-tag> <to-tag>
+```
+
+**Parameters:**
+
+- `repository-name` (required): Name of the repository to check
+  - `farming-grants-agreements-ui`
+  - `farming-grants-agreements-api`
+  - `farming-grants-agreements-pdf`
+- `from-tag` (required): Starting tag/version
+- `to-tag` (required): Ending tag/version
+
+**What it does:**
+
+- Shows commits between two tags for the specified repository
+- Displays commit hash, subject, author, and relative time
+- Shows commit count
+- Validates repository name and tags
+
+**Examples:**
+
+```bash
+# Compare two versions for the UI
+defra-diff farming-grants-agreements-ui 1.22.0 1.30.0
+
+# Compare two versions for the API
+defra-diff farming-grants-agreements-api 1.20.0 1.25.0
+
+# Output format:
+# abc1234 - Fixed bug in API (2 days ago) <John Doe>
+```
+
+---
+
 ### `setup-aliases.sh`
 
 Sets up shell aliases for convenient access to the automation scripts.
@@ -96,7 +139,7 @@ Sets up shell aliases for convenient access to the automation scripts.
 **What it does:**
 
 - Adds aliases to `~/.bashrc` and/or `~/.zshrc`
-- Creates convenient shortcuts: `defra-up`, `defra-pull`, `defra-down`
+- Creates convenient shortcuts: `defra-up`, `defra-pull`, `defra-down`, `defra-diff`
 
 **After running, reload your shell:**
 
