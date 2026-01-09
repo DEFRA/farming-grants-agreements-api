@@ -25,7 +25,7 @@ let originalFetch
 
 describe('UI sending a POST request to accept an agreement', () => {
   const provider = new Pact({
-    consumer: 'farming-grants-agreements-api-rest',
+    consumer: 'farming-grants-agreements-api',
     provider: 'land-grants-api',
     dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
     pactfileWriteMode: 'update',

@@ -70,8 +70,8 @@ describe('UI sending a GET request to get an agreement', () => {
 
   it('should validate the expectations of the UI', async () => {
     const pactOpts = {
-      provider: 'farming-grants-agreements-api-rest',
-      consumer: 'farming-grants-agreements-ui-rest',
+      provider: 'farming-grants-agreements-api',
+      consumer: 'farming-grants-agreements-ui',
       ...(process.env.CI
         ? {
             pactBrokerUrl:
@@ -88,7 +88,7 @@ describe('UI sending a GET request to get an agreement', () => {
             logLevel: 'debug',
             // Hard coded path for local testing
             pactUrls: [
-              '../farming-grants-agreements-ui/src/contracts/consumer/pacts/farming-grants-agreements-ui-rest-farming-grants-agreements-api-rest.json'
+              '../farming-grants-agreements-ui/src/contracts/consumer/pacts/farming-grants-agreements-ui-farming-grants-agreements-api.json'
             ]
           }),
       providerBaseUrl: `http://localhost:${config.get('port')}`, // server.info.uri,
