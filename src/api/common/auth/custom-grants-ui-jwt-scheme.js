@@ -6,12 +6,6 @@ import {
   getAgreementDataBySbi
 } from '~/src/api/agreement/helpers/get-agreement-data.js'
 
-// Hapi auth scheme for Grants UI JWT validation.
-// Extracted from src/api/index.js with no functional changes.
-//
-// Registration example:
-//   server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
-//   server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
 const customGrantsUiJwtScheme = () => ({
   authenticate: async (request, h) => {
     const { agreementId } = request.params || {}

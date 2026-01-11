@@ -286,8 +286,7 @@ const config = convict({
     token: {
       doc: 'Authorization Bearer token',
       format: String,
-      default:
-        'dnJPWFp4VG9SNnR6UGxBTzo0L0xvcWo2OTBHbGZhNXRpT25wL1RnPT06Mnp0SE90NzdDb0dpSWorTk1YZ2luWWZ4V1hhbFJYL0NreWtFWldnOFpOYm1ZSVZXRC83N2ZzTm1XakR1cndHa01sVjVlalpEZm1jY21jN0NzRFJpMGc9PQ==',
+      default: '',
       env: 'LAND_GRANTS_TOKEN'
     }
   },
