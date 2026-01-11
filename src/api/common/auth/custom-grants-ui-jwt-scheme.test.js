@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import Boom from '@hapi/boom'
+import { customGrantsUiJwtScheme } from './custom-grants-ui-jwt-scheme.js'
 
 // Mocks for external dependencies used by the scheme
 const mockValidateJwtAuthentication = vi.fn()
@@ -14,8 +15,6 @@ vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: (...args) => mockGetAgreementDataById(...args),
   getAgreementDataBySbi: (...args) => mockGetAgreementDataBySbi(...args)
 }))
-
-import { customGrantsUiJwtScheme } from './custom-grants-ui-jwt-scheme.js'
 
 describe('custom-grants-ui-jwt-scheme', () => {
   const scheme = customGrantsUiJwtScheme()
