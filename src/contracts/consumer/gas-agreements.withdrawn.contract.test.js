@@ -12,8 +12,8 @@ const { like, uuid } = MatchersV2
 
 describe('receiving events from the GAS SQS queue and processing them', () => {
   const messagePact = new MessageConsumerPact({
-    consumer: 'farming-grants-agreements-api-sqs',
-    provider: 'fg-gas-backend-sns',
+    consumer: 'farming-grants-agreements-api',
+    provider: 'fg-gas-backend',
     dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
     pactfileWriteMode: 'update'
   })

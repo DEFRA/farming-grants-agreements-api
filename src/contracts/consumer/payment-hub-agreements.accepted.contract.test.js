@@ -79,8 +79,8 @@ let originalFetch
 // Reason: Pending actual request/response data from payment hub service
 describe.skip('UI sending a POST request to accept an agreement', () => {
   const provider = new Pact({
-    consumer: 'farming-grants-agreements-api-rest',
-    provider: 'payment-hub-rest',
+    consumer: 'farming-grants-agreements-api',
+    provider: 'payment-hub',
     dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
     pactfileWriteMode: 'update',
     logLevel: process.env.CI ? 'warn' : 'info'
