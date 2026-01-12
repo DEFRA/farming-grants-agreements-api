@@ -1,6 +1,5 @@
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
-import Boom from '@hapi/boom'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/api/router.js'
@@ -12,52 +11,11 @@ import { requestTracing } from '~/src/api/common/helpers/request-tracing.js'
 import { setupProxy } from '~/src/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '~/src/api/common/helpers/mongoose.js'
 import { errorHandlerPlugin } from '~/src/api/common/helpers/error-handler.js'
-import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
-import {
-  getAgreementDataById,
-  getAgreementDataBySbi
-} from './agreement/helpers/get-agreement-data.js'
+import { customGrantsUiJwtScheme } from '~/src/api/common/auth/custom-grants-ui-jwt-scheme.js'
 import { createSqsClientPlugin } from '~/src/api/common/helpers/sqs-client.js'
 import { handleCreateAgreementEvent } from './common/helpers/sqs-message-processor/create-agreement.js'
 import { handleUpdateAgreementEvent } from './common/helpers/sqs-message-processor/update-agreement.js'
 import { returnDataHandlerPlugin } from './common/helpers/return-data-handler.js'
-
-const customGrantsUiJwtScheme = () => ({
-  authenticate: async (request, h) => {
-    const { agreementId } = request.params
-    let agreementData = null
-    if (agreementId) {
-      agreementData = await getAgreementDataById(agreementId)
-    }
-
-    const authResult = validateJwtAuthentication(
-      request.headers['x-encrypted-auth'],
-      agreementData,
-      request.logger
-    )
-
-    if (!authResult.valid) {
-      throw Boom.unauthorized(
-        'Not authorized to view/accept offer agreement document'
-      )
-    }
-    // Getting Agreement of the farmer based on the SBI number as agreementId not provided
-    if (!agreementData && checkAuthSourceAndSbi(authResult)) {
-      agreementData = await getAgreementDataBySbi(authResult.sbi)
-    }
-
-    return h.authenticated({
-      credentials: {
-        agreementData,
-        source: authResult.source
-      }
-    })
-  }
-})
-
-function checkAuthSourceAndSbi(auth) {
-  return typeof auth.source === 'string' && auth.source === 'defra' && auth.sbi
-}
 
 async function createServer(serverOptions = {}) {
   setupProxy()
