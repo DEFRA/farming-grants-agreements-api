@@ -15,7 +15,9 @@ Core delivery platform Node.js Backend Template.
     - [Update dependencies](#update-dependencies)
     - [Formatting](#formatting)
       - [Windows prettier issue](#windows-prettier-issue)
+    - [Running the agreements-api service with JWT authentication enabled](#running-the-agreements-api-service-with-jwt-authentication-enabled)
   - [API endpoints](#api-endpoints)
+    - [Generating a JWT for API calls (scripts/gen-auth-header.js)](#generating-a-jwt-for-api-calls-scriptsgen-auth-headerjs)
     - [Proxy](#proxy)
   - [Docker](#docker)
     - [Development image](#development-image)
@@ -26,7 +28,7 @@ Core delivery platform Node.js Backend Template.
     - [Dependabot](#dependabot)
     - [SonarCloud](#sonarcloud)
   - [Licence](#licence)
-    - [About the licence](#about-the-licence)
+    - [About licence](#about-licence)
 
 ## Requirements
 
@@ -355,7 +357,7 @@ The following attribution statement MUST be cited in your products and applicati
 
 > Contains public sector information licensed under the Open Government license v3
 
-### About the licence
+### About licence
 
 The Open Government Licence (OGL) was developed by the Controller of Her Majesty's Stationery Office (HMSO) to enable
 information providers in the public sector to license the use and re-use of their information under a common open
