@@ -79,8 +79,8 @@ describe('sending updated (accepted) events via SNS', () => {
   })
 
   const messagePact = new MessageProviderPact({
-    provider: 'farming-grants-agreements-api-sns',
-    consumer: 'farming-grants-agreements-pdf-sqs',
+    provider: 'farming-grants-agreements-api',
+    consumer: 'farming-grants-agreements-pdf',
     ...(process.env.CI
       ? {
           pactBrokerUrl:
@@ -97,7 +97,7 @@ describe('sending updated (accepted) events via SNS', () => {
           logLevel: 'debug',
           // Hard coded path for local testing
           pactUrls: [
-            '../farming-grants-agreements-pdf/src/contracts/consumer/pacts/farming-grants-agreements-pdf-sqs-farming-grants-agreements-api-sns.json'
+            '../farming-grants-agreements-pdf/src/contracts/consumer/pacts/farming-grants-agreements-pdf-farming-grants-agreements-api.json'
           ]
         }),
     // Consumer.given
