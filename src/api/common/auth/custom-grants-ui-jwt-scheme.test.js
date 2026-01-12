@@ -123,20 +123,25 @@ describe('custom-grants-ui-jwt-scheme', () => {
       logger
     }
 
-    await expect(scheme.authenticate(request, h)).rejects.toMatchObject({
+    const authPromise = scheme.authenticate(request, h)
+
+    await expect(authPromise).rejects.toMatchObject({
       isBoom: true,
       output: { statusCode: 401 }
     })
 
+    let err
     try {
-      await scheme.authenticate(request, h)
-    } catch (err) {
-      expect(Boom.isBoom(err)).toBe(true)
-      expect(err.output.statusCode).toBe(401)
-      expect(err.message).toBe(
-        'Not authorized to view/accept offer agreement document'
-      )
+      await authPromise
+    } catch (caught) {
+      err = caught
     }
+
+    expect(Boom.isBoom(err)).toBe(true)
+    expect(err.output.statusCode).toBe(401)
+    expect(err.message).toBe(
+      'Not authorized to view/accept offer agreement document'
+    )
 
     expect(h.authenticated).not.toHaveBeenCalled()
     expect(mockGetAgreementDataById).not.toHaveBeenCalled()
