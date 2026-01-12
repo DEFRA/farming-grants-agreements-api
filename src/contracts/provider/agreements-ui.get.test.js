@@ -77,7 +77,12 @@ describe('UI sending a GET request to get an agreement', () => {
             pactBrokerUrl:
               process.env.PACT_BROKER_URL ??
               'https://ffc-pact-broker.azure.defra.cloud',
-            consumerVersionSelectors: [{ latest: true }],
+            consumerVersionSelectors: [
+              {
+                consumer: 'farming-grants-agreements-ui',
+                latest: true
+              }
+            ],
             pactBrokerUsername: process.env.PACT_USER,
             pactBrokerPassword: process.env.PACT_PASS,
             publishVerificationResult:

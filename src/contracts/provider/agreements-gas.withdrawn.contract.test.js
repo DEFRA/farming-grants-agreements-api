@@ -20,7 +20,12 @@ describe.skip('sending updated (withdrawn) events via SNS', () => {
     pactBrokerUrl:
       process.env.PACT_BROKER_URL ??
       'https://ffc-pact-broker.azure.defra.cloud',
-    consumerVersionSelectors: [{ latest: true }],
+    consumerVersionSelectors: [
+      {
+        consumer: 'fg-gas-backend',
+        latest: true
+      }
+    ],
     pactBrokerUsername: process.env.PACT_USER,
     pactBrokerPassword: process.env.PACT_PASS,
     publishVerificationResult: process.env.PACT_PUBLISH_VERIFICATION === 'true',
