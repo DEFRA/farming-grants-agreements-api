@@ -60,6 +60,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       schedule: agreementData.frequency === 'Quarterly' ? 'T4' : undefined,
       dueDate: agreementData.payment.payments[0].paymentDate,
       value: agreementData.payment.agreementTotalPence,
+      currency: agreementData.payment.currency || 'GBP',
       invoiceLines
     }
 
