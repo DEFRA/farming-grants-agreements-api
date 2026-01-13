@@ -28,7 +28,7 @@ Core delivery platform Node.js Backend Template.
     - [Dependabot](#dependabot)
     - [SonarCloud](#sonarcloud)
   - [Licence](#licence)
-    - [About licence](#about-licence)
+    - [About the licence](#about-the-licence)
 
 ## Requirements
 
@@ -357,7 +357,7 @@ The following attribution statement MUST be cited in your products and applicati
 
 > Contains public sector information licensed under the Open Government license v3
 
-### About licence
+### About the licence
 
 The Open Government Licence (OGL) was developed by the Controller of Her Majesty's Stationery Office (HMSO) to enable
 information providers in the public sector to license the use and re-use of their information under a common open
