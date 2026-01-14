@@ -10,8 +10,7 @@ vi.mock('~/src/api/common/models/agreements.js', () => ({
   updateOneAgreementVersion: vi.fn().mockResolvedValue('created')
 }))
 
-// Reason: Pact consumer tests need to be setup in fg-gas-backend
-describe.skip('sending updated (accepted) events via SNS', () => {
+describe('sending updated (accepted) events via SNS', () => {
   const mockLogger = {
     info: vi.fn(),
     error: vi.fn()
@@ -33,6 +32,7 @@ describe.skip('sending updated (accepted) events via SNS', () => {
     pactBrokerPassword: process.env.PACT_PASS,
     publishVerificationResult: process.env.PACT_PUBLISH_VERIFICATION === 'true',
     providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
+    failIfNoPactsFound: false,
     messageProviders: {
       'agreement accepted': async () => {
         let message
