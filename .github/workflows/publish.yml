@@ -15,7 +15,7 @@ env:
 
 jobs:
   build:
-    if: github.run_number != 1
+    if: github.run_number != 1 && github.event.repository.fork == false
     name: CDP-build-workflow
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +40,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   pact:
+    if: github.event.repository.fork == false
     needs: build
     runs-on: self-hosted
 
