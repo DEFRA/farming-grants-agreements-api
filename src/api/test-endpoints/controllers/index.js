@@ -2,3 +2,4 @@ export { postTestQueueMessageController } from '~/src/api/test-endpoints/control
 export { getTestAgreementController } from '~/src/api/test-endpoints/controllers/get-test-agreement.controller.js'
 export { postTestUnacceptOfferController } from '~/src/api/test-endpoints/controllers/post-test-unaccept-offer.controller.js'
 export { postTestPopulateAgreementsController } from '~/src/api/test-endpoints/controllers/post-test-populate-agreements.controller.js'
+export { getTestInvoiceController } from '~/src/api/test-endpoints/controllers/get-test-invoice.controller.js'
