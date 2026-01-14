@@ -71,7 +71,8 @@ describe('updatePaymentHub', () => {
           ]
         }
       ],
-      agreementTotalPence: 500000
+      agreementTotalPence: 500000,
+      currency: 'GBP'
     }
   }
 
@@ -127,6 +128,7 @@ describe('updatePaymentHub', () => {
           schedule: 'T4',
           dueDate: '2022-11-09',
           value: 500000,
+          currency: 'GBP',
           invoiceLines: [
             [
               {
@@ -189,6 +191,7 @@ describe('updatePaymentHub', () => {
         schedule: 'T4',
         dueDate: '2022-11-09',
         value: 500000,
+        currency: 'GBP',
         invoiceLines: [
           [
             {
@@ -242,7 +245,8 @@ describe('updatePaymentHub', () => {
               lineItems: []
             }
           ],
-          agreementTotalPence: 0
+          agreementTotalPence: 0,
+          currency: 'GBP'
         }
       }
 
@@ -358,7 +362,8 @@ describe('updatePaymentHub', () => {
               ]
             }
           ],
-          agreementTotalPence: 12345
+          agreementTotalPence: 12345,
+          currency: 'GBP'
         }
       }
 
@@ -371,6 +376,7 @@ describe('updatePaymentHub', () => {
           schedule: undefined,
           dueDate: '2023-02-01',
           value: 12345,
+          currency: 'GBP',
           invoiceLines: [
             [
               {
@@ -400,6 +406,7 @@ describe('updatePaymentHub', () => {
         schedule: 'T4',
         dueDate: '2022-11-09',
         value: 500000,
+        currency: 'GBP',
         invoiceLines: [
           [
             {
@@ -449,7 +456,8 @@ describe('updatePaymentHub', () => {
               ]
             }
           ],
-          agreementTotalPence: 100000
+          agreementTotalPence: 100000,
+          currency: 'GBP'
         }
       }
 
@@ -457,6 +465,44 @@ describe('updatePaymentHub', () => {
 
       const result = await updatePaymentHub(mockContext, 'SFI123456789')
       expect(result.status).toBe('success')
+    })
+
+    it('should default currency to GBP when currency is null, empty string or undefined', async () => {
+      const testCases = [
+        { currency: null, description: 'null' },
+        { currency: '', description: 'empty string' },
+        { currency: undefined, description: 'undefined' }
+      ]
+
+      for (const testCase of testCases) {
+        vi.clearAllMocks()
+
+        const agreementWithMissingCurrency = {
+          ...mockAgreementData,
+          payment: {
+            ...mockAgreementData.payment,
+            currency: testCase.currency
+          }
+        }
+
+        getAgreementDataById.mockResolvedValue(agreementWithMissingCurrency)
+
+        await updatePaymentHub(mockContext, 'SFI123456789')
+
+        expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+          paymentHubRequest: expect.objectContaining({
+            currency: 'GBP'
+          })
+        })
+
+        expect(sendPaymentHubRequest).toHaveBeenCalledWith(
+          mockServer,
+          mockLogger,
+          expect.objectContaining({
+            currency: 'GBP'
+          })
+        )
+      }
     })
   })
 
