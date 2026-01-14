@@ -96,7 +96,8 @@ describe('sending updated (accepted) events via SNS', () => {
           pactBrokerPassword: process.env.PACT_PASS,
           publishVerificationResult:
             process.env.PACT_PUBLISH_VERIFICATION === 'true',
-          providerVersion: process.env.SERVICE_VERSION ?? '1.0.0'
+          providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
+          failIfNoPactsFound: false
         }
       : {
           logLevel: 'debug',

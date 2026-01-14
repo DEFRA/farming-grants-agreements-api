@@ -7,8 +7,7 @@ import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message
 vi.mock('~/src/api/common/helpers/sns-publisher.js')
 vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 
-// Reason: Pact consumer tests need to be setup in fg-gas-backend
-describe.skip('sending updated (withdrawn) events via SNS', () => {
+describe('sending updated (withdrawn) events via SNS', () => {
   const mockLogger = {
     info: vi.fn(),
     error: vi.fn()
@@ -30,6 +29,7 @@ describe.skip('sending updated (withdrawn) events via SNS', () => {
     pactBrokerPassword: process.env.PACT_PASS,
     publishVerificationResult: process.env.PACT_PUBLISH_VERIFICATION === 'true',
     providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
+    failIfNoPactsFound: false,
     messageProviders: {
       'agreement withdrawn': async () => {
         let message
