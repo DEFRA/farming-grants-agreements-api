@@ -12,6 +12,7 @@ import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
 import { getJsonPacts } from '~/src/contracts/consumer/pact-test-helpers.js'
+import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
 
 vi.unmock('mongoose')
 
@@ -32,12 +33,11 @@ const localPactDir = path.resolve(
 
 describe('UI sending a GET request to get an agreement', () => {
   beforeAll(async () => {
-    // Use the MongoDB URI provided by @shelf/jest-mongodb
-    const mongoUri = globalThis.__MONGO_URI__
+    const mongoOverrides = buildIsolatedMongoOptions('agreements-ui-contract')
 
     // Configure the application
     config.set('port', crypto.randomInt(30001, 65535))
-    config.set('mongoUri', mongoUri)
+    config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.seedDb', true)
@@ -62,7 +62,10 @@ describe('UI sending a GET request to get an agreement', () => {
     })
 
     // Create and start the server
-    server = await createServer({ disableSQS: true })
+    server = await createServer({
+      disableSQS: true,
+      ...mongoOverrides
+    })
     await server.start()
     await seedDatabase(console, [
       { ...agreements[1], identifiers: { ...agreements[1].identifiers, sbi } }

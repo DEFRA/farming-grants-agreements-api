@@ -11,6 +11,7 @@ import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 import { withPactDir } from '~/src/contracts/consumer/pact-test-helpers.js'
+import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
 
 const { like, iso8601Date, eachLike } = MatchersV2
 
@@ -37,12 +38,11 @@ describe('UI sending a POST request to accept an agreement', () => {
     originalFetch = global.fetch
     global.fetch = undiciFetch
 
-    // Use the MongoDB URI provided by @shelf/jest-mongodb
-    const mongoUri = globalThis.__MONGO_URI__
+    const mongoOverrides = buildIsolatedMongoOptions('land-grants-contract')
 
     // Configure the application
     config.set('port', crypto.randomInt(30001, 65535))
-    config.set('mongoUri', mongoUri)
+    config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.isPaymentHubEnabled', false)
@@ -57,7 +57,10 @@ describe('UI sending a POST request to accept an agreement', () => {
     })
 
     // Create and start the server
-    server = await createServer({ disableSQS: true })
+    server = await createServer({
+      disableSQS: true,
+      ...mongoOverrides
+    })
     await server.initialize()
     await seedDatabase(console, [sampleData.agreements[1]])
   })
