@@ -90,7 +90,7 @@ const createAgreementVariation = (index, timestamp, dateRange) => {
         sbi,
         frn,
         crn: template.identifiers?.crn ?? 'crn',
-        defraId: template.identifiers?.defraId ?? 'defraId'
+        defraId: template.identifiers?.defraId
       },
       status: 'offered',
       scheme: template.answers?.scheme ?? 'SFI',

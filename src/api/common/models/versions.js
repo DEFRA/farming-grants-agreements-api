@@ -6,7 +6,7 @@ const Identifiers = new mongoose.Schema({
   sbi: { type: String, required: true },
   frn: { type: String, required: true },
   crn: { type: String, required: true },
-  defraId: { type: String, required: true }
+  defraId: { type: String }
 })
 
 const ActionApplications = new mongoose.Schema({
