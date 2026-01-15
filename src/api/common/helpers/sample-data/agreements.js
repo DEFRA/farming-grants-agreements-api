@@ -868,8 +868,7 @@ export default [
     identifiers: {
       sbi: '106284736',
       frn: 'frn',
-      crn: 'crn',
-      defraId: 'defraId'
+      crn: 'crn'
     },
     answers: {
       hasCheckedLandIsUpToDate: true,

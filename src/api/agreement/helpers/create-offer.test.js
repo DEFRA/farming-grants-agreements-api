@@ -100,8 +100,7 @@ const agreementData = {
   identifiers: {
     sbi: '106284736',
     frn: '1234567890',
-    crn: '1234567890',
-    defraId: '1234567890'
+    crn: '1234567890'
   },
   answers: {
     scheme: 'SFI',
@@ -251,6 +250,50 @@ describe('createOffer', () => {
         })
       },
       mockLogger
+    )
+  })
+
+  it('accepts identifiers without defraId', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer('aws-message-id', agreementData, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].identifiers).toEqual(
+      expect.objectContaining({
+        sbi: '106284736',
+        frn: '1234567890',
+        crn: '1234567890'
+      })
+    )
+    expect(lastCallArgs.versions[0].identifiers.defraId).toBeUndefined()
+  })
+
+  it('accepts identifiers with defraId', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    const withDefraId = {
+      ...agreementData,
+      identifiers: {
+        ...agreementData.identifiers,
+        defraId: '1234567890'
+      }
+    }
+
+    await createOffer('aws-message-id', withDefraId, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].identifiers).toEqual(
+      expect.objectContaining({
+        sbi: '106284736',
+        frn: '1234567890',
+        crn: '1234567890',
+        defraId: '1234567890'
+      })
     )
   })
 
