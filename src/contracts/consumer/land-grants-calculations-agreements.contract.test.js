@@ -1,7 +1,6 @@
 import { vi } from 'vitest'
 import { fetch as undiciFetch } from 'undici'
 
-import path from 'node:path'
 import crypto from 'node:crypto'
 
 import { Pact, MatchersV2 } from '@pact-foundation/pact'
@@ -11,6 +10,7 @@ import { config } from '~/src/config/index.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
+import { withPactDir } from '~/src/contracts/consumer/pact-test-helpers.js'
 
 const { like, iso8601Date, eachLike } = MatchersV2
 
@@ -27,9 +27,8 @@ describe('UI sending a POST request to accept an agreement', () => {
   const provider = new Pact({
     consumer: 'farming-grants-agreements-api',
     provider: 'land-grants-api',
-    dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
-    pactfileWriteMode: 'update',
-    logLevel: process.env.CI ? 'warn' : 'info'
+    logLevel: process.env.CI ? 'warn' : 'info',
+    ...withPactDir(import.meta.url)
   })
 
   beforeAll(async () => {

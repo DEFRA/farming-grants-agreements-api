@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
 
-import path from 'node:path'
 import crypto from 'node:crypto'
 
 import { Pact } from '@pact-foundation/pact'
@@ -10,6 +9,7 @@ import { config } from '~/src/config/index.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
+import { withPactDir } from '~/src/contracts/consumer/pact-test-helpers.js'
 
 vi.unmock('mongoose')
 
@@ -81,9 +81,8 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
   const provider = new Pact({
     consumer: 'farming-grants-agreements-api',
     provider: 'payment-hub',
-    dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
-    pactfileWriteMode: 'update',
-    logLevel: process.env.CI ? 'warn' : 'info'
+    logLevel: process.env.CI ? 'warn' : 'info',
+    ...withPactDir(import.meta.url)
   })
 
   beforeAll(async () => {

@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 import crypto from 'node:crypto'
+import path from 'node:path'
 
 import { Verifier } from '@pact-foundation/pact'
 
@@ -10,6 +11,7 @@ import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
+import { getJsonPacts } from '~/src/contracts/consumer/pact-test-helpers.js'
 
 vi.unmock('mongoose')
 
@@ -22,6 +24,11 @@ vi.mock('~/src/api/common/helpers/fetch.js', () => ({
 }))
 
 let server
+
+const localPactDir = path.resolve(
+  process.cwd(),
+  '../farming-grants-agreements-ui/src/contracts/consumer/pacts'
+)
 
 describe('UI sending a GET request to get an agreement', () => {
   beforeAll(async () => {
@@ -93,9 +100,7 @@ describe('UI sending a GET request to get an agreement', () => {
         : {
             logLevel: 'debug',
             // Hard coded path for local testing
-            pactUrls: [
-              '../farming-grants-agreements-ui/src/contracts/consumer/pacts/farming-grants-agreements-ui-farming-grants-agreements-api.json'
-            ]
+            pactUrls: getJsonPacts(localPactDir)
           }),
       providerBaseUrl: `http://localhost:${config.get('port')}`, // server.info.uri,
       requestFilter: (req, res, next) => {
