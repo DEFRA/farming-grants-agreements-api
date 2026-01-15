@@ -4,7 +4,7 @@ import { MessageConsumerPact, MatchersV2 } from '@pact-foundation/pact'
 import { handleCreateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/create-agreement.js'
 import { createOffer as mockCreateOffer } from '~/src/api/agreement/helpers/create-offer.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
-import { withPactDir } from '~/src/contracts/consumer/pact-test-helpers.js'
+import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
 
 vi.mock('~/src/api/agreement/helpers/create-offer.js')
 vi.mock('~/src/api/common/helpers/sns-publisher.js')

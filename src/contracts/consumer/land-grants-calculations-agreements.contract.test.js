@@ -10,7 +10,7 @@ import { config } from '~/src/config/index.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
-import { withPactDir } from '~/src/contracts/consumer/pact-test-helpers.js'
+import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
 import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
 
 const { like, iso8601Date, eachLike } = MatchersV2

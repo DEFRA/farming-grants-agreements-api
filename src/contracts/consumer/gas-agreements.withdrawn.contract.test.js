@@ -2,7 +2,7 @@ import { MatchersV2, MessageConsumerPact } from '@pact-foundation/pact'
 
 import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/update-agreement.js'
 import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
-import { withPactDir } from '~/src/contracts/consumer/pact-test-helpers.js'
+import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
 
 vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 vi.mock('~/src/api/common/helpers/sns-publisher.js')

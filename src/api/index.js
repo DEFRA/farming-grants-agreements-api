@@ -79,8 +79,9 @@ async function createServer(serverOptions = {}) {
           databaseName: mongoDatabase
         }
       },
-      ...(!disableSQS
-        ? [
+      ...(disableSQS
+        ? []
+        : [
             createSqsClientPlugin(
               'gas_create_agreement',
               config.get('sqs.queueUrl'),
@@ -91,8 +92,7 @@ async function createServer(serverOptions = {}) {
               config.get('sqs.gasApplicationUpdatedQueueUrl'),
               handleUpdateAgreementEvent
             )
-          ]
-        : []),
+          ]),
       errorHandlerPlugin,
       returnDataHandlerPlugin,
       router

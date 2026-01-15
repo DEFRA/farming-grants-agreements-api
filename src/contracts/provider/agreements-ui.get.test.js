@@ -11,7 +11,7 @@ import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { getJsonPacts } from '~/src/contracts/consumer/pact-test-helpers.js'
+import { getJsonPacts } from '~/src/contracts/test-helpers/pact.js'
 import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
 
 vi.unmock('mongoose')

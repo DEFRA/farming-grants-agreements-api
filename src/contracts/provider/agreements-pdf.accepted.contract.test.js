@@ -10,7 +10,7 @@ import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { getJsonPacts } from '~/src/contracts/consumer/pact-test-helpers.js'
+import { getJsonPacts } from '~/src/contracts/test-helpers/pact.js'
 
 vi.mock('~/src/api/agreement/helpers/accept-offer.js')
 vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
