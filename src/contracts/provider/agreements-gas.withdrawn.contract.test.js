@@ -16,17 +16,12 @@ describe('sending updated (withdrawn) events via SNS', () => {
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api',
     consumer: 'fg-gas-backend',
-    pactBrokerUrl:
-      process.env.PACT_BROKER_URL ??
-      'https://ffc-pact-broker.azure.defra.cloud',
     consumerVersionSelectors: [
       {
         consumer: 'fg-gas-backend',
         latest: true
       }
     ],
-    pactBrokerUsername: process.env.PACT_USER,
-    pactBrokerPassword: process.env.PACT_PASS,
     publishVerificationResult: process.env.PACT_PUBLISH_VERIFICATION === 'true',
     providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
     failIfNoPactsFound: false,

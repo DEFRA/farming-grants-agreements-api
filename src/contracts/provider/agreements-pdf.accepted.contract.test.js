@@ -91,17 +91,12 @@ describe('sending updated (accepted) events via SNS', () => {
     consumer: 'farming-grants-agreements-pdf',
     ...(process.env.CI
       ? {
-          pactBrokerUrl:
-            process.env.PACT_BROKER_URL ??
-            'https://ffc-pact-broker.azure.defra.cloud',
           consumerVersionSelectors: [
             {
               consumer: 'farming-grants-agreements-pdf',
               latest: true
             }
           ],
-          pactBrokerUsername: process.env.PACT_USER,
-          pactBrokerPassword: process.env.PACT_PASS,
           publishVerificationResult:
             process.env.PACT_PUBLISH_VERIFICATION === 'true',
           providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
