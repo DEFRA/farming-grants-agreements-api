@@ -6,6 +6,7 @@ BASE_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 # Array of repositories to update
 repos=(
+  "cdp-app-config"
   "cdp-defra-id-stub"
   "fg-gas-backend"
   "grants-ui"
