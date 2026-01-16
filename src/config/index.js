@@ -291,6 +291,12 @@ const config = convict({
     }
   },
   paymentHub: {
+    defaultSourceSystem: {
+      doc: 'Default source system for payment hub requests',
+      format: String,
+      default: 'FPTT',
+      env: 'PAYMENT_HUB_DEFAULT_SOURCE_SYSTEM'
+    },
     uri: {
       doc: 'URI for payment hub service bus',
       format: String,

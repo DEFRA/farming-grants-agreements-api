@@ -64,6 +64,7 @@ services:
       - 'compose/aws.env'
     environment:
       PAYMENT_HUB_LOGGING: ${PAYMENT_HUB_LOGGING:-true}
+      PAYMENT_HUB_DEFAULT_SOURCE_SYSTEM: ${PAYMENT_HUB_DEFAULT_SOURCE_SYSTEM:-FPTT}
       PORT: 3555
       NODE_ENV: ${NODE_ENV:-development}
       LOCALSTACK_ENDPOINT: http://localstack:4566
