@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
 
-import path from 'node:path'
 import crypto from 'node:crypto'
 
 import { Pact } from '@pact-foundation/pact'
@@ -10,6 +9,8 @@ import { config } from '~/src/config/index.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
+import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
+import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
 
 vi.unmock('mongoose')
 
@@ -81,9 +82,8 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
   const provider = new Pact({
     consumer: 'farming-grants-agreements-api',
     provider: 'payment-hub',
-    dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
-    pactfileWriteMode: 'update',
-    logLevel: process.env.CI ? 'warn' : 'info'
+    logLevel: process.env.CI ? 'warn' : 'info',
+    ...withPactDir(import.meta.url)
   })
 
   beforeAll(async () => {
@@ -101,12 +101,11 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
       return originalFetch(url, options)
     })
 
-    // Use the MongoDB URI provided by @shelf/jest-mongodb
-    const mongoUri = globalThis.__MONGO_URI__
+    const mongoOverrides = buildIsolatedMongoOptions('payment-hub-contract')
 
     // Configure the application
     config.set('port', crypto.randomInt(30001, 65535))
-    config.set('mongoUri', mongoUri)
+    config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.isPaymentHubEnabled', true)
@@ -120,7 +119,10 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
     })
 
     // Create and start the server
-    server = await createServer({ disableSQS: true })
+    server = await createServer({
+      disableSQS: true,
+      ...mongoOverrides
+    })
     await server.initialize()
     await seedDatabase(console, [agreements[1]])
   })

@@ -46,6 +46,8 @@ describe('mongooseDb', () => {
   let mockServer
   let mockLogger
   let mockOptions
+  /** @type {Record<string, unknown>} */
+  let configValues
 
   beforeEach(() => {
     mockLogger = {
@@ -67,22 +69,21 @@ describe('mongooseDb', () => {
       databaseName: 'test-db'
     }
 
+    configValues = {
+      mongoUri: mockOptions.mongoUrl,
+      mongoDatabase: mockOptions.databaseName,
+      'featureFlags.seedDb': false
+    }
+
     // Reset mocks
     vi.clearAllMocks()
+
+    mockConfig.get.mockImplementation((key) => configValues[key])
   })
 
-  describe('plugin registration', () => {
-    test('should have correct plugin name and version', () => {
-      expect(mongooseDb.plugin.name).toBe('mongoose')
-      expect(mongooseDb.plugin.version).toBe('1.0.0')
-    })
-
-    test('should have correct options from config', () => {
-      expect(mongooseDb.options.mongoUrl).toBe(mockConfig.get('mongoUri'))
-      expect(mongooseDb.options.databaseName).toBe(
-        mockConfig.get('mongoDatabase')
-      )
-    })
+  test('plugin should have correct name and version metadata', () => {
+    expect(mongooseDb.plugin.name).toBe('mongoose')
+    expect(mongooseDb.plugin.version).toBe('1.0.0')
   })
 
   describe('register function', () => {
@@ -105,9 +106,17 @@ describe('mongooseDb', () => {
       )
     })
 
+    test('should fall back to config when options are not provided', () => {
+      mongooseDb.plugin.register(mockServer)
+
+      expect(mockMongoose.connect).toHaveBeenCalledWith(configValues.mongoUri, {
+        dbName: configValues.mongoDatabase
+      })
+    })
+
     test('should seed database when feature flag is enabled', async () => {
       // Arrange
-      mockConfig.get.mockReturnValue(true)
+      configValues['featureFlags.seedDb'] = true
       mockSeedDatabase.mockResolvedValue(undefined)
 
       // Act
@@ -121,9 +130,6 @@ describe('mongooseDb', () => {
     })
 
     test('should not seed database when feature flag is disabled', async () => {
-      // Arrange
-      mockConfig.get.mockReturnValue(false)
-
       // Act
       await Promise.resolve(mongooseDb.plugin.register(mockServer, mockOptions))
 
@@ -134,7 +140,7 @@ describe('mongooseDb', () => {
 
     test('should handle seed database errors gracefully', async () => {
       // Arrange
-      mockConfig.get.mockReturnValue(true)
+      configValues['featureFlags.seedDb'] = true
       const seedError = new Error('Seed failed')
       mockSeedDatabase.mockRejectedValue(seedError)
 

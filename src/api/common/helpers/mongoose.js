@@ -13,14 +13,17 @@ export const mongooseDb = {
     /**
      *
      * @param { import('@hapi/hapi').Server } server
-     * @param {{mongoUrl: string, databaseName: string}} options
+     * @param {{mongoUrl?: string, databaseName?: string}} [options]
      * @returns {void}
      */
-    register: async function (server, options) {
+    register: async function (server, options = {}) {
       server.logger.info('Setting up Mongoose')
 
-      await mongoose.connect(options.mongoUrl, {
-        dbName: options.databaseName
+      const mongoUrl = options.mongoUrl ?? config.get('mongoUri')
+      const databaseName = options.databaseName ?? config.get('mongoDatabase')
+
+      await mongoose.connect(mongoUrl, {
+        dbName: databaseName
       })
 
       server.logger.info('Mongoose connected to MongoDB')
@@ -44,10 +47,6 @@ export const mongooseDb = {
         await mongoose.disconnect()
       })
     }
-  },
-  options: {
-    mongoUrl: config.get('mongoUri'),
-    databaseName: config.get('mongoDatabase')
   }
 }
 

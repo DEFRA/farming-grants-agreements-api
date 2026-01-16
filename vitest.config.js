@@ -20,7 +20,9 @@ export default defineConfig({
         '**/index.js',
         '**/*.test.js',
         '**/*.contract.test.js',
-        '**/contracts/**'
+        '**/contracts/**',
+        '**/__mocks__/**',
+        '**test-helper**'
       ]
     },
     setupFiles: ['./.vitest/setup.js'],

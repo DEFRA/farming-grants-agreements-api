@@ -55,10 +55,7 @@ async function createServer(serverOptions = {}) {
   server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
   server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
 
-  const options = {
-    disableSQS: false,
-    ...serverOptions
-  }
+  const { disableSQS = false, mongoUrl, mongoDatabase } = serverOptions
 
   // Hapi Plugins:
   // requestLogger      - automatically logs incoming requests
@@ -75,9 +72,16 @@ async function createServer(serverOptions = {}) {
       requestTracing,
       secureContext,
       pulse,
-      mongooseDb,
-      ...(!options.disableSQS
-        ? [
+      {
+        plugin: mongooseDb.plugin,
+        options: {
+          mongoUrl,
+          databaseName: mongoDatabase
+        }
+      },
+      ...(disableSQS
+        ? []
+        : [
             createSqsClientPlugin(
               'gas_create_agreement',
               config.get('sqs.queueUrl'),
@@ -88,8 +92,7 @@ async function createServer(serverOptions = {}) {
               config.get('sqs.gasApplicationUpdatedQueueUrl'),
               handleUpdateAgreementEvent
             )
-          ]
-        : []),
+          ]),
       errorHandlerPlugin,
       returnDataHandlerPlugin,
       router

@@ -1,9 +1,8 @@
-import path from 'node:path'
-
 import { MatchersV2, MessageConsumerPact } from '@pact-foundation/pact'
 
 import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/update-agreement.js'
 import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
+import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
 
 vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 vi.mock('~/src/api/common/helpers/sns-publisher.js')
@@ -14,8 +13,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
   const messagePact = new MessageConsumerPact({
     consumer: 'farming-grants-agreements-api',
     provider: 'fg-gas-backend',
-    dir: path.resolve('src', 'contracts', 'consumer', 'pacts'),
-    pactfileWriteMode: 'update'
+    ...withPactDir(import.meta.url)
   })
 
   const mockLogger = {
