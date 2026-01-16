@@ -1,4 +1,6 @@
 import { vi } from 'vitest'
+import path from 'node:path'
+
 import { MessageProviderPact } from '@pact-foundation/pact'
 
 import { createServer } from '~/src/api/index.js'
@@ -8,6 +10,7 @@ import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement
 import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { getJsonPacts } from '~/src/contracts/test-helpers/pact.js'
 
 vi.mock('~/src/api/agreement/helpers/accept-offer.js')
 vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
@@ -21,6 +24,11 @@ vi.mock(
 )
 vi.mock('~/src/api/common/helpers/jwt-auth.js')
 vi.mock('~/src/api/common/helpers/sns-publisher.js')
+
+const localPactDir = path.resolve(
+  process.cwd(),
+  '../farming-grants-agreements-pdf/src/contracts/consumer/pacts'
+)
 
 describe('sending updated (accepted) events via SNS', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -102,9 +110,7 @@ describe('sending updated (accepted) events via SNS', () => {
       : {
           logLevel: 'debug',
           // Hard coded path for local testing
-          pactUrls: [
-            '../farming-grants-agreements-pdf/src/contracts/consumer/pacts/farming-grants-agreements-pdf-farming-grants-agreements-api.json'
-          ]
+          pactUrls: getJsonPacts(localPactDir)
         }),
     // Consumer.given
     stateHandlers: {

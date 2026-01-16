@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 import crypto from 'node:crypto'
+import path from 'node:path'
 
 import { Verifier } from '@pact-foundation/pact'
 
@@ -10,6 +11,8 @@ import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
 import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
 import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
 import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
+import { getJsonPacts } from '~/src/contracts/test-helpers/pact.js'
+import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
 
 vi.unmock('mongoose')
 
@@ -23,14 +26,18 @@ vi.mock('~/src/api/common/helpers/fetch.js', () => ({
 
 let server
 
+const localPactDir = path.resolve(
+  process.cwd(),
+  '../farming-grants-agreements-ui/src/contracts/consumer/pacts'
+)
+
 describe('UI sending a GET request to get an agreement', () => {
   beforeAll(async () => {
-    // Use the MongoDB URI provided by @shelf/jest-mongodb
-    const mongoUri = globalThis.__MONGO_URI__
+    const mongoOverrides = buildIsolatedMongoOptions('agreements-ui-contract')
 
     // Configure the application
     config.set('port', crypto.randomInt(30001, 65535))
-    config.set('mongoUri', mongoUri)
+    config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.seedDb', true)
@@ -55,7 +62,10 @@ describe('UI sending a GET request to get an agreement', () => {
     })
 
     // Create and start the server
-    server = await createServer({ disableSQS: true })
+    server = await createServer({
+      disableSQS: true,
+      ...mongoOverrides
+    })
     await server.start()
     await seedDatabase(console, [
       { ...agreements[1], identifiers: { ...agreements[1].identifiers, sbi } }
@@ -93,9 +103,7 @@ describe('UI sending a GET request to get an agreement', () => {
         : {
             logLevel: 'debug',
             // Hard coded path for local testing
-            pactUrls: [
-              '../farming-grants-agreements-ui/src/contracts/consumer/pacts/farming-grants-agreements-ui-farming-grants-agreements-api.json'
-            ]
+            pactUrls: getJsonPacts(localPactDir)
           }),
       providerBaseUrl: `http://localhost:${config.get('port')}`, // server.info.uri,
       requestFilter: (req, res, next) => {
