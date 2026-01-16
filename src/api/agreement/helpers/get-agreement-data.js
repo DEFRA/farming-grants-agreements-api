@@ -89,10 +89,9 @@ const getAgreementDataById = async (agreementId) => {
   validateAgreementId(agreementId)
 
   // Get the agreement data before accepting
-  const agreementData = await getAgreementData({
+  return getAgreementData({
     agreementNumber: agreementId
   })
-  return agreementData
 }
 
 /**
