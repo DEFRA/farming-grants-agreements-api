@@ -88,7 +88,6 @@ describe('sending updated (accepted) events via SNS', () => {
 
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api',
-    consumer: 'farming-grants-agreements-pdf',
     ...(process.env.CI
       ? {
           consumerVersionSelectors: [

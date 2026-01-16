@@ -81,7 +81,6 @@ describe('UI sending a GET request to get an agreement', () => {
   it('should validate the expectations of the UI', async () => {
     const pactOpts = {
       provider: 'farming-grants-agreements-api',
-      consumer: 'farming-grants-agreements-ui',
       ...(process.env.CI
         ? {
             consumerVersionSelectors: [

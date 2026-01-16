@@ -22,7 +22,6 @@ describe('sending updated (created) event via SNS', () => {
 
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api',
-    consumer: 'fg-gas-backend',
     consumerVersionSelectors: [
       {
         consumer: 'fg-gas-backend',
