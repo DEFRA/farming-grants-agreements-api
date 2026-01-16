@@ -81,20 +81,14 @@ describe('UI sending a GET request to get an agreement', () => {
   it('should validate the expectations of the UI', async () => {
     const pactOpts = {
       provider: 'farming-grants-agreements-api',
-      consumer: 'farming-grants-agreements-ui',
       ...(process.env.CI
         ? {
-            pactBrokerUrl:
-              process.env.PACT_BROKER_URL ??
-              'https://ffc-pact-broker.azure.defra.cloud',
             consumerVersionSelectors: [
               {
                 consumer: 'farming-grants-agreements-ui',
                 latest: true
               }
             ],
-            pactBrokerUsername: process.env.PACT_USER,
-            pactBrokerPassword: process.env.PACT_PASS,
             publishVerificationResult:
               process.env.PACT_PUBLISH_VERIFICATION === 'true',
             providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
