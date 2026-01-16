@@ -18,7 +18,10 @@ vi.mock('./get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
 }))
 vi.mock('~/src/config/index.js', () => {
-  const store = { 'featureFlags.isPaymentHubEnabled': false }
+  const store = {
+    'featureFlags.isPaymentHubEnabled': false,
+    'paymentHub.defaultSourceSystem': 'FPTT'
+  }
   return {
     config: {
       get: vi.fn((key) => store[key]),
@@ -118,7 +121,7 @@ describe('updatePaymentHub', () => {
 
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
-          sourceSystem: 'AHWR',
+          sourceSystem: 'FPTT',
           sbi: '106284736',
           frn: '1234567890',
           marketingYear: 2024,
@@ -153,7 +156,7 @@ describe('updatePaymentHub', () => {
         mockServer,
         mockLogger,
         expect.objectContaining({
-          sourceSystem: 'AHWR',
+          sourceSystem: 'FPTT',
           agreementNumber: 'SFI123456789'
         })
       )
@@ -181,7 +184,7 @@ describe('updatePaymentHub', () => {
       )
 
       const paymentHubRequestData = {
-        sourceSystem: 'AHWR',
+        sourceSystem: 'FPTT',
         sbi: '106284736',
         frn: '1234567890',
         marketingYear: 2024,
@@ -219,7 +222,7 @@ describe('updatePaymentHub', () => {
         mockServer,
         mockLogger,
         expect.objectContaining({
-          sourceSystem: 'AHWR',
+          sourceSystem: 'FPTT',
           agreementNumber: 'SFI123456789'
         })
       )
@@ -396,7 +399,7 @@ describe('updatePaymentHub', () => {
       await updatePaymentHub(mockContext, 'SFI123456789')
 
       const expectedPaymentRequest = {
-        sourceSystem: 'AHWR',
+        sourceSystem: 'FPTT',
         sbi: '106284736',
         frn: '1234567890',
         marketingYear: 2024,

@@ -49,7 +49,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
     // Construct the request payload based on the agreement data
     /** @type {PaymentHubRequest} */
     const paymentHubRequest = {
-      sourceSystem: 'AHWR',
+      sourceSystem: config.get('paymentHub.defaultSourceSystem'),
       sbi: agreementData.identifiers.sbi,
       frn: agreementData.identifiers.frn,
       marketingYear,
