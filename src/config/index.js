@@ -297,6 +297,12 @@ const config = convict({
       default: 'FPTT',
       env: 'PAYMENT_HUB_DEFAULT_SOURCE_SYSTEM'
     },
+    defaultLedger: {
+      doc: 'Default ledger for payment hub requests',
+      format: String,
+      default: 'AP',
+      env: 'PAYMENT_HUB_DEFAULT_LEDGER'
+    },
     uri: {
       doc: 'URI for payment hub service bus',
       format: String,
