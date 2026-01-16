@@ -53,7 +53,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       sbi: agreementData.identifiers.sbi,
       frn: agreementData.identifiers.frn,
       marketingYear,
-      paymentRequestNumber: 1,
+      paymentRequestNumber: agreementData.version,
       correlationId: agreementData.correlationId,
       invoiceNumber: invoice.invoiceNumber,
       agreementNumber: agreementData.agreementNumber,

@@ -35,6 +35,7 @@ describe('updatePaymentHub', () => {
   const mockAgreementData = {
     agreementNumber: 'SFI123456789',
     correlationId: 'test-correlation-id',
+    version: 1,
     identifiers: {
       sbi: '106284736',
       frn: '1234567890'
