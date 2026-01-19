@@ -20,7 +20,8 @@ vi.mock('./get-agreement-data.js', () => ({
 vi.mock('~/src/config/index.js', () => {
   const store = {
     'featureFlags.isPaymentHubEnabled': false,
-    'paymentHub.defaultSourceSystem': 'FPTT'
+    'paymentHub.defaultSourceSystem': 'FPTT',
+    'paymentHub.defaultLedger': 'AP'
   }
   return {
     config: {
@@ -196,6 +197,7 @@ describe('updatePaymentHub', () => {
         dueDate: '2022-11-09',
         value: 500000,
         currency: 'GBP',
+        ledger: 'AP',
         invoiceLines: [
           [
             {
@@ -411,6 +413,7 @@ describe('updatePaymentHub', () => {
         dueDate: '2022-11-09',
         value: 500000,
         currency: 'GBP',
+        ledger: 'AP',
         invoiceLines: [
           [
             {
