@@ -131,18 +131,18 @@ describe('updatePaymentHub', () => {
           agreementNumber: 'SFI123456789',
           schedule: 'T4',
           dueDate: '2022-11-09',
-          value: 500000,
+          value: 5000,
           currency: 'GBP',
           invoiceLines: [
             [
               {
-                value: 200000,
+                value: 2000,
                 description:
                   '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
                 schemeCode: 'ACT001'
               },
               {
-                value: 300000,
+                value: 3000,
                 description:
                   '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
                 schemeCode: 'ACT002'
@@ -194,18 +194,18 @@ describe('updatePaymentHub', () => {
         agreementNumber: 'SFI123456789',
         schedule: 'T4',
         dueDate: '2022-11-09',
-        value: 500000,
+        value: 5000,
         currency: 'GBP',
         invoiceLines: [
           [
             {
-              value: 200000,
+              value: 2000,
               description:
                 '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
               schemeCode: 'ACT001'
             },
             {
-              value: 300000,
+              value: 3000,
               description:
                 '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
               schemeCode: 'ACT002'
@@ -379,12 +379,12 @@ describe('updatePaymentHub', () => {
         paymentHubRequest: expect.objectContaining({
           schedule: undefined,
           dueDate: '2023-02-01',
-          value: 12345,
+          value: 123.45,
           currency: 'GBP',
           invoiceLines: [
             [
               {
-                value: 12345,
+                value: 123.45,
                 description:
                   '2023-02-01: One-off payment per agreement per year for Annual management payment',
                 schemeCode: 'AL001'
@@ -409,18 +409,18 @@ describe('updatePaymentHub', () => {
         agreementNumber: 'SFI123456789',
         schedule: 'T4',
         dueDate: '2022-11-09',
-        value: 500000,
+        value: 5000,
         currency: 'GBP',
         invoiceLines: [
           [
             {
-              value: 200000,
+              value: 2000,
               description:
                 '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
               schemeCode: 'ACT001'
             },
             {
-              value: 300000,
+              value: 3000,
               description:
                 '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
               schemeCode: 'ACT002'
