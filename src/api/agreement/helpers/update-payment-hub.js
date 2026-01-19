@@ -62,6 +62,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       value: agreementData.payment.agreementTotalPence,
       currency: agreementData.payment.currency || 'GBP',
       ledger: config.get('paymentHub.defaultLedger'),
+      deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
       invoiceLines
     }
 
