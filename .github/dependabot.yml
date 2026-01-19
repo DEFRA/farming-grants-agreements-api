@@ -1,5 +1,5 @@
 version: 2
-
+enable-beta-ecosystems: true
 updates:
   # Update npm packages
   - package-ecosystem: npm
@@ -12,14 +12,21 @@ updates:
         patterns:
           - '@babel/*'
           - 'autoprefixer'
-          - 'babel-plugin-module-resolver'
           - 'babel-loader'
+          - 'babel-plugin-module-resolver'
           - 'babel-plugin-transform-import-meta'
+          - 'clean-webpack-plugin'
+          - 'copy-webpack-plugin'
+          - 'terser-webpack-plugin'
           - 'tsx'
+          - 'webpack'
+          - 'webpack-*'
 
       lint:
         patterns:
           - '@typescript-eslint/*'
+          - 'eslint'
+          - 'eslint-*'
           - 'prettier'
           - 'stylelint'
           - 'stylelint-*'
@@ -27,8 +34,10 @@ updates:
 
       logging:
         patterns:
+          - '@elastic/ecs-pino-format'
           - '*-pino'
           - '*-pino-format'
+          - 'hapi-pino'
           - 'pino'
           - 'pino-*'
 
@@ -37,6 +46,7 @@ updates:
           - 'babel-jest'
           - 'husky'
           - 'jest'
+          - 'jest-*'
           - 'nodemon'
           - 'npm-run-all'
 
@@ -45,9 +55,9 @@ updates:
           - '@types/*'
 
     ignore:
-      - dependency-name: 'eslint-*'
-      - dependency-name: 'eslint'
-      - dependency-name: '@typescript-eslint/*'
+      # Upgrade to Node LTS versions only
+      - dependency-name: '@types/node'
+        versions: [">=25"]
 
     # Schedule run every Monday, local time
     schedule:
@@ -63,6 +73,31 @@ updates:
 
   # Update GitHub Actions
   - package-ecosystem: github-actions
+    directory: /
+
+    # Schedule run every Monday, local time
+    schedule:
+      interval: weekly
+      time: '10:30'
+      timezone: 'Europe/London'
+
+  # Update Dockerfiles
+  - package-ecosystem: docker
+    directory: /
+
+    ignore:
+      # Upgrade to Node LTS versions only
+      - dependency-name: 'node'
+        versions: [">=25"]
+
+    # Schedule run every Monday, local time
+    schedule:
+      interval: weekly
+      time: '10:30'
+      timezone: 'Europe/London'
+
+  # Update Docker Compose files
+  - package-ecosystem: docker-compose
     directory: /
 
     # Schedule run every Monday, local time
