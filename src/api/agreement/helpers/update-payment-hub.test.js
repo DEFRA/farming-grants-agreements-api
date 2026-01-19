@@ -22,7 +22,8 @@ vi.mock('~/src/config/index.js', () => {
     'featureFlags.isPaymentHubEnabled': false,
     'paymentHub.defaultSourceSystem': 'FPTT',
     'paymentHub.defaultLedger': 'AP',
-    'paymentHub.defaultDeliveryBody': 'RP00'
+    'paymentHub.defaultDeliveryBody': 'RP00',
+    'paymentHub.defaultFesCode': 'FALS_FPTT'
   }
   return {
     config: {
@@ -200,6 +201,7 @@ describe('updatePaymentHub', () => {
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
+        fesCode: 'FALS_FPTT',
         invoiceLines: [
           [
             {
@@ -417,6 +419,7 @@ describe('updatePaymentHub', () => {
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
+        fesCode: 'FALS_FPTT',
         invoiceLines: [
           [
             {
