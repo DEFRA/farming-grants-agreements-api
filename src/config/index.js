@@ -303,6 +303,12 @@ const config = convict({
       default: 'AP',
       env: 'PAYMENT_HUB_DEFAULT_LEDGER'
     },
+    defaultDeliveryBody: {
+      doc: 'Default delivery body for payment hub requests',
+      format: String,
+      default: 'RP00',
+      env: 'PAYMENT_HUB_DEFAULT_DELIVERY_BODY'
+    },
     uri: {
       doc: 'URI for payment hub service bus',
       format: String,
