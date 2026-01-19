@@ -97,7 +97,7 @@ describe('UI sending a POST request to accept an agreement', () => {
             annualPaymentPence: like(4806),
             parcelId: like('8083'),
             sheetId: like('SD6743'),
-            version: like(1)
+            version: like('1.0.0')
           }
         }),
 
@@ -108,7 +108,7 @@ describe('UI sending a POST request to accept an agreement', () => {
               'CMOR1: Assess moorland and produce a written record'
             ),
             annualPaymentPence: like(27200),
-            version: like(1)
+            version: like('1.0.0')
           }
         }),
 
