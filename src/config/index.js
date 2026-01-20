@@ -309,6 +309,12 @@ const config = convict({
       default: 'RP00',
       env: 'PAYMENT_HUB_DEFAULT_DELIVERY_BODY'
     },
+    defaultFesCode: {
+      doc: 'Default FES code for payment hub requests',
+      format: String,
+      default: 'FALS_FPTT',
+      env: 'PAYMENT_HUB_DEFAULT_FES_CODE'
+    },
     uri: {
       doc: 'URI for payment hub service bus',
       format: String,
