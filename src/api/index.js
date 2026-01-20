@@ -1,5 +1,8 @@
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
+import Inert from '@hapi/inert'
+import Vision from '@hapi/vision'
+import HapiSwagger from 'hapi-swagger'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/api/router.js'
@@ -55,9 +58,17 @@ async function createServer(serverOptions = {}) {
   server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
   server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
 
-  const { disableSQS = false, mongoUrl, mongoDatabase } = serverOptions
+  const {
+    disableSQS = false,
+    mongoUrl,
+    mongoDatabase,
+    docsOnly = false
+  } = serverOptions
 
   // Hapi Plugins:
+  // Inert              - static file serving (required by hapi-swagger)
+  // Vision             - template rendering (required by hapi-swagger)
+  // HapiSwagger        - OpenAPI spec generation
   // requestLogger      - automatically logs incoming requests
   // requestTracing     - trace header logging and propagation
   // secureContext      - loads CA certificates from environment config
@@ -68,33 +79,53 @@ async function createServer(serverOptions = {}) {
   // router             - routes used in the app
   await server.register(
     [
-      requestLogger,
-      requestTracing,
-      secureContext,
-      pulse,
+      Inert,
+      Vision,
       {
-        plugin: mongooseDb.plugin,
+        plugin: HapiSwagger,
         options: {
-          mongoUrl,
-          databaseName: mongoDatabase
+          info: {
+            title: 'Agreement Service API',
+            version: '1.0.0',
+            description: 'Farming Grants Agreements API'
+          },
+          documentationPath: '/docs',
+          jsonPath: '/docs/openapi.json',
+          grouping: 'tags'
         }
       },
-      ...(disableSQS
+      // Skip runtime plugins when only generating docs
+      ...(docsOnly
         ? []
         : [
-            createSqsClientPlugin(
-              'gas_create_agreement',
-              config.get('sqs.queueUrl'),
-              handleCreateAgreementEvent
-            ),
-            createSqsClientPlugin(
-              'gas_application_updated',
-              config.get('sqs.gasApplicationUpdatedQueueUrl'),
-              handleUpdateAgreementEvent
-            )
+            requestLogger,
+            requestTracing,
+            secureContext,
+            pulse,
+            {
+              plugin: mongooseDb.plugin,
+              options: {
+                mongoUrl,
+                databaseName: mongoDatabase
+              }
+            },
+            ...(disableSQS
+              ? []
+              : [
+                  createSqsClientPlugin(
+                    'gas_create_agreement',
+                    config.get('sqs.queueUrl'),
+                    handleCreateAgreementEvent
+                  ),
+                  createSqsClientPlugin(
+                    'gas_application_updated',
+                    config.get('sqs.gasApplicationUpdatedQueueUrl'),
+                    handleUpdateAgreementEvent
+                  )
+                ]),
+            errorHandlerPlugin,
+            returnDataHandlerPlugin
           ]),
-      errorHandlerPlugin,
-      returnDataHandlerPlugin,
       router
     ].filter(Boolean)
   )

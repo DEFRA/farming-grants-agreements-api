@@ -1,0 +1,212 @@
+{
+  "basePath": "/",
+  "info": {
+    "title": "Agreement Service API",
+    "version": "1.0.0",
+    "description": "Farming Grants Agreements API"
+  },
+  "swagger": "2.0",
+  "host": "MacBook-Pro-2.local:3555",
+  "schemes": [
+    "http"
+  ],
+  "tags": [],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "operationId": "getHealth",
+        "description": "Returns the service health status and version. Used by the platform to verify the service is running.",
+        "tags": [
+          "health"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/{agreementId}": {
+      "get": {
+        "summary": "Get agreement by ID",
+        "operationId": "getAgreementid",
+        "description": "Returns agreement data for the specified agreement ID. Allows Entra authentication.",
+        "tags": [
+          "agreement"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Get current user agreement",
+        "operationId": "get",
+        "description": "Returns agreement data for the authenticated user based on JWT credentials.",
+        "tags": [
+          "agreement"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      },
+      "post": {
+        "summary": "Accept agreement offer",
+        "operationId": "post",
+        "description": "Accepts the agreement offer for the authenticated user. Updates payment hub and publishes status update event.",
+        "tags": [
+          "agreement"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/api/test/agreement": {
+      "get": {
+        "summary": "Get test agreement",
+        "operationId": "getApiTestAgreement",
+        "description": "Retrieves agreement data by agreement number for testing purposes.",
+        "tags": [
+          "test"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/api/test/invoice": {
+      "get": {
+        "summary": "Get test invoice",
+        "operationId": "getApiTestInvoice",
+        "description": "Retrieves invoice data for testing purposes.",
+        "tags": [
+          "test"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/api/test/unauthorized": {
+      "get": {
+        "summary": "Test unauthorized response",
+        "operationId": "getApiTestUnauthorized",
+        "description": "Test endpoint to trigger 401 error and return JSON error response.",
+        "tags": [
+          "test"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/{agreementId}/{version}/download": {
+      "get": {
+        "summary": "Download agreement PDF",
+        "operationId": "getAgreementidVersionDownload",
+        "description": "Downloads the agreement PDF document for the specified agreement ID and version from S3.",
+        "tags": [
+          "agreement"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/api/test/populate-agreements": {
+      "post": {
+        "summary": "Populate agreements with sample data for performance testing",
+        "operationId": "postApiTestPopulateagreements",
+        "tags": [
+          "test"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/api/test/queue-message/{queueName}": {
+      "post": {
+        "summary": "Post test queue message",
+        "operationId": "postApiTestQueuemessageQueuename",
+        "description": "Posts a test message to the specified SQS queue for testing.",
+        "tags": [
+          "test"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/api/test/unaccept-offer/{agreementId}": {
+      "post": {
+        "summary": "Unaccept agreement offer",
+        "operationId": "postApiTestUnacceptofferAgreementid",
+        "description": "Reverts an accepted agreement offer back to offered status.",
+        "tags": [
+          "test"
+        ],
+        "responses": {
+          "default": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {}
+}

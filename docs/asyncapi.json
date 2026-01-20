@@ -1,0 +1,146 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "Agreement Service Events",
+    "version": "1.0.0",
+    "description": "Event-driven messaging for the Farming Grants Agreements API"
+  },
+  "channels": {
+    "sqs/create_agreement": {
+      "description": "Queue for creating new agreements from GAS",
+      "subscribe": {
+        "operationId": "handleCreateAgreementEvent",
+        "message": {
+          "name": "CreateAgreementEvent",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "gas-backend.agreement.create"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "identifiers": {
+                    "type": "object"
+                  },
+                  "application": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sqs/update_agreement": {
+      "description": "Queue for application status updates (e.g., withdrawn)",
+      "subscribe": {
+        "operationId": "handleUpdateAgreementEvent",
+        "message": {
+          "name": "UpdateAgreementEvent",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "clientRef": {
+                    "type": "string"
+                  },
+                  "agreementNumber": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "withdrawn"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sns/agreement_status_updated": {
+      "description": "Topic for agreement status change notifications",
+      "publish": {
+        "operationId": "publishAgreementStatusUpdated",
+        "message": {
+          "name": "AgreementStatusUpdatedEvent",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "description": "CloudEvents 1.0 format",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "source": {
+                "type": "string",
+                "example": "urn:service:agreement"
+              },
+              "specversion": {
+                "type": "string",
+                "example": "1.0"
+              },
+              "type": {
+                "type": "string",
+                "example": "io.onsite.agreement.status.updated"
+              },
+              "time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "datacontenttype": {
+                "type": "string",
+                "example": "application/json"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "agreementNumber": {
+                    "type": "string"
+                  },
+                  "correlationId": {
+                    "type": "string"
+                  },
+                  "clientRef": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "integer"
+                  },
+                  "agreementUrl": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

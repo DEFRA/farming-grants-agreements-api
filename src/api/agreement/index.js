@@ -14,7 +14,13 @@ const agreement = {
       server.route({
         method: 'GET',
         path: '/',
-        options: { auth },
+        options: {
+          auth,
+          tags: ['api', 'agreement'],
+          description: 'Get current user agreement',
+          notes:
+            'Returns agreement data for the authenticated user based on JWT credentials.'
+        },
         /**
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
@@ -25,7 +31,13 @@ const agreement = {
       server.route({
         method: 'POST',
         path: '/',
-        options: { auth },
+        options: {
+          auth,
+          tags: ['api', 'agreement'],
+          description: 'Accept agreement offer',
+          notes:
+            'Accepts the agreement offer for the authenticated user. Updates payment hub and publishes status update event.'
+        },
         /**
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
@@ -36,7 +48,13 @@ const agreement = {
       server.route({
         method: 'GET',
         path: '/{agreementId}',
-        options: { auth },
+        options: {
+          auth,
+          tags: ['api', 'agreement'],
+          description: 'Get agreement by ID',
+          notes:
+            'Returns agreement data for the specified agreement ID. Allows Entra authentication.'
+        },
         /**
          * @param {import('@hapi/hapi').Request & { pre: { agreementData: Agreement } }} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
@@ -47,7 +65,13 @@ const agreement = {
       server.route({
         method: 'GET',
         path: '/{agreementId}/{version}/download',
-        options: { auth },
+        options: {
+          auth,
+          tags: ['api', 'agreement'],
+          description: 'Download agreement PDF',
+          notes:
+            'Downloads the agreement PDF document for the specified agreement ID and version from S3.'
+        },
         /**
          * @param {import('@hapi/hapi').Request} request
          * @param {import('@hapi/hapi').ResponseToolkit} h
