@@ -21,11 +21,21 @@ try {
 
   const openApiPath = path.resolve(process.cwd(), 'docs/openapi.json')
   fs.writeFileSync(openApiPath, JSON.stringify(openApiSpec, null, 2))
+
+  // Verify file was written
+  if (!fs.existsSync(openApiPath)) {
+    throw new Error(`Failed to write OpenAPI spec to ${openApiPath}`)
+  }
   console.log(`OpenAPI spec written to ${openApiPath}`)
 
   // Write AsyncAPI spec
   const asyncApiPath = path.resolve(process.cwd(), 'docs/asyncapi.json')
   fs.writeFileSync(asyncApiPath, JSON.stringify(asyncApiSpec, null, 2))
+
+  // Verify file was written
+  if (!fs.existsSync(asyncApiPath)) {
+    throw new Error(`Failed to write AsyncAPI spec to ${asyncApiPath}`)
+  }
   console.log(`AsyncAPI spec written to ${asyncApiPath}`)
 
   console.log('API documentation generated successfully.')
@@ -34,6 +44,12 @@ try {
   process.exitCode = 1
 } finally {
   if (server) {
-    await server.stop()
+    try {
+      await server.stop()
+    } catch (stopError) {
+      console.error('Error stopping server:', stopError)
+    }
   }
+  // Explicitly exit to ensure script completes before git add runs
+  process.exit(process.exitCode ?? 0)
 }

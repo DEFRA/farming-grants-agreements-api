@@ -40,11 +40,11 @@
       "get": {
         "summary": "Get agreement by ID",
         "operationId": "getAgreementid",
-        "description": "Returns agreement data for the specified agreement ID. This endpoint supports both Grants UI and Entra authentication methods.",
+        "description": "Returns agreement data for the specified agreement ID. This endpoint supports both DefraID and Entra authentication methods.",
         "parameters": [
           {
             "type": "string",
-            "description": "Unique agreement identifier (e.g. ESFIG-AB1234-AB1/2/A123456)",
+            "description": "Unique agreement identifier (e.g. SFI123456789)",
             "name": "agreementId",
             "in": "path",
             "required": true
@@ -67,7 +67,7 @@
       "get": {
         "summary": "Get current user agreement",
         "operationId": "get",
-        "description": "Returns agreement data for the authenticated user based on JWT credentials. The user must be authenticated via the Grants UI JWT token.",
+        "description": "Returns agreement data for the authenticated user based on JWT credentials. The user must be authenticated via the Grants UI JWT token (DefraID or Entra).",
         "tags": [
           "agreement"
         ],
@@ -189,7 +189,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "Unique agreement identifier (e.g. ESFIG-AB1234-AB1/2/A123456)",
+            "description": "Unique agreement identifier (e.g. SFI123456789)",
             "name": "agreementId",
             "in": "path",
             "required": true
