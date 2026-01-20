@@ -6,9 +6,11 @@ import path from 'node:path'
 
 console.log('Generating API documentation...')
 
+let server
+
 try {
   // Generate OpenAPI spec (docsOnly skips MongoDB, SQS, and other runtime plugins)
-  const server = await createServer({ docsOnly: true })
+  server = await createServer({ docsOnly: true })
   await server.initialize()
 
   const response = await server.inject({
@@ -29,5 +31,9 @@ try {
   console.log('API documentation generated successfully.')
 } catch (error) {
   console.error('Failed to generate API documentation:', error)
-  process.exit(1)
+  process.exitCode = 1
+} finally {
+  if (server) {
+    await server.stop()
+  }
 }

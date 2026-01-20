@@ -9,17 +9,13 @@ const auth = 'grants-ui-jwt'
 const agreementIdParam = Joi.object({
   agreementId: Joi.string()
     .required()
-    .description(
-      'Unique agreement identifier (e.g. ESFIG-AB1234-AB1/2/A123456)'
-    )
+    .description('Unique agreement identifier (e.g. SFI123456789)')
 })
 
 const downloadParams = Joi.object({
   agreementId: Joi.string()
     .required()
-    .description(
-      'Unique agreement identifier (e.g. ESFIG-AB1234-AB1/2/A123456)'
-    ),
+    .description('Unique agreement identifier (e.g. SFI123456789)'),
   version: Joi.number()
     .integer()
     .min(1)
@@ -59,7 +55,7 @@ const agreement = {
           tags: ['api', 'agreement'],
           description: 'Get current user agreement',
           notes:
-            'Returns agreement data for the authenticated user based on JWT credentials. The user must be authenticated via the Grants UI JWT token.',
+            'Returns agreement data for the authenticated user based on JWT credentials. The user must be authenticated via the Grants UI JWT token (DefraID or Entra).',
           response: {
             schema: agreementResponseSchema,
             failAction: 'log'
@@ -101,7 +97,7 @@ const agreement = {
           tags: ['api', 'agreement'],
           description: 'Get agreement by ID',
           notes:
-            'Returns agreement data for the specified agreement ID. This endpoint supports both Grants UI and Entra authentication methods.',
+            'Returns agreement data for the specified agreement ID. This endpoint supports both DefraID and Entra authentication methods.',
           validate: {
             params: agreementIdParam
           },
