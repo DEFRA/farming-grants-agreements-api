@@ -1,6 +1,6 @@
 /* eslint-disable no-console, n/no-process-exit */
 import { createServer } from '../src/api/index.js'
-import { asyncApiSpec } from '../src/api/common/asyncapi-spec.js'
+import { asyncApiSpec } from '../docs/asyncapi-spec.js'
 import fs from 'node:fs'
 import path from 'node:path'
 
