@@ -6,7 +6,7 @@
     "description": "Farming Grants Agreements API"
   },
   "swagger": "2.0",
-  "host": "MacBook-Pro-2.local:3555",
+  "host": "mac-mini.asus-router.local:3555",
   "schemes": [
     "http"
   ],
@@ -296,6 +296,57 @@
     }
   },
   "definitions": {
+    "1": {
+      "type": "object",
+      "description": "1 field",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "description": {
+          "type": "string",
+          "description": "description field",
+          "example": "CMOR1: Assess moorland and produce a written record"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "unit": {
+          "type": "string",
+          "description": "unit field",
+          "example": "ha"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "quantity field",
+          "example": 4.53411078
+        },
+        "rateInPence": {
+          "type": "integer",
+          "description": "rateInPence field",
+          "example": 1060
+        },
+        "annualPaymentPence": {
+          "type": "integer",
+          "description": "annualPaymentPence field",
+          "example": 4806
+        },
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        }
+      }
+    },
     "message": {
       "type": "string",
       "description": "Health check status message",
@@ -339,9 +390,504 @@
         "message"
       ]
     },
-    "agreementData": {
+    "identifiers": {
       "type": "object",
-      "description": "The agreement data object"
+      "description": "identifiers field",
+      "properties": {
+        "sbi": {
+          "type": "string",
+          "description": "sbi field",
+          "example": "106284736"
+        },
+        "frn": {
+          "type": "string",
+          "description": "frn field",
+          "example": "frn"
+        },
+        "crn": {
+          "type": "string",
+          "description": "crn field",
+          "example": "crn"
+        }
+      }
+    },
+    "Model1": {
+      "type": "object"
+    },
+    "actionApplications": {
+      "type": "array",
+      "description": "actionApplications field",
+      "items": {
+        "$ref": "#/definitions/Model1"
+      }
+    },
+    "parcelItems": {
+      "type": "object",
+      "description": "parcelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/1"
+        }
+      }
+    },
+    "Model2": {
+      "type": "object",
+      "description": "1 field",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "description": {
+          "type": "string",
+          "description": "description field",
+          "example": "CMOR1: Assess moorland and produce a written record"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "annualPaymentPence": {
+          "type": "integer",
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "agreementLevelItems": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model2"
+        }
+      }
+    },
+    "Model3": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
+          "type": "integer",
+          "description": "parcelItemId field",
+          "example": 1
+        },
+        "paymentPence": {
+          "type": "integer",
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "lineItems": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model3"
+      }
+    },
+    "Model4": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/lineItems"
+        }
+      }
+    },
+    "payments": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model4"
+      }
+    },
+    "payment": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
+        },
+        "agreementTotalPence": {
+          "type": "integer",
+          "description": "agreementTotalPence field",
+          "example": 96018
+        },
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/agreementLevelItems"
+        },
+        "payments": {
+          "$ref": "#/definitions/payments"
+        }
+      }
+    },
+    "email": {
+      "type": "object",
+      "description": "email field",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "address field",
+          "example": "cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test"
+        }
+      }
+    },
+    "phone": {
+      "type": "object",
+      "description": "phone field",
+      "properties": {
+        "mobile": {
+          "type": "string",
+          "description": "mobile field",
+          "example": "01234031670"
+        }
+      }
+    },
+    "address": {
+      "type": "object",
+      "description": "address field",
+      "properties": {
+        "line1": {
+          "type": "string",
+          "description": "line1 field",
+          "example": "Mason House Farm Clitheroe Rd"
+        },
+        "line2": {
+          "type": "string",
+          "description": "line2 field",
+          "example": "Bashall Eaves"
+        },
+        "street": {
+          "type": "string",
+          "description": "street field",
+          "example": "Bartindale Road"
+        },
+        "city": {
+          "type": "string",
+          "description": "city field",
+          "example": "Clitheroe"
+        },
+        "postalCode": {
+          "type": "string",
+          "description": "postalCode field",
+          "example": "BB7 3DD"
+        }
+      }
+    },
+    "business": {
+      "type": "object",
+      "description": "business field",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "name field",
+          "example": "J&S Hartley"
+        },
+        "email": {
+          "$ref": "#/definitions/email"
+        },
+        "phone": {
+          "$ref": "#/definitions/phone"
+        },
+        "address": {
+          "$ref": "#/definitions/address"
+        }
+      }
+    },
+    "name": {
+      "type": "object",
+      "description": "name field",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "title field",
+          "example": "Mr."
+        },
+        "first": {
+          "type": "string",
+          "description": "first field",
+          "example": "Edward"
+        },
+        "middle": {
+          "type": "string",
+          "description": "middle field",
+          "example": "Paul"
+        },
+        "last": {
+          "type": "string",
+          "description": "last field",
+          "example": "Jones"
+        }
+      }
+    },
+    "customer": {
+      "type": "object",
+      "description": "customer field",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/name"
+        }
+      }
+    },
+    "applicant": {
+      "type": "object",
+      "description": "applicant field",
+      "properties": {
+        "business": {
+          "$ref": "#/definitions/business"
+        },
+        "customer": {
+          "$ref": "#/definitions/customer"
+        }
+      }
+    },
+    "area": {
+      "type": "object",
+      "description": "area field",
+      "properties": {
+        "unit": {
+          "type": "string",
+          "description": "unit field",
+          "example": "ha"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "quantity field",
+          "example": 5.2182
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee92"
+        }
+      }
+    },
+    "appliedFor": {
+      "type": "object",
+      "description": "appliedFor field",
+      "properties": {
+        "unit": {
+          "type": "string",
+          "description": "unit field",
+          "example": "ha"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "quantity field",
+          "example": 4.7575
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee94"
+        }
+      }
+    },
+    "Model5": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "durationYears": {
+          "type": "integer",
+          "description": "durationYears field",
+          "example": 3
+        },
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model5"
+      }
+    },
+    "Model6": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/actions"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "parcel": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model6"
+      }
+    },
+    "Model7": {
+      "type": "object"
+    },
+    "agreement": {
+      "type": "array",
+      "description": "agreement field",
+      "items": {
+        "$ref": "#/definitions/Model7"
+      }
+    },
+    "application": {
+      "type": "object",
+      "description": "application field",
+      "properties": {
+        "parcel": {
+          "$ref": "#/definitions/parcel"
+        },
+        "agreement": {
+          "$ref": "#/definitions/agreement"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
+        }
+      }
+    },
+    "answers": {
+      "type": "object",
+      "description": "answers field",
+      "properties": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
+          "type": "string",
+          "description": "agreementName field",
+          "example": "Example agreement 2"
+        },
+        "scheme": {
+          "type": "string",
+          "description": "scheme field",
+          "example": "SFI"
+        },
+        "year": {
+          "type": "integer",
+          "description": "year field",
+          "example": 2025
+        },
+        "actionApplications": {
+          "$ref": "#/definitions/actionApplications"
+        },
+        "payment": {
+          "$ref": "#/definitions/payment"
+        },
+        "applicant": {
+          "$ref": "#/definitions/applicant"
+        },
+        "application": {
+          "$ref": "#/definitions/application"
+        }
+      }
+    },
+    "AgreementData": {
+      "type": "object",
+      "description": "Complete agreement data structure from Pact test data",
+      "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "SFI987654321"
+        },
+        "clientRef": {
+          "type": "string",
+          "description": "clientRef field",
+          "example": "client-ref-002"
+        },
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "frps-private-beta"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "createdAt field",
+          "example": "2025-08-19T09:36:45.131Z"
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "submittedAt field",
+          "example": "2025-08-19T09:36:44.509Z"
+        },
+        "identifiers": {
+          "$ref": "#/definitions/identifiers"
+        },
+        "answers": {
+          "$ref": "#/definitions/answers"
+        }
+      }
     },
     "source": {
       "type": "string",
@@ -364,21 +910,325 @@
       "type": "object",
       "properties": {
         "agreementData": {
-          "$ref": "#/definitions/agreementData"
+          "$ref": "#/definitions/AgreementData"
         },
         "auth": {
           "$ref": "#/definitions/auth"
         }
       }
     },
-    "Model1": {
+    "Model8": {
       "type": "object"
+    },
+    "Model9": {
+      "type": "array",
+      "description": "actionApplications field",
+      "items": {
+        "$ref": "#/definitions/Model8"
+      }
+    },
+    "Model10": {
+      "type": "object",
+      "description": "1 field",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "description": {
+          "type": "string",
+          "description": "description field",
+          "example": "CMOR1: Assess moorland and produce a written record"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "annualPaymentPence": {
+          "type": "integer",
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "Model11": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model10"
+        }
+      }
+    },
+    "Model12": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
+          "type": "integer",
+          "description": "parcelItemId field",
+          "example": 1
+        },
+        "paymentPence": {
+          "type": "integer",
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "Model13": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model12"
+      }
+    },
+    "Model14": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/Model13"
+        }
+      }
+    },
+    "Model15": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model14"
+      }
+    },
+    "Model16": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
+        },
+        "agreementTotalPence": {
+          "type": "integer",
+          "description": "agreementTotalPence field",
+          "example": 96018
+        },
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/Model11"
+        },
+        "payments": {
+          "$ref": "#/definitions/Model15"
+        }
+      }
+    },
+    "Model17": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "durationYears": {
+          "type": "integer",
+          "description": "durationYears field",
+          "example": 3
+        },
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
+        }
+      }
+    },
+    "Model18": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model17"
+      }
+    },
+    "Model19": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/Model18"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "Model20": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model19"
+      }
+    },
+    "Model21": {
+      "type": "object"
+    },
+    "Model22": {
+      "type": "array",
+      "description": "agreement field",
+      "items": {
+        "$ref": "#/definitions/Model21"
+      }
+    },
+    "Model23": {
+      "type": "object",
+      "description": "application field",
+      "properties": {
+        "parcel": {
+          "$ref": "#/definitions/Model20"
+        },
+        "agreement": {
+          "$ref": "#/definitions/Model22"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
+        }
+      }
+    },
+    "Model24": {
+      "type": "object",
+      "description": "answers field",
+      "properties": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
+          "type": "string",
+          "description": "agreementName field",
+          "example": "Example agreement 2"
+        },
+        "scheme": {
+          "type": "string",
+          "description": "scheme field",
+          "example": "SFI"
+        },
+        "year": {
+          "type": "integer",
+          "description": "year field",
+          "example": 2025
+        },
+        "actionApplications": {
+          "$ref": "#/definitions/Model9"
+        },
+        "payment": {
+          "$ref": "#/definitions/Model16"
+        },
+        "applicant": {
+          "$ref": "#/definitions/applicant"
+        },
+        "application": {
+          "$ref": "#/definitions/Model23"
+        }
+      }
+    },
+    "Model25": {
+      "type": "object",
+      "description": "Complete agreement data structure from Pact test data",
+      "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "SFI987654321"
+        },
+        "clientRef": {
+          "type": "string",
+          "description": "clientRef field",
+          "example": "client-ref-002"
+        },
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "frps-private-beta"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "createdAt field",
+          "example": "2025-08-19T09:36:45.131Z"
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "submittedAt field",
+          "example": "2025-08-19T09:36:44.509Z"
+        },
+        "identifiers": {
+          "$ref": "#/definitions/identifiers"
+        },
+        "answers": {
+          "$ref": "#/definitions/Model24"
+        }
+      }
     },
     "AgreementArrayResponse": {
       "type": "array",
       "description": "Array of agreement data objects",
       "items": {
-        "$ref": "#/definitions/Model1"
+        "$ref": "#/definitions/Model25"
       }
     },
     "InvoiceResponse": {
@@ -428,34 +1278,400 @@
         }
       }
     },
-    "Model2": {
+    "Model26": {
+      "type": "object"
+    },
+    "Model27": {
+      "type": "array",
+      "description": "actionApplications field",
+      "items": {
+        "$ref": "#/definitions/Model26"
+      }
+    },
+    "Model28": {
       "type": "object",
-      "description": "The updated agreement data after acceptance"
+      "description": "1 field",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "description": {
+          "type": "string",
+          "description": "description field",
+          "example": "CMOR1: Assess moorland and produce a written record"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "annualPaymentPence": {
+          "type": "integer",
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "Model29": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model28"
+        }
+      }
+    },
+    "Model30": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
+          "type": "integer",
+          "description": "parcelItemId field",
+          "example": 1
+        },
+        "paymentPence": {
+          "type": "integer",
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "Model31": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model30"
+      }
+    },
+    "Model32": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/Model31"
+        }
+      }
+    },
+    "Model33": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model32"
+      }
+    },
+    "Model34": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
+        },
+        "agreementTotalPence": {
+          "type": "integer",
+          "description": "agreementTotalPence field",
+          "example": 96018
+        },
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/Model29"
+        },
+        "payments": {
+          "$ref": "#/definitions/Model33"
+        }
+      }
+    },
+    "Model35": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "durationYears": {
+          "type": "integer",
+          "description": "durationYears field",
+          "example": 3
+        },
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
+        }
+      }
+    },
+    "Model36": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model35"
+      }
+    },
+    "Model37": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/Model36"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "Model38": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model37"
+      }
+    },
+    "Model39": {
+      "type": "object"
+    },
+    "Model40": {
+      "type": "array",
+      "description": "agreement field",
+      "items": {
+        "$ref": "#/definitions/Model39"
+      }
+    },
+    "Model41": {
+      "type": "object",
+      "description": "application field",
+      "properties": {
+        "parcel": {
+          "$ref": "#/definitions/Model38"
+        },
+        "agreement": {
+          "$ref": "#/definitions/Model40"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
+        }
+      }
+    },
+    "Model42": {
+      "type": "object",
+      "description": "answers field",
+      "properties": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
+          "type": "string",
+          "description": "agreementName field",
+          "example": "Example agreement 2"
+        },
+        "scheme": {
+          "type": "string",
+          "description": "scheme field",
+          "example": "SFI"
+        },
+        "year": {
+          "type": "integer",
+          "description": "year field",
+          "example": 2025
+        },
+        "actionApplications": {
+          "$ref": "#/definitions/Model27"
+        },
+        "payment": {
+          "$ref": "#/definitions/Model34"
+        },
+        "applicant": {
+          "$ref": "#/definitions/applicant"
+        },
+        "application": {
+          "$ref": "#/definitions/Model41"
+        }
+      }
+    },
+    "Model43": {
+      "type": "object",
+      "description": "The updated agreement data after acceptance",
+      "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "SFI987654321"
+        },
+        "clientRef": {
+          "type": "string",
+          "description": "clientRef field",
+          "example": "client-ref-002"
+        },
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "frps-private-beta"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "createdAt field",
+          "example": "2025-08-19T09:36:45.131Z"
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "submittedAt field",
+          "example": "2025-08-19T09:36:44.509Z"
+        },
+        "identifiers": {
+          "$ref": "#/definitions/identifiers"
+        },
+        "answers": {
+          "$ref": "#/definitions/Model42"
+        }
+      }
     },
     "AcceptOfferResponse": {
       "type": "object",
       "properties": {
         "agreementData": {
-          "$ref": "#/definitions/Model2"
+          "$ref": "#/definitions/Model43"
         }
       }
     },
-    "identifiers": {
+    "Identifiers": {
       "type": "object",
-      "description": "Identifiers for the agreement",
+      "description": "Business and customer identifiers",
       "properties": {
         "sbi": {
           "type": "string",
-          "description": "Single Business Identifier"
+          "description": "sbi field",
+          "example": "106284736"
+        },
+        "frn": {
+          "type": "string",
+          "description": "frn field",
+          "example": "frn"
+        },
+        "crn": {
+          "type": "string",
+          "description": "crn field",
+          "example": "crn"
         }
       }
     },
+    "Model44": {
+      "type": "object",
+      "description": "email field",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "address field",
+          "example": "test@example.com"
+        }
+      }
+    },
+    "Model45": {
+      "type": "object",
+      "description": "business field",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "name field",
+          "example": "J&S Hartley"
+        },
+        "email": {
+          "$ref": "#/definitions/Model44"
+        },
+        "phone": {
+          "$ref": "#/definitions/phone"
+        },
+        "address": {
+          "$ref": "#/definitions/address"
+        }
+      }
+    },
+    "Applicant": {
+      "type": "object",
+      "description": "Applicant business and customer details",
+      "properties": {
+        "business": {
+          "$ref": "#/definitions/Model45"
+        },
+        "customer": {
+          "$ref": "#/definitions/customer"
+        }
+      }
+    },
+    "Model46": {
+      "type": "object"
+    },
     "data": {
       "type": "object",
-      "description": "Message data payload",
+      "description": "Message data payload (based on Pact test data)",
       "properties": {
         "identifiers": {
-          "$ref": "#/definitions/identifiers"
+          "$ref": "#/definitions/Identifiers"
+        },
+        "applicant": {
+          "$ref": "#/definitions/Applicant"
+        },
+        "answers": {
+          "$ref": "#/definitions/Model46"
         }
       }
     },
@@ -468,9 +1684,312 @@
         }
       }
     },
-    "Model3": {
+    "Model47": {
+      "type": "object"
+    },
+    "Model48": {
+      "type": "array",
+      "description": "actionApplications field",
+      "items": {
+        "$ref": "#/definitions/Model47"
+      }
+    },
+    "Model49": {
       "type": "object",
-      "description": "Created agreement data (only for create_agreement queue)"
+      "description": "1 field",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "description": {
+          "type": "string",
+          "description": "description field",
+          "example": "CMOR1: Assess moorland and produce a written record"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "annualPaymentPence": {
+          "type": "integer",
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "Model50": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model49"
+        }
+      }
+    },
+    "Model51": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
+          "type": "integer",
+          "description": "parcelItemId field",
+          "example": 1
+        },
+        "paymentPence": {
+          "type": "integer",
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "Model52": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model51"
+      }
+    },
+    "Model53": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/Model52"
+        }
+      }
+    },
+    "Model54": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model53"
+      }
+    },
+    "Model55": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
+        },
+        "agreementTotalPence": {
+          "type": "integer",
+          "description": "agreementTotalPence field",
+          "example": 96018
+        },
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/Model50"
+        },
+        "payments": {
+          "$ref": "#/definitions/Model54"
+        }
+      }
+    },
+    "Model56": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "version": {
+          "type": "integer",
+          "description": "version field",
+          "example": 1
+        },
+        "durationYears": {
+          "type": "integer",
+          "description": "durationYears field",
+          "example": 3
+        },
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
+        }
+      }
+    },
+    "Model57": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model56"
+      }
+    },
+    "Model58": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/Model57"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "Model59": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model58"
+      }
+    },
+    "Model60": {
+      "type": "object"
+    },
+    "Model61": {
+      "type": "array",
+      "description": "agreement field",
+      "items": {
+        "$ref": "#/definitions/Model60"
+      }
+    },
+    "Model62": {
+      "type": "object",
+      "description": "application field",
+      "properties": {
+        "parcel": {
+          "$ref": "#/definitions/Model59"
+        },
+        "agreement": {
+          "$ref": "#/definitions/Model61"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
+        }
+      }
+    },
+    "Model63": {
+      "type": "object",
+      "description": "answers field",
+      "properties": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
+          "type": "string",
+          "description": "agreementName field",
+          "example": "Example agreement 2"
+        },
+        "scheme": {
+          "type": "string",
+          "description": "scheme field",
+          "example": "SFI"
+        },
+        "year": {
+          "type": "integer",
+          "description": "year field",
+          "example": 2025
+        },
+        "actionApplications": {
+          "$ref": "#/definitions/Model48"
+        },
+        "payment": {
+          "$ref": "#/definitions/Model55"
+        },
+        "applicant": {
+          "$ref": "#/definitions/applicant"
+        },
+        "application": {
+          "$ref": "#/definitions/Model62"
+        }
+      }
+    },
+    "Model64": {
+      "type": "object",
+      "description": "Created agreement data (only for create_agreement queue)",
+      "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "SFI987654321"
+        },
+        "clientRef": {
+          "type": "string",
+          "description": "clientRef field",
+          "example": "client-ref-002"
+        },
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "frps-private-beta"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "createdAt field",
+          "example": "2025-08-19T09:36:45.131Z"
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "submittedAt field",
+          "example": "2025-08-19T09:36:44.509Z"
+        },
+        "identifiers": {
+          "$ref": "#/definitions/identifiers"
+        },
+        "answers": {
+          "$ref": "#/definitions/Model63"
+        }
+      }
     },
     "QueueMessageResponse": {
       "type": "object",
@@ -480,11 +1999,11 @@
           "description": "Success message"
         },
         "agreementData": {
-          "$ref": "#/definitions/Model3"
+          "$ref": "#/definitions/Model64"
         }
       }
     },
-    "Model4": {
+    "Model65": {
       "type": "string",
       "description": "Success confirmation message",
       "enum": [
@@ -495,7 +2014,7 @@
       "type": "object",
       "properties": {
         "message": {
-          "$ref": "#/definitions/Model4"
+          "$ref": "#/definitions/Model65"
         }
       }
     }

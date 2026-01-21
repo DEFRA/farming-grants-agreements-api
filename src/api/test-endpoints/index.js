@@ -8,8 +8,14 @@ import {
 } from '~/src/api/test-endpoints/controllers/index.js'
 import Boom from '@hapi/boom'
 import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import {
+  getTestEndpointSchemas,
+  getCommonResponseSchemas
+} from '~/src/api/common/helpers/joi-schema-from-pact.js'
 
-// Joi schemas for test endpoints
+// Joi schemas for test endpoints (using Pact test data)
+const { queueMessagePayload, queueMessageResponse } = getTestEndpointSchemas()
+const { agreementArrayResponse } = getCommonResponseSchemas()
 
 const queueMessageParams = Joi.object({
   queueName: Joi.string()
@@ -20,27 +26,6 @@ const queueMessageParams = Joi.object({
     )
 })
 
-const queueMessagePayload = Joi.object({
-  data: Joi.object({
-    identifiers: Joi.object({
-      sbi: Joi.string().description('Single Business Identifier')
-    }).description('Identifiers for the agreement')
-  })
-    .unknown(true)
-    .description('Message data payload')
-})
-  .unknown(true)
-  .description('SQS message body to post to the queue')
-  .label('QueueMessagePayload')
-
-const queueMessageResponse = Joi.object({
-  message: Joi.string().description('Success message'),
-  agreementData: Joi.object()
-    .unknown(true)
-    .allow(null)
-    .description('Created agreement data (only for create_agreement queue)')
-}).label('QueueMessageResponse')
-
 const getAgreementQuery = Joi.object({
   id: Joi.alternatives()
     .try(Joi.string(), Joi.array().items(Joi.string()))
@@ -49,11 +34,6 @@ const getAgreementQuery = Joi.object({
       'Agreement ID(s) to retrieve. Supports comma-delimited values or multiple id params.'
     )
 })
-
-const agreementArrayResponse = Joi.array()
-  .items(Joi.object().unknown(true))
-  .description('Array of agreement data objects')
-  .label('AgreementArrayResponse')
 
 const unacceptOfferParams = Joi.object({
   agreementId: Joi.string()

@@ -1,5 +1,5 @@
 /**
- * AsyncAPI specification for Agreement Service events
+ * AsyncAPI specification for Agreement Service events (refactored to use Pact test data)
  * Defines SQS consumers and SNS publishers for event-driven messaging
  *
  * This version derives schemas from the actual Pact contract test data,
