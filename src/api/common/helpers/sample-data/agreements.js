@@ -759,9 +759,7 @@ export default [
             address:
               'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
           },
-          phone: {
-            mobile: '01234031670'
-          },
+          phone: '01234031670',
           address: {
             line1: 'Mason House Farm Clitheroe Rd',
             line2: 'Bashall Eaves',
@@ -1081,9 +1079,7 @@ export default [
             address:
               'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
           },
-          phone: {
-            mobile: '01234031670'
-          },
+          phone: '01234031670',
           address: {
             line1: 'Mason House Farm Clitheroe Rd',
             line2: 'Bashall Eaves',
