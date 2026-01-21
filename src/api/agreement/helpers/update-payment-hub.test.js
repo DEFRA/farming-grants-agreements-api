@@ -46,8 +46,8 @@ describe('updatePaymentHub', () => {
       sbi: '106284736',
       frn: '1234567890'
     },
-    frequency: 'Quarterly',
     payment: {
+      frequency: 'Quarterly',
       parcelItems: {
         'parcel-item-1': {
           parcelId: 'PARCEL001',
@@ -352,8 +352,8 @@ describe('updatePaymentHub', () => {
     it('should map agreement level items and omit schedule for non-quarterly', async () => {
       const agreementWithAgreementLevelItem = {
         ...mockAgreementData,
-        frequency: 'Annually',
         payment: {
+          frequency: 'Annually',
           parcelItems: {},
           agreementLevelItems: {
             'agreement-level-1': {
