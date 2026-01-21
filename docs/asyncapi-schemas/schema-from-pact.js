@@ -190,14 +190,8 @@ export function getApplicationSchemas() {
 export function getPaymentSchemas() {
   const sample = getSampleAgreement()
 
-  // Payment schema is typically in the payment field
-  const paymentSample = sample.payment || {
-    agreementStartDate: sample.answers?.agreementStartDate || '2024-11-01',
-    agreementEndDate: sample.answers?.agreementEndDate || '2027-10-31',
-    frequency: 'Quarterly',
-    agreementTotalPence: 11270793,
-    annualTotalPence: 6440448
-  }
+  // Use payment data directly from sample file, fallback to answers.payment
+  const paymentSample = sample.payment || sample.answers?.payment
 
   return {
     Payment: generateSchemaFromSample(
@@ -213,26 +207,16 @@ export function getPaymentSchemas() {
 export function getApplicantSchemas() {
   const sample = getSampleAgreement()
 
-  const applicantSample = sample.applicant || {
-    business: {
-      name: 'J&S Hartley',
-      email: { address: 'test@example.com' },
-      phone: { mobile: '01234031670' },
-      address: {
-        line1: 'Mason House Farm Clitheroe Rd',
-        line2: 'Bashall Eaves',
-        street: 'Bartindale Road',
-        city: 'Clitheroe',
-        postalCode: 'BB7 3DD'
-      }
-    },
-    customer: {
-      name: {
-        title: 'Mr.',
-        first: 'Edward',
-        middle: 'Paul',
-        last: 'Jones'
-      }
+  // Use applicant data directly from sample file
+  const applicantSample = sample.applicant
+  if (!applicantSample) {
+    // Fallback for samples without applicant field
+    return {
+      Applicant: {
+        type: 'object',
+        description: 'Applicant business and customer details'
+      },
+      Address: { type: 'object', description: 'Postal address' }
     }
   }
 
@@ -291,7 +275,10 @@ export function getEventPayloadExamples() {
         status: 'accepted',
         date: '2025-01-15T10:30:00.000Z',
         code: agreement.code,
-        endDate: '2027-10-31'
+        endDate:
+          agreement.payment?.agreementEndDate ||
+          agreement.answers?.payment?.agreementEndDate ||
+          '2027-10-31'
       }
     }
   }

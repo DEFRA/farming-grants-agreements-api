@@ -396,7 +396,7 @@
                   "status": "accepted",
                   "date": "2025-01-15T10:30:00.000Z",
                   "code": "frps-private-beta",
-                  "endDate": "2027-10-31"
+                  "endDate": "2028-09-01"
                 }
               }
             }
@@ -736,12 +736,12 @@
           "agreementStartDate": {
             "type": "string",
             "description": "",
-            "example": "2024-11-01"
+            "example": "2025-09-01"
           },
           "agreementEndDate": {
             "type": "string",
             "description": "",
-            "example": "2027-10-31"
+            "example": "2028-09-01"
           },
           "frequency": {
             "type": "string",
@@ -751,12 +751,173 @@
           "agreementTotalPence": {
             "type": "number",
             "description": "",
-            "example": 11270793
+            "example": 96018
           },
           "annualTotalPence": {
             "type": "number",
             "description": "",
-            "example": 6440448
+            "example": 32006
+          },
+          "parcelItems": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "1": {
+                "type": "object",
+                "description": "",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "",
+                    "example": "CMOR1"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "",
+                    "example": "CMOR1: Assess moorland and produce a written record"
+                  },
+                  "version": {
+                    "type": "number",
+                    "description": "",
+                    "example": 1
+                  },
+                  "unit": {
+                    "type": "string",
+                    "description": "",
+                    "example": "ha"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "description": "",
+                    "example": 4.53411078
+                  },
+                  "rateInPence": {
+                    "type": "number",
+                    "description": "",
+                    "example": 1060
+                  },
+                  "annualPaymentPence": {
+                    "type": "number",
+                    "description": "",
+                    "example": 4806
+                  },
+                  "sheetId": {
+                    "type": "string",
+                    "description": "",
+                    "example": "SD6743"
+                  },
+                  "parcelId": {
+                    "type": "string",
+                    "description": "",
+                    "example": "8083"
+                  }
+                },
+                "required": [
+                  "code",
+                  "description",
+                  "version",
+                  "unit",
+                  "quantity",
+                  "rateInPence",
+                  "annualPaymentPence",
+                  "sheetId",
+                  "parcelId"
+                ]
+              }
+            },
+            "required": [
+              "1"
+            ]
+          },
+          "agreementLevelItems": {
+            "type": "object",
+            "description": "",
+            "properties": {
+              "1": {
+                "type": "object",
+                "description": "",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "",
+                    "example": "CMOR1"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "",
+                    "example": "CMOR1: Assess moorland and produce a written record"
+                  },
+                  "version": {
+                    "type": "number",
+                    "description": "",
+                    "example": 1
+                  },
+                  "annualPaymentPence": {
+                    "type": "number",
+                    "description": "",
+                    "example": 27200
+                  }
+                },
+                "required": [
+                  "code",
+                  "description",
+                  "version",
+                  "annualPaymentPence"
+                ]
+              }
+            },
+            "required": [
+              "1"
+            ]
+          },
+          "payments": {
+            "type": "array",
+            "description": "",
+            "items": {
+              "type": "object",
+              "description": "",
+              "properties": {
+                "totalPaymentPence": {
+                  "type": "number",
+                  "description": "",
+                  "example": 8007
+                },
+                "paymentDate": {
+                  "type": "string",
+                  "description": "",
+                  "example": "2025-12-05"
+                },
+                "lineItems": {
+                  "type": "array",
+                  "description": "",
+                  "items": {
+                    "type": "object",
+                    "description": "",
+                    "properties": {
+                      "parcelItemId": {
+                        "type": "number",
+                        "description": "",
+                        "example": 1
+                      },
+                      "paymentPence": {
+                        "type": "number",
+                        "description": "",
+                        "example": 1204
+                      }
+                    },
+                    "required": [
+                      "parcelItemId",
+                      "paymentPence"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "totalPaymentPence",
+                "paymentDate",
+                "lineItems"
+              ]
+            }
           }
         },
         "required": [
@@ -764,180 +925,19 @@
           "agreementEndDate",
           "frequency",
           "agreementTotalPence",
-          "annualTotalPence"
+          "annualTotalPence",
+          "parcelItems",
+          "agreementLevelItems",
+          "payments"
         ]
       },
       "Applicant": {
         "type": "object",
-        "description": "Applicant business and customer details",
-        "properties": {
-          "business": {
-            "type": "object",
-            "description": "",
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "",
-                "example": "J&S Hartley"
-              },
-              "email": {
-                "type": "object",
-                "description": "",
-                "properties": {
-                  "address": {
-                    "type": "string",
-                    "description": "",
-                    "example": "test@example.com"
-                  }
-                },
-                "required": [
-                  "address"
-                ]
-              },
-              "phone": {
-                "type": "object",
-                "description": "",
-                "properties": {
-                  "mobile": {
-                    "type": "string",
-                    "description": "",
-                    "example": "01234031670"
-                  }
-                },
-                "required": [
-                  "mobile"
-                ]
-              },
-              "address": {
-                "type": "object",
-                "description": "",
-                "properties": {
-                  "line1": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Mason House Farm Clitheroe Rd"
-                  },
-                  "line2": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Bashall Eaves"
-                  },
-                  "street": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Bartindale Road"
-                  },
-                  "city": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Clitheroe"
-                  },
-                  "postalCode": {
-                    "type": "string",
-                    "description": "",
-                    "example": "BB7 3DD"
-                  }
-                },
-                "required": [
-                  "line1",
-                  "line2",
-                  "street",
-                  "city",
-                  "postalCode"
-                ]
-              }
-            },
-            "required": [
-              "name",
-              "email",
-              "phone",
-              "address"
-            ]
-          },
-          "customer": {
-            "type": "object",
-            "description": "",
-            "properties": {
-              "name": {
-                "type": "object",
-                "description": "",
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Mr."
-                  },
-                  "first": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Edward"
-                  },
-                  "middle": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Paul"
-                  },
-                  "last": {
-                    "type": "string",
-                    "description": "",
-                    "example": "Jones"
-                  }
-                },
-                "required": [
-                  "title",
-                  "first",
-                  "middle",
-                  "last"
-                ]
-              }
-            },
-            "required": [
-              "name"
-            ]
-          }
-        },
-        "required": [
-          "business",
-          "customer"
-        ]
+        "description": "Applicant business and customer details"
       },
       "Address": {
         "type": "object",
-        "description": "Postal address",
-        "properties": {
-          "line1": {
-            "type": "string",
-            "description": "",
-            "example": "Mason House Farm Clitheroe Rd"
-          },
-          "line2": {
-            "type": "string",
-            "description": "",
-            "example": "Bashall Eaves"
-          },
-          "street": {
-            "type": "string",
-            "description": "",
-            "example": "Bartindale Road"
-          },
-          "city": {
-            "type": "string",
-            "description": "",
-            "example": "Clitheroe"
-          },
-          "postalCode": {
-            "type": "string",
-            "description": "",
-            "example": "BB7 3DD"
-          }
-        },
-        "required": [
-          "line1",
-          "line2",
-          "street",
-          "city",
-          "postalCode"
-        ]
+        "description": "Postal address"
       }
     }
   }
