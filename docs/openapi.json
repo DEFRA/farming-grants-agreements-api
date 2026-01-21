@@ -563,17 +563,6 @@
         }
       }
     },
-    "phone": {
-      "type": "object",
-      "description": "phone field",
-      "properties": {
-        "mobile": {
-          "type": "string",
-          "description": "mobile field",
-          "example": "01234031670"
-        }
-      }
-    },
     "address": {
       "type": "object",
       "description": "address field",
@@ -618,7 +607,9 @@
           "$ref": "#/definitions/email"
         },
         "phone": {
-          "$ref": "#/definitions/phone"
+          "type": "string",
+          "description": "phone field",
+          "example": "01234031670"
         },
         "address": {
           "$ref": "#/definitions/address"
@@ -1622,6 +1613,17 @@
           "type": "string",
           "description": "address field",
           "example": "test@example.com"
+        }
+      }
+    },
+    "phone": {
+      "type": "object",
+      "description": "phone field",
+      "properties": {
+        "mobile": {
+          "type": "string",
+          "description": "mobile field",
+          "example": "01234031670"
         }
       }
     },

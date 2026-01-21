@@ -1,0 +1,1 @@
+npm run generate:api-docs && git add docs/openapi.json docs/asyncapi.json

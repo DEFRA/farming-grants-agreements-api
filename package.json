@@ -15,7 +15,7 @@
     "dev:debug": "npm run server:debug",
     "format": "prettier --write \"src/**/*.js\" \"**/*.{js,cjs,md,json,config.js,test.js,graphql.js}\"",
     "format:check": "prettier --check \"src/**/*.js\" \"**/*.{js,cjs,md,json,config.js,test.js,graphql.js}\"",
-    "git:pre-commit-hook": "npm run format:check && npm run lint && npm test && npm run generate:api-docs && git add docs/openapi.json docs/asyncapi.json",
+    "git:pre-commit-hook": "npm run format:check && npm run lint && npm test",
     "generate:api-docs": "tsx ./scripts/generate-api-docs.js",
     "commitlint": "commitlint --edit",
     "postinstall": "npm run setup:husky",
