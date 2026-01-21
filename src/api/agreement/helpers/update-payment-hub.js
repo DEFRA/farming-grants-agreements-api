@@ -57,7 +57,8 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       correlationId: agreementData.correlationId,
       invoiceNumber: invoice.invoiceNumber,
       agreementNumber: agreementData.agreementNumber,
-      schedule: agreementData.frequency === 'Quarterly' ? 'T4' : undefined,
+      schedule:
+        agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
       dueDate: agreementData.payment.payments[0].paymentDate,
       value: agreementData.payment.agreementTotalPence,
       currency: agreementData.payment.currency || 'GBP',
