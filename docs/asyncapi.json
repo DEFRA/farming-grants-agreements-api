@@ -3,7 +3,7 @@
   "info": {
     "title": "Agreement Service Events",
     "version": "1.0.0",
-    "description": "Event-driven messaging for the Farming Grants Agreements API. This service consumes agreement creation and update events from SQS queues, and publishes agreement status change notifications to SNS topics."
+    "description": "Event-driven messaging for the Farming Grants Agreements API. This service consumes agreement creation and update events from SQS queues, and publishes agreement status change notifications to SNS topics. Schemas are generated from Pact contract test data."
   },
   "channels": {
     "sqs/gas_create_agreement": {
@@ -18,7 +18,319 @@
           "contentType": "application/json",
           "payload": {
             "$ref": "#/components/schemas/CreateAgreementPayload"
-          }
+          },
+          "examples": [
+            {
+              "name": "Agreement Created Example (from Pact tests)",
+              "payload": {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "source": "fg-gas-backend",
+                "time": "2025-12-15T10:19:06.519Z",
+                "specversion": "1.0",
+                "type": "cloud.defra.test.fg-gas-backend.agreement.create",
+                "datacontenttype": "application/json",
+                "data": {
+                  "notificationMessageId": "sample-notification-2",
+                  "agreementNumber": "SFI987654321",
+                  "clientRef": "client-ref-002",
+                  "code": "frps-private-beta",
+                  "createdAt": "2025-08-19T09:36:45.131Z",
+                  "submittedAt": "2025-08-19T09:36:44.509Z",
+                  "identifiers": {
+                    "sbi": "106284736",
+                    "frn": "frn",
+                    "crn": "crn"
+                  },
+                  "answers": {
+                    "hasCheckedLandIsUpToDate": true,
+                    "agreementName": "Example agreement 2",
+                    "scheme": "SFI",
+                    "year": 2025,
+                    "actionApplications": [],
+                    "payment": {
+                      "agreementStartDate": "2025-09-01",
+                      "agreementEndDate": "2028-09-01",
+                      "frequency": "Quarterly",
+                      "agreementTotalPence": 96018,
+                      "annualTotalPence": 32006,
+                      "parcelItems": {
+                        "1": {
+                          "code": "CMOR1",
+                          "description": "CMOR1: Assess moorland and produce a written record",
+                          "version": 1,
+                          "unit": "ha",
+                          "quantity": 4.53411078,
+                          "rateInPence": 1060,
+                          "annualPaymentPence": 4806,
+                          "sheetId": "SD6743",
+                          "parcelId": "8083"
+                        }
+                      },
+                      "agreementLevelItems": {
+                        "1": {
+                          "code": "CMOR1",
+                          "description": "CMOR1: Assess moorland and produce a written record",
+                          "version": 1,
+                          "annualPaymentPence": 27200
+                        }
+                      },
+                      "payments": [
+                        {
+                          "totalPaymentPence": 8007,
+                          "paymentDate": "2025-12-05",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1204
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6803
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2026-03-05",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2026-06-05",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2026-09-07",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2026-12-07",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2027-03-05",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2027-06-07",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2027-09-06",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2027-12-06",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2028-03-06",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2028-06-05",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        },
+                        {
+                          "totalPaymentPence": 8001,
+                          "paymentDate": "2028-09-05",
+                          "lineItems": [
+                            {
+                              "parcelItemId": 1,
+                              "paymentPence": 1201
+                            },
+                            {
+                              "agreementLevelItemId": 1,
+                              "paymentPence": 6800
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "applicant": {
+                      "business": {
+                        "name": "J&S Hartley",
+                        "email": {
+                          "address": "cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test"
+                        },
+                        "phone": {
+                          "mobile": "01234031670"
+                        },
+                        "address": {
+                          "line1": "Mason House Farm Clitheroe Rd",
+                          "line2": "Bashall Eaves",
+                          "line3": null,
+                          "line4": null,
+                          "line5": null,
+                          "street": "Bartindale Road",
+                          "city": "Clitheroe",
+                          "postalCode": "BB7 3DD"
+                        }
+                      },
+                      "customer": {
+                        "name": {
+                          "title": "Mr.",
+                          "first": "Edward",
+                          "middle": "Paul",
+                          "last": "Jones"
+                        }
+                      }
+                    },
+                    "application": {
+                      "parcel": [
+                        {
+                          "sheetId": "SD6743",
+                          "parcelId": "8083",
+                          "area": {
+                            "unit": "ha",
+                            "quantity": 5.2182,
+                            "_id": "69262bb2331fd3b45b76ee92"
+                          },
+                          "actions": [
+                            {
+                              "code": "CMOR1",
+                              "version": 1,
+                              "durationYears": 3,
+                              "appliedFor": {
+                                "unit": "ha",
+                                "quantity": 4.7575,
+                                "_id": "69262bb2331fd3b45b76ee94"
+                              },
+                              "_id": "69262bb2331fd3b45b76ee93"
+                            }
+                          ],
+                          "_id": "69262bb2331fd3b45b76ee91"
+                        },
+                        {
+                          "sheetId": "SD6743",
+                          "parcelId": "8333",
+                          "area": {
+                            "unit": "ha",
+                            "quantity": 2.1703,
+                            "_id": "69262bb2331fd3b45b76ee98"
+                          },
+                          "actions": [
+                            {
+                              "code": "CMOR1",
+                              "version": 1,
+                              "durationYears": 3,
+                              "appliedFor": {
+                                "unit": "ha",
+                                "quantity": 2.1705,
+                                "_id": "69262bb2331fd3b45b76ee9a"
+                              },
+                              "_id": "69262bb2331fd3b45b76ee99"
+                            }
+                          ],
+                          "_id": "69262bb2331fd3b45b76ee97"
+                        }
+                      ],
+                      "agreement": [],
+                      "_id": "69262bb2331fd3b45b76ee90"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       }
     },
@@ -34,7 +346,24 @@
           "contentType": "application/json",
           "payload": {
             "$ref": "#/components/schemas/UpdateAgreementPayload"
-          }
+          },
+          "examples": [
+            {
+              "name": "Agreement Withdrawn Example (from Pact tests)",
+              "payload": {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "source": "fg-gas-backend",
+                "specversion": "1.0",
+                "type": "cloud.defra.test.fg-gas-backend.agreement.withdraw",
+                "datacontenttype": "application/json",
+                "data": {
+                  "clientRef": "client-ref-002",
+                  "agreementNumber": "SFI987654321",
+                  "status": "withdrawn"
+                }
+              }
+            }
+          ]
         }
       }
     },
@@ -50,7 +379,30 @@
           "contentType": "application/json",
           "payload": {
             "$ref": "#/components/schemas/AgreementStatusUpdatedPayload"
-          }
+          },
+          "examples": [
+            {
+              "name": "Agreement Status Updated Example",
+              "payload": {
+                "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                "source": "urn:defra:farming:agreement-service",
+                "specversion": "1.0",
+                "type": "cloud.defra.dev.fg-gas-backend.agreement.status.updated",
+                "time": "2025-01-15T10:30:00.000Z",
+                "datacontenttype": "application/json",
+                "data": {
+                  "agreementNumber": "SFI987654321",
+                  "correlationId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                  "clientRef": "client-ref-002",
+                  "version": 1,
+                  "status": "accepted",
+                  "date": "2025-01-15T10:30:00.000Z",
+                  "code": "frps-private-beta",
+                  "endDate": "2027-10-31"
+                }
+              }
+            }
+          ]
         }
       }
     }
@@ -59,71 +411,75 @@
     "schemas": {
       "CreateAgreementPayload": {
         "type": "object",
-        "description": "Payload for creating a new agreement from an approved application",
+        "description": "CloudEvents 1.0 payload for creating a new agreement from an approved application",
         "required": [
           "type",
           "data"
         ],
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique event identifier (UUID)"
+          },
+          "source": {
+            "type": "string",
+            "description": "Event source identifier",
+            "example": "fg-gas-backend"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp"
+          },
+          "specversion": {
+            "type": "string",
+            "const": "1.0",
+            "description": "CloudEvents specification version"
+          },
           "type": {
             "type": "string",
-            "description": "Event type identifier. Must contain \"gas-backend.agreement.create\" to trigger processing.",
-            "example": "cloud.defra.dev.fg-gas-backend.agreement.create"
+            "description": "Event type identifier. Must contain \"gas-backend.agreement.create\"",
+            "example": "cloud.defra.test.fg-gas-backend.agreement.create"
+          },
+          "datacontenttype": {
+            "type": "string",
+            "const": "application/json"
           },
           "data": {
-            "type": "object",
-            "description": "Agreement data from the approved application",
-            "required": [
-              "identifiers",
-              "application"
-            ],
-            "properties": {
-              "correlationId": {
-                "type": "string",
-                "description": "Unique identifier for tracing the request across services",
-                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-              },
-              "clientRef": {
-                "type": "string",
-                "description": "Client reference number from the original application",
-                "example": "client-ref-001"
-              },
-              "code": {
-                "type": "string",
-                "description": "Scheme code identifier",
-                "example": "frps-private-beta"
-              },
-              "identifiers": {
-                "$ref": "#/components/schemas/Identifiers"
-              },
-              "application": {
-                "$ref": "#/components/schemas/Application"
-              },
-              "applicant": {
-                "$ref": "#/components/schemas/Applicant"
-              },
-              "payment": {
-                "$ref": "#/components/schemas/Payment"
-              }
-            }
+            "$ref": "#/components/schemas/AgreementData"
           }
         }
       },
       "UpdateAgreementPayload": {
         "type": "object",
-        "description": "Payload for updating an existing agreement status",
+        "description": "CloudEvents 1.0 payload for updating agreement status",
         "required": [
           "data"
         ],
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique event identifier (UUID)"
+          },
+          "source": {
+            "type": "string",
+            "description": "Event source identifier"
+          },
+          "specversion": {
+            "type": "string",
+            "const": "1.0"
+          },
           "type": {
             "type": "string",
             "description": "Event type identifier",
-            "example": "cloud.defra.dev.fg-gas-backend.application.updated"
+            "example": "cloud.defra.test.fg-gas-backend.agreement.withdraw"
+          },
+          "datacontenttype": {
+            "type": "string",
+            "const": "application/json"
           },
           "data": {
             "type": "object",
-            "description": "Update data for the agreement",
             "required": [
               "clientRef",
               "agreementNumber",
@@ -132,21 +488,18 @@
             "properties": {
               "clientRef": {
                 "type": "string",
-                "description": "Client reference number to identify the agreement",
-                "example": "client-ref-001"
+                "description": "Client reference number"
               },
               "agreementNumber": {
                 "type": "string",
-                "description": "Unique agreement number",
-                "example": "SFI123456789"
+                "description": "Agreement number"
               },
               "status": {
                 "type": "string",
-                "description": "New status for the agreement. Currently only \"withdrawn\" is processed.",
                 "enum": [
                   "withdrawn"
                 ],
-                "example": "withdrawn"
+                "description": "New status"
               }
             }
           }
@@ -168,180 +521,170 @@
           "id": {
             "type": "string",
             "format": "uuid",
-            "description": "Unique event identifier (UUID v4)",
-            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            "description": "Unique event identifier (UUID v4)"
           },
           "source": {
             "type": "string",
-            "description": "Event source URN identifying the Agreement Service",
+            "description": "Event source URN",
             "example": "urn:defra:farming:agreement-service"
           },
           "specversion": {
             "type": "string",
-            "description": "CloudEvents specification version",
-            "const": "1.0",
-            "example": "1.0"
+            "const": "1.0"
           },
           "type": {
             "type": "string",
-            "description": "CloudEvents type identifier for agreement status updates",
+            "description": "CloudEvents type identifier",
             "example": "cloud.defra.dev.fg-gas-backend.agreement.status.updated"
           },
           "time": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO 8601 timestamp when the event occurred",
-            "example": "2025-01-15T10:30:00.000Z"
+            "description": "ISO 8601 timestamp"
           },
           "datacontenttype": {
             "type": "string",
-            "description": "Content type of the data payload",
-            "const": "application/json",
-            "example": "application/json"
+            "const": "application/json"
           },
           "data": {
-            "$ref": "#/components/schemas/AgreementStatusData"
+            "type": "object",
+            "required": [
+              "agreementNumber",
+              "status",
+              "date"
+            ],
+            "properties": {
+              "agreementNumber": {
+                "type": "string"
+              },
+              "correlationId": {
+                "type": "string"
+              },
+              "clientRef": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "agreementUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "accepted",
+                  "withdrawn"
+                ]
+              },
+              "date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "code": {
+                "type": "string"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date"
+              }
+            }
           }
         }
       },
-      "AgreementStatusData": {
+      "AgreementData": {
         "type": "object",
-        "description": "Data payload for agreement status update events",
-        "required": [
-          "agreementNumber",
-          "status",
-          "date"
-        ],
+        "description": "Complete agreement data structure (generated from Pact test sample data)",
         "properties": {
-          "agreementNumber": {
-            "type": "string",
-            "description": "Unique agreement identifier",
-            "example": "SFI123456789"
+          "notificationMessageId": {
+            "type": "string"
           },
-          "correlationId": {
-            "type": "string",
-            "description": "Correlation ID for request tracing",
-            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          "agreementNumber": {
+            "type": "string"
           },
           "clientRef": {
-            "type": "string",
-            "description": "Client reference from the original application",
-            "example": "client-ref-001"
-          },
-          "version": {
-            "type": "integer",
-            "description": "Agreement version number",
-            "minimum": 1,
-            "example": 1
-          },
-          "agreementUrl": {
-            "type": "string",
-            "format": "uri",
-            "description": "URL to view the agreement (only included for accepted agreements)",
-            "example": "https://farming-grants.defra.gov.uk/agreement/SFI123456789"
-          },
-          "status": {
-            "type": "string",
-            "description": "New agreement status",
-            "enum": [
-              "accepted",
-              "withdrawn"
-            ],
-            "example": "accepted"
-          },
-          "date": {
-            "type": "string",
-            "format": "date-time",
-            "description": "ISO 8601 timestamp when the status change occurred",
-            "example": "2025-01-15T10:30:00.000Z"
+            "type": "string"
           },
           "code": {
-            "type": "string",
-            "description": "Scheme code identifier",
-            "example": "frps-private-beta"
+            "type": "string"
           },
-          "endDate": {
-            "type": "string",
-            "format": "date",
-            "description": "Agreement end date (YYYY-MM-DD)",
-            "example": "2027-10-31"
+          "identifiers": {
+            "$ref": "#/components/schemas/Identifiers"
+          },
+          "answers": {
+            "type": "object",
+            "properties": {
+              "agreementName": {
+                "type": "string"
+              },
+              "actionApplications": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sheetId": {
+                      "type": "string"
+                    },
+                    "parcelId": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "appliedFor": {
+                      "type": "object",
+                      "properties": {
+                        "quantity": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "ha",
+                            "metres"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "applicant": {
+            "$ref": "#/components/schemas/Applicant"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/Payment"
           }
         }
       },
       "Identifiers": {
         "type": "object",
         "description": "Business and customer identifiers",
-        "required": [
-          "sbi"
-        ],
         "properties": {
           "sbi": {
             "type": "string",
-            "description": "Single Business Identifier - unique identifier for the farming business",
+            "description": "",
             "example": "106284736"
           },
           "frn": {
             "type": "string",
-            "description": "Firm Reference Number",
-            "example": "1234567890"
+            "description": "",
+            "example": "frn"
           },
           "crn": {
             "type": "string",
-            "description": "Customer Reference Number",
-            "example": "CRN123456"
-          },
-          "defraId": {
-            "type": "string",
-            "description": "Defra customer identity ID",
-            "example": "defra-id-123"
+            "description": "",
+            "example": "crn"
           }
-        }
-      },
-      "Address": {
-        "type": "object",
-        "description": "Postal address",
-        "properties": {
-          "line1": {
-            "type": "string",
-            "description": "Address line 1",
-            "example": "Mason House Farm Clitheroe Rd"
-          },
-          "line2": {
-            "type": "string",
-            "description": "Address line 2",
-            "example": "Bashall Eaves"
-          },
-          "line3": {
-            "type": "string",
-            "nullable": true,
-            "description": "Address line 3"
-          },
-          "line4": {
-            "type": "string",
-            "nullable": true,
-            "description": "Address line 4"
-          },
-          "line5": {
-            "type": "string",
-            "nullable": true,
-            "description": "Address line 5"
-          },
-          "street": {
-            "type": "string",
-            "description": "Street name",
-            "example": "Bartindale Road"
-          },
-          "city": {
-            "type": "string",
-            "description": "City or town",
-            "example": "Clitheroe"
-          },
-          "postalCode": {
-            "type": "string",
-            "description": "Postal code",
-            "example": "BB7 3DD"
-          }
-        }
+        },
+        "required": [
+          "sbi",
+          "frn",
+          "crn"
+        ]
       },
       "Application": {
         "type": "object",
@@ -349,9 +692,8 @@
         "properties": {
           "parcel": {
             "type": "array",
-            "description": "List of land parcels included in the application",
             "items": {
-              "$ref": "#/components/schemas/Parcel"
+              "type": "object"
             }
           }
         }
@@ -359,93 +701,33 @@
       "Parcel": {
         "type": "object",
         "description": "Land parcel with associated actions",
-        "required": [
-          "sheetId",
-          "parcelId"
-        ],
         "properties": {
           "sheetId": {
-            "type": "string",
-            "description": "OS map sheet identifier",
-            "example": "SD6743"
+            "type": "string"
           },
           "parcelId": {
-            "type": "string",
-            "description": "Land parcel identifier within the sheet",
-            "example": "8083"
+            "type": "string"
           },
           "area": {
-            "type": "object",
-            "description": "Total area of the parcel",
-            "properties": {
-              "unit": {
-                "type": "string",
-                "description": "Unit of measurement",
-                "enum": [
-                  "ha",
-                  "metres"
-                ],
-                "example": "ha"
-              },
-              "quantity": {
-                "type": "number",
-                "description": "Area quantity",
-                "example": 5.2182
-              }
-            }
+            "type": "object"
           },
           "actions": {
-            "type": "array",
-            "description": "Environmental actions applied to this parcel",
-            "items": {
-              "$ref": "#/components/schemas/Action"
-            }
+            "type": "array"
           }
         }
       },
       "Action": {
         "type": "object",
         "description": "Environmental action applied to a land parcel",
-        "required": [
-          "code",
-          "version",
-          "appliedFor"
-        ],
         "properties": {
           "code": {
-            "type": "string",
-            "description": "Action code (e.g., CMOR1, UPL1, SPM4)",
-            "example": "CMOR1"
+            "type": "string"
           },
           "version": {
-            "type": "integer",
-            "description": "Action version number",
-            "example": 1
-          },
-          "durationYears": {
-            "type": "integer",
-            "description": "Duration of the action in years",
-            "example": 3
+            "type": "integer"
           },
           "appliedFor": {
-            "type": "object",
-            "description": "Quantity applied for this action",
-            "properties": {
-              "unit": {
-                "type": "string",
-                "description": "Unit of measurement",
-                "enum": [
-                  "ha",
-                  "metres"
-                ],
-                "example": "ha"
-              },
-              "quantity": {
-                "type": "number",
-                "description": "Quantity applied for",
-                "example": 4.7575
-              }
-            }
+            "type": "object"
           }
         }
       },
@@ -455,179 +737,37 @@
         "properties": {
           "agreementStartDate": {
             "type": "string",
-            "format": "date",
-            "description": "Agreement start date (YYYY-MM-DD)",
+            "description": "",
             "example": "2024-11-01"
           },
           "agreementEndDate": {
             "type": "string",
-            "format": "date",
-            "description": "Agreement end date (YYYY-MM-DD)",
+            "description": "",
             "example": "2027-10-31"
           },
           "frequency": {
             "type": "string",
-            "description": "Payment frequency",
-            "enum": [
-              "Quarterly",
-              "Annual"
-            ],
+            "description": "",
             "example": "Quarterly"
           },
           "agreementTotalPence": {
-            "type": "integer",
-            "description": "Total agreement value in pence over the full term",
+            "type": "number",
+            "description": "",
             "example": 11270793
           },
           "annualTotalPence": {
-            "type": "integer",
-            "description": "Annual payment total in pence",
-            "example": 6440448
-          },
-          "parcelItems": {
-            "type": "object",
-            "description": "Map of parcel-level payment items (keyed by item ID)",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ParcelItem"
-            }
-          },
-          "agreementLevelItems": {
-            "type": "object",
-            "description": "Map of agreement-level payment items (keyed by item ID)",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/AgreementLevelItem"
-            }
-          },
-          "payments": {
-            "type": "array",
-            "description": "Scheduled payment instalments",
-            "items": {
-              "$ref": "#/components/schemas/PaymentInstalment"
-            }
-          }
-        }
-      },
-      "ParcelItem": {
-        "type": "object",
-        "description": "Payment line item for a specific parcel action",
-        "properties": {
-          "code": {
-            "type": "string",
-            "description": "Action code",
-            "example": "SPM4"
-          },
-          "description": {
-            "type": "string",
-            "description": "Action description",
-            "example": "SPM4: Manage hedgerows"
-          },
-          "version": {
-            "type": "integer",
-            "description": "Action version",
-            "example": 1
-          },
-          "unit": {
-            "type": "string",
-            "description": "Unit of measurement",
-            "enum": [
-              "ha",
-              "metres"
-            ],
-            "example": "metres"
-          },
-          "quantity": {
             "type": "number",
-            "description": "Quantity covered",
-            "example": 95
-          },
-          "rateInPence": {
-            "type": "integer",
-            "description": "Payment rate per unit in pence",
-            "example": 2565
-          },
-          "annualPaymentPence": {
-            "type": "integer",
-            "description": "Annual payment amount in pence",
-            "example": 243675
-          },
-          "sheetId": {
-            "type": "string",
-            "description": "OS map sheet ID",
-            "example": "SD4841"
-          },
-          "parcelId": {
-            "type": "string",
-            "description": "Parcel ID",
-            "example": "44"
+            "description": "",
+            "example": 6440448
           }
-        }
-      },
-      "AgreementLevelItem": {
-        "type": "object",
-        "description": "Payment line item at agreement level (not parcel-specific)",
-        "properties": {
-          "code": {
-            "type": "string",
-            "description": "Action code",
-            "example": "CSAM1"
-          },
-          "description": {
-            "type": "string",
-            "description": "CSAM1: Assess soil, produce a soil management plan and test soil organic matter",
-            "example": "CSAM1: Assess soil, produce a soil management plan and test soil organic matter"
-          },
-          "version": {
-            "type": "integer",
-            "description": "Action version",
-            "example": 1
-          },
-          "annualPaymentPence": {
-            "type": "integer",
-            "description": "Annual payment amount in pence",
-            "example": 27200
-          }
-        }
-      },
-      "PaymentInstalment": {
-        "type": "object",
-        "description": "Individual payment instalment",
-        "properties": {
-          "totalPaymentPence": {
-            "type": "integer",
-            "description": "Total payment amount for this instalment in pence",
-            "example": 1610119
-          },
-          "paymentDate": {
-            "type": "string",
-            "format": "date",
-            "description": "Scheduled payment date (YYYY-MM-DD)",
-            "example": "2025-12-05"
-          },
-          "lineItems": {
-            "type": "array",
-            "description": "Breakdown of payment by item",
-            "items": {
-              "type": "object",
-              "properties": {
-                "parcelItemId": {
-                  "type": "integer",
-                  "description": "Reference to parcelItems key (mutually exclusive with agreementLevelItemId)",
-                  "example": 1
-                },
-                "agreementLevelItemId": {
-                  "type": "integer",
-                  "description": "Reference to agreementLevelItems key (mutually exclusive with parcelItemId)",
-                  "example": 1
-                },
-                "paymentPence": {
-                  "type": "integer",
-                  "description": "Payment amount for this line item in pence",
-                  "example": 60920
-                }
-              }
-            }
-          }
-        }
+        },
+        "required": [
+          "agreementStartDate",
+          "agreementEndDate",
+          "frequency",
+          "agreementTotalPence",
+          "annualTotalPence"
+        ]
       },
       "Applicant": {
         "type": "object",
@@ -635,71 +775,171 @@
         "properties": {
           "business": {
             "type": "object",
-            "description": "Business information",
+            "description": "",
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Business trading name",
+                "description": "",
                 "example": "J&S Hartley"
               },
               "email": {
                 "type": "object",
+                "description": "",
                 "properties": {
                   "address": {
                     "type": "string",
-                    "format": "email",
-                    "description": "Business email address"
+                    "description": "",
+                    "example": "test@example.com"
                   }
-                }
+                },
+                "required": [
+                  "address"
+                ]
               },
               "phone": {
                 "type": "object",
+                "description": "",
                 "properties": {
                   "mobile": {
                     "type": "string",
-                    "description": "Business phone number",
+                    "description": "",
                     "example": "01234031670"
                   }
-                }
+                },
+                "required": [
+                  "mobile"
+                ]
               },
               "address": {
-                "$ref": "#/components/schemas/Address"
+                "type": "object",
+                "description": "",
+                "properties": {
+                  "line1": {
+                    "type": "string",
+                    "description": "",
+                    "example": "Mason House Farm Clitheroe Rd"
+                  },
+                  "line2": {
+                    "type": "string",
+                    "description": "",
+                    "example": "Bashall Eaves"
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "",
+                    "example": "Bartindale Road"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "",
+                    "example": "Clitheroe"
+                  },
+                  "postalCode": {
+                    "type": "string",
+                    "description": "",
+                    "example": "BB7 3DD"
+                  }
+                },
+                "required": [
+                  "line1",
+                  "line2",
+                  "street",
+                  "city",
+                  "postalCode"
+                ]
               }
-            }
+            },
+            "required": [
+              "name",
+              "email",
+              "phone",
+              "address"
+            ]
           },
           "customer": {
             "type": "object",
-            "description": "Individual customer details",
+            "description": "",
             "properties": {
               "name": {
                 "type": "object",
-                "description": "Customer name",
+                "description": "",
                 "properties": {
                   "title": {
                     "type": "string",
-                    "description": "Title (e.g., Mr., Mrs., Ms.)",
+                    "description": "",
                     "example": "Mr."
                   },
                   "first": {
                     "type": "string",
-                    "description": "First name",
+                    "description": "",
                     "example": "Edward"
                   },
                   "middle": {
                     "type": "string",
-                    "description": "Middle name(s)",
+                    "description": "",
                     "example": "Paul"
                   },
                   "last": {
                     "type": "string",
-                    "description": "Last name",
+                    "description": "",
                     "example": "Jones"
                   }
-                }
+                },
+                "required": [
+                  "title",
+                  "first",
+                  "middle",
+                  "last"
+                ]
               }
-            }
+            },
+            "required": [
+              "name"
+            ]
           }
-        }
+        },
+        "required": [
+          "business",
+          "customer"
+        ]
+      },
+      "Address": {
+        "type": "object",
+        "description": "Postal address",
+        "properties": {
+          "line1": {
+            "type": "string",
+            "description": "",
+            "example": "Mason House Farm Clitheroe Rd"
+          },
+          "line2": {
+            "type": "string",
+            "description": "",
+            "example": "Bashall Eaves"
+          },
+          "street": {
+            "type": "string",
+            "description": "",
+            "example": "Bartindale Road"
+          },
+          "city": {
+            "type": "string",
+            "description": "",
+            "example": "Clitheroe"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "",
+            "example": "BB7 3DD"
+          }
+        },
+        "required": [
+          "line1",
+          "line2",
+          "street",
+          "city",
+          "postalCode"
+        ]
       }
     }
   }

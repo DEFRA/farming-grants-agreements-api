@@ -2,10 +2,13 @@ import Joi from 'joi'
 import { getAgreementController } from './controllers/get-agreement.controller.js'
 import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
+import { getCommonResponseSchemas } from '~/src/api/common/helpers/joi-schema-from-pact.js'
 
 const auth = 'grants-ui-jwt'
 
-// Joi schemas for agreement endpoints
+// Joi schemas for agreement endpoints (using Pact test data)
+const { agreementResponse, acceptOfferResponse } = getCommonResponseSchemas()
+
 const agreementIdParam = Joi.object({
   agreementId: Joi.string()
     .required()
@@ -22,23 +25,6 @@ const downloadParams = Joi.object({
     .required()
     .description('Agreement version number (starts at 1)')
 })
-
-const agreementResponseSchema = Joi.object({
-  agreementData: Joi.object()
-    .description('The agreement data object')
-    .unknown(true),
-  auth: Joi.object({
-    source: Joi.string()
-      .valid('grants-ui', 'entra')
-      .description('Authentication source')
-  }).description('Authentication metadata')
-}).label('AgreementResponse')
-
-const acceptOfferResponseSchema = Joi.object({
-  agreementData: Joi.object()
-    .description('The updated agreement data after acceptance')
-    .unknown(true)
-}).label('AcceptOfferResponse')
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
@@ -57,7 +43,7 @@ const agreement = {
           notes:
             'Returns agreement data for the authenticated user based on JWT credentials. The user must be authenticated via the Grants UI JWT token (DefraID or Entra).',
           response: {
-            schema: agreementResponseSchema,
+            schema: agreementResponse,
             failAction: 'log'
           }
         },
@@ -78,7 +64,7 @@ const agreement = {
           notes:
             'Accepts the agreement offer for the authenticated user. This endpoint updates the payment hub, records the signature date, and publishes a status update event to SNS. Only agreements with status "offered" can be accepted.',
           response: {
-            schema: acceptOfferResponseSchema,
+            schema: acceptOfferResponse,
             failAction: 'log'
           }
         },
@@ -102,7 +88,7 @@ const agreement = {
             params: agreementIdParam
           },
           response: {
-            schema: agreementResponseSchema,
+            schema: agreementResponse,
             failAction: 'log'
           }
         },
