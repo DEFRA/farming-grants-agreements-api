@@ -72,7 +72,7 @@ describe('getAgreementController', () => {
       })
 
       describe('not yet accepted', () => {
-        const agreementId = 'SFI123456789'
+        const agreementId = 'FPTT123456789'
         let mockAgreementData
 
         beforeEach(() => {
@@ -154,7 +154,7 @@ describe('getAgreementController', () => {
 
         beforeEach(() => {
           mockAgreementData = {
-            agreementNumber: 'SFI123456789',
+            agreementNumber: 'FPTT123456789',
             status: 'accepted',
             sbi: '106284736',
             application: {
@@ -194,7 +194,7 @@ describe('getAgreementController', () => {
 
         beforeEach(() => {
           mockAgreementData = {
-            agreementNumber: 'SFI123456789',
+            agreementNumber: 'FPTT123456789',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -264,7 +264,7 @@ describe('getAgreementController', () => {
         })
 
         const mockAgreementData = {
-          agreementNumber: 'SFI123456789',
+          agreementNumber: 'FPTT123456789',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -293,7 +293,7 @@ describe('getAgreementController', () => {
   })
 
   describe('GET /{agreementId}', () => {
-    const doGet = (agreementId = 'SFI123456789', headers = {}) =>
+    const doGet = (agreementId = 'FPTT123456789', headers = {}) =>
       server.inject({
         method: 'GET',
         url: `/${agreementId}`,
@@ -301,7 +301,7 @@ describe('getAgreementController', () => {
       })
 
     describe('Farmer', () => {
-      const agreementId = 'SFI123456789'
+      const agreementId = 'FPTT123456789'
 
       beforeEach(() => {
         vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
@@ -480,7 +480,7 @@ describe('getAgreementController', () => {
         })
 
         const mockAgreementData = {
-          agreementNumber: 'SFI123456789',
+          agreementNumber: 'FPTT123456789',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -498,7 +498,7 @@ describe('getAgreementController', () => {
       })
 
       test('should return agreement data', async () => {
-        const { statusCode, result } = await doGet('SFI123456789')
+        const { statusCode, result } = await doGet('FPTT123456789')
         expect(statusCode).toBe(statusCodes.ok)
         expect(result.agreementData.status).toContain('offered')
         expect(result.auth.source).toBe('entra')
@@ -573,7 +573,7 @@ describe('getAgreementController', () => {
       })
 
       describe('not yet accepted', () => {
-        const agreementId = 'SFI123456789'
+        const agreementId = 'FPTT123456789'
         let mockAgreementData
 
         beforeEach(() => {
@@ -655,7 +655,7 @@ describe('getAgreementController', () => {
 
         beforeEach(() => {
           mockAgreementData = {
-            agreementNumber: 'SFI123456789',
+            agreementNumber: 'FPTT123456789',
             status: 'accepted',
             sbi: '106284736',
             application: {
@@ -695,7 +695,7 @@ describe('getAgreementController', () => {
 
         beforeEach(() => {
           mockAgreementData = {
-            agreementNumber: 'SFI123456789',
+            agreementNumber: 'FPTT123456789',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -765,7 +765,7 @@ describe('getAgreementController', () => {
         })
 
         const mockAgreementData = {
-          agreementNumber: 'SFI123456789',
+          agreementNumber: 'FPTT123456789',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -794,7 +794,7 @@ describe('getAgreementController', () => {
   })
 
   describe('GET /{agreementId}', () => {
-    const doGet = (agreementId = 'SFI123456789', headers = {}) =>
+    const doGet = (agreementId = 'FPTT123456789', headers = {}) =>
       server.inject({
         method: 'GET',
         url: `/${agreementId}`,
@@ -802,7 +802,7 @@ describe('getAgreementController', () => {
       })
 
     describe('Farmer', () => {
-      const agreementId = 'SFI123456789'
+      const agreementId = 'FPTT123456789'
 
       beforeEach(() => {
         vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
@@ -981,7 +981,7 @@ describe('getAgreementController', () => {
         })
 
         const mockAgreementData = {
-          agreementNumber: 'SFI123456789',
+          agreementNumber: 'FPTT123456789',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -999,7 +999,7 @@ describe('getAgreementController', () => {
       })
 
       test('should return agreement data', async () => {
-        const { statusCode, result } = await doGet('SFI123456789')
+        const { statusCode, result } = await doGet('FPTT123456789')
         expect(statusCode).toBe(statusCodes.ok)
         expect(result.agreementData.status).toContain('offered')
         expect(result.auth.source).toBe('entra')

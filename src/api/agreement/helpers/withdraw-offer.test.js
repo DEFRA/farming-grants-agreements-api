@@ -28,7 +28,7 @@ describe('withdrawOffer', () => {
   test('should successfully withdraw an offer', async () => {
     // Arrange
     const clientRef = 'client-ref-001'
-    const agreementNumber = 'SFI123456789'
+    const agreementNumber = 'FPTT123456789'
     const mockResult = { modifiedCount: 1 }
 
     agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)
@@ -55,7 +55,7 @@ describe('withdrawOffer', () => {
   test('should throw Boom.internal when updateOneAgreementVersion fails', async () => {
     // Arrange
     const clientRef = 'client-ref-001'
-    const agreementNumber = 'SFI123456789'
+    const agreementNumber = 'FPTT123456789'
     const error = new Error('Database error')
 
     agreementModel.updateOneAgreementVersion.mockRejectedValueOnce(error)
@@ -79,7 +79,7 @@ describe('withdrawOffer', () => {
   test('should handle different clientRef values', async () => {
     // Arrange
     const clientRef = 'different-ref'
-    const agreementNumber = 'SFI987654321'
+    const agreementNumber = 'FPTT987654321'
     const mockResult = { modifiedCount: 1 }
 
     agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)

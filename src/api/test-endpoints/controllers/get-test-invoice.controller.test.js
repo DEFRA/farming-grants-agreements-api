@@ -23,7 +23,7 @@ describe('getTestInvoiceController', () => {
 
   test('returns 200 with invoice data when found', async () => {
     const mockInvoice = {
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       invoiceNumber: 'INV-001',
       paymentHubRequest: { amount: 1000 }
     }
@@ -32,13 +32,13 @@ describe('getTestInvoiceController', () => {
       lean: vi.fn().mockResolvedValue(mockInvoice)
     })
 
-    const request = { query: { agreementNumber: 'SFI123456789' }, logger }
+    const request = { query: { agreementNumber: 'FPTT123456789' }, logger }
     const res = await getTestInvoiceController.handler(request, h)
 
     expect(res.statusCode).toBe(200)
     expect(res.payload).toEqual(mockInvoice)
     expect(invoicesModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123456789'
+      agreementNumber: 'FPTT123456789'
     })
   })
 
@@ -56,13 +56,13 @@ describe('getTestInvoiceController', () => {
       lean: vi.fn().mockResolvedValue(null)
     })
 
-    const request = { query: { agreementNumber: 'SFI123456789' }, logger }
+    const request = { query: { agreementNumber: 'FPTT123456789' }, logger }
     const err = await getTestInvoiceController.handler(request, h)
 
     expect(Boom.isBoom(err)).toBe(true)
     expect(err.output.statusCode).toBe(404)
     expect(err.message).toBe(
-      'Invoice not found for agreement number SFI123456789'
+      'Invoice not found for agreement number FPTT123456789'
     )
   })
 
@@ -71,7 +71,7 @@ describe('getTestInvoiceController', () => {
       lean: vi.fn().mockRejectedValue(new Error('db connection failed'))
     })
 
-    const request = { query: { agreementNumber: 'SFI123456789' }, logger }
+    const request = { query: { agreementNumber: 'FPTT123456789' }, logger }
     const res = await getTestInvoiceController.handler(request, h)
 
     expect(res.statusCode).toBe(500)

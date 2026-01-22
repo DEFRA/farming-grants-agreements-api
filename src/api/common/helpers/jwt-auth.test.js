@@ -84,7 +84,7 @@ describe('jwt-auth', () => {
   describe('verifyJwtPayload', () => {
     const mockAgreementData = {
       identifiers: { sbi: '123456' },
-      agreementNumber: 'SFI123456789'
+      agreementNumber: 'FPTT123456789'
     }
 
     test('should return true for entra source regardless of SBI', () => {
@@ -258,7 +258,7 @@ describe('jwt-auth', () => {
   describe('validateJwtAuthentication', () => {
     const mockAgreementData = {
       identifiers: { sbi: '123456' },
-      agreementNumber: 'SFI123456789'
+      agreementNumber: 'FPTT123456789'
     }
 
     beforeEach(() => {
@@ -398,7 +398,7 @@ describe('validateJwtAuthentication - payload extraction failure path', () => {
 
     const agreementData = {
       identifiers: { sbi: '123456' },
-      agreementNumber: 'SFI123456789'
+      agreementNumber: 'FPTT123456789'
     }
 
     const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() }

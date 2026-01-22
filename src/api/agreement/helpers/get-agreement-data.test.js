@@ -14,14 +14,14 @@ vi.mock('~/src/api/common/models/agreements.js')
 
 describe('getAgreementDataById', () => {
   const mockAgreement = {
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     agreementName: 'Test Agreement',
     signatureDate: '1/1/2024'
   }
 
   const mockGroup = {
     _id: '507f1f77bcf86cd799439011',
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     agreementName: 'Test Agreement'
   }
 
@@ -66,7 +66,7 @@ describe('getAgreementDataById', () => {
   })
 
   test('should throw Boom.notFound when agreement group is not found', async () => {
-    const agreementId = 'SFI999999999'
+    const agreementId = 'FPTT999999999'
 
     agreementsModel.aggregate.mockReturnValue({
       catch: vi.fn().mockResolvedValue([])
@@ -89,7 +89,7 @@ describe('getAgreementDataById', () => {
 
   test('should return agreement data when found', async () => {
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
 
     agreementsModel.aggregate.mockReturnValue({
       catch: vi.fn().mockResolvedValue([
@@ -130,7 +130,7 @@ describe('getAgreementDataById', () => {
 
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
-    const agreementId = 'SFI999999999'
+    const agreementId = 'FPTT999999999'
 
     agreementsModel.aggregate.mockReturnValue({
       catch: vi.fn().mockResolvedValue([])
@@ -153,7 +153,7 @@ describe('getAgreementDataById', () => {
 
   test('should handle missing logger gracefully', async () => {
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
 
     agreementsModel.aggregate.mockReturnValue({
       catch: vi.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
@@ -180,7 +180,7 @@ describe('getAgreementDataById', () => {
 
 describe('getAgreementDataBySbi', () => {
   const mockAgreement = {
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     agreementName: 'Test Agreement',
     signatureDate: '1/1/2024',
     identifiers: { sbi: '106284736' }
@@ -188,7 +188,7 @@ describe('getAgreementDataBySbi', () => {
 
   const mockGroup = {
     _id: '507f1f77bcf86cd799439011',
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     agreementName: 'Test Agreement',
     sbi: '106284736'
   }
@@ -455,7 +455,7 @@ describe('doesAgreementExist', () => {
 
   test('should work with different search terms', async () => {
     // Arrange
-    const searchTerms = { agreementNumber: 'SFI123456789' }
+    const searchTerms = { agreementNumber: 'FPTT123456789' }
     agreementsModel.aggregate.mockReturnValue({
       catch: vi.fn().mockResolvedValue([{ id: 'existing-agreement' }])
     })

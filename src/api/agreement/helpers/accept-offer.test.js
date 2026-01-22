@@ -101,9 +101,9 @@ describe('acceptOffer', () => {
     // Test with undefined agreementData
     await expect(
       acceptOffer(
-        'SFI123456789',
+        'FPTT123456789',
         undefined,
-        'http://localhost:3555/SFI123456789',
+        'http://localhost:3555/FPTT123456789',
         mockLogger
       )
     ).rejects.toThrow('Agreement data is required')
@@ -111,9 +111,9 @@ describe('acceptOffer', () => {
     // Test with null agreementData
     await expect(
       acceptOffer(
-        'SFI123456789',
+        'FPTT123456789',
         null,
-        'http://localhost:3555/SFI123456789',
+        'http://localhost:3555/FPTT123456789',
         mockLogger
       )
     ).rejects.toThrow('Agreement data is required')
@@ -142,16 +142,16 @@ describe('acceptOffer', () => {
     })
 
     const agreementData = {
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref'
     }
 
     await expect(
       acceptOffer(
-        'SFI123456789',
+        'FPTT123456789',
         agreementData,
-        'http://localhost:3555/SFI123456789',
+        'http://localhost:3555/FPTT123456789',
         mockLogger
       )
     ).rejects.toThrow(
@@ -169,16 +169,16 @@ describe('acceptOffer', () => {
     })
 
     const agreementData = {
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref'
     }
 
     await expect(
       acceptOffer(
-        'SFI123456789',
+        'FPTT123456789',
         agreementData,
-        'http://localhost:3555/SFI123456789',
+        'http://localhost:3555/FPTT123456789',
         mockLogger
       )
     ).rejects.toThrow(
@@ -191,7 +191,7 @@ describe('acceptOffer', () => {
 
   test('should successfully accept an agreement', async () => {
     const agreementData = {
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
       sbi: 'test-sbi',
@@ -207,7 +207,7 @@ describe('acceptOffer', () => {
     }
 
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
     agreementsModel.updateOneAgreementVersion.mockResolvedValue(
       mockUpdateResult
     )
@@ -273,7 +273,7 @@ describe('acceptOffer', () => {
 
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
-    const agreementId = 'SFI999999999'
+    const agreementId = 'FPTT999999999'
     agreementsModel.updateOneAgreementVersion.mockResolvedValue(null)
 
     // Act & Assert
@@ -285,17 +285,17 @@ describe('acceptOffer', () => {
           application: { parcel: [] },
           actionApplications: []
         },
-        'http://localhost:3555/SFI999999999',
+        'http://localhost:3555/FPTT999999999',
         mockLogger
       )
-    ).rejects.toThrow(Boom.notFound('Offer not found with ID SFI999999999'))
+    ).rejects.toThrow(Boom.notFound('Offer not found with ID FPTT999999999'))
 
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
   })
 
   test('should handle database errors and log them', async () => {
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
     const dbError = Boom.internal('Database connection failed')
     agreementsModel.updateOneAgreementVersion.mockRejectedValue(dbError)
 
@@ -308,7 +308,7 @@ describe('acceptOffer', () => {
           application: { parcel: [] },
           actionApplications: []
         },
-        'http://localhost:3555/SFI123456789',
+        'http://localhost:3555/FPTT123456789',
         mockLogger
       )
     ).rejects.toThrow(Boom.internal('Database connection failed'))
@@ -318,7 +318,7 @@ describe('acceptOffer', () => {
 
   test('should rethrow Boom errors without wrapping', async () => {
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
     const boomError = Boom.badImplementation('Database error')
     agreementsModel.updateOneAgreementVersion.mockRejectedValue(boomError)
 
@@ -331,7 +331,7 @@ describe('acceptOffer', () => {
           application: { parcel: [] },
           actionApplications: []
         },
-        'http://localhost:3555/SFI123456789',
+        'http://localhost:3555/FPTT123456789',
         mockLogger
       )
     ).rejects.toEqual(boomError)

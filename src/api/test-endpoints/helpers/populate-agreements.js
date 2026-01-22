@@ -41,7 +41,7 @@ const createDateRange = () => {
 }
 
 const generateAgreementNumber = (index) =>
-  `SFI${String(index).padStart(AGREEMENT_NUMBER_PAD_LENGTH, '0')}`
+  `FPTT${String(index).padStart(AGREEMENT_NUMBER_PAD_LENGTH, '0')}`
 
 const generateRandomDateInRange = ({ startMs, rangeMs }) => {
   const r =
@@ -93,7 +93,7 @@ const createAgreementVariation = (index, timestamp, dateRange) => {
         defraId: template.identifiers?.defraId
       },
       status: 'offered',
-      scheme: template.answers?.scheme ?? 'SFI',
+      scheme: template.answers?.scheme ?? 'FPTT',
       actionApplications: cloneValue(template.answers?.actionApplications, []),
       payment: cloneValue(template.answers?.payment, {}),
       applicant: cloneValue(template.answers?.applicant, {}),
