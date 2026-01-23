@@ -82,7 +82,8 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
 
     return {
       status: 'success',
-      message: 'Payload sent to payment hub successfully'
+      message: 'Payload sent to payment hub successfully',
+      claimId: invoice.claimId
     }
   } catch (error) {
     error.message = `Failed to setup payment schedule. ${error.message}`

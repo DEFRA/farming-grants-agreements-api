@@ -160,7 +160,7 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
 
         expect(statusCode).toBe(200)
         expect(result.agreementData.status).toContain('accepted')
-        expect(result.agreementData.agreement.agreementNumber).toContain('SFI')
+        expect(result.agreementData.agreement.agreementNumber).toContain('FPTT')
       })
   })
 })

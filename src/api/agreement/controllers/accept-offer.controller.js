@@ -24,9 +24,11 @@ const acceptOfferController = async (request, h) => {
       request.logger
     )
 
+    let claimId
     try {
       // Update the payment hub
-      await updatePaymentHub(request, agreementNumber)
+      const paymentHubResult = await updatePaymentHub(request, agreementNumber)
+      claimId = paymentHubResult.claimId
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
       await unacceptOffer(agreementNumber)
@@ -48,7 +50,8 @@ const acceptOfferController = async (request, h) => {
           status: agreementData.status,
           date: agreementData.signatureDate,
           code: agreementData?.code,
-          endDate: agreementData?.payment?.agreementEndDate
+          endDate: agreementData?.payment?.agreementEndDate,
+          claimId
         }
       },
       request.logger

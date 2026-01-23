@@ -36,7 +36,7 @@ describe('sending updated (accepted) events via SNS', () => {
 
   const mockAgreementData = {
     code: 'mockCode',
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     status: 'offered',
     clientRef: 'mockClientRef',
     correlationId: 'mockCorrelationId',
@@ -73,7 +73,7 @@ describe('sending updated (accepted) events via SNS', () => {
       status: 'accepted'
     })
     unacceptOffer.mockResolvedValue()
-    updatePaymentHub.mockResolvedValue()
+    updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
 
     // Setup default mock implementations with complete data structure
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)

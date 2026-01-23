@@ -36,7 +36,7 @@ describe('unacceptOffer', () => {
 
   test('should successfully unaccept an offer', async () => {
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
     const updateResult = { modifiedCount: 1 }
 
     agreementsModel.updateOneAgreementVersion.mockResolvedValueOnce(
@@ -56,7 +56,7 @@ describe('unacceptOffer', () => {
 
   test('should throw a boom error when updateOneAgreementVersion fails', async () => {
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
     const mockError = 'Mock error'
 
     agreementsModel.updateOneAgreementVersion.mockRejectedValueOnce(mockError)

@@ -12,7 +12,7 @@ describe('SQS message processor', () => {
     vi.clearAllMocks()
     mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn() }
     createOffer.mockResolvedValue({
-      agreementNumber: 'SFI123456789'
+      agreementNumber: 'FPTT123456789'
     })
   })
 

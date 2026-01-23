@@ -34,7 +34,7 @@ describe('acceptOfferDocumentController', () => {
   const mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn() }
 
   const mockAgreementData = {
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     status: 'offered',
     clientRef: 'test-client-ref',
     correlationId: 'test-correlation-id',
@@ -83,7 +83,7 @@ describe('acceptOfferDocumentController', () => {
       status: 'accepted'
     })
     unacceptOffer.mockResolvedValue()
-    updatePaymentHub.mockResolvedValue()
+    updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
 
     // Setup default mock implementations with complete data structure
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
@@ -105,7 +105,7 @@ describe('acceptOfferDocumentController', () => {
       return h.continue
     })
 
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
 
     const { statusCode, result } = await server.inject({
       method: 'POST',
@@ -141,15 +141,16 @@ describe('acceptOfferDocumentController', () => {
         topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
         type: 'io.onsite.agreement.status.updated',
         data: {
-          agreementNumber: 'SFI123456789',
+          agreementNumber: 'FPTT123456789',
           correlationId: 'test-correlation-id',
           version: 1,
-          agreementUrl: `${config.get('viewAgreementURI')}/SFI123456789`,
+          agreementUrl: `${config.get('viewAgreementURI')}/FPTT123456789`,
           clientRef: 'test-client-ref',
           status: 'accepted',
           date: '2024-01-01T00:00:00.000Z',
           code: 'test-code',
-          endDate: '2027-12-31'
+          endDate: '2027-12-31',
+          claimId: 'R00000001'
         }
       },
       mockLogger
@@ -168,7 +169,7 @@ describe('acceptOfferDocumentController', () => {
       return h.continue
     })
 
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
 
     const { statusCode, result } = await server.inject({
       method: 'POST',
@@ -227,7 +228,7 @@ describe('acceptOfferDocumentController', () => {
   })
 
   test('should handle base URL header', async () => {
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
 
     const { statusCode, result } = await server.inject({
       method: 'POST',
@@ -268,7 +269,7 @@ describe('acceptOfferDocumentController', () => {
     // Assert
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('accepted')
-    expect(result.agreementData.agreementNumber).toContain('SFI123456789')
+    expect(result.agreementData.agreementNumber).toContain('FPTT123456789')
   })
 
   test('should rollback the accepting the agreement if the payment hub request fails', async () => {
@@ -287,7 +288,7 @@ describe('acceptOfferDocumentController', () => {
 
     // Assert
     expect(statusCode).toBe(statusCodes.internalServerError)
-    expect(unacceptOffer).toHaveBeenCalledWith('SFI123456789')
+    expect(unacceptOffer).toHaveBeenCalledWith('FPTT123456789')
     expect(result).toEqual({
       errorMessage: 'Payment hub request failed'
     })

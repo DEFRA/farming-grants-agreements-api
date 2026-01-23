@@ -18,7 +18,7 @@ describe('SQS message processor', () => {
       correlationId: 'mockCorrelationId',
       code: 'mockCode',
       status: 'withdrawn',
-      agreement: { agreementNumber: 'SFI123456789' }
+      agreement: { agreementNumber: 'FPTT123456789' }
     })
   })
 
@@ -29,7 +29,7 @@ describe('SQS message processor', () => {
         data: {
           status: 'withdrawn',
           clientRef: 'client-ref-001',
-          agreementNumber: 'SFI123456789'
+          agreementNumber: 'FPTT123456789'
         }
       }
       const message = {
@@ -41,12 +41,12 @@ describe('SQS message processor', () => {
 
       expect(withdrawOffer).toHaveBeenCalledWith(
         'client-ref-001',
-        'SFI123456789'
+        'FPTT123456789'
       )
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           data: {
-            agreementNumber: 'SFI123456789',
+            agreementNumber: 'FPTT123456789',
             clientRef: 'mockClientRef',
             code: 'mockCode',
             correlationId: 'mockCorrelationId',
@@ -103,7 +103,7 @@ describe('SQS message processor', () => {
         data: {
           status: 'withdrawn',
           clientRef: 'client-ref-001',
-          agreementNumber: 'SFI123456789'
+          agreementNumber: 'FPTT123456789'
         }
       }
 
@@ -118,12 +118,12 @@ describe('SQS message processor', () => {
       )
       expect(withdrawOffer).toHaveBeenCalledWith(
         'client-ref-001',
-        'SFI123456789'
+        'FPTT123456789'
       )
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           data: {
-            agreementNumber: 'SFI123456789',
+            agreementNumber: 'FPTT123456789',
             clientRef: 'mockClientRef',
             code: 'mockCode',
             correlationId: 'mockCorrelationId',

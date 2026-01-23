@@ -65,7 +65,7 @@ const mockSortLeanReject = (err, sortSpy = vi.fn()) => ({
 })
 
 describe('agreements.updateOneAgreementVersion', () => {
-  const AGREEMENT_FILTER = { agreementNumber: 'SFI123456789' }
+  const AGREEMENT_FILTER = { agreementNumber: 'FPTT123456789' }
   const UPDATE = {
     $set: { status: 'accepted', signatureDate: '2025-08-30T12:00:00Z' }
   }

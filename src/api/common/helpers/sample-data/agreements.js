@@ -14,7 +14,7 @@ const manageHedgerowTreesDescription =
 export default [
   {
     notificationMessageId: 'sample-notification-1',
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     clientRef: 'client-ref-001',
     code: 'frps-private-beta',
     identifiers: {
@@ -858,7 +858,7 @@ export default [
   },
   {
     notificationMessageId: 'sample-notification-2',
-    agreementNumber: 'SFI987654321',
+    agreementNumber: 'FPTT987654321',
     clientRef: 'client-ref-002',
     code: 'frps-private-beta',
     createdAt: '2025-08-19T09:36:45.131Z',
@@ -871,7 +871,7 @@ export default [
     answers: {
       hasCheckedLandIsUpToDate: true,
       agreementName: 'Example agreement 2',
-      scheme: 'SFI',
+      scheme: 'FPTT',
       year: 2025,
       actionApplications: [],
       payment: {

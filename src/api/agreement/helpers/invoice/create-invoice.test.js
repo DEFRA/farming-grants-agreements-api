@@ -47,7 +47,7 @@ describe('formatClaimId', () => {
 })
 
 describe('getOrCreateClaimId', () => {
-  const mockAgreementId = 'SFI123456789'
+  const mockAgreementId = 'FPTT123456789'
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -144,7 +144,7 @@ describe('getOrCreateClaimId', () => {
 
 describe('createInvoice', () => {
   const mockCorrelationId = '123e4567-e89b-12d3-a456-426614174000'
-  const mockAgreementId = 'SFI123456789'
+  const mockAgreementId = 'FPTT123456789'
 
   const createMockAgreementData = (version = 1) => ({
     correlationId: mockCorrelationId,

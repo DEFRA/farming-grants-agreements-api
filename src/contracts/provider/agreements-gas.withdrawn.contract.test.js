@@ -31,7 +31,7 @@ describe('sending updated (withdrawn) events via SNS', () => {
           mockPublishEvent.mockResolvedValue()
 
           mockWithdrawOffer.mockResolvedValue({
-            agreement: { agreementNumber: 'SFI123456789' },
+            agreement: { agreementNumber: 'FPTT123456789' },
             clientRef: 'mockClientRef',
             code: 'mockCode',
             correlationId: 'mockCorrelationId',

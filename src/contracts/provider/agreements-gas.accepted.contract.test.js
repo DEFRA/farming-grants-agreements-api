@@ -37,7 +37,7 @@ describe('sending updated (accepted) events via SNS', () => {
           config.set('files.s3.region', 'mockS3Region')
 
           await acceptOffer(
-            'SFI123456789',
+            'FPTT123456789',
             {
               ...sampleData.agreements[1],
               correlationId: 'mockCorrelationId',

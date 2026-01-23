@@ -31,7 +31,7 @@ describe('Custom Grants UI JWT Authentication Scheme', () => {
   })
 
   describe('authentication via route', () => {
-    const mockAgreementId = 'SFI123456789'
+    const mockAgreementId = 'FPTT123456789'
     const mockAgreementData = {
       agreementNumber: mockAgreementId,
       status: 'offered',
