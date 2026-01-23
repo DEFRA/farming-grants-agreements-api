@@ -1,0 +1,167 @@
+asyncapi: '2.6.0'
+info:
+  title: Farming Grants Agreements API - Agreement Status Updated Events
+  version: '1.0.0'
+  description: |
+    Events emitted by the Farming Grants Agreements API when agreement status changes
+    (e.g. offered, accepted, withdrawn). Messages follow the CloudEvents 1.0 envelope
+    with a JSON payload in `data`.
+
+defaultContentType: application/json
+
+servers:
+  localstack:
+    url: 'http://localhost:4566'
+    protocol: sns
+    description: Local development using LocalStack SNS
+    variables:
+      region:
+        description: AWS region
+        default: eu-west-2
+
+channels:
+  agreement_status_updated:
+    description: SNS topic receiving agreement status update events
+    bindings:
+      sns:
+        topic:
+          name: agreement_status_updated
+    publish:
+      summary: Agreement status updated event
+      description: Emitted when an agreement is created (offered), accepted, or withdrawn.
+      operationId: publishAgreementStatusUpdated
+      message:
+        $ref: '#/components/messages/AgreementStatusUpdated'
+
+components:
+  messages:
+    AgreementStatusUpdated:
+      name: AgreementStatusUpdated
+      title: Agreement Status Updated
+      contentType: application/json
+      summary: CloudEvent wrapper with agreement status update payload in `data`.
+      examples:
+        - name: Offered
+          summary: Agreement created (offered)
+          payload:
+            id: '3a9f7b2e-1a89-4f7a-9ad4-0a4e3f6c9f1e'
+            source: 'urn:service:agreement'
+            specversion: '1.0'
+            type: 'io.onsite.agreement.status.updated'
+            time: '2025-10-06T16:41:59.497Z'
+            datacontenttype: 'application/json'
+            data:
+              agreementNumber: 'SFI123456789'
+              correlationId: '6b3a8e88-0e8b-4b7c-8fb5-1f2e4d7c9a1b'
+              clientRef: 'ref-1234'
+              status: 'offered'
+              date: '2025-10-06T16:40:21.951Z'
+              code: 'frps-private-beta'
+        - name: Accepted
+          summary: Agreement accepted
+          payload:
+            id: 'b4d5e2a7-8c91-4f37-9b23-8f7a6c5d4e3f'
+            source: 'urn:service:agreement'
+            specversion: '1.0'
+            type: 'io.onsite.agreement.status.updated'
+            time: '2025-10-06T16:41:59.497Z'
+            datacontenttype: 'application/json'
+            data:
+              agreementNumber: 'SFI123456789'
+              correlationId: 'mockCorrelationId'
+              clientRef: 'mockClientRef'
+              version: 'v1'
+              agreementUrl: 'https://example.com/agreement/SFI123456789.pdf'
+              status: 'accepted'
+              date: '2025-10-06T16:40:21.951Z'
+              code: 'mockCode'
+        - name: Withdrawn
+          summary: Application withdrawn → agreement withdrawn
+          payload:
+            id: '9c8b7a6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d'
+            source: 'urn:service:agreement'
+            specversion: '1.0'
+            type: 'io.onsite.agreement.status.updated'
+            time: '2025-10-06T16:41:59.497Z'
+            datacontenttype: 'application/json'
+            data:
+              agreementNumber: 'SFI123456789'
+              correlationId: 'mockCorrelationId'
+              clientRef: 'mockClientRef'
+              status: 'withdrawn'
+              date: '2025-10-06T16:40:21.951Z'
+              code: 'mockCode'
+      payload:
+        $ref: '#/components/schemas/CloudEventAgreementStatusUpdated'
+
+  schemas:
+    CloudEventAgreementStatusUpdated:
+      type: object
+      required:
+        - id
+        - source
+        - specversion
+        - type
+        - time
+        - datacontenttype
+        - data
+      properties:
+        id:
+          type: string
+          description: Unique event identifier (UUID v4)
+        source:
+          type: string
+          description: Event source identifier
+          example: urn:service:agreement
+        specversion:
+          type: string
+          enum: ['1.0']
+        type:
+          type: string
+          description: CloudEvent type
+          example: io.onsite.agreement.status.updated
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          enum: ['application/json']
+        data:
+          $ref: '#/components/schemas/AgreementStatusUpdateData'
+
+    AgreementStatusUpdateData:
+      type: object
+      description: Agreement status update details emitted by the service
+      required:
+        - agreementNumber
+        - status
+        - date
+      properties:
+        agreementNumber:
+          type: string
+          description: Unique agreement number (e.g. SFI#########)
+          example: SFI123456789
+        correlationId:
+          type: string
+          description: Correlation identifier to trace request flow
+        clientRef:
+          type: string
+          description: Client reference from upstream system
+        version:
+          type: string
+          description: Agreement version (present on acceptance)
+        agreementUrl:
+          type: string
+          format: uri
+          description: URL to the generated agreement PDF (present on acceptance)
+        status:
+          type: string
+          description: Agreement status value
+          enum: [offered, accepted, withdrawn]
+        date:
+          type: string
+          format: date-time
+          description: Event-effective timestamp
+        code:
+          type: string
+          description: Scheme or programme code
