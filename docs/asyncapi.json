@@ -31,7 +31,7 @@
                 "datacontenttype": "application/json",
                 "data": {
                   "notificationMessageId": "sample-notification-2",
-                  "agreementNumber": "SFI987654321",
+                  "agreementNumber": "FPTT987654321",
                   "clientRef": "client-ref-002",
                   "code": "frps-private-beta",
                   "createdAt": "2025-08-19T09:36:45.131Z",
@@ -44,7 +44,7 @@
                   "answers": {
                     "hasCheckedLandIsUpToDate": true,
                     "agreementName": "Example agreement 2",
-                    "scheme": "SFI",
+                    "scheme": "FPTT",
                     "year": 2025,
                     "actionApplications": [],
                     "payment": {
@@ -356,7 +356,7 @@
                 "datacontenttype": "application/json",
                 "data": {
                   "clientRef": "client-ref-002",
-                  "agreementNumber": "SFI987654321",
+                  "agreementNumber": "FPTT987654321",
                   "status": "withdrawn"
                 }
               }
@@ -389,7 +389,7 @@
                 "time": "2025-01-15T10:30:00.000Z",
                 "datacontenttype": "application/json",
                 "data": {
-                  "agreementNumber": "SFI987654321",
+                  "agreementNumber": "FPTT987654321",
                   "correlationId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
                   "clientRef": "client-ref-002",
                   "version": 1,

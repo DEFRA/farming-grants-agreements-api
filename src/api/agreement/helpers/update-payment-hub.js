@@ -3,6 +3,7 @@ import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-
 import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
 import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
+import { formatPaymentDecimal } from '~/src/api/common/helpers/format-payment-decimal.js'
 import { config } from '~/src/config/index.js'
 
 /**
@@ -15,10 +16,7 @@ import { config } from '~/src/config/index.js'
 async function updatePaymentHub({ server, logger }, agreementNumber) {
   try {
     const agreementData = await getAgreementDataById(agreementNumber)
-    const invoice = await createInvoice(
-      agreementNumber,
-      agreementData.correlationId
-    )
+    const invoice = await createInvoice(agreementNumber, agreementData)
 
     const marketingYear = new Date().getFullYear()
 
@@ -39,7 +37,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
         }
 
         return {
-          value: line.paymentPence,
+          value: formatPaymentDecimal(line.paymentPence),
           description,
           schemeCode
         }
@@ -60,11 +58,12 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       schedule:
         agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
       dueDate: agreementData.payment.payments[0].paymentDate,
-      value: agreementData.payment.agreementTotalPence,
+      value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
       currency: agreementData.payment.currency || 'GBP',
       ledger: config.get('paymentHub.defaultLedger'),
       deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
       fesCode: config.get('paymentHub.defaultFesCode'),
+      claimId: invoice.claimId,
       invoiceLines
     }
 
@@ -83,7 +82,8 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
 
     return {
       status: 'success',
-      message: 'Payload sent to payment hub successfully'
+      message: 'Payload sent to payment hub successfully',
+      claimId: invoice.claimId
     }
   } catch (error) {
     error.message = `Failed to setup payment schedule. ${error.message}`

@@ -86,7 +86,7 @@ const targetDataStructure = {
 }
 
 const targetGroupDataStructure = {
-  agreementNumber: 'SFI987654321',
+  agreementNumber: 'FPTT987654321',
   agreementName: 'Sample Agreement',
   agreements: [targetDataStructure]
 }
@@ -96,14 +96,14 @@ const agreementData = {
   code: 'frps-private-beta',
   createdAt: '2023-10-01T12:00:00Z',
   submittedAt: '2023-10-01T11:00:00Z',
-  agreementNumber: 'SFI987654321',
+  agreementNumber: 'FPTT987654321',
   identifiers: {
     sbi: '106284736',
     frn: '1234567890',
     crn: '1234567890'
   },
   answers: {
-    scheme: 'SFI',
+    scheme: 'FPTT',
     year: 2025,
     agreementName: 'Sample Agreement',
     hasCheckedLandIsUpToDate: true,
@@ -189,7 +189,7 @@ describe('createOffer', () => {
       ...targetGroupDataStructure,
       sbi: '106284736',
       frn: '1234567890',
-      agreementNumber: 'SFI999999999', // test uses expect.any(String)
+      agreementNumber: 'FPTT999999999', // test uses expect.any(String)
       correlationId: 'abc-def' // test uses expect.any(String)
     }
     populated.agreements = [{ ...targetDataStructure }]
@@ -239,7 +239,7 @@ describe('createOffer', () => {
         topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
         type: 'io.onsite.agreement.status.updated',
         data: expect.objectContaining({
-          agreementNumber: 'SFI999999999',
+          agreementNumber: 'FPTT999999999',
           correlationId: expect.stringMatching(
             /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
           ),
@@ -459,8 +459,8 @@ describe('createOffer', () => {
 
     const result = await createOffer(uuidv4(), emptyAgreementData, mockLogger)
 
-    // Should fall back to a generated SFI number
-    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    // Should fall back to a generated FPTT number
+    expect(result.agreementNumber).toMatch(/^FPTT\d{9}$/)
     expect(result.agreementNumber).not.toBe('')
 
     // Restore previous config
@@ -472,7 +472,7 @@ describe('createOffer', () => {
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', true)
 
-    const provided = 'SFI123456789'
+    const provided = 'FPTT123456789'
     doesAgreementExist.mockResolvedValueOnce(false)
 
     const populated = {
@@ -504,12 +504,12 @@ describe('createOffer', () => {
 
     doesAgreementExist.mockResolvedValueOnce(false)
 
-    const provided = 'SFI888888888'
+    const provided = 'FPTT888888888'
     const data = { ...agreementData, agreementNumber: provided }
 
     const result = await createOffer(uuidv4(), data, mockLogger)
 
-    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).toMatch(/^FPTT\d{9}$/)
     expect(result.agreementNumber).not.toBe(provided)
 
     config.set('featureFlags.seedDb', previous)
@@ -525,7 +525,7 @@ describe('createOffer', () => {
     const data = { ...agreementData, agreementNumber: '' }
     const result = await createOffer(uuidv4(), data, mockLogger)
 
-    expect(result.agreementNumber).toMatch(/^SFI\d{9}$/)
+    expect(result.agreementNumber).toMatch(/^FPTT\d{9}$/)
     expect(result.agreementNumber).not.toBe('')
 
     config.set('featureFlags.seedDb', previous)
@@ -607,7 +607,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
 
@@ -654,7 +654,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'VAUGHAN FARMS LIMITED',
@@ -711,7 +711,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
 
@@ -772,7 +772,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'PARCEL BUSINESS LTD',
@@ -828,7 +828,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
 
@@ -889,7 +889,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         application: {
           applicant: {
             business: {
@@ -932,7 +932,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
 
@@ -966,7 +966,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'ANSWERS PAYMENTS LTD',
@@ -1014,7 +1014,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
     doesAgreementExist.mockResolvedValueOnce(false)
@@ -1045,7 +1045,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'ROOT PAYMENTS LTD',
@@ -1093,7 +1093,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
     doesAgreementExist.mockResolvedValueOnce(false)
@@ -1124,7 +1124,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'PARCELS PLURAL LTD',
@@ -1161,7 +1161,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
     doesAgreementExist.mockResolvedValueOnce(false)
@@ -1187,7 +1187,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'PAYMENTS TOTAL LTD',
@@ -1224,7 +1224,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
     doesAgreementExist.mockResolvedValueOnce(false)
@@ -1254,7 +1254,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'CALCULATED TOTAL LTD',
@@ -1298,7 +1298,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
     doesAgreementExist.mockResolvedValueOnce(false)
@@ -1329,7 +1329,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'EMPTY PAYMENTS LTD',
@@ -1376,7 +1376,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'NULL APPLICATION LTD',
@@ -1420,7 +1420,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'SINGLE PARCEL LTD',
@@ -1455,7 +1455,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
     doesAgreementExist.mockResolvedValueOnce(false)
@@ -1485,7 +1485,7 @@ describe('createOffer', () => {
         defraId: 'defraId'
       },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'NULL PARCEL LTD',
@@ -1519,7 +1519,7 @@ describe('createOffer', () => {
   describe('generateAgreementNumber', () => {
     it('should generate a valid agreement number', () => {
       const agreementNumber = generateAgreementNumber()
-      expect(agreementNumber).toMatch(/^SFI\d{9}$/)
+      expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
     })
 
     it('should generate unique agreement numbers', () => {
@@ -1556,7 +1556,7 @@ describe('createOffer', () => {
       code: 'frps-private-beta',
       identifiers: { sbi: '106284736', frn: '1234567890' },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         totalAnnualPaymentPence: 32006,
         parcels: [
           {
@@ -1596,7 +1596,7 @@ describe('createOffer', () => {
       code: 'frps-private-beta',
       identifiers: { sbi: '106284736', frn: '1234567890' },
       answers: {
-        scheme: 'SFI'
+        scheme: 'FPTT'
         // No payment, no applicant, no parcels, no application
       }
     }
@@ -1636,7 +1636,7 @@ describe('createOffer', () => {
       code: 'frps-private-beta',
       identifiers: { sbi: '106284736', frn: '1234567890' },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         parcels: [
           {
             sheetId: 'SD6743',
@@ -1670,7 +1670,7 @@ describe('createOffer', () => {
       code: 'frps-private-beta',
       identifiers: { sbi: '106284736', frn: '1234567890' },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         applicant: {
           business: {
             name: 'TEST BUSINESS',
@@ -1708,7 +1708,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
 
@@ -1745,7 +1745,7 @@ describe('createOffer', () => {
       code: 'frps-private-beta',
       identifiers: { sbi: '106284736', frn: '1234567890' },
       answers: {
-        scheme: 'SFI',
+        scheme: 'FPTT',
         payment: {
           annualTotalPence: 1000,
           agreementStartDate: '2024-01-01',
@@ -1778,7 +1778,7 @@ describe('createOffer', () => {
     }
 
     agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       agreements: []
     })
 
@@ -1906,7 +1906,7 @@ describe('createOffer', () => {
         clientRef: 'ref',
         code: 'frps-private-beta',
         identifiers: { sbi: '1', frn: '2' },
-        answers: { scheme: 'SFI' }
+        answers: { scheme: 'FPTT' }
       }
       doesAgreementExist.mockResolvedValueOnce(false)
       await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(

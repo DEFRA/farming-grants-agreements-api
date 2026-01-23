@@ -61,7 +61,7 @@ To run the application in `development` mode run:
 npm run dev
 ```
 
-If you'd like to seed the database with a mock agreement (which you can view by using the agreementId `SFI123456789`) you must set the environment variable `SEED_DB` to `true`.
+If you'd like to seed the database with a mock agreement (which you can view by using the agreementId `FPTT123456789`) you must set the environment variable `SEED_DB` to `true`.
 To run the service without `grants-ui` disable the Jwt authentication by setting the environment variable `JWT_ENABLED=false`
 
 ```bash

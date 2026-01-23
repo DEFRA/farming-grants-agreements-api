@@ -15,7 +15,7 @@ export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
   const maxRandomNumber = 999999999
   const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
-  return `SFI${randomNum}`
+  return `FPTT${randomNum}`
 }
 
 /**

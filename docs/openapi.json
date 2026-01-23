@@ -817,7 +817,7 @@
         "scheme": {
           "type": "string",
           "description": "scheme field",
-          "example": "SFI"
+          "example": "FPTT"
         },
         "year": {
           "type": "integer",
@@ -850,7 +850,7 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "SFI987654321"
+          "example": "FPTT987654321"
         },
         "clientRef": {
           "type": "string",
@@ -1152,7 +1152,7 @@
         "scheme": {
           "type": "string",
           "description": "scheme field",
-          "example": "SFI"
+          "example": "FPTT"
         },
         "year": {
           "type": "integer",
@@ -1185,7 +1185,7 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "SFI987654321"
+          "example": "FPTT987654321"
         },
         "clientRef": {
           "type": "string",
@@ -1513,7 +1513,7 @@
         "scheme": {
           "type": "string",
           "description": "scheme field",
-          "example": "SFI"
+          "example": "FPTT"
         },
         "year": {
           "type": "integer",
@@ -1546,7 +1546,7 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "SFI987654321"
+          "example": "FPTT987654321"
         },
         "clientRef": {
           "type": "string",
@@ -1930,7 +1930,7 @@
         "scheme": {
           "type": "string",
           "description": "scheme field",
-          "example": "SFI"
+          "example": "FPTT"
         },
         "year": {
           "type": "integer",
@@ -1963,7 +1963,7 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "SFI987654321"
+          "example": "FPTT987654321"
         },
         "clientRef": {
           "type": "string",
