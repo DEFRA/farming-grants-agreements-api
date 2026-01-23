@@ -16,10 +16,7 @@ import { config } from '~/src/config/index.js'
 async function updatePaymentHub({ server, logger }, agreementNumber) {
   try {
     const agreementData = await getAgreementDataById(agreementNumber)
-    const invoice = await createInvoice(
-      agreementNumber,
-      agreementData.correlationId
-    )
+    const invoice = await createInvoice(agreementNumber, agreementData)
 
     const marketingYear = new Date().getFullYear()
 
@@ -66,6 +63,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       ledger: config.get('paymentHub.defaultLedger'),
       deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
       fesCode: config.get('paymentHub.defaultFesCode'),
+      claimId: invoice.claimId,
       invoiceLines
     }
 

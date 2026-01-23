@@ -7,6 +7,7 @@ const schema = new mongoose.Schema(
     agreementNumber: { type: String, required: true },
     invoiceNumber: { type: String, required: true },
     correlationId: { type: String, required: true },
+    claimId: { type: String, required: true },
     paymentHubRequest: { type: Object, required: false }
   },
   {

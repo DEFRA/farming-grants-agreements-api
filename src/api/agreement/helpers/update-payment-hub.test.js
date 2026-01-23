@@ -84,7 +84,8 @@ describe('updatePaymentHub', () => {
   }
 
   const mockInvoice = {
-    invoiceNumber: 'INV-123456'
+    invoiceNumber: 'INV-123456',
+    claimId: 'R00000001'
   }
 
   beforeEach(() => {
@@ -119,7 +120,7 @@ describe('updatePaymentHub', () => {
       expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
       expect(createInvoice).toHaveBeenCalledWith(
         agreementNumber,
-        'test-correlation-id'
+        mockAgreementData
       )
 
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
@@ -183,7 +184,7 @@ describe('updatePaymentHub', () => {
       expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
       expect(createInvoice).toHaveBeenCalledWith(
         agreementNumber,
-        'test-correlation-id'
+        mockAgreementData
       )
 
       const paymentHubRequestData = {
@@ -202,6 +203,7 @@ describe('updatePaymentHub', () => {
         ledger: 'AP',
         deliveryBody: 'RP00',
         fesCode: 'FALS_FPTT',
+        claimId: 'R00000001',
         invoiceLines: [
           [
             {
@@ -420,6 +422,7 @@ describe('updatePaymentHub', () => {
         ledger: 'AP',
         deliveryBody: 'RP00',
         fesCode: 'FALS_FPTT',
+        claimId: 'R00000001',
         invoiceLines: [
           [
             {
