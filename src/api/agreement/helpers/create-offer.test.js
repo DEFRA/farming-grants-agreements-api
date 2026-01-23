@@ -309,7 +309,7 @@ describe('createOffer', () => {
             reference: '9000000501',
             name: 'HireContracting',
             email: { address: 'test@test.com' },
-            phone: '07700900301',
+            phone: { mobile: '07700900301' },
             line1: '5 Example Lane',
             line2: 'Example Village',
             city: 'Exampleton',
@@ -364,7 +364,7 @@ describe('createOffer', () => {
           business: {
             name: 'Structured Business',
             email: { address: 'structured@test.com' },
-            phone: '01234567890',
+            phone: { mobile: '01234567890' },
             address: {
               line1: 'Existing line 1',
               postalCode: 'AB1 2CD'
@@ -424,7 +424,7 @@ describe('createOffer', () => {
           business: {
             name: 'No Address Business',
             email: { address: 'noaddress@test.com' },
-            phone: '07700900000'
+            phone: { mobile: '07700900000' }
           }
         }
       }
@@ -663,7 +663,7 @@ describe('createOffer', () => {
               address:
                 'meadow@example.test'
             },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: '3 Example Lane',
               line2: 'Example Village',
@@ -780,7 +780,7 @@ describe('createOffer', () => {
             email: {
               address: 'farmer@example.com'
             },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Farm Lane',
               line2: 'Village',
@@ -898,7 +898,7 @@ describe('createOffer', () => {
               email: {
                 address: 'applicant@example.com'
               },
-              phone: '02079460901',
+              phone: { mobile: '02079460901' },
               address: {
                 line1: 'Answers Lane',
                 line2: 'Village',
@@ -974,7 +974,7 @@ describe('createOffer', () => {
             email: {
               address: 'payments@example.com'
             },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Payments Lane',
               city: 'Exampleton',
@@ -1053,7 +1053,7 @@ describe('createOffer', () => {
             email: {
               address: 'rootpayments@example.com'
             },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Root Payments Lane',
               city: 'Exampleton',
@@ -1130,7 +1130,7 @@ describe('createOffer', () => {
             name: 'PARCELS PLURAL LTD',
             reference: '9100000002',
             email: { address: 'parcels@example.com' },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Parcels Lane',
               city: 'Exampleton',
@@ -1193,7 +1193,7 @@ describe('createOffer', () => {
             name: 'PAYMENTS TOTAL LTD',
             reference: '9100000002',
             email: { address: 'total@example.com' },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Total Lane',
               city: 'Exampleton',
@@ -1260,7 +1260,7 @@ describe('createOffer', () => {
             name: 'CALCULATED TOTAL LTD',
             reference: '9100000002',
             email: { address: 'calc@example.com' },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Calc Lane',
               city: 'Exampleton',
@@ -1335,7 +1335,7 @@ describe('createOffer', () => {
             name: 'EMPTY PAYMENTS LTD',
             reference: '9100000002',
             email: { address: 'empty@example.com' },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Empty Lane',
               city: 'Exampleton',
@@ -1382,7 +1382,7 @@ describe('createOffer', () => {
             name: 'NULL APPLICATION LTD',
             reference: '9100000002',
             email: { address: 'null@example.com' },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Null Lane',
               city: 'Exampleton',
@@ -1426,7 +1426,7 @@ describe('createOffer', () => {
             name: 'SINGLE PARCEL LTD',
             reference: '9100000002',
             email: { address: 'single@example.com' },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Single Lane',
               city: 'Exampleton',
@@ -1491,7 +1491,7 @@ describe('createOffer', () => {
             name: 'NULL PARCEL LTD',
             reference: '9100000002',
             email: { address: 'nullparcel@example.com' },
-            phone: '02079460901',
+            phone: { mobile: '02079460901' },
             address: {
               line1: 'Null Parcel Lane',
               city: 'Exampleton',
@@ -1676,7 +1676,7 @@ describe('createOffer', () => {
             name: 'TEST BUSINESS',
             reference: '1234567890',
             email: { address: 'test@example.test' },
-            phone: '01234567890',
+            phone: { mobile: '01234567890' },
             address: {
               line1: 'Test Address',
               city: 'Test City',

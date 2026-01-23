@@ -759,7 +759,7 @@ export default [
             address:
               'meadow@example.test'
           },
-          phone: '02079460901',
+          phone: { mobile: '02079460901' },
           address: {
             line1: '3 Example Lane',
             line2: 'Example Village',
@@ -1079,7 +1079,7 @@ export default [
             address:
               'meadow@example.test'
           },
-          phone: '02079460901',
+          phone: { mobile: '02079460901' },
           address: {
             line1: '3 Example Lane',
             line2: 'Example Village',
