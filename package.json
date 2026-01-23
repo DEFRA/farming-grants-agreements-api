@@ -62,7 +62,7 @@
     "hapi-pulse": "^3.0.1",
     "html-entities": "^2.5.2",
     "https-proxy-agent": "^7.0.5",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "mongoose": "^8.12.1",
     "node-fetch": "^3.3.2",
     "pino": "9.13.1",
