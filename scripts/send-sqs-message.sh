@@ -26,7 +26,7 @@ read -r -d '' MESSAGE << EOM
       "defraId":"1234567890"
     },
     "answers":{
-      "scheme":"SFI",
+      "scheme":"FPTT",
       "year":2025,
       "hasCheckedLandIsUpToDate":true,
       "actionApplications":[

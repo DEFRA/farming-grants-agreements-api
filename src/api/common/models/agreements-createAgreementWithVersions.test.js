@@ -8,7 +8,7 @@ vi.unmock('mongoose')
 
 describe('agreements.createAgreementWithVersions', () => {
   const AGREEMENT_BASE = {
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     clientRef: 'TEST-CLIENT-REF',
     sbi: '106284736',
     frn: '1234567890'
@@ -16,7 +16,7 @@ describe('agreements.createAgreementWithVersions', () => {
 
   const VERSION_PAYLOADS = [
     {
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       sbi: '106284736',
       status: 'offered',
       createdAt: new Date('2025-05-01')
@@ -167,7 +167,7 @@ describe('agreements.findLatestAgreementVersion', () => {
     }
     const mockVersion = {
       _id: 'version2',
-      agreementNumber: 'SFI123',
+      agreementNumber: 'FPTT123',
       status: 'offered',
       createdAt: new Date()
     }
@@ -187,12 +187,12 @@ describe('agreements.findLatestAgreementVersion', () => {
     })
 
     const result = await agreementsModel.findLatestAgreementVersion({
-      agreementNumber: 'SFI123'
+      agreementNumber: 'FPTT123'
     })
 
     expect(result).toEqual(mockVersion)
     expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123'
+      agreementNumber: 'FPTT123'
     })
   })
 
@@ -206,11 +206,11 @@ describe('agreements.findLatestAgreementVersion', () => {
     })
 
     await expect(
-      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
+      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'FPTT123' })
     ).rejects.toThrow('Agreement not found using filter')
 
     expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123'
+      agreementNumber: 'FPTT123'
     })
   })
 
@@ -229,11 +229,11 @@ describe('agreements.findLatestAgreementVersion', () => {
     })
 
     await expect(
-      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
+      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'FPTT123' })
     ).rejects.toThrow('Agreement has no child versions to update')
 
     expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123'
+      agreementNumber: 'FPTT123'
     })
   })
 
@@ -252,11 +252,11 @@ describe('agreements.findLatestAgreementVersion', () => {
     })
 
     await expect(
-      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
+      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'FPTT123' })
     ).rejects.toThrow('Agreement has no child versions to update')
 
     expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123'
+      agreementNumber: 'FPTT123'
     })
   })
 
@@ -270,11 +270,11 @@ describe('agreements.findLatestAgreementVersion', () => {
     })
 
     await expect(
-      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'SFI123' })
+      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'FPTT123' })
     ).rejects.toThrow('Database error')
 
     expect(agreementsModel.findOne).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123'
+      agreementNumber: 'FPTT123'
     })
   })
 })
@@ -307,13 +307,13 @@ describe('agreements.updateOneAgreementVersion', () => {
     versionsModel.findOneAndUpdate = vi.fn().mockReturnValue(mockChain)
 
     const result = await agreementsModel.updateOneAgreementVersion(
-      { agreementNumber: 'SFI123', sbi: '123456' },
+      { agreementNumber: 'FPTT123', sbi: '123456' },
       { status: 'accepted' }
     )
 
     expect(result).toEqual(mockUpdatedVersion)
     expect(agreementsModel.findLatestAgreementVersion).toHaveBeenCalledWith({
-      agreementNumber: 'SFI123'
+      agreementNumber: 'FPTT123'
     })
     expect(versionsModel.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: 'version123', sbi: '123456' },

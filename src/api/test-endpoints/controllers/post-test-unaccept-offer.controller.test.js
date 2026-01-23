@@ -41,7 +41,7 @@ describe('unacceptOfferController', () => {
 
   test('should successfully unaccept an agreement and return 200 OK', async () => {
     // Arrange
-    const agreementId = 'SFI123456789'
+    const agreementId = 'FPTT123456789'
     unacceptOffer.mockResolvedValue({ modifiedCount: 1 })
 
     // Act

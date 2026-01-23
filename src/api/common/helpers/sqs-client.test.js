@@ -86,7 +86,7 @@ describe('SQS Client', () => {
 
     // Setup createOffer mock to return a mock agreement
     createOffer.mockResolvedValue({
-      agreementNumber: 'SFI123456789',
+      agreementNumber: 'FPTT123456789',
       notificationMessageId: 'test-message-id',
       sbi: '123456789',
       frn: '123456789'

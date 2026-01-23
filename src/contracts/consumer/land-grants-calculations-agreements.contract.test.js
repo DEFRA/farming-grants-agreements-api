@@ -168,7 +168,7 @@ describe('UI sending a POST request to accept an agreement', () => {
         })
 
         expect(statusCode).toBe(200)
-        expect(result.agreementData.agreementNumber).toContain('SFI')
+        expect(result.agreementData.agreementNumber).toContain('FPTT')
         expect(result.agreementData.payment.agreementTotalPence).toBe(96018)
       })
   })

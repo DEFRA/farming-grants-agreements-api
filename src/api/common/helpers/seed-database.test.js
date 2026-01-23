@@ -175,7 +175,7 @@ describe('seedDatabase', () => {
       vi.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
         __esModule: true,
         default: {
-          agreements: [{ agreementNumber: 'SFI123456789' }]
+          agreements: [{ agreementNumber: 'FPTT123456789' }]
         }
       }))
 
@@ -243,7 +243,7 @@ describe('seedDatabase', () => {
             'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
-          data: { agreementNumber: 'SFI123456789' }
+          data: { agreementNumber: 'FPTT123456789' }
         },
         mockLogger,
         expect.objectContaining({ send: expect.any(Function) })
@@ -344,7 +344,7 @@ describe('seedDatabase', () => {
           agreements: [
             {
               notificationMessageId: 'mockNotificationMessageId',
-              agreementNumber: 'SFI123456789'
+              agreementNumber: 'FPTT123456789'
             }
           ]
         }
@@ -368,7 +368,7 @@ describe('seedDatabase', () => {
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           data: {
             notificationMessageId: 'mockNotificationMessageId',
-            agreementNumber: 'SFI123456789'
+            agreementNumber: 'FPTT123456789'
           }
         },
         mockLogger

@@ -39,7 +39,7 @@ describe('updatePaymentHub', () => {
   let mockServer, mockLogger, mockContext
 
   const mockAgreementData = {
-    agreementNumber: 'SFI123456789',
+    agreementNumber: 'FPTT123456789',
     correlationId: 'test-correlation-id',
     version: 1,
     identifiers: {
@@ -113,7 +113,7 @@ describe('updatePaymentHub', () => {
 
   describe('Successful Payment Hub Updates', () => {
     it('should successfully send payment to hub with valid agreement', async () => {
-      const agreementNumber = 'SFI123456789'
+      const agreementNumber = 'FPTT123456789'
 
       const result = await updatePaymentHub(mockContext, agreementNumber)
 
@@ -132,7 +132,7 @@ describe('updatePaymentHub', () => {
           paymentRequestNumber: 1,
           correlationId: 'test-correlation-id',
           invoiceNumber: 'INV-123456',
-          agreementNumber: 'SFI123456789',
+          agreementNumber: 'FPTT123456789',
           schedule: 'T4',
           dueDate: '2022-11-09',
           value: 5000,
@@ -161,19 +161,20 @@ describe('updatePaymentHub', () => {
         mockLogger,
         expect.objectContaining({
           sourceSystem: 'FPTT',
-          agreementNumber: 'SFI123456789'
+          agreementNumber: 'FPTT123456789'
         })
       )
 
       expect(result).toEqual({
         status: 'success',
-        message: 'Payload sent to payment hub successfully'
+        message: 'Payload sent to payment hub successfully',
+        claimId: 'R00000001'
       })
     })
 
     it('should not send payment hub request when payment hub toggle is disabled', async () => {
       config.set('featureFlags.isPaymentHubEnabled', false)
-      const agreementNumber = 'SFI123456789'
+      const agreementNumber = 'FPTT123456789'
 
       const result = await updatePaymentHub(
         mockContext,
@@ -195,7 +196,7 @@ describe('updatePaymentHub', () => {
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
         invoiceNumber: 'INV-123456',
-        agreementNumber: 'SFI123456789',
+        agreementNumber: 'FPTT123456789',
         schedule: 'T4',
         dueDate: '2022-11-09',
         value: 5000,
@@ -231,7 +232,7 @@ describe('updatePaymentHub', () => {
         mockLogger,
         expect.objectContaining({
           sourceSystem: 'FPTT',
-          agreementNumber: 'SFI123456789'
+          agreementNumber: 'FPTT123456789'
         })
       )
 
@@ -241,7 +242,8 @@ describe('updatePaymentHub', () => {
 
       expect(result).toEqual({
         status: 'success',
-        message: 'Payload sent to payment hub successfully'
+        message: 'Payload sent to payment hub successfully',
+        claimId: 'R00000001'
       })
     })
 
@@ -264,7 +266,7 @@ describe('updatePaymentHub', () => {
 
       getAgreementDataById.mockResolvedValue(agreementWithNoActivities)
 
-      const result = await updatePaymentHub(mockContext, 'SFI123456789')
+      const result = await updatePaymentHub(mockContext, 'FPTT123456789')
 
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
@@ -296,7 +298,7 @@ describe('updatePaymentHub', () => {
       Boom.internal.mockReturnValue(new Error('Internal server error'))
 
       await expect(
-        updatePaymentHub(mockContext, 'SFI123456789')
+        updatePaymentHub(mockContext, 'FPTT123456789')
       ).rejects.toThrow('Internal server error')
 
       expect(dbError.message).toBe(
@@ -311,7 +313,7 @@ describe('updatePaymentHub', () => {
       Boom.internal.mockReturnValue(new Error('Internal server error'))
 
       await expect(
-        updatePaymentHub(mockContext, 'SFI123456789')
+        updatePaymentHub(mockContext, 'FPTT123456789')
       ).rejects.toThrow('Internal server error')
 
       expect(updateError.message).toBe(
@@ -326,7 +328,7 @@ describe('updatePaymentHub', () => {
       Boom.internal.mockReturnValue(new Error('Internal server error'))
 
       await expect(
-        updatePaymentHub(mockContext, 'SFI123456789')
+        updatePaymentHub(mockContext, 'FPTT123456789')
       ).rejects.toThrow('Internal server error')
 
       expect(hubError.message).toBe(
@@ -342,7 +344,7 @@ describe('updatePaymentHub', () => {
       sendPaymentHubRequest.mockRejectedValue(boomError)
 
       await expect(
-        updatePaymentHub(mockContext, 'SFI123456789')
+        updatePaymentHub(mockContext, 'FPTT123456789')
       ).rejects.toThrow('Failed to setup payment schedule. Boom error')
 
       expect(sendPaymentHubRequest).toHaveBeenCalled()
@@ -381,7 +383,7 @@ describe('updatePaymentHub', () => {
 
       getAgreementDataById.mockResolvedValue(agreementWithAgreementLevelItem)
 
-      await updatePaymentHub(mockContext, 'SFI123456789')
+      await updatePaymentHub(mockContext, 'FPTT123456789')
 
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
@@ -404,7 +406,7 @@ describe('updatePaymentHub', () => {
     })
 
     it('should correctly map agreement data to payment hub request', async () => {
-      await updatePaymentHub(mockContext, 'SFI123456789')
+      await updatePaymentHub(mockContext, 'FPTT123456789')
 
       const expectedPaymentRequest = {
         sourceSystem: 'FPTT',
@@ -414,7 +416,7 @@ describe('updatePaymentHub', () => {
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
         invoiceNumber: 'INV-123456',
-        agreementNumber: 'SFI123456789',
+        agreementNumber: 'FPTT123456789',
         schedule: 'T4',
         dueDate: '2022-11-09',
         value: 5000,
@@ -479,7 +481,7 @@ describe('updatePaymentHub', () => {
 
       getAgreementDataById.mockResolvedValue(agreementWithMissingDetails)
 
-      const result = await updatePaymentHub(mockContext, 'SFI123456789')
+      const result = await updatePaymentHub(mockContext, 'FPTT123456789')
       expect(result.status).toBe('success')
     })
 
@@ -503,7 +505,7 @@ describe('updatePaymentHub', () => {
 
         getAgreementDataById.mockResolvedValue(agreementWithMissingCurrency)
 
-        await updatePaymentHub(mockContext, 'SFI123456789')
+        await updatePaymentHub(mockContext, 'FPTT123456789')
 
         expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
           paymentHubRequest: expect.objectContaining({
@@ -546,7 +548,7 @@ describe('updatePaymentHub', () => {
         return Promise.resolve({ success: true })
       })
 
-      await updatePaymentHub(mockContext, 'SFI123456789')
+      await updatePaymentHub(mockContext, 'FPTT123456789')
 
       expect(callOrder).toEqual([
         'getAgreementDataById',

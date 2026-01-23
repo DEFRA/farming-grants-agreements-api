@@ -128,7 +128,7 @@ describe('postTestQueueMessageController', () => {
   test('retrieves agreement data for create_agreement queue', async () => {
     const mockAgreementData = {
       _id: 'agreement123',
-      agreementNumber: 'SFI123',
+      agreementNumber: 'FPTT123',
       status: 'offered'
     }
 
@@ -163,7 +163,7 @@ describe('postTestQueueMessageController', () => {
   test('handles backoff retry with 404 errors', async () => {
     const mockAgreementData = {
       _id: 'agreement123',
-      agreementNumber: 'SFI123',
+      agreementNumber: 'FPTT123',
       status: 'offered'
     }
 

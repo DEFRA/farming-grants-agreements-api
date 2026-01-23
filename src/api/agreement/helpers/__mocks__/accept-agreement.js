@@ -2,7 +2,7 @@ import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 
 export const acceptAgreement = vi.fn().mockImplementation((agreementId) => {
-  if (agreementId === 'SFI123456789') {
+  if (agreementId === 'FPTT123456789') {
     return {
       acknowledged: true,
       modifiedCount: 1
