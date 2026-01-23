@@ -4,6 +4,10 @@ import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoic
 import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
 import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
 import { formatPaymentDecimal } from '~/src/api/common/helpers/format-payment-decimal.js'
+import {
+  formatPaymentDate,
+  validateOptionalPaymentDate
+} from '~/src/api/common/helpers/format-payment-date.js'
 import { config } from '~/src/config/index.js'
 
 /**
@@ -49,6 +53,14 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
 
     // Construct the request payload based on the agreement data
     /** @type {PaymentHubRequest} */
+    const dueDate = formatPaymentDate(
+      agreementData.payment.payments[0].paymentDate
+    )
+    const recoveryDate = ''
+
+    validateOptionalPaymentDate(dueDate, 'dueDate')
+    validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
+
     const paymentHubRequest = {
       sourceSystem: config.get('paymentHub.defaultSourceSystem'),
       sbi: agreementData.identifiers.sbi,
@@ -60,7 +72,8 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       agreementNumber: agreementData.agreementNumber,
       schedule:
         agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
-      dueDate: agreementData.payment.payments[0].paymentDate,
+      dueDate,
+      recoveryDate,
       value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
       currency: agreementData.payment.currency || 'GBP',
       ledger: config.get('paymentHub.defaultLedger'),
