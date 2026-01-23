@@ -105,12 +105,7 @@ const Applicant = new mongoose.Schema({
         }),
         required: true
       },
-      phone: {
-        type: new mongoose.Schema({
-          mobile: { type: String }
-        }),
-        required: true
-      },
+      phone: { type: String, required: true },
       address: {
         type: new mongoose.Schema({
           line1: { type: String, required: true },
