@@ -17,7 +17,7 @@ import { config } from '~/src/config/index.js'
  * @returns {Promise<*>} Result of the payment hub update
  * @throws {Error} If the agreement data is not found or if there is an error
  */
-async function updatePaymentHub({ server, logger }, agreementNumber) {
+const updatePaymentHub = async ({ server, logger }, agreementNumber) => {
   try {
     const agreementData = await getAgreementDataById(agreementNumber)
     const invoice = await createInvoice(
@@ -61,13 +61,12 @@ export { updatePaymentHub }
 
 /** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
 
-function buildPaymentHubRequest(agreementData, invoiceNumber) {
+const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
   const marketingYear = new Date().getFullYear()
   const invoiceLines = buildInvoiceLines(agreementData)
   const { dueDate, recoveryDate } = resolvePaymentDates(agreementData)
 
-  /** @type {PaymentHubRequest} */
-  const paymentHubRequest = {
+  return {
     sourceSystem: config.get('paymentHub.defaultSourceSystem'),
     sbi: agreementData.identifiers.sbi,
     frn: agreementData.identifiers.frn,
@@ -79,6 +78,7 @@ function buildPaymentHubRequest(agreementData, invoiceNumber) {
     schedule:
       agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
     dueDate,
+    recoveryDate,
     value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
     currency: agreementData.payment.currency || 'GBP',
     ledger: config.get('paymentHub.defaultLedger'),
@@ -86,27 +86,23 @@ function buildPaymentHubRequest(agreementData, invoiceNumber) {
     fesCode: config.get('paymentHub.defaultFesCode'),
     invoiceLines
   }
-
-  if (recoveryDate !== '') {
-    paymentHubRequest.recoveryDate = recoveryDate
-  }
-
-  return paymentHubRequest
 }
 
-function resolvePaymentDates(agreementData) {
+const resolvePaymentDates = (agreementData) => {
   const dueDate = formatPaymentDate(
     agreementData.payment.payments[0].paymentDate
   )
-  const recoveryDate = agreementData?.payment?.recoveryDate ?? ''
+  const recoveryDate = ''
 
   validateOptionalPaymentDate(dueDate, 'dueDate')
-  validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
+  if (recoveryDate !== '') {
+    validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
+  }
 
   return { dueDate, recoveryDate }
 }
 
-function buildInvoiceLines(agreementData) {
+const buildInvoiceLines = (agreementData) => {
   return agreementData.payment.payments.map((payment) =>
     payment.lineItems.map((line) => {
       let description, schemeCode
