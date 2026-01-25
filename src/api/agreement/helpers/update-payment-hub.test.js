@@ -205,7 +205,6 @@ describe('updatePaymentHub', () => {
         ledger: 'AP',
         deliveryBody: 'RP00',
         fesCode: 'FALS_FPTT',
-        claimId: 'R00000001',
         invoiceLines: [
           [
             {
@@ -426,7 +425,6 @@ describe('updatePaymentHub', () => {
         ledger: 'AP',
         deliveryBody: 'RP00',
         fesCode: 'FALS_FPTT',
-        claimId: 'R00000001',
         invoiceLines: [
           [
             {
