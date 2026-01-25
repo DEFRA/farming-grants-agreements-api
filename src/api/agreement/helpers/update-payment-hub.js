@@ -56,7 +56,7 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
     const dueDate = formatPaymentDate(
       agreementData.payment.payments[0].paymentDate
     )
-    const recoveryDate = ''
+    const recoveryDate = agreementData?.payment?.recoveryDate ?? ''
 
     validateOptionalPaymentDate(dueDate, 'dueDate')
     validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
@@ -73,13 +73,15 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       schedule:
         agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
       dueDate,
-      recoveryDate,
       value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
       currency: agreementData.payment.currency || 'GBP',
       ledger: config.get('paymentHub.defaultLedger'),
       deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
       fesCode: config.get('paymentHub.defaultFesCode'),
       invoiceLines
+    }
+    if (recoveryDate !== '') {
+      paymentHubRequest.recoveryDate = recoveryDate
     }
 
     // update the invoice with the payment hub request
