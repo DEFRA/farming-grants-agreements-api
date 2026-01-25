@@ -25,64 +25,10 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
       agreementData.correlationId
     )
 
-    const marketingYear = new Date().getFullYear()
-
-    const invoiceLines = agreementData.payment.payments.map((payment) =>
-      payment.lineItems.map((line) => {
-        let description, schemeCode
-        if (line.parcelItemId) {
-          const lineDetails =
-            agreementData.payment.parcelItems[line.parcelItemId]
-          description = `${payment.paymentDate}: Parcel: ${lineDetails.parcelId}: ${lineDetails.description}`
-          schemeCode = lineDetails.code
-        }
-        if (line.agreementLevelItemId) {
-          const lineDetails =
-            agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
-          description = `${payment.paymentDate}: One-off payment per agreement per year for ${lineDetails.description}`
-          schemeCode = lineDetails.code
-        }
-
-        return {
-          value: formatPaymentDecimal(line.paymentPence),
-          description,
-          schemeCode
-        }
-      })
+    const paymentHubRequest = buildPaymentHubRequest(
+      agreementData,
+      invoice.invoiceNumber
     )
-
-    // Construct the request payload based on the agreement data
-    /** @type {PaymentHubRequest} */
-    const dueDate = formatPaymentDate(
-      agreementData.payment.payments[0].paymentDate
-    )
-    const recoveryDate = agreementData?.payment?.recoveryDate ?? ''
-
-    validateOptionalPaymentDate(dueDate, 'dueDate')
-    validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
-
-    const paymentHubRequest = {
-      sourceSystem: config.get('paymentHub.defaultSourceSystem'),
-      sbi: agreementData.identifiers.sbi,
-      frn: agreementData.identifiers.frn,
-      marketingYear,
-      paymentRequestNumber: agreementData.version,
-      correlationId: agreementData.correlationId,
-      invoiceNumber: invoice.invoiceNumber,
-      agreementNumber: agreementData.agreementNumber,
-      schedule:
-        agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
-      dueDate,
-      value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
-      currency: agreementData.payment.currency || 'GBP',
-      ledger: config.get('paymentHub.defaultLedger'),
-      deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
-      fesCode: config.get('paymentHub.defaultFesCode'),
-      invoiceLines
-    }
-    if (recoveryDate !== '') {
-      paymentHubRequest.recoveryDate = recoveryDate
-    }
 
     // update the invoice with the payment hub request
     await updateInvoice(invoice.invoiceNumber, {
@@ -114,3 +60,73 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
 export { updatePaymentHub }
 
 /** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
+
+function buildPaymentHubRequest(agreementData, invoiceNumber) {
+  const marketingYear = new Date().getFullYear()
+  const invoiceLines = buildInvoiceLines(agreementData)
+  const { dueDate, recoveryDate } = resolvePaymentDates(agreementData)
+
+  /** @type {PaymentHubRequest} */
+  const paymentHubRequest = {
+    sourceSystem: config.get('paymentHub.defaultSourceSystem'),
+    sbi: agreementData.identifiers.sbi,
+    frn: agreementData.identifiers.frn,
+    marketingYear,
+    paymentRequestNumber: agreementData.version,
+    correlationId: agreementData.correlationId,
+    invoiceNumber,
+    agreementNumber: agreementData.agreementNumber,
+    schedule:
+      agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
+    dueDate,
+    value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
+    currency: agreementData.payment.currency || 'GBP',
+    ledger: config.get('paymentHub.defaultLedger'),
+    deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
+    fesCode: config.get('paymentHub.defaultFesCode'),
+    invoiceLines
+  }
+
+  if (recoveryDate !== '') {
+    paymentHubRequest.recoveryDate = recoveryDate
+  }
+
+  return paymentHubRequest
+}
+
+function resolvePaymentDates(agreementData) {
+  const dueDate = formatPaymentDate(
+    agreementData.payment.payments[0].paymentDate
+  )
+  const recoveryDate = agreementData?.payment?.recoveryDate ?? ''
+
+  validateOptionalPaymentDate(dueDate, 'dueDate')
+  validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
+
+  return { dueDate, recoveryDate }
+}
+
+function buildInvoiceLines(agreementData) {
+  return agreementData.payment.payments.map((payment) =>
+    payment.lineItems.map((line) => {
+      let description, schemeCode
+      if (line.parcelItemId) {
+        const lineDetails = agreementData.payment.parcelItems[line.parcelItemId]
+        description = `${payment.paymentDate}: Parcel: ${lineDetails.parcelId}: ${lineDetails.description}`
+        schemeCode = lineDetails.code
+      }
+      if (line.agreementLevelItemId) {
+        const lineDetails =
+          agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
+        description = `${payment.paymentDate}: One-off payment per agreement per year for ${lineDetails.description}`
+        schemeCode = lineDetails.code
+      }
+
+      return {
+        value: formatPaymentDecimal(line.paymentPence),
+        description,
+        schemeCode
+      }
+    })
+  )
+}
