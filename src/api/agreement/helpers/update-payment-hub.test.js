@@ -134,7 +134,7 @@ describe('updatePaymentHub', () => {
           invoiceNumber: 'INV-123456',
           agreementNumber: 'FPTT123456789',
           schedule: 'T4',
-          dueDate: '2022-11-09',
+          dueDate: '09/11/2022',
           value: 5000,
           currency: 'GBP',
           invoiceLines: [
@@ -198,13 +198,13 @@ describe('updatePaymentHub', () => {
         invoiceNumber: 'INV-123456',
         agreementNumber: 'FPTT123456789',
         schedule: 'T4',
-        dueDate: '2022-11-09',
+        dueDate: '09/11/2022',
+        recoveryDate: '',
         value: 5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
         fesCode: 'FALS_FPTT',
-        claimId: 'R00000001',
         invoiceLines: [
           [
             {
@@ -388,7 +388,7 @@ describe('updatePaymentHub', () => {
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
           schedule: undefined,
-          dueDate: '2023-02-01',
+          dueDate: '01/02/2023',
           value: 123.45,
           currency: 'GBP',
           invoiceLines: [
@@ -418,13 +418,13 @@ describe('updatePaymentHub', () => {
         invoiceNumber: 'INV-123456',
         agreementNumber: 'FPTT123456789',
         schedule: 'T4',
-        dueDate: '2022-11-09',
+        dueDate: '09/11/2022',
+        recoveryDate: '',
         value: 5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
         fesCode: 'FALS_FPTT',
-        claimId: 'R00000001',
         invoiceLines: [
           [
             {
