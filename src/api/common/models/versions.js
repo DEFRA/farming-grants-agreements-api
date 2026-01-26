@@ -99,13 +99,6 @@ const Applicant = new mongoose.Schema({
   business: {
     type: new mongoose.Schema({
       name: { type: String, required: true },
-      email: {
-        type: new mongoose.Schema({
-          address: { type: String, required: true }
-        }),
-        required: true
-      },
-      phone: { type: String, required: true },
       address: {
         type: new mongoose.Schema({
           line1: { type: String, required: true },
