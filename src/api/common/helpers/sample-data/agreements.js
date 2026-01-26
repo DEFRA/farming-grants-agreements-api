@@ -755,13 +755,6 @@ export default [
       applicant: {
         business: {
           name: 'J&S Hartley',
-          email: {
-            address:
-              'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
-          },
-          phone: {
-            mobile: '01234031670'
-          },
           address: {
             line1: 'Mason House Farm Clitheroe Rd',
             line2: 'Bashall Eaves',
@@ -1078,13 +1071,6 @@ export default [
       applicant: {
         business: {
           name: 'J&S Hartley',
-          email: {
-            address:
-              'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
-          },
-          phone: {
-            mobile: '01234031670'
-          },
           address: {
             line1: 'Mason House Farm Clitheroe Rd',
             line2: 'Bashall Eaves',
