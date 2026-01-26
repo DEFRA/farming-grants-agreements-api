@@ -308,8 +308,6 @@ describe('createOffer', () => {
           business: {
             reference: '3577139140',
             name: 'HireContracting',
-            email: { address: 'test@test.com' },
-            phone: '4478673322372323',
             line1: 'Benbrigge House',
             line2: 'ALBRIGHTON',
             city: 'GRIMSBY',
@@ -363,8 +361,6 @@ describe('createOffer', () => {
         applicant: {
           business: {
             name: 'Structured Business',
-            email: { address: 'structured@test.com' },
-            phone: '01234567890',
             address: {
               line1: 'Existing line 1',
               postalCode: 'AB1 2CD'
@@ -422,9 +418,7 @@ describe('createOffer', () => {
         ...agreementData.answers,
         applicant: {
           business: {
-            name: 'No Address Business',
-            email: { address: 'noaddress@test.com' },
-            phone: '07700900000'
+            name: 'No Address Business'
           }
         }
       }
@@ -659,11 +653,6 @@ describe('createOffer', () => {
           business: {
             name: 'VAUGHAN FARMS LIMITED',
             reference: '3989509178',
-            email: {
-              address:
-                'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Mason House Farm Clitheroe Rd',
               line2: 'Bashall Eaves',
@@ -777,10 +766,6 @@ describe('createOffer', () => {
           business: {
             name: 'PARCEL BUSINESS LTD',
             reference: '3989509178',
-            email: {
-              address: 'farmer@example.com'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Farm Lane',
               line2: 'Village',
@@ -895,10 +880,6 @@ describe('createOffer', () => {
             business: {
               name: 'ANSWERS APPLICATION LTD',
               reference: '3989509178',
-              email: {
-                address: 'applicant@example.com'
-              },
-              phone: '01234031670',
               address: {
                 line1: 'Answers Lane',
                 line2: 'Village',
@@ -971,10 +952,6 @@ describe('createOffer', () => {
           business: {
             name: 'ANSWERS PAYMENTS LTD',
             reference: '3989509178',
-            email: {
-              address: 'payments@example.com'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Payments Lane',
               city: 'Clitheroe',
@@ -1050,10 +1027,6 @@ describe('createOffer', () => {
           business: {
             name: 'ROOT PAYMENTS LTD',
             reference: '3989509178',
-            email: {
-              address: 'rootpayments@example.com'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Root Payments Lane',
               city: 'Clitheroe',
@@ -1129,8 +1102,6 @@ describe('createOffer', () => {
           business: {
             name: 'PARCELS PLURAL LTD',
             reference: '3989509178',
-            email: { address: 'parcels@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Parcels Lane',
               city: 'Clitheroe',
@@ -1192,8 +1163,6 @@ describe('createOffer', () => {
           business: {
             name: 'PAYMENTS TOTAL LTD',
             reference: '3989509178',
-            email: { address: 'total@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Total Lane',
               city: 'Clitheroe',
@@ -1259,8 +1228,6 @@ describe('createOffer', () => {
           business: {
             name: 'CALCULATED TOTAL LTD',
             reference: '3989509178',
-            email: { address: 'calc@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Calc Lane',
               city: 'Clitheroe',
@@ -1334,8 +1301,6 @@ describe('createOffer', () => {
           business: {
             name: 'EMPTY PAYMENTS LTD',
             reference: '3989509178',
-            email: { address: 'empty@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Empty Lane',
               city: 'Clitheroe',
@@ -1381,8 +1346,6 @@ describe('createOffer', () => {
           business: {
             name: 'NULL APPLICATION LTD',
             reference: '3989509178',
-            email: { address: 'null@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Null Lane',
               city: 'Clitheroe',
@@ -1425,8 +1388,6 @@ describe('createOffer', () => {
           business: {
             name: 'SINGLE PARCEL LTD',
             reference: '3989509178',
-            email: { address: 'single@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Single Lane',
               city: 'Clitheroe',
@@ -1490,8 +1451,6 @@ describe('createOffer', () => {
           business: {
             name: 'NULL PARCEL LTD',
             reference: '3989509178',
-            email: { address: 'nullparcel@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Null Parcel Lane',
               city: 'Clitheroe',
@@ -1675,8 +1634,6 @@ describe('createOffer', () => {
           business: {
             name: 'TEST BUSINESS',
             reference: '1234567890',
-            email: { address: 'test@example.com' },
-            phone: '01234567890',
             address: {
               line1: 'Test Address',
               city: 'Test City',
