@@ -28,6 +28,7 @@
 /**
  * @typedef {object} InvoiceLine
  * @property {number} value - The value of the invoice line.
+ * @property {string} agreementNumber - The agreement number.
  * @property {string} description - The description of the invoice line.
  * @property {string} schemeCode - The scheme code.
  * @property {string} standardCode - The standard code.
