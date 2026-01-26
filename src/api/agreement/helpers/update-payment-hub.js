@@ -118,6 +118,7 @@ const buildInvoiceLines = (agreementData) => {
 
       return {
         value: formatPaymentDecimal(line.paymentPence),
+        agreementNumber: agreementData.agreementNumber,
         description,
         schemeCode
       }
