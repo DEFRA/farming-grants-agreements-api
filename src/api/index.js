@@ -1,5 +1,8 @@
 import hapi from '@hapi/hapi'
 import CatboxMemory from '@hapi/catbox-memory'
+import Inert from '@hapi/inert'
+import Vision from '@hapi/vision'
+import HapiSwagger from 'hapi-swagger'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/api/router.js'
@@ -17,9 +20,8 @@ import { handleCreateAgreementEvent } from './common/helpers/sqs-message-process
 import { handleUpdateAgreementEvent } from './common/helpers/sqs-message-processor/update-agreement.js'
 import { returnDataHandlerPlugin } from './common/helpers/return-data-handler.js'
 
-async function createServer(serverOptions = {}) {
-  setupProxy()
-  const server = hapi.server({
+function getServerConfig() {
+  return {
     port: config.get('port'),
     routes: {
       validate: {
@@ -50,14 +52,83 @@ async function createServer(serverOptions = {}) {
         }
       }
     ]
-  })
+  }
+}
 
+function setupAuthentication(server) {
   server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
   server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
+}
 
-  const { disableSQS = false, mongoUrl, mongoDatabase } = serverOptions
+function getPlugins(serverOptions) {
+  const {
+    disableSQS = false,
+    mongoUrl,
+    mongoDatabase,
+    docsOnly = false
+  } = serverOptions
+
+  return [
+    Inert,
+    Vision,
+    {
+      plugin: HapiSwagger,
+      options: {
+        info: {
+          title: 'Agreement Service API',
+          version: '1.0.0',
+          description: 'Farming Grants Agreements API'
+        },
+        documentationPath: '/docs',
+        jsonPath: '/docs/openapi.json',
+        grouping: 'tags'
+      }
+    },
+    // Skip runtime plugins when only generating docs
+    ...(docsOnly
+      ? []
+      : [
+          requestLogger,
+          requestTracing,
+          secureContext,
+          pulse,
+          {
+            plugin: mongooseDb.plugin,
+            options: {
+              mongoUrl,
+              databaseName: mongoDatabase
+            }
+          },
+          ...(disableSQS
+            ? []
+            : [
+                createSqsClientPlugin(
+                  'gas_create_agreement',
+                  config.get('sqs.queueUrl'),
+                  handleCreateAgreementEvent
+                ),
+                createSqsClientPlugin(
+                  'gas_application_updated',
+                  config.get('sqs.gasApplicationUpdatedQueueUrl'),
+                  handleUpdateAgreementEvent
+                )
+              ]),
+          errorHandlerPlugin,
+          returnDataHandlerPlugin
+        ]),
+    router
+  ].filter(Boolean)
+}
+
+async function createServer(serverOptions = {}) {
+  setupProxy()
+  const server = hapi.server(getServerConfig())
+  setupAuthentication(server)
 
   // Hapi Plugins:
+  // Inert              - static file serving (required by hapi-swagger)
+  // Vision             - template rendering (required by hapi-swagger)
+  // HapiSwagger        - OpenAPI spec generation
   // requestLogger      - automatically logs incoming requests
   // requestTracing     - trace header logging and propagation
   // secureContext      - loads CA certificates from environment config
@@ -66,38 +137,7 @@ async function createServer(serverOptions = {}) {
   // sqsClientPlugin    - AWS SQS client
   // errorHandlerPlugin - sets up default error handling
   // router             - routes used in the app
-  await server.register(
-    [
-      requestLogger,
-      requestTracing,
-      secureContext,
-      pulse,
-      {
-        plugin: mongooseDb.plugin,
-        options: {
-          mongoUrl,
-          databaseName: mongoDatabase
-        }
-      },
-      ...(disableSQS
-        ? []
-        : [
-            createSqsClientPlugin(
-              'gas_create_agreement',
-              config.get('sqs.queueUrl'),
-              handleCreateAgreementEvent
-            ),
-            createSqsClientPlugin(
-              'gas_application_updated',
-              config.get('sqs.gasApplicationUpdatedQueueUrl'),
-              handleUpdateAgreementEvent
-            )
-          ]),
-      errorHandlerPlugin,
-      returnDataHandlerPlugin,
-      router
-    ].filter(Boolean)
-  )
+  await server.register(getPlugins(serverOptions))
 
   return server
 }

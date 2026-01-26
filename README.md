@@ -2,33 +2,32 @@
 
 Core delivery platform Node.js Backend Template.
 
-- [farming-grants-agreements-api](#farming-grants-agreements-api)
-  - [Requirements](#requirements)
-    - [Node.js](#nodejs)
-  - [Local development](#local-development)
-    - [Setup](#setup)
-    - [Development](#development)
-    - [Testing](#testing)
-  - [Testing the SQS queue](#testing-the-sqs-queue)
-    - [Production](#production)
-    - [Npm scripts](#npm-scripts)
-    - [Update dependencies](#update-dependencies)
-    - [Formatting](#formatting)
-      - [Windows prettier issue](#windows-prettier-issue)
-    - [Running the agreements-api service with JWT authentication enabled](#running-the-agreements-api-service-with-jwt-authentication-enabled)
-  - [API endpoints](#api-endpoints)
-    - [Generating a JWT for API calls (scripts/gen-auth-header.js)](#generating-a-jwt-for-api-calls-scriptsgen-auth-headerjs)
-    - [Proxy](#proxy)
-  - [Docker](#docker)
-    - [Development image](#development-image)
-    - [Production image](#production-image)
-    - [Docker Compose](#docker-compose)
-    - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
-    - [The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)](#the-google-analytics-trackingid-secret-configuration-ga_tracking_idgoogleanalyticstrackingid)
-    - [Dependabot](#dependabot)
-    - [SonarCloud](#sonarcloud)
-  - [Licence](#licence)
-    - [About the licence](#about-the-licence)
+- [Requirements](#requirements)
+  - [Node.js](#nodejs)
+- [Local development](#local-development)
+  - [Setup](#setup)
+  - [Development](#development)
+  - [Testing](#testing)
+- [Testing the SQS queue](#testing-the-sqs-queue)
+  - [Production](#production)
+  - [Npm scripts](#npm-scripts)
+  - [Update dependencies](#update-dependencies)
+  - [Formatting](#formatting)
+    - [Windows prettier issue](#windows-prettier-issue)
+  - [Running the agreements-api service with JWT authentication enabled](#running-the-agreements-api-service-with-jwt-authentication-enabled)
+- [API endpoints](#api-endpoints)
+  - [Generating a JWT for API calls (scripts/gen-auth-header.js)](#generating-a-jwt-for-api-calls-scriptsgen-auth-headerjs)
+  - [Proxy](#proxy)
+- [Docker](#docker)
+  - [Development image](#development-image)
+  - [Production image](#production-image)
+  - [Docker Compose](#docker-compose)
+  - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
+  - [The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)](#the-google-analytics-trackingid-secret-configuration-ga_tracking_idgoogleanalyticstrackingid)
+  - [Dependabot](#dependabot)
+  - [SonarCloud](#sonarcloud)
+- [Licence](#licence)
+  - [About the licence](#about-the-licence)
 
 ## Requirements
 
@@ -359,7 +358,7 @@ The following attribution statement MUST be cited in your products and applicati
 
 ### About the licence
 
-The Open Government Licence (OGL) was developed by the Controller of Her Majesty's Stationery Office (HMSO) to enable
+The Open Government Licence (OGL) was developed by the Controller of His Majesty's Stationery Office (HMSO) to enable
 information providers in the public sector to license the use and re-use of their information under a common open
 licence.
 
