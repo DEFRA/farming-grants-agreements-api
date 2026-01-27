@@ -92,8 +92,9 @@ const resolvePaymentDates = (agreementData) => {
   const dueDate = formatPaymentDate(
     agreementData.payment.payments[0].paymentDate
   )
-  const recoveryDate = ''
-  const originalSettlementDate = ''
+  const recoveryDate = agreementData.payment.recoveryDate ?? ''
+  const originalSettlementDate =
+    agreementData.payment.originalSettlementDate ?? ''
 
   validateOptionalPaymentDate(dueDate, 'dueDate')
   if (recoveryDate !== '') {
