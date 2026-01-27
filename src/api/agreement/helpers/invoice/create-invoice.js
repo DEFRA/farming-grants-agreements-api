@@ -14,6 +14,19 @@ function formatClaimId(seq) {
 }
 
 /**
+ * Get the quarter (Q1-Q4) from a date
+ * @param {string|Date} date - The date to get the quarter from
+ * @returns {string} The quarter (Q1, Q2, Q3, or Q4)
+ */
+function getQuarter(date) {
+  const monthsPerQuarter = 3
+  const dateObj = new Date(date)
+  const month = dateObj.getMonth() // 0-11
+  const quarter = Math.floor(month / monthsPerQuarter) + 1
+  return `Q${quarter}`
+}
+
+/**
  * Generate a new claimId using the counter
  * @returns {Promise<string>} The new claim ID
  */
@@ -59,18 +72,14 @@ async function getOrCreateClaimId(agreementId, version) {
  * @returns {Promise<Invoice>} The created invoice
  */
 async function createInvoice(agreementId, agreementData) {
-  const counter = await countersModel.findOneAndUpdate(
-    { _id: 'invoices' },
-    { $inc: { seq: 1 } },
-    { returnDocument: 'after', upsert: true }
-  )
-
   const claimId = await getOrCreateClaimId(agreementId, agreementData.version)
+
+  const quarter = getQuarter(agreementData.dueDate)
 
   const invoice = await invoicesModel
     .create({
       agreementNumber: agreementId,
-      invoiceNumber: `FRPS${counter.seq + 1}`,
+      invoiceNumber: `${claimId}_${agreementData.version}_${quarter}`,
       correlationId: agreementData.correlationId,
       claimId
     })

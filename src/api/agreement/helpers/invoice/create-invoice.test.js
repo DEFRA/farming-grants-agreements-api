@@ -146,9 +146,10 @@ describe('createInvoice', () => {
   const mockCorrelationId = '123e4567-e89b-12d3-a456-426614174000'
   const mockAgreementId = 'FPTT123456789'
 
-  const createMockAgreementData = (version = 1) => ({
+  const createMockAgreementData = (version = 1, dueDate = '2024-03-15') => ({
     correlationId: mockCorrelationId,
-    version
+    version,
+    dueDate
   })
 
   beforeEach(() => {
@@ -169,42 +170,32 @@ describe('createInvoice', () => {
 
   it('should create a new invoice with correct data and generated claimId for version 1', async () => {
     // Arrange
-    const mockInvoiceCounter = { seq: 3 }
     const mockClaimIdCounter = { seq: 1 }
-    const mockAgreementData = createMockAgreementData(1)
+    const mockAgreementData = createMockAgreementData(1, '2024-03-15') // Q1
 
     const mockInvoice = {
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'FRPS4',
+      invoiceNumber: 'R00000001_1_Q1',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     }
 
-    countersModel.findOneAndUpdate
-      .mockResolvedValueOnce(mockInvoiceCounter) // First call for invoices counter
-      .mockResolvedValueOnce(mockClaimIdCounter) // Second call for claimIds counter
+    countersModel.findOneAndUpdate.mockResolvedValue(mockClaimIdCounter)
     invoicesModel.create.mockResolvedValue(mockInvoice)
 
     // Act
     const result = await createInvoice(mockAgreementId, mockAgreementData)
 
     // Assert
-    expect(countersModel.findOneAndUpdate).toHaveBeenCalledTimes(2)
-    expect(countersModel.findOneAndUpdate).toHaveBeenNthCalledWith(
-      1,
-      { _id: 'invoices' },
-      { $inc: { seq: 1 } },
-      { returnDocument: 'after', upsert: true }
-    )
-    expect(countersModel.findOneAndUpdate).toHaveBeenNthCalledWith(
-      2,
+    expect(countersModel.findOneAndUpdate).toHaveBeenCalledTimes(1)
+    expect(countersModel.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: 'claimIds' },
       { $inc: { seq: 1 } },
       { returnDocument: 'after', upsert: true }
     )
     expect(invoicesModel.create).toHaveBeenCalledWith({
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'FRPS4',
+      invoiceNumber: 'R00000001_1_Q1',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     })
@@ -213,18 +204,15 @@ describe('createInvoice', () => {
 
   it('should create invoice with existing claimId for version > 1', async () => {
     // Arrange
-    const mockInvoiceCounter = { seq: 5 }
     const existingClaimId = 'R00000003'
-    const mockAgreementData = createMockAgreementData(2)
+    const mockAgreementData = createMockAgreementData(2, '2024-06-15') // Q2
 
     const mockInvoice = {
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'FRPS6',
+      invoiceNumber: 'R00000003_2_Q2',
       correlationId: mockCorrelationId,
       claimId: existingClaimId
     }
-
-    countersModel.findOneAndUpdate.mockResolvedValue(mockInvoiceCounter)
 
     const mockLean = vi.fn().mockResolvedValue({ claimId: existingClaimId })
     const mockSort = vi.fn(() => ({ lean: mockLean }))
@@ -240,7 +228,7 @@ describe('createInvoice', () => {
     })
     expect(invoicesModel.create).toHaveBeenCalledWith({
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'FRPS6',
+      invoiceNumber: 'R00000003_2_Q2',
       correlationId: mockCorrelationId,
       claimId: existingClaimId
     })
@@ -249,20 +237,17 @@ describe('createInvoice', () => {
 
   it('should generate invoice numbers sequentially', async () => {
     // Arrange
-    const mockInvoiceCounter = { seq: 0 }
     const mockClaimIdCounter = { seq: 1 }
-    const mockAgreementData = createMockAgreementData(1)
+    const mockAgreementData = createMockAgreementData(1, '2024-09-15') // Q3
 
     const mockInvoice = {
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'FRPS1',
+      invoiceNumber: 'R00000001_1_Q3',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     }
 
-    countersModel.findOneAndUpdate
-      .mockResolvedValueOnce(mockInvoiceCounter)
-      .mockResolvedValueOnce(mockClaimIdCounter)
+    countersModel.findOneAndUpdate.mockResolvedValue(mockClaimIdCounter)
     invoicesModel.create.mockResolvedValue(mockInvoice)
 
     // Act
@@ -271,7 +256,7 @@ describe('createInvoice', () => {
     // Assert
     expect(invoicesModel.create).toHaveBeenCalledWith({
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'FRPS1',
+      invoiceNumber: 'R00000001_1_Q3',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     })
@@ -281,13 +266,10 @@ describe('createInvoice', () => {
   it('should throw Boom.internal if invoicesModel.create throws an error', async () => {
     // Arrange
     const mockError = new Error('Database error')
-    const mockInvoiceCounter = { seq: 0 }
     const mockClaimIdCounter = { seq: 1 }
     const mockAgreementData = createMockAgreementData(1)
 
-    countersModel.findOneAndUpdate
-      .mockResolvedValueOnce(mockInvoiceCounter)
-      .mockResolvedValueOnce(mockClaimIdCounter)
+    countersModel.findOneAndUpdate.mockResolvedValue(mockClaimIdCounter)
     invoicesModel.create.mockRejectedValue(mockError)
     Boom.internal.mockReturnValue(new Error('Database error'))
 
@@ -301,13 +283,10 @@ describe('createInvoice', () => {
 
   it('should throw Boom.notFound if invoicesModel.create returns falsy value', async () => {
     // Arrange
-    const mockInvoiceCounter = { seq: 0 }
     const mockClaimIdCounter = { seq: 1 }
     const mockAgreementData = createMockAgreementData(1)
 
-    countersModel.findOneAndUpdate
-      .mockResolvedValueOnce(mockInvoiceCounter)
-      .mockResolvedValueOnce(mockClaimIdCounter)
+    countersModel.findOneAndUpdate.mockResolvedValue(mockClaimIdCounter)
     invoicesModel.create.mockResolvedValue(null)
     const expectedMessage = `Invoice not created for Agreement ID ${mockAgreementId}`
     Boom.notFound.mockReturnValue(new Error(expectedMessage))
