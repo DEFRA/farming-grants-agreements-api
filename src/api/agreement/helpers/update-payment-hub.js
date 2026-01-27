@@ -55,8 +55,6 @@ const updatePaymentHub = async ({ server, logger }, agreementNumber) => {
   }
 }
 
-export { updatePaymentHub }
-
 /** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
 
 const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
@@ -78,6 +76,8 @@ const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
       agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
     dueDate,
     recoveryDate,
+    debtType: validateDebtType(''),
+    remittanceDescription: validateRemittanceDescription(''),
     originalSettlementDate,
     value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
     currency: agreementData.payment.currency || 'GBP',
@@ -109,6 +109,22 @@ const resolvePaymentDates = (agreementData) => {
   return { dueDate, recoveryDate, originalSettlementDate }
 }
 
+const validateDebtType = (debtType) => {
+  if (debtType.length > 3) {
+    throw new Error(`value of ${debtType} must be no more than 3 characters`)
+  }
+  return debtType
+}
+
+const validateRemittanceDescription = (remittanceDescription) => {
+  if (remittanceDescription.length > 60) {
+    throw new Error(
+      `value of ${remittanceDescription} must be no more than 60 characters`
+    )
+  }
+  return remittanceDescription
+}
+
 const buildInvoiceLines = (agreementData) => {
   return agreementData.payment.payments.map((payment) =>
     payment.lineItems.map((line) => {
@@ -134,3 +150,5 @@ const buildInvoiceLines = (agreementData) => {
     })
   )
 }
+
+export { updatePaymentHub, validateDebtType, validateRemittanceDescription }
