@@ -119,6 +119,10 @@ const buildInvoiceLines = (agreementData) => {
       return {
         value: formatPaymentDecimal(line.paymentPence),
         agreementNumber: agreementData.agreementNumber,
+        deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
+        // accountCode: 'MOCK_VALUE', // accountCode is owned by the Payments/Finance team,
+        // Added automatically by Payment Hub enrichment,
+        // TODO BS check
         description,
         schemeCode
       }
