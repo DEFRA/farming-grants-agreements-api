@@ -24,7 +24,8 @@ const updatePaymentHub = async ({ server, logger }, agreementNumber) => {
 
     const paymentHubRequest = buildPaymentHubRequest(
       agreementData,
-      invoice.invoiceNumber
+      invoice.invoiceNumber,
+      invoice.claimId
     )
 
     // update the invoice with the payment hub request
@@ -59,10 +60,20 @@ export { updatePaymentHub }
 
 /** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
 
-const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
+const buildPaymentHubRequest = (
+  agreementData,
+  invoiceNumber,
+  invoiceClaimId
+) => {
   const marketingYear = new Date().getFullYear()
   const invoiceLines = buildInvoiceLines(agreementData)
   const { dueDate, recoveryDate } = resolvePaymentDates(agreementData)
+
+  // Use claimId from agreement data if available, otherwise fallback to invoice claimId
+  const claimId = agreementData.claimId || invoiceClaimId
+
+  // Use originalInvoiceNumber from agreement data if available
+  const originalInvoiceNumber = agreementData.originalInvoiceNumber
 
   return {
     sourceSystem: config.get('paymentHub.defaultSourceSystem'),
@@ -72,6 +83,7 @@ const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
     paymentRequestNumber: agreementData.version,
     correlationId: agreementData.correlationId,
     invoiceNumber,
+    originalInvoiceNumber,
     agreementNumber: agreementData.agreementNumber,
     schedule:
       agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
@@ -82,6 +94,7 @@ const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
     ledger: config.get('paymentHub.defaultLedger'),
     deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
     fesCode: config.get('paymentHub.defaultFesCode'),
+    claimId,
     invoiceLines
   }
 }
