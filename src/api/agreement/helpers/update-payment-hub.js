@@ -62,7 +62,8 @@ export { updatePaymentHub }
 const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
   const marketingYear = new Date().getFullYear()
   const invoiceLines = buildInvoiceLines(agreementData)
-  const { dueDate, recoveryDate } = resolvePaymentDates(agreementData)
+  const { dueDate, recoveryDate, originalSettlementDate } =
+    resolvePaymentDates(agreementData)
 
   return {
     sourceSystem: config.get('paymentHub.defaultSourceSystem'),
@@ -77,6 +78,7 @@ const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
       agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
     dueDate,
     recoveryDate,
+    originalSettlementDate,
     value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
     currency: agreementData.payment.currency || 'GBP',
     ledger: config.get('paymentHub.defaultLedger'),
@@ -91,13 +93,20 @@ const resolvePaymentDates = (agreementData) => {
     agreementData.payment.payments[0].paymentDate
   )
   const recoveryDate = ''
+  const originalSettlementDate = ''
 
   validateOptionalPaymentDate(dueDate, 'dueDate')
   if (recoveryDate !== '') {
     validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
   }
+  if (originalSettlementDate !== '') {
+    validateOptionalPaymentDate(
+      originalSettlementDate,
+      'originalSettlementDate'
+    )
+  }
 
-  return { dueDate, recoveryDate }
+  return { dueDate, recoveryDate, originalSettlementDate }
 }
 
 const buildInvoiceLines = (agreementData) => {
