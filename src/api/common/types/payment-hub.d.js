@@ -29,11 +29,11 @@
  * @typedef {object} InvoiceLine
  * @property {number} value - The value of the invoice line.
  * @property {string} agreementNumber - The agreement number.
+ * @property {string} deliveryBody - The delivery body identifier.
  * @property {string} description - The description of the invoice line.
  * @property {string} schemeCode - The scheme code.
  * @property {string} standardCode - The standard code.
  * @property {string} accountCode - The account code.
- * @property {string} deliveryBody - The delivery body identifier.
  * @property {number} marketingYear - The marketing year.
  * @property {boolean} convergence - Indicates if convergence applies.
  * @property {boolean} stateAid - Indicates if state aid applies.
