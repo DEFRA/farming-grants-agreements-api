@@ -34,6 +34,7 @@
  * @property {string} schemeCode - The scheme code.
  * @property {string} standardCode - The standard code.
  * @property {string} accountCode - The account code.
+ * @property {string} fundCode - The fund code.
  * @property {number} marketingYear - The marketing year.
  * @property {boolean} convergence - Indicates if convergence applies.
  * @property {boolean} stateAid - Indicates if state aid applies.
