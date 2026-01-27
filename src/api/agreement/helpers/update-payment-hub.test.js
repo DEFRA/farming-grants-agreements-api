@@ -539,6 +539,28 @@ describe('updatePaymentHub', () => {
         )
       }
     })
+
+    it('should include recoveryDate and originalSettlementDate when provided', async () => {
+      const agreementWithOptionalDates = {
+        ...mockAgreementData,
+        payment: {
+          ...mockAgreementData.payment,
+          recoveryDate: '15/03/2023',
+          originalSettlementDate: '20/04/2023'
+        }
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithOptionalDates)
+
+      await updatePaymentHub(mockContext, 'FPTT123456789')
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining({
+          recoveryDate: '15/03/2023',
+          originalSettlementDate: '20/04/2023'
+        })
+      })
+    })
   })
 
   describe('Function Call Order', () => {

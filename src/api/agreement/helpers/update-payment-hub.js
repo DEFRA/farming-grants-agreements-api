@@ -109,17 +109,23 @@ const resolvePaymentDates = (agreementData) => {
   return { dueDate, recoveryDate, originalSettlementDate }
 }
 
+const DEBT_TYPE_MAX_LENGTH = 3
+
 const validateDebtType = (debtType) => {
-  if (debtType.length > 3) {
-    throw new Error(`value of ${debtType} must be no more than 3 characters`)
+  if (debtType.length > DEBT_TYPE_MAX_LENGTH) {
+    throw new Error(
+      `value of ${debtType} must be no more than ${DEBT_TYPE_MAX_LENGTH} characters`
+    )
   }
   return debtType
 }
 
+const REMITTANCE_DESCRIPTION_MAX_LENGTH = 60
+
 const validateRemittanceDescription = (remittanceDescription) => {
-  if (remittanceDescription.length > 60) {
+  if (remittanceDescription.length > REMITTANCE_DESCRIPTION_MAX_LENGTH) {
     throw new Error(
-      `value of ${remittanceDescription} must be no more than 60 characters`
+      `value of ${remittanceDescription} must be no more than ${REMITTANCE_DESCRIPTION_MAX_LENGTH} characters`
     )
   }
   return remittanceDescription
