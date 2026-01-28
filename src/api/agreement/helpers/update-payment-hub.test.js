@@ -141,12 +141,12 @@ describe('updatePaymentHub', () => {
           agreementNumber: 'FPTT123456789',
           schedule: 'T4',
           dueDate: '09/11/2022',
-          value: 5000,
+          value: -5000,
           currency: 'GBP',
           invoiceLines: [
             [
               {
-                value: 2000,
+                value: -2000,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
                 description:
@@ -154,7 +154,7 @@ describe('updatePaymentHub', () => {
                 schemeCode: 'ACT001'
               },
               {
-                value: 3000,
+                value: -3000,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
                 description:
@@ -214,7 +214,7 @@ describe('updatePaymentHub', () => {
         debtType: '',
         remittanceDescription: '',
         originalSettlementDate: '',
-        value: 5000,
+        value: -5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
@@ -223,7 +223,7 @@ describe('updatePaymentHub', () => {
         invoiceLines: [
           [
             {
-              value: 2000,
+              value: -2000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               description:
@@ -231,7 +231,7 @@ describe('updatePaymentHub', () => {
               schemeCode: 'ACT001'
             },
             {
-              value: 3000,
+              value: -3000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               description:
@@ -408,12 +408,12 @@ describe('updatePaymentHub', () => {
         paymentHubRequest: expect.objectContaining({
           schedule: undefined,
           dueDate: '01/02/2023',
-          value: 123.45,
+          value: -123.45,
           currency: 'GBP',
           invoiceLines: [
             [
               {
-                value: 123.45,
+                value: -123.45,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
                 description:
@@ -445,7 +445,7 @@ describe('updatePaymentHub', () => {
         originalSettlementDate: '',
         remittanceDescription: '',
         debtType: '',
-        value: 5000,
+        value: -5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
@@ -454,7 +454,7 @@ describe('updatePaymentHub', () => {
         invoiceLines: [
           [
             {
-              value: 2000,
+              value: -2000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               description:
@@ -462,7 +462,7 @@ describe('updatePaymentHub', () => {
               schemeCode: 'ACT001'
             },
             {
-              value: 3000,
+              value: -3000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               description:
