@@ -1,7 +1,11 @@
 import { vi } from 'vitest'
 
 import Boom from '@hapi/boom'
-import { updatePaymentHub } from './update-payment-hub.js'
+import {
+  updatePaymentHub,
+  validateDebtType,
+  validateRemittanceDescription
+} from './update-payment-hub.js'
 import { getAgreementDataById } from './get-agreement-data.js'
 import { createInvoice } from './invoice/create-invoice.js'
 import { updateInvoice } from './invoice/update-invoice.js'
@@ -204,6 +208,9 @@ describe('updatePaymentHub', () => {
         schedule: 'T4',
         dueDate: '09/11/2022',
         recoveryDate: '',
+        debtType: '',
+        remittanceDescription: '',
+        originalSettlementDate: '',
         value: 5000,
         currency: 'GBP',
         ledger: 'AP',
@@ -430,6 +437,9 @@ describe('updatePaymentHub', () => {
         schedule: 'T4',
         dueDate: '09/11/2022',
         recoveryDate: '',
+        originalSettlementDate: '',
+        remittanceDescription: '',
+        debtType: '',
         value: 5000,
         currency: 'GBP',
         ledger: 'AP',
@@ -536,6 +546,28 @@ describe('updatePaymentHub', () => {
         )
       }
     })
+
+    it('should include recoveryDate and originalSettlementDate when provided', async () => {
+      const agreementWithOptionalDates = {
+        ...mockAgreementData,
+        payment: {
+          ...mockAgreementData.payment,
+          recoveryDate: '15/03/2023',
+          originalSettlementDate: '20/04/2023'
+        }
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithOptionalDates)
+
+      await updatePaymentHub(mockContext, 'FPTT123456789')
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining({
+          recoveryDate: '15/03/2023',
+          originalSettlementDate: '20/04/2023'
+        })
+      })
+    })
   })
 
   describe('Function Call Order', () => {
@@ -571,5 +603,35 @@ describe('updatePaymentHub', () => {
         'sendPaymentHubRequest'
       ])
     })
+  })
+})
+
+describe('validateDebtType', () => {
+  it('should return the debt type when it is 3 characters or fewer', () => {
+    expect(validateDebtType('')).toBe('')
+    expect(validateDebtType('irr')).toBe('irr')
+    expect(validateDebtType('adm')).toBe('adm')
+  })
+
+  it('should throw when the debt type exceeds 3 characters', () => {
+    expect(() => validateDebtType('irrr')).toThrow(
+      'value of irrr must be no more than 3 characters'
+    )
+  })
+})
+
+describe('validateRemittanceDescription', () => {
+  it('should return the description when it is 60 characters or fewer', () => {
+    expect(validateRemittanceDescription('')).toBe('')
+    expect(validateRemittanceDescription('Short description')).toBe(
+      'Short description'
+    )
+  })
+
+  it('should throw when the description exceeds 60 characters', () => {
+    const longDescription = 'a'.repeat(61)
+    expect(() => validateRemittanceDescription(longDescription)).toThrow(
+      `value of ${longDescription} must be no more than 60 characters`
+    )
   })
 })
