@@ -39,6 +39,17 @@ vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
   // Added explicit mock for getAgreementDataById to satisfy tests that import this module
   getAgreementDataById: vi.fn().mockResolvedValue({})
 }))
+vi.mock(
+  '~/src/api/agreement/helpers/invoice/generate-original-invoice-number.js',
+  () => ({
+    generateClaimId: vi.fn().mockResolvedValue('R00000001'),
+    generateInvoiceNumber: vi
+      .fn()
+      .mockImplementation(
+        (claimId, agreementData) => `${claimId}_${agreementData.version}_Q1`
+      )
+  })
+)
 
 const targetDataStructure = {
   notificationMessageId: 'aws-message-id',
