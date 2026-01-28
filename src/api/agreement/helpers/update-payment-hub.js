@@ -55,14 +55,13 @@ const updatePaymentHub = async ({ server, logger }, agreementNumber) => {
   }
 }
 
-export { updatePaymentHub }
-
 /** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
 
 const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
   const marketingYear = new Date().getFullYear()
   const invoiceLines = buildInvoiceLines(agreementData)
-  const { dueDate, recoveryDate } = resolvePaymentDates(agreementData)
+  const { dueDate, recoveryDate, originalSettlementDate } =
+    resolvePaymentDates(agreementData)
 
   return {
     sourceSystem: config.get('paymentHub.defaultSourceSystem'),
@@ -77,6 +76,9 @@ const buildPaymentHubRequest = (agreementData, invoiceNumber) => {
       agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
     dueDate,
     recoveryDate,
+    debtType: validateDebtType(''),
+    remittanceDescription: validateRemittanceDescription(''),
+    originalSettlementDate,
     value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
     currency: agreementData.payment.currency || 'GBP',
     ledger: config.get('paymentHub.defaultLedger'),
@@ -90,14 +92,44 @@ const resolvePaymentDates = (agreementData) => {
   const dueDate = formatPaymentDate(
     agreementData.payment.payments[0].paymentDate
   )
-  const recoveryDate = ''
+  const recoveryDate = agreementData.payment.recoveryDate ?? ''
+  const originalSettlementDate =
+    agreementData.payment.originalSettlementDate ?? ''
 
   validateOptionalPaymentDate(dueDate, 'dueDate')
   if (recoveryDate !== '') {
     validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
   }
+  if (originalSettlementDate !== '') {
+    validateOptionalPaymentDate(
+      originalSettlementDate,
+      'originalSettlementDate'
+    )
+  }
 
-  return { dueDate, recoveryDate }
+  return { dueDate, recoveryDate, originalSettlementDate }
+}
+
+const DEBT_TYPE_MAX_LENGTH = 3
+
+const validateDebtType = (debtType) => {
+  if (debtType.length > DEBT_TYPE_MAX_LENGTH) {
+    throw new Error(
+      `value of ${debtType} must be no more than ${DEBT_TYPE_MAX_LENGTH} characters`
+    )
+  }
+  return debtType
+}
+
+const REMITTANCE_DESCRIPTION_MAX_LENGTH = 60
+
+const validateRemittanceDescription = (remittanceDescription) => {
+  if (remittanceDescription.length > REMITTANCE_DESCRIPTION_MAX_LENGTH) {
+    throw new Error(
+      `value of ${remittanceDescription} must be no more than ${REMITTANCE_DESCRIPTION_MAX_LENGTH} characters`
+    )
+  }
+  return remittanceDescription
 }
 
 const buildInvoiceLines = (agreementData) => {
@@ -129,3 +161,5 @@ const buildInvoiceLines = (agreementData) => {
     })
   )
 }
+
+export { updatePaymentHub, validateDebtType, validateRemittanceDescription }
