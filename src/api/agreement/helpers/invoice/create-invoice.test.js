@@ -115,7 +115,7 @@ describe('createInvoice', () => {
   const createMockAgreementData = (
     version = 1,
     claimId = 'R00000001',
-    originalInvoiceNumber = 'R00000001_1_Q1'
+    originalInvoiceNumber = 'R00000001-V001Q1'
   ) => ({
     correlationId: mockCorrelationId,
     version,
@@ -147,12 +147,12 @@ describe('createInvoice', () => {
     const mockAgreementData = createMockAgreementData(
       1,
       'R00000001',
-      'R00000001_1_Q1'
+      'R00000001-V001Q1'
     )
 
     const mockInvoice = {
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'R00000001_1_Q1',
+      invoiceNumber: 'R00000001-V001Q1',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     }
@@ -165,7 +165,7 @@ describe('createInvoice', () => {
     // Assert
     expect(invoicesModel.create).toHaveBeenCalledWith({
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'R00000001_1_Q1',
+      invoiceNumber: 'R00000001-V001Q1',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     })
@@ -178,7 +178,7 @@ describe('createInvoice', () => {
       correlationId: mockCorrelationId,
       version: 2,
       claimId: 'R00000001',
-      originalInvoiceNumber: 'R00000001_1_Q1',
+      originalInvoiceNumber: 'R00000001_V001_Q1',
       payment: {
         payments: [{ paymentDate: '2024-06-15' }] // Q2
       }
@@ -186,7 +186,7 @@ describe('createInvoice', () => {
 
     const mockInvoice = {
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'R00000001_2_Q2',
+      invoiceNumber: 'R00000001-V002Q2',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     }
@@ -199,7 +199,7 @@ describe('createInvoice', () => {
     // Assert
     expect(invoicesModel.create).toHaveBeenCalledWith({
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'R00000001_2_Q2',
+      invoiceNumber: 'R00000001-V002Q2',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     })
@@ -212,7 +212,7 @@ describe('createInvoice', () => {
       correlationId: mockCorrelationId,
       version: 2,
       claimId: 'R00000001',
-      originalInvoiceNumber: 'R00000001_1_Q1',
+      originalInvoiceNumber: 'R00000001_V001_Q1',
       payment: {
         payments: [{ paymentDate: '2024-09-15' }] // Q3
       }
@@ -220,7 +220,7 @@ describe('createInvoice', () => {
 
     const mockInvoice = {
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'R00000001_2_Q3',
+      invoiceNumber: 'R00000001-V002Q3',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     }
@@ -233,7 +233,7 @@ describe('createInvoice', () => {
     // Assert
     expect(invoicesModel.create).toHaveBeenCalledWith({
       agreementNumber: mockAgreementId,
-      invoiceNumber: 'R00000001_2_Q3',
+      invoiceNumber: 'R00000001-V002Q3',
       correlationId: mockCorrelationId,
       claimId: 'R00000001'
     })
