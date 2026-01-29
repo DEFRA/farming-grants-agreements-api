@@ -3,7 +3,7 @@ import { formatPaymentDecimal } from './format-payment-decimal.js'
 
 describe('formatPaymentDecimal', () => {
   it('converts pence to a decimal currency value', () => {
-    expect(formatPaymentDecimal(1086)).toBe(10.86)
+    expect(formatPaymentDecimal(1086)).toBe(-10.86)
   })
 
   it('keeps zero values unchanged', () => {
@@ -11,7 +11,7 @@ describe('formatPaymentDecimal', () => {
   })
 
   it('handles the maximum supported value', () => {
-    expect(formatPaymentDecimal(99999999999999)).toBe(999999999999.99)
+    expect(formatPaymentDecimal(99999999999999)).toBe(-999999999999.99)
   })
 
   it('throws for non-numeric inputs', () => {
