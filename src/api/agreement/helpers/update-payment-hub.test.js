@@ -149,6 +149,9 @@ describe('updatePaymentHub', () => {
                 value: -2000,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                marketingYear: 2024,
                 description:
                   '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
                 schemeCode: 'ACT001'
@@ -157,6 +160,9 @@ describe('updatePaymentHub', () => {
                 value: -3000,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                marketingYear: 2024,
                 description:
                   '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
                 schemeCode: 'ACT002'
@@ -226,6 +232,9 @@ describe('updatePaymentHub', () => {
               value: -2000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
               schemeCode: 'ACT001'
@@ -234,6 +243,9 @@ describe('updatePaymentHub', () => {
               value: -3000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
               schemeCode: 'ACT002'
@@ -416,6 +428,9 @@ describe('updatePaymentHub', () => {
                 value: -123.45,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                marketingYear: 2024,
                 description:
                   '2023-02-01: One-off payment per agreement per year for Annual management payment',
                 schemeCode: 'AL001'
@@ -457,6 +472,9 @@ describe('updatePaymentHub', () => {
               value: -2000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
               schemeCode: 'ACT001'
@@ -465,6 +483,9 @@ describe('updatePaymentHub', () => {
               value: -3000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
               schemeCode: 'ACT002'
