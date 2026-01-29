@@ -47,7 +47,7 @@ describe('updatePaymentHub', () => {
     correlationId: 'test-correlation-id',
     version: 1,
     claimId: 'R00000001',
-    originalInvoiceNumber: 'R00000001_1_Q1',
+    originalInvoiceNumber: 'R00000001-V001Q1',
     identifiers: {
       sbi: '106284736',
       frn: '1234567890'
@@ -206,7 +206,7 @@ describe('updatePaymentHub', () => {
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
         invoiceNumber: 'INV-123456',
-        originalInvoiceNumber: 'R00000001_1_Q1',
+        originalInvoiceNumber: 'R00000001-V001Q1',
         agreementNumber: 'FPTT123456789',
         schedule: 'T4',
         dueDate: '09/11/2022',
@@ -437,7 +437,7 @@ describe('updatePaymentHub', () => {
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
         invoiceNumber: 'INV-123456',
-        originalInvoiceNumber: 'R00000001_1_Q1',
+        originalInvoiceNumber: 'R00000001-V001Q1',
         agreementNumber: 'FPTT123456789',
         schedule: 'T4',
         dueDate: '09/11/2022',
