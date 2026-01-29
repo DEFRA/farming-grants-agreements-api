@@ -45,14 +45,15 @@ async function generateClaimId() {
  * @param {object} agreementData.payment - Payment information
  * @param {string} agreementData.payment.payments[0].paymentDate - The first payment date
  * @param {number} agreementData.version - The agreement version
- * @returns {string} Invoice number in format: claimId_version_quarter (e.g., 'R00000001_1_Q1')
+ * @returns {string} Invoice number in format: claimId-versionQuarter (e.g., 'R00000001-V001Q1')
  */
 function generateInvoiceNumber(claimId, agreementData) {
   const dueDate = agreementData.payment?.payments?.[0]?.paymentDate
-  const version = agreementData.version
+  const paymentRequestNumberPadding = 3
+  const version = `V${String(agreementData.version).padStart(paymentRequestNumberPadding, '0')}`
   const quarter = getQuarter(dueDate)
 
-  return `${claimId}_${version}_${quarter}`
+  return `${claimId}-${version}${quarter}`
 }
 
 export { generateClaimId, generateInvoiceNumber, formatClaimId, getQuarter }
