@@ -131,7 +131,7 @@ describe('sending updated (accepted) events via SNS', () => {
 
           message = mockPublishEvent.mock.calls[0][0]
 
-          message.specVersion = message.specVersion ?? '1.0'
+          message.specVersion = message.specversion ?? '1.0'
           message.data.date = '2025-10-06T16:40:21.951Z'
           message.time = '2025-10-06T16:41:59.497Z'
         } catch (err) {
