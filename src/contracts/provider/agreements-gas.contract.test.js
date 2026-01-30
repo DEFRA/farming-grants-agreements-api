@@ -45,7 +45,7 @@ describe('sending events to GAS via SNS', () => {
         source: config.get('aws.sns.eventSource'),
         type,
         time,
-        specversion: '1.0',
+        specVersion: '1.0', // TODO Technically AWS events use lowercase `specversion`
         datacontenttype: 'application/json',
         data
       }
