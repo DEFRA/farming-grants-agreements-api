@@ -28,8 +28,12 @@ describe('getTestInvoiceController', () => {
       paymentHubRequest: { amount: 1000 }
     }
 
-    invoicesModel.findOne.mockReturnValue({
+    const mockSort = vi.fn().mockReturnValue({
       lean: vi.fn().mockResolvedValue(mockInvoice)
+    })
+
+    invoicesModel.findOne.mockReturnValue({
+      sort: mockSort
     })
 
     const request = { query: { agreementNumber: 'FPTT123456789' }, logger }
@@ -40,6 +44,7 @@ describe('getTestInvoiceController', () => {
     expect(invoicesModel.findOne).toHaveBeenCalledWith({
       agreementNumber: 'FPTT123456789'
     })
+    expect(mockSort).toHaveBeenCalledWith({ createdAt: -1 })
   })
 
   test('returns Boom 400 when agreementNumber query param is missing', async () => {
@@ -52,8 +57,12 @@ describe('getTestInvoiceController', () => {
   })
 
   test('returns Boom 404 when invoice not found', async () => {
-    invoicesModel.findOne.mockReturnValue({
+    const mockSort = vi.fn().mockReturnValue({
       lean: vi.fn().mockResolvedValue(null)
+    })
+
+    invoicesModel.findOne.mockReturnValue({
+      sort: mockSort
     })
 
     const request = { query: { agreementNumber: 'FPTT123456789' }, logger }
@@ -64,11 +73,16 @@ describe('getTestInvoiceController', () => {
     expect(err.message).toBe(
       'Invoice not found for agreement number FPTT123456789'
     )
+    expect(mockSort).toHaveBeenCalledWith({ createdAt: -1 })
   })
 
   test('returns 500 when unexpected error occurs', async () => {
-    invoicesModel.findOne.mockReturnValue({
+    const mockSort = vi.fn().mockReturnValue({
       lean: vi.fn().mockRejectedValue(new Error('db connection failed'))
+    })
+
+    invoicesModel.findOne.mockReturnValue({
+      sort: mockSort
     })
 
     const request = { query: { agreementNumber: 'FPTT123456789' }, logger }
@@ -80,5 +94,6 @@ describe('getTestInvoiceController', () => {
       error: 'An unexpected error occurred'
     })
     expect(logger.error).toHaveBeenCalled()
+    expect(mockSort).toHaveBeenCalledWith({ createdAt: -1 })
   })
 })
