@@ -1827,6 +1827,18 @@ describe('createOffer', () => {
     )
   })
 
+  it('should set claimId and originalInvoiceNumber correctly for version 1', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer('aws-message-id', agreementData, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].claimId).toBe('R00000001')
+    expect(lastCallArgs.versions[0].originalInvoiceNumber).toBe('')
+  })
+
   describe('Error Handling', () => {
     beforeEach(() => {
       vi.clearAllMocks()
