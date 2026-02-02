@@ -10,10 +10,7 @@ import {
   getAgreementDataById
 } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
-import {
-  generateClaimId,
-  generateInvoiceNumber
-} from '~/src/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import { generateClaimId } from '~/src/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 
 export const generateAgreementNumber = () => {
   const minRandomNumber = 100000000
@@ -48,10 +45,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
 
   // Generate claimId and originalInvoiceNumber for version 1
   const claimId = await generateClaimId()
-  const originalInvoiceNumber = generateInvoiceNumber(claimId, {
-    payment,
-    version: 1
-  })
+  const originalInvoiceNumber = ''
 
   const data = {
     notificationMessageId,
