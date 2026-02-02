@@ -122,11 +122,6 @@ describe('sending events to GAS via SNS', () => {
       'an agreement created message': async () => {
         capturedMessage = null
 
-        config.set(
-          'aws.sns.topic.agreementStatusUpdate.type',
-          'cloud.defra.test.farming-grants-agreements-api.agreement.created'
-        )
-
         const agreementData = {
           ...sampleData.agreements[1],
           correlationId: 'b65c1dea-0328-47ab-ba26-f515db846110',
