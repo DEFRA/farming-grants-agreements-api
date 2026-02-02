@@ -595,6 +595,87 @@ describe('updatePaymentHub', () => {
         })
       })
     })
+
+    it('should use stored scheme year (answers.year) for invoice-line marketingYear when present', async () => {
+      const agreementWithStoredYear = {
+        ...mockAgreementData,
+        answers: {
+          year: 2025
+        }
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithStoredYear)
+
+      await updatePaymentHub(mockContext, 'FPTT123456789')
+
+      expect(sendPaymentHubRequest).toHaveBeenCalledWith(
+        mockServer,
+        mockLogger,
+        expect.objectContaining({
+          marketingYear: 2024,
+          invoiceLines: [
+            [
+              expect.objectContaining({ marketingYear: 2025 }),
+              expect.objectContaining({ marketingYear: 2025 })
+            ]
+          ]
+        })
+      )
+    })
+
+    it('should prefer agreement year over stored scheme year (answers.year) for invoice-line marketingYear when both are present', async () => {
+      const agreementWithBothYears = {
+        ...mockAgreementData,
+        year: 2023,
+        answers: {
+          year: 2025
+        }
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithBothYears)
+
+      await updatePaymentHub(mockContext, 'FPTT123456789')
+
+      expect(sendPaymentHubRequest).toHaveBeenCalledWith(
+        mockServer,
+        mockLogger,
+        expect.objectContaining({
+          marketingYear: 2024,
+          invoiceLines: [
+            [
+              expect.objectContaining({ marketingYear: 2023 }),
+              expect.objectContaining({ marketingYear: 2023 })
+            ]
+          ]
+        })
+      )
+    })
+
+    it('should fallback to current year for invoice-line marketingYear when no stored year is present', async () => {
+      const agreementWithNoStoredYear = {
+        ...mockAgreementData,
+        year: undefined,
+        answers: undefined
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithNoStoredYear)
+
+      await updatePaymentHub(mockContext, 'FPTT123456789')
+
+      expect(sendPaymentHubRequest).toHaveBeenCalledWith(
+        mockServer,
+        mockLogger,
+        expect.objectContaining({
+          marketingYear: 2024,
+          invoiceLines: [
+            [
+              expect.objectContaining({ marketingYear: 2024 }),
+              expect.objectContaining({ marketingYear: 2024 })
+            ]
+          ]
+        })
+      )
+    })
   })
 
   describe('Function Call Order', () => {
