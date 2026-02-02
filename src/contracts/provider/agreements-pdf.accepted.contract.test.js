@@ -143,8 +143,6 @@ describe('sending updated (accepted) events via SNS', () => {
           message = 'Publish event was not called, check above for errors'
         }
 
-        console.log('>>>>>', message)
-
         return message
       }
     }

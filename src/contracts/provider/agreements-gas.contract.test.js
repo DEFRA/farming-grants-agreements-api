@@ -1,183 +1,263 @@
+import { vi } from 'vitest'
+import path from 'node:path'
+
 import { MessageProviderPact } from '@pact-foundation/pact'
-import { v4 as uuidv4 } from 'uuid'
 
 import { config } from '~/src/config/index.js'
-import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { createServer } from '~/src/api/index.js'
 import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { withdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
+import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
+import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
+import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
 import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/update-agreement.js'
-import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
-import { acceptOfferController } from '~/src/api/agreement/controllers/accept-offer.controller.js'
-import { acceptOffer as mockAcceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { updatePaymentHub as mockUpdatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
+import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
+import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { getJsonPacts } from '~/src/contracts/test-helpers/pact.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
 
-vi.mock('~/src/api/common/helpers/sns-publisher.js')
-vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 vi.mock('~/src/api/agreement/helpers/accept-offer.js')
+vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
+vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 vi.mock('~/src/api/agreement/helpers/update-payment-hub.js')
-vi.mock('~/src/api/common/models/agreements.js', () => ({
-  default: {
-    createAgreementWithVersions: vi.fn().mockResolvedValue({
-      agreementNumber: 'FPTT987654321'
-    })
+vi.mock(
+  '~/src/api/agreement/helpers/get-agreement-data.js',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return { __esModule: true, ...actual, getAgreementDataBySbi: vi.fn() }
   }
-}))
+)
+vi.mock('~/src/api/common/helpers/jwt-auth.js')
+vi.mock('~/src/api/common/helpers/sns-publisher.js')
 
-describe('sending events to GAS via SNS', () => {
-  const mockLogger = {
-    info: vi.fn(),
-    error: vi.fn()
+const localPactDir = path.resolve(
+  process.cwd(),
+  '../fg-gas-backend/src/contracts/consumer/pacts'
+)
+
+const MOCK_DATE = '2025-10-06T16:40:21.951Z'
+const MOCK_TIME = '2025-10-06T16:41:59.497Z'
+const PROVIDER_NAME = 'farming-grants-agreements-api'
+const SNS_EVENT_SOURCE_KEY = 'aws.sns.eventSource'
+
+const mockLogger = {
+  info: vi.fn(),
+  error: vi.fn()
+}
+
+const mockAgreementData = {
+  status: 'offered',
+  ...sampleData.agreements[1]
+}
+
+const setupMocks = () => {
+  vi.clearAllMocks()
+
+  acceptOffer.mockReset()
+  unacceptOffer.mockReset()
+  withdrawOffer.mockReset()
+  getAgreementDataBySbi.mockReset()
+  updatePaymentHub.mockReset()
+
+  acceptOffer.mockResolvedValue({
+    ...mockAgreementData,
+    signatureDate: '2024-01-01T00:00:00.000Z',
+    status: 'accepted'
+  })
+  unacceptOffer.mockResolvedValue()
+  updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
+
+  withdrawOffer.mockResolvedValue({
+    agreement: { agreementNumber: 'FPTT123456789' },
+    clientRef: 'mockClientRef',
+    code: 'mockCode',
+    correlationId: 'mockCorrelationId',
+    status: 'withdrawn'
+  })
+
+  getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
+
+  vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+    valid: true,
+    source: 'defra',
+    sbi: '106284736'
+  })
+}
+
+/**
+ * Transform the captured publishEvent input into a complete CloudEvent message
+ * This simulates what sns-publisher.js does internally
+ */
+const buildCloudEventMessage = (capturedInput) => {
+  const { type, data } = capturedInput
+  return {
+    id: '12345678-1234-1234-1234-123456789012',
+    source: config.get(SNS_EVENT_SOURCE_KEY),
+    specversion: '1.0',
+    specVersion: '1.0', // TODO Technically AWS events use lowercase `specversion`
+    type,
+    time: MOCK_TIME,
+    datacontenttype: 'application/json',
+    data: {
+      ...data,
+      date: MOCK_DATE
+    }
   }
+}
 
-  let capturedMessage = null
+const createdMessageProvider = async () => {
+  let message
+  try {
+    mockPublishEvent.mockResolvedValue()
 
-  beforeEach(() => {
-    vi.clearAllMocks()
-    capturedMessage = null
+    config.set(SNS_EVENT_SOURCE_KEY, PROVIDER_NAME)
 
-    config.set('aws.sns.eventSource', 'farming-grants-agreements-api')
+    await createOffer('aws-message-id', mockAgreementData, mockLogger)
 
-    // Mock publishEvent to construct the CloudEvents message like the real implementation
-    mockPublishEvent.mockImplementation(({ type, time, data }) => {
-      // Capture the latest message (for when there are multiple calls)
-      capturedMessage = {
-        id: uuidv4(),
-        source: config.get('aws.sns.eventSource'),
-        type,
-        time,
-        specVersion: '1.0', // TODO Technically AWS events use lowercase `specversion`
-        datacontenttype: 'application/json',
-        data
+    message = mockPublishEvent.mock.calls[0][0]
+
+    message.specVersion = message.specVersion ?? '1.0'
+    message.data.correlationId = 'mockCorrelationId'
+    message.data.date = '2025-10-06T16:40:21.951Z'
+    message.time = '2025-10-06T16:41:59.497Z'
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    message = 'Publish event was not called, check above for errors'
+  }
+  return message
+}
+
+const acceptedMessageProvider = async (server) => {
+  let message
+  try {
+    // Reset mocks to ensure clean state
+    mockPublishEvent.mockClear()
+
+    // Set the config to use the correct event type for accepted
+    config.set(SNS_EVENT_SOURCE_KEY, PROVIDER_NAME)
+    config.set(
+      'aws.sns.topic.agreementStatusUpdate.type',
+      'cloud.defra.test.farming-grants-agreements-api.agreement.accepted'
+    )
+
+    await server.inject({
+      method: 'POST',
+      url: '/',
+      headers: {
+        'x-encrypted-auth': 'valid-jwt-token'
       }
     })
 
-    // Mock acceptOffer to return accepted agreement data
-    mockAcceptOffer.mockResolvedValue({
-      agreementNumber: 'FPTT987654321',
-      correlationId: 'b65c1dea-0328-47ab-ba26-f515db846110',
-      clientRef: 'client-ref-002',
-      code: 'frps-private-beta',
-      status: 'accepted',
-      signatureDate: '2025-08-19T09:36:45.131Z',
-      payment: {
-        agreementEndDate: '2028-09-01'
-      },
-      versions: [{ version: 1 }]
-    })
+    const capturedInput = mockPublishEvent.mock.calls[0][0]
+    message = buildCloudEventMessage(capturedInput)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    message = 'Publish event was not called, check above for errors'
+  }
+  return message
+}
 
-    // Mock updatePaymentHub to return a claim ID
-    mockUpdatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
+const withdrawnMessageProvider = async () => {
+  let message
+  try {
+    // Reset mocks to ensure clean state
+    mockPublishEvent.mockClear()
+
+    // Set the config to use the correct event type for withdrawn
+    config.set(SNS_EVENT_SOURCE_KEY, PROVIDER_NAME)
+    config.set(
+      'aws.sns.topic.agreementStatusUpdate.type',
+      'cloud.defra.test.farming-grants-agreements-api.agreement.withdrawn'
+    )
+
+    // Call the real SQS message handler which calls withdrawOffer and publishEvent
+    await handleUpdateAgreementEvent(
+      '123-456-789',
+      {
+        id: '12-34-56-78-90',
+        source: 'fg-gas-backend',
+        specversion: '1.0',
+        type: 'cloud.defra.test.fg-gas-backend.agreement.withdraw',
+        datacontenttype: 'application/json',
+        data: {
+          clientRef: 'mockClientRef',
+          agreementNumber: 'FPTT123456789',
+          status: 'withdrawn'
+        }
+      },
+      mockLogger
+    )
+
+    const capturedInput = mockPublishEvent.mock.calls[0][0]
+    message = buildCloudEventMessage(capturedInput)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    message = 'Publish event was not called, check above for errors'
+  }
+  return message
+}
+
+describe('sending events via SNS to GAS', () => {
+  /** @type {import('@hapi/hapi').Server} */
+  let server
+
+  beforeAll(async () => {
+    server = await createServer({ disableSQS: true })
+    await server.initialize()
+  })
+
+  afterAll(async () => {
+    if (server) {
+      await server.stop({ timeout: 0 })
+    }
+  })
+
+  beforeEach(() => {
+    setupMocks()
   })
 
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api',
-    consumerVersionSelectors: [
-      {
-        consumer: 'fg-gas-backend',
-        latest: true
-      }
-    ],
-    publishVerificationResult: process.env.PACT_PUBLISH_VERIFICATION === 'true',
-    providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
-    failIfNoPactsFound: false,
-    messageProviders: {
-      'an agreement accepted message': async () => {
-        capturedMessage = null
-
-        config.set(
-          'aws.sns.topic.agreementStatusUpdate.type',
-          'cloud.defra.test.farming-grants-agreements-api.agreement.accepted'
-        )
-
-        // Create a mock request object for the controller
-        const mockRequest = {
-          auth: {
-            credentials: {
-              agreementData: {
-                agreementNumber: 'FPTT987654321',
-                correlationId: 'b65c1dea-0328-47ab-ba26-f515db846110',
-                clientRef: 'client-ref-002',
-                code: 'frps-private-beta',
-                status: 'offered',
-                payment: {
-                  agreementEndDate: '2028-09-01'
-                }
-              }
+    ...(process.env.CI
+      ? {
+          consumerVersionSelectors: [
+            {
+              consumer: 'fg-gas-backend',
+              latest: true
             }
-          },
-          logger: mockLogger
+          ],
+          publishVerificationResult:
+            process.env.PACT_PUBLISH_VERIFICATION === 'true',
+          providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
+          failIfNoPactsFound: false
         }
-
-        const mockH = {
-          response: vi.fn().mockReturnThis(),
-          header: vi.fn().mockReturnThis(),
-          code: vi.fn().mockReturnThis()
-        }
-
-        // Call the real acceptOfferController which calls acceptOffer, updatePaymentHub, and publishEvent
-        await acceptOfferController(mockRequest, mockH)
-
-        return capturedMessage
+      : {
+          logLevel: 'debug',
+          pactUrls: getJsonPacts(localPactDir)
+        }),
+    stateHandlers: {
+      'an agreement offer has been created': () => {
+        mockPublishEvent.mockResolvedValue()
       },
-      'an agreement created message': async () => {
-        capturedMessage = null
-
-        const agreementData = {
-          ...sampleData.agreements[1],
-          correlationId: 'b65c1dea-0328-47ab-ba26-f515db846110',
-          clientRef: 'client-ref-002',
-          code: 'frps-private-beta'
-        }
-
-        // Call the real createOffer function which calls publishEvent
-        await createOffer('test-message-id', agreementData, mockLogger)
-
-        return capturedMessage
+      'an agreement offer has been withdrawn': () => {
+        mockPublishEvent.mockResolvedValue()
       },
-      'an agreement withdrawn message': async () => {
-        capturedMessage = null
-
-        config.set(
-          'aws.sns.topic.agreementStatusUpdate.type',
-          'cloud.defra.test.farming-grants-agreements-api.agreement.withdrawn'
-        )
-
-        const withdrawnAgreement = {
-          agreement: { agreementNumber: 'FPTT123456789' },
-          correlationId: 'a65c1dea-0328-47ab-ba26-f515db846110',
-          clientRef: 'client-ref-003',
-          code: 'frps-private-beta',
-          status: 'withdrawn'
-        }
-
-        mockWithdrawOffer.mockResolvedValue(withdrawnAgreement)
-
-        const incomingMessage = {
-          id: 'test-message-id',
-          source: 'fg-gas-backend',
-          specversion: '1.0',
-          type: 'cloud.defra.test.fg-gas-backend.agreement.withdraw',
-          datacontenttype: 'application/json',
-          data: {
-            clientRef: 'client-ref-003',
-            agreementNumber: 'FPTT123456789',
-            status: 'withdrawn'
-          }
-        }
-
-        // Call the real handleUpdateAgreementEvent which calls withdrawOffer then publishEvent
-        await handleUpdateAgreementEvent(
-          incomingMessage.id,
-          incomingMessage,
-          mockLogger
-        )
-
-        return capturedMessage
+      'an agreement offer has been accepted': () => {
+        mockPublishEvent.mockResolvedValue()
       }
+    },
+    messageProviders: {
+      'an agreement created message': createdMessageProvider,
+      'an agreement withdrawn message': withdrawnMessageProvider,
+      'an agreement accepted message': () => acceptedMessageProvider(server)
     }
   })
 
-  it('should validate all GAS message structures', async () => {
+  it('should validate the message structure', async () => {
     const verify = await messagePact.verify()
 
     expect(verify).toBeTruthy()
