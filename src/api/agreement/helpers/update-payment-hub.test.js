@@ -141,7 +141,7 @@ describe('updatePaymentHub', () => {
           agreementNumber: 'FPTT123456789',
           schedule: 'T4',
           dueDate: '09/11/2022',
-          value: -5000,
+          annualValue: -5000,
           currency: 'GBP',
           invoiceLines: [
             [
@@ -220,7 +220,7 @@ describe('updatePaymentHub', () => {
         debtType: '',
         remittanceDescription: '',
         originalSettlementDate: '',
-        value: -5000,
+        annualValue: -5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
@@ -301,7 +301,7 @@ describe('updatePaymentHub', () => {
 
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
-          value: 0,
+          annualValue: 0,
           invoiceLines: [[]]
         })
       })
@@ -420,7 +420,7 @@ describe('updatePaymentHub', () => {
         paymentHubRequest: expect.objectContaining({
           schedule: undefined,
           dueDate: '01/02/2023',
-          value: -123.45,
+          annualValue: -123.45,
           currency: 'GBP',
           invoiceLines: [
             [
@@ -460,7 +460,7 @@ describe('updatePaymentHub', () => {
         originalSettlementDate: '',
         remittanceDescription: '',
         debtType: '',
-        value: -5000,
+        annualValue: -5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',

@@ -91,7 +91,9 @@ const buildPaymentHubRequest = (
     debtType: validateDebtType(''),
     remittanceDescription: validateRemittanceDescription(''),
     originalSettlementDate,
-    value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
+    annualValue: formatPaymentDecimal(
+      agreementData.payment.agreementTotalPence
+    ),
     currency: agreementData.payment.currency || 'GBP',
     ledger: config.get('paymentHub.defaultLedger'),
     deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
