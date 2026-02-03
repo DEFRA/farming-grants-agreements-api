@@ -10,7 +10,7 @@ read -r -d '' MESSAGE << EOM
 {
   "id":"xxxx-xxxx-xxxx-xxxx",
   "source":"fg-gas-backend",
-  "specVersion":"1.0",
+  "specversion":"1.0",
   "type":"cloud.defra.test.fg-gas-backend.agreement.create",
   "datacontenttype":"application/json",
   "data":{
