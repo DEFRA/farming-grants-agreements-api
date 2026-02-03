@@ -89,7 +89,9 @@ const buildPaymentHubRequest = (
     dueDate,
     recoveryDate,
     debtType: validateDebtType(''),
-    remittanceDescription: validateRemittanceDescription(''),
+    remittanceDescription: validateRemittanceDescription(
+      'Farm Payments Technical Test Payment'
+    ),
     originalSettlementDate,
     annualValue: formatPaymentDecimal(
       agreementData.payment.agreementTotalPence
