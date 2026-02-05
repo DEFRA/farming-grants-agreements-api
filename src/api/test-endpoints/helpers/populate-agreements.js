@@ -3,13 +3,13 @@ import crypto from 'node:crypto'
 import agreements from '~/src/api/common/models/agreements.js'
 import versionsModel from '~/src/api/common/models/versions.js'
 import sampleData from '~/src/api/common/helpers/sample-data/index.js'
+import { generateAgreementNumber } from '~/src/api/agreement/helpers/create-offer.js'
 
 const DEFAULT_TARGET_COUNT = 70000
 const DEFAULT_BATCH_SIZE = 1000
 const DEFAULT_CONCURRENCY = 4
 const MAX_CONCURRENCY = 10
 const ERROR_SAMPLE_LIMIT = 25
-const AGREEMENT_NUMBER_PAD_LENGTH = 9
 const CLIENT_REF_PAD_LENGTH = 8
 const FRN_BASE = 1000000000
 const FRN_RANGE = 9000000000
@@ -40,9 +40,6 @@ const createDateRange = () => {
   }
 }
 
-const generateAgreementNumber = (index) =>
-  `FPTT${String(index).padStart(AGREEMENT_NUMBER_PAD_LENGTH, '0')}`
-
 const generateRandomDateInRange = ({ startMs, rangeMs }) => {
   const r =
     Number(crypto.randomBytes(8).readBigUInt64BE()) /
@@ -50,12 +47,12 @@ const generateRandomDateInRange = ({ startMs, rangeMs }) => {
   return new Date(startMs + r * rangeMs).toISOString()
 }
 
-const createAgreementVariation = (index, timestamp, dateRange) => {
+const createAgreementVariation = async (index, timestamp, dateRange) => {
   const template = SAMPLE_TEMPLATES[index % SAMPLE_TEMPLATES.length]
   const agreementId = new mongoose.Types.ObjectId()
   const versionId = new mongoose.Types.ObjectId()
 
-  const agreementNumber = generateAgreementNumber(index)
+  const agreementNumber = await generateAgreementNumber(index)
   const notificationMessageId = `notification-${index}-${timestamp}`
   const correlationId = `correlation-${index}-${timestamp}`
   const clientRef = `client-ref-${String(index).padStart(
@@ -111,7 +108,7 @@ const processBatch = async ({ startIndex, batchSize, dateRange, logger }) => {
   const versionDocs = []
 
   for (let i = startIndex; i < startIndex + batchSize; i++) {
-    const { agreement, version } = createAgreementVariation(
+    const { agreement, version } = await createAgreementVariation(
       i,
       batchTimestamp + i,
       dateRange
