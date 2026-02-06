@@ -70,7 +70,7 @@ describe('acceptOffer', () => {
         'files.s3.bucket': 'test-bucket',
         'files.s3.region': 'eu-west-2',
         'aws.sns.topic.agreementStatusUpdate.arn':
-          'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo',
         'aws.sns.topic.agreementStatusUpdate.type':
           'io.onsite.agreement.status.updated'
       }

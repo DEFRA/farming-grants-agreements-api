@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 import { v4 as uuidv4 } from 'uuid'
+import { config } from '~/src/config/index.js'
 
 import mongoose from 'mongoose'
 import Boom from '@hapi/boom'
@@ -248,7 +249,7 @@ describe('createOffer', () => {
     expect(publishEvent).toHaveBeenCalledWith(
       {
         time: '2025-01-01T00:00:00.000Z',
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: 'io.onsite.agreement.status.updated',
         data: expect.objectContaining({
           agreementNumber: 'FPTT999999999',
@@ -1823,7 +1824,7 @@ describe('createOffer', () => {
 
     expect(publishEvent).toHaveBeenCalledWith(
       {
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: 'io.onsite.agreement.status.updated',
         time: expect.any(String),
         data: expect.objectContaining({

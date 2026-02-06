@@ -52,7 +52,8 @@ export async function publishEvent(
       await client.send(
         new PublishCommand({
           TopicArn: topicArn,
-          Message: JSON.stringify(message)
+          Message: JSON.stringify(message),
+          MessageGroupId: config.get('serviceName')
         })
       )
       logger?.info?.(
