@@ -93,7 +93,7 @@ docker compose -f compose.yml up -d --build
 
 It might be helpful to use localstack's dashboard to view the SQS queue and any messages: [https://app.localstack.cloud/inst/default/resources/sqs](https://app.localstack.cloud/inst/default/resources/sqs)
 
-You can send a test `grant_application_approved` event by running:
+You can send a test `grant_application_approved_fifo.fifo` event by running:
 
 ```bash
 npm run publish:accept

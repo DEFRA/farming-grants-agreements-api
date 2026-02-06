@@ -166,7 +166,7 @@ const config = convict({
             doc: 'AWS SNS Topic ARN for Agreement status update events',
             format: String,
             default:
-              'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo',
+              'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo',
             env: 'SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED'
           },
           type: {
