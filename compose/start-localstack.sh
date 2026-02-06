@@ -5,15 +5,15 @@ echo "🚀 Initializing SNS + SQS in LocalStack..."
 
 # SQS Queues we listen to
 declare -A QUEUES=(
-  [grant_application_approved]="create_agreement" # Grants UI has approved an application, we need to create the agreement in response
-  [gas__sns__update_agreement_status]="update_agreement" # Grants Application Service update (e.g. withdrawn)
-  [agreement_status_updated]="create_agreement_pdf" # We need to create the agreement PDF in response to the offer being accepted
+  [grant_application_approved_fifo]="create_agreement_fifo" # Grants UI has approved an application, we need to create the agreement in response
+  [gas__sns__update_agreement_status_fifo]="update_agreement_fifo" # Grants Application Service update (e.g. withdrawn)
+  [agreement_status_updated_fifo]="create_agreement_pdf_fifo" # We need to create the agreement PDF in response to the offer being accepted
 )
 
 # SNS Topics we publish to
 declare -A TOPICS=(
-  [agreement_status_updated]="agreement_status_updated" # We've updated the agreement status e.g. created/accepted
-  [create_agreement_pdf]="agreement_status_updated"     # - Used to generate the PDF of the agreement
+  [agreement_status_updated_fifo]="agreement_status_updated_fifo" # We've updated the agreement status e.g. created/accepted
+  [create_agreement_pdf_fifo]="agreement_status_updated_fifo"     # - Used to generate the PDF of the agreement
 )
 
 # Associative arrays for ARNs and URLs
@@ -40,21 +40,29 @@ done
 # Create SQS queues and get ARNs
 for key in "${!QUEUES[@]}"; do
   queue_name="${QUEUES[$key]}"
-  url=$(awslocal sqs create-queue --queue-name "$queue_name" --endpoint-url=$AWS_ENDPOINT --query 'QueueUrl' --output text)
+  # ensure FIFO queue name
+  if [[ "$queue_name" != *.fifo ]]; then
+    queue_name="${queue_name}.fifo"
+  fi
+  url=$(awslocal sqs create-queue --queue-name "$queue_name" --endpoint-url=$AWS_ENDPOINT --attributes FifoQueue=true,ContentBasedDeduplication=true --query 'QueueUrl' --output text)
   arn=$(awslocal sqs get-queue-attributes --queue-url "$url" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
   QUEUE_URLS[$key]="$url"
   QUEUE_ARNS[$key]="$arn"
-  echo "✅ Created queue: $url"
+  echo "✅ Created FIFO queue: $url"
 done
 
 # Create mock SQS queues tests can use to publish and listen to
 for key in "${!TOPICS[@]}"; do
   queue_name="$key"
-  url=$(awslocal sqs create-queue --queue-name "$queue_name" --endpoint-url=$AWS_ENDPOINT --query 'QueueUrl' --output text)
+  # ensure FIFO queue name
+  if [[ "$queue_name" != *.fifo ]]; then
+    queue_name="${queue_name}.fifo"
+  fi
+  url=$(awslocal sqs create-queue --queue-name "$queue_name" --endpoint-url=$AWS_ENDPOINT --attributes FifoQueue=true,ContentBasedDeduplication=true --query 'QueueUrl' --output text)
   arn=$(awslocal sqs get-queue-attributes --queue-url "$url" --attribute-name QueueArn --query "Attributes.QueueArn" --output text)
   QUEUE_URLS[$key]="$url"
   QUEUE_ARNS[$key]="$arn"
-  echo "✅ Created queue: $url"
+  echo "✅ Created FIFO queue: $url"
 done
 
 

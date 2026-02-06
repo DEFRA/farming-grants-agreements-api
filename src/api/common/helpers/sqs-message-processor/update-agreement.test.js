@@ -3,6 +3,7 @@ import { handleUpdateAgreementEvent } from './update-agreement.js'
 import { processMessage } from '../sqs-client.js'
 import { withdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
 import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { config } from '~/src/config/index.js'
 
 vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 vi.mock('~/src/api/common/helpers/sns-publisher.js')
@@ -54,8 +55,7 @@ describe('SQS message processor', () => {
             status: 'withdrawn'
           },
           time: expect.any(String),
-          topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
           type: 'io.onsite.agreement.status.updated'
         },
         mockLogger
@@ -131,8 +131,7 @@ describe('SQS message processor', () => {
             status: 'withdrawn'
           },
           time: expect.any(String),
-          topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
           type: 'io.onsite.agreement.status.updated'
         },
         mockLogger
