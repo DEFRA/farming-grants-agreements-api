@@ -3,7 +3,7 @@
 # Script to receive and display messages from an SQS queue
 
 # Set defaults for testing
-QUEUE_NAME="create_agreement_fifo.fifo"
+QUEUE_NAME="create_agreement_fifo.fifo_fifo"
 QUEUE_URL="https://sqs.eu-west-2.amazonaws.com/332499610595/create_agreement_fifo.fifo"
 AWS_ENDPOINT_URL="https://sqs.eu-west-2.amazonaws.com"
 AWS_REGION="eu-west-2"
