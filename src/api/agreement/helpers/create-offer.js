@@ -12,11 +12,20 @@ import {
 import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
 import { generateClaimId } from '~/src/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 
-export const generateAgreementNumber = () => {
+export const generateAgreementNumber = async () => {
   const minRandomNumber = 100000000
   const maxRandomNumber = 999999999
-  const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
-  return `FPTT${randomNum}`
+
+  let agreementNumber
+  let agreementNumberExists
+
+  do {
+    const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
+    agreementNumber = `FPTT${randomNum}`
+    agreementNumberExists = await agreementsModel.exists({ agreementNumber })
+  } while (agreementNumberExists)
+
+  return agreementNumber
 }
 
 /**
@@ -41,7 +50,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     application
   } = resolveAgreementFields(agreementData)
 
-  const agreementNumber = determineAgreementNumber(agreementData)
+  const agreementNumber = await determineAgreementNumber(agreementData)
 
   // Generate claimId and originalInvoiceNumber for version 1
   const claimId = await generateClaimId()
@@ -323,7 +332,7 @@ function buildLegacyAgreementContent(
   }
 }
 
-function determineAgreementNumber(agreementData) {
+async function determineAgreementNumber(agreementData) {
   if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {
     return agreementData.agreementNumber
   }
