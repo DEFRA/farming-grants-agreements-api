@@ -22,6 +22,7 @@ vi.mock('~/src/api/common/models/agreements.js', () => {
       })
     })),
     createAgreementWithVersions: vi.fn(() => populatedAgreement),
+    exists: vi.fn().mockResolvedValue(false),
 
     // helper exposed to tests:
     __setPopulatedAgreement: (g) => {
@@ -1487,17 +1488,29 @@ describe('createOffer', () => {
   })
 
   describe('generateAgreementNumber', () => {
-    it('should generate a valid agreement number', () => {
-      const agreementNumber = generateAgreementNumber()
+    it('should generate a valid agreement number', async () => {
+      const agreementNumber = await generateAgreementNumber()
       expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
     })
 
-    it('should generate unique agreement numbers', () => {
+    it('should generate unique agreement numbers', async () => {
       const numbers = new Set()
       for (let i = 0; i < 100; i++) {
-        numbers.add(generateAgreementNumber())
+        numbers.add(await generateAgreementNumber())
       }
       expect(numbers.size).toBe(100)
+    })
+
+    it('should retry until a non-duplicate agreement number is found', async () => {
+      agreementsModel.exists
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false)
+
+      const agreementNumber = await generateAgreementNumber()
+
+      expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
+      expect(agreementsModel.exists).toHaveBeenCalledTimes(3)
     })
   })
 
