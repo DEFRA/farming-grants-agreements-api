@@ -1,3 +1,4 @@
+import { config } from '~/src/config/index.js'
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
 
@@ -127,7 +128,8 @@ async function publishTestEvent() {
   await sns.send(
     new PublishCommand({
       TopicArn: topicArn,
-      Message: JSON.stringify(message)
+      Message: JSON.stringify(message),
+      MessageGroupId: config.get('serviceName')
     })
   )
 
