@@ -200,6 +200,10 @@ describe('createOffer', () => {
     // Return EXACT group the test asserts against
     const populated = {
       ...targetGroupDataStructure,
+      createdAt: '2025-01-01T00:00:00.000Z',
+      payment: {
+        agreementEndDate: agreementData.answers.payment.agreementEndDate
+      },
       sbi: '106284736',
       frn: '1234567890',
       agreementNumber: 'FPTT999999999', // test uses expect.any(String)
@@ -259,7 +263,8 @@ describe('createOffer', () => {
           clientRef: 'ref-1234',
           status: 'offered',
           date: '2025-01-01T00:00:00.000Z',
-          endDate: '2027-12-31'
+          agreementCreateDate: '2025-01-01T00:00:00.000Z',
+          agreementEndDate: '2027-12-31'
         })
       },
       mockLogger
@@ -1834,7 +1839,8 @@ describe('createOffer', () => {
           status: 'offered',
           date: expect.any(String),
           code: agreementData.code,
-          endDate: agreementData.answers.payment.agreementEndDate
+          agreementCreateDate: expect.any(String),
+          agreementEndDate: agreementData.answers.payment.agreementEndDate
         })
       },
       mockLogger
