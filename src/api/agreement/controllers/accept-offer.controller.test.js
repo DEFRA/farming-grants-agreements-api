@@ -39,6 +39,8 @@ describe('acceptOfferDocumentController', () => {
     clientRef: 'test-client-ref',
     correlationId: 'test-correlation-id',
     code: 'test-code',
+    createdAt: '2023-12-01T00:00:00.000Z',
+    updatedAt: '2024-01-02T00:00:00.000Z',
     actionApplications: [],
     payment: {
       agreementStartDate: '2024-01-01',
@@ -147,9 +149,12 @@ describe('acceptOfferDocumentController', () => {
           agreementUrl: `${config.get('viewAgreementURI')}/FPTT123456789`,
           clientRef: 'test-client-ref',
           status: 'accepted',
-          date: '2024-01-01T00:00:00.000Z',
           code: 'test-code',
-          endDate: '2027-12-31',
+          agreementCreateDate: '2023-12-01T00:00:00.000Z',
+          agreementAcceptedDate: '2024-01-01T00:00:00.000Z',
+          agreementStartData: '2024-01-01',
+          agreementEndData: '2027-12-31',
+          agreementUpdatedDate: '2024-01-02T00:00:00.000Z',
           claimId: 'R00000001'
         }
       },
