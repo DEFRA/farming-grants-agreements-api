@@ -240,7 +240,7 @@ describe('seedDatabase', () => {
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
           data: { agreementNumber: 'FPTT123456789' }
@@ -288,7 +288,7 @@ describe('seedDatabase', () => {
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
           data: { agreementNumber: 'CUST1' }
@@ -299,7 +299,7 @@ describe('seedDatabase', () => {
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
           data: { agreementNumber: 'CUST2' }
@@ -363,7 +363,7 @@ describe('seedDatabase', () => {
         'mockNotificationMessageId',
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           time: expect.any(String),
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           data: {
