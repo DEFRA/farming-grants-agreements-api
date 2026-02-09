@@ -107,7 +107,7 @@ const Applicant = new mongoose.Schema({
           line4: { type: String },
           line5: { type: String },
           street: { type: String },
-          city: { type: String },
+          city: { type: String, required: true },
           postalCode: { type: String, required: true }
         }),
         required: true
