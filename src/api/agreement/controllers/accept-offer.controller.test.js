@@ -138,7 +138,7 @@ describe('acceptOfferDocumentController', () => {
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
       {
         time: '2024-01-01T00:00:00.000Z',
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: 'io.onsite.agreement.status.updated',
         data: {
           agreementNumber: 'FPTT123456789',
