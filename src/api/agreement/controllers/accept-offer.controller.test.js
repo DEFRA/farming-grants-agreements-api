@@ -62,6 +62,8 @@ describe('acceptOfferDocumentController', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2024-01-03T12:34:56.789Z'))
     calculatePaymentsBasedOnActions.mockResolvedValue({
       agreementStartDate: '2024-01-01',
       agreementEndDate: '2025-12-31',
@@ -96,6 +98,10 @@ describe('acceptOfferDocumentController', () => {
       source: 'defra',
       sbi: '106284736'
     })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   test('should successfully accept an offer and return 200 OK', async () => {
@@ -150,10 +156,11 @@ describe('acceptOfferDocumentController', () => {
           clientRef: 'test-client-ref',
           status: 'accepted',
           code: 'test-code',
+          date: '2024-01-03T12:34:56.789Z',
           agreementCreateDate: '2023-12-01T00:00:00.000Z',
           agreementAcceptedDate: '2024-01-01T00:00:00.000Z',
-          agreementStartData: '2024-01-01',
-          agreementEndData: '2027-12-31',
+          agreementStartDate: '2024-01-01',
+          agreementEndDate: '2027-12-31',
           agreementUpdatedDate: '2024-01-02T00:00:00.000Z',
           claimId: 'R00000001'
         }
