@@ -99,7 +99,7 @@ describe('postTestQueueMessageController', () => {
     expect(sendMock).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
-          QueueUrl: 'http://localhost:4566/000000000000/create_agreement',
+          QueueUrl: 'http://localhost:4566/000000000000/test-queue',
           MessageBody: JSON.stringify(payload)
         })
       })
@@ -125,7 +125,7 @@ describe('postTestQueueMessageController', () => {
     )
   })
 
-  test('retrieves agreement data for create_agreement queue', async () => {
+  test('retrieves agreement data for default queue', async () => {
     const mockAgreementData = {
       _id: 'agreement123',
       agreementNumber: 'FPTT123',
@@ -136,7 +136,29 @@ describe('postTestQueueMessageController', () => {
     getAgreementData.mockResolvedValueOnce(mockAgreementData)
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: {} },
+      h
+    )
+
+    expect(res.statusCode).toBe(statusCodes.ok)
+    expect(res.payload.agreementData).toEqual(mockAgreementData)
+    expect(getAgreementData).toHaveBeenCalledWith({
+      sbi: '123456789'
+    })
+  })
+
+  test('retrieves agreement data for test-queue queue', async () => {
+    const mockAgreementData = {
+      _id: 'agreement123',
+      agreementNumber: 'FPTT123',
+      status: 'offered'
+    }
+
+    sendMock.mockResolvedValueOnce({})
+    getAgreementData.mockResolvedValueOnce(mockAgreementData)
+
+    const res = await postTestQueueMessageController.handler(
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
@@ -174,7 +196,7 @@ describe('postTestQueueMessageController', () => {
       .mockResolvedValueOnce(mockAgreementData)
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
@@ -192,7 +214,7 @@ describe('postTestQueueMessageController', () => {
     getAgreementData.mockRejectedValue(Boom.notFound('Not found'))
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
@@ -210,7 +232,7 @@ describe('postTestQueueMessageController', () => {
     getAgreementData.mockRejectedValueOnce(new Error('Database error'))
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
@@ -220,6 +242,7 @@ describe('postTestQueueMessageController', () => {
 
   test('logs queue message posting', async () => {
     sendMock.mockResolvedValueOnce({})
+    getAgreementData.mockResolvedValueOnce(undefined)
 
     await postTestQueueMessageController.handler(
       { payload, logger, params: { queueName: 'test-queue' } },

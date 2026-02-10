@@ -39,9 +39,9 @@ const postTestQueueMessageController = {
         throw Boom.internal('Queue message data is required')
       }
 
-      const { queueName = 'create_agreement' } = request.params
       const baseQueueUrl = config.get('sqs.queueUrl').split('/')
-      baseQueueUrl.pop()
+      const defaultQueueName = baseQueueUrl.pop()
+      const { queueName = defaultQueueName } = request.params
       const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
 
       request.logger.info(
@@ -55,13 +55,14 @@ const postTestQueueMessageController = {
 
       const command = new SendMessageCommand({
         QueueUrl: queueUrl,
-        MessageBody: JSON.stringify(queueMessage)
+        MessageBody: JSON.stringify(queueMessage),
+        MessageGroupId: config.get('serviceName')
       })
 
       await sqsClient.send(command)
 
       let agreementData
-      if (queueName === 'create_agreement') {
+      if (queueName === defaultQueueName) {
         // Get the agreement from the database by SBI
         agreementData = await checkAgreementWithBackoff(
           queueMessage.data.identifiers.sbi,
