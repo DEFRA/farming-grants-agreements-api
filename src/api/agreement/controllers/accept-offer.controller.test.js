@@ -62,7 +62,7 @@ describe('acceptOfferDocumentController', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2024-01-03T12:34:56.789Z'))
     calculatePaymentsBasedOnActions.mockResolvedValue({
       agreementStartDate: '2024-01-01',
