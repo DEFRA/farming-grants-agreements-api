@@ -40,7 +40,7 @@ const acceptOfferController = async (request, h) => {
       {
         topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
-        time: agreementData.signatureDate,
+        time: new Date().toISOString(),
         data: {
           agreementNumber,
           correlationId: agreementData?.correlationId,
@@ -49,12 +49,10 @@ const acceptOfferController = async (request, h) => {
           agreementUrl,
           status: agreementData.status,
           code: agreementData?.code,
-          date: new Date().toISOString(),
           agreementCreateDate: agreementData.createdAt,
           agreementAcceptedDate: agreementData.signatureDate,
           agreementStartDate: agreementData?.payment?.agreementStartDate,
           agreementEndDate: agreementData?.payment?.agreementEndDate,
-          agreementUpdatedDate: agreementData.updatedAt,
           claimId
         }
       },
