@@ -262,7 +262,6 @@ describe('createOffer', () => {
           ),
           clientRef: 'ref-1234',
           status: 'offered',
-          date: '2025-01-01T00:00:00.000Z',
           agreementCreateDate: '2025-01-01T00:00:00.000Z',
           agreementEndDate: '2027-12-31'
         })
@@ -1837,7 +1836,6 @@ describe('createOffer', () => {
           correlationId: expect.any(String),
           clientRef: agreementData.clientRef,
           status: 'offered',
-          date: expect.any(String),
           code: agreementData.code,
           agreementCreateDate: expect.any(String),
           agreementEndDate: agreementData.answers.payment.agreementEndDate
