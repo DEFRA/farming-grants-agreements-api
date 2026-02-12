@@ -26,6 +26,7 @@ vi.mock('~/src/config/index.js', () => {
     'featureFlags.isPaymentHubEnabled': false,
     'paymentHub.defaultSourceSystem': 'FPTT',
     'paymentHub.defaultLedger': 'AP',
+    'paymentHub.defaultSchedule': 'T4',
     'paymentHub.defaultDeliveryBody': 'RP00',
     'paymentHub.defaultFesCode': 'FALS_FPTT'
   }
