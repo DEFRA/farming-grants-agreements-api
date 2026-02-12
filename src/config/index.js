@@ -303,6 +303,12 @@ const config = convict({
       default: 'AP',
       env: 'PAYMENT_HUB_DEFAULT_LEDGER'
     },
+    defaultSchedule: {
+      doc: 'Default schedule for payment hub requests',
+      format: String,
+      default: 'T4',
+      env: 'PAYMENT_HUB_DEFAULT_SCHEDULE'
+    },
     defaultDeliveryBody: {
       doc: 'Default delivery body for payment hub requests',
       format: String,
