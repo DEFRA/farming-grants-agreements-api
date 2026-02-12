@@ -220,7 +220,7 @@ describe('postTestQueueMessageController', () => {
 
     expect(Boom.isBoom(res)).toBe(true)
     expect(res.message).toBe(
-      'Failed to retrieve agreement data after multiple attempts for SBI: 123456789'
+      'Agreement was added to the queue, but failed to create/retrieve agreement after multiple attempts for SBI: 123456789. Verify data format is correct by checking the logs for errors.'
     )
 
     // Restore setTimeout

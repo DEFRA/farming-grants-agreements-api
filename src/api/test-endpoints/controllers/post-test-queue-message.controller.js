@@ -4,23 +4,36 @@ import { statusCodes } from '~/src/api/common/constants/status-codes.js'
 import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
 import { config } from '~/src/config/index.js'
 
-const maxDelay = 8000
+const maxAttempts = 8
+const backoffDelay = 500
 
-const checkAgreementWithBackoff = async (sbi, delay, logger) => {
-  if (delay > maxDelay) {
+const fetchAgreementWithRetry = async (sbi, logger, attemptCount = 1) => {
+  if (attemptCount > maxAttempts) {
     throw Boom.internal(
-      `Failed to retrieve agreement data after multiple attempts for SBI: ${sbi}`
+      `Agreement was added to the queue, but failed to create/retrieve agreement after multiple attempts for SBI: ${sbi}. Verify data format is correct by checking the logs for errors.`
     )
   }
 
   // Attempt to get the agreement data
   try {
-    return await getAgreementData({ sbi })
+    const agreement = await getAgreementData({ sbi })
+    logger.info(
+      `Test queue - Successfully retrieved agreement data for SBI: ${sbi} after ${attemptCount} attempts`
+    )
+    return agreement
   } catch (error) {
-    logger.error(error, `Failed to retrieve agreement data for SBI: ${sbi}`)
     if (isBoom(error) && error.output.statusCode === statusCodes.notFound) {
-      await new Promise((resolve) => setTimeout(resolve, delay))
-      return checkAgreementWithBackoff(sbi, delay * 2, logger)
+      logger.error(
+        error,
+        `Test queue - Agreement for: ${sbi} does not exist yet, retrying...`
+      )
+      await new Promise((resolve) => setTimeout(resolve, backoffDelay))
+      return fetchAgreementWithRetry(sbi, logger, attemptCount + 1)
+    } else {
+      logger.error(
+        error,
+        `Test queue - Failed to retrieve agreement data for SBI: ${sbi}`
+      )
     }
     throw error
   }
@@ -59,14 +72,16 @@ const postTestQueueMessageController = {
         MessageGroupId: config.get('serviceName')
       })
 
-      await sqsClient.send(command)
+      const result = await sqsClient.send(command)
+      request.logger.info(
+        `Successfully posted test queue message to: "${queueUrl}" with MessageId: ${result.MessageId}`
+      )
 
       let agreementData
       if (queueName === defaultQueueName) {
         // Get the agreement from the database by SBI
-        agreementData = await checkAgreementWithBackoff(
+        agreementData = await fetchAgreementWithRetry(
           queueMessage.data.identifiers.sbi,
-          1000,
           request.logger
         )
       }
