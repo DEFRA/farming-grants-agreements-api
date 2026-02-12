@@ -85,7 +85,9 @@ const buildPaymentHubRequest = (
     originalInvoiceNumber,
     agreementNumber: agreementData.agreementNumber,
     schedule:
-      agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
+      agreementData.payment.frequency === 'Quarterly'
+        ? config.get('paymentHub.defaultSchedule')
+        : undefined,
     dueDate,
     recoveryDate,
     debtType: validateDebtType(''),
