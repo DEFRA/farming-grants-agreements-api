@@ -167,13 +167,18 @@ const buildInvoiceLines = (agreementData) => {
         schemeCode = lineDetails.code
       }
 
+      const storedMarketingYear =
+        agreementData?.year ??
+        agreementData?.answers?.year ??
+        new Date().getFullYear()
+
       return {
         value: formatPaymentDecimal(line.paymentPence),
         agreementNumber: agreementData.agreementNumber,
         deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
         accountCode: 'SOS710',
         fundCode: 'DRD10',
-        marketingYear: new Date().getFullYear(),
+        marketingYear: storedMarketingYear,
         description,
         schemeCode
       }
