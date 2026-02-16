@@ -1837,7 +1837,7 @@ describe('createOffer', () => {
           clientRef: agreementData.clientRef,
           status: 'offered',
           code: agreementData.code,
-          date: expect.any(String)
+          date: '2025-01-01T00:00:00.000Z'
         })
       },
       mockLogger

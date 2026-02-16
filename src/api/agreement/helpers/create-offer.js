@@ -81,8 +81,6 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     versions: [data] // can pass multiple payloads
   })
 
-  // call ladn
-
   // Publish event to SNS
   await publishEvent(
     {
