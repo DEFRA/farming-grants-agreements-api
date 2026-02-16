@@ -156,10 +156,9 @@ describe('acceptOfferDocumentController', () => {
           clientRef: 'test-client-ref',
           status: 'accepted',
           code: 'test-code',
-          agreementCreateDate: '2023-12-01T00:00:00.000Z',
-          agreementAcceptedDate: '2024-01-01T00:00:00.000Z',
-          agreementStartDate: '2024-01-01',
-          agreementEndDate: '2027-12-31',
+          date: '2024-01-02T00:00:00.000Z',
+          startDate: '2024-01-01',
+          endDate: '2027-12-31',
           claimId: 'R00000001'
         }
       },

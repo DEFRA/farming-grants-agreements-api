@@ -42,8 +42,7 @@ export const handleUpdateAgreementEvent = async (
           clientRef: updatedVersion.clientRef,
           status: updatedVersion.status,
           date: new Date().toISOString(),
-          code: updatedVersion.code,
-          endDate: updatedVersion.payment?.agreementEndDate
+          code: updatedVersion.code
         }
       },
       logger
