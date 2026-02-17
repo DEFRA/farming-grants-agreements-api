@@ -41,7 +41,7 @@ export const handleUpdateAgreementEvent = async (
           correlationId: updatedVersion.correlationId,
           clientRef: updatedVersion.clientRef,
           status: updatedVersion.status,
-          date: new Date().toISOString(),
+          date: updatedVersion.updatedAt,
           code: updatedVersion.code
         }
       },
