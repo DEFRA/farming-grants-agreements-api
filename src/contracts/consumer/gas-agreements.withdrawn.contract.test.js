@@ -25,7 +25,8 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
     mockWithdrawOffer.mockResolvedValue({
       agreement: {
         agreementNumber: 'mockAgreementNumber'
-      }
+      },
+      updatedAt: '2025-01-01T00:00:00.000Z'
     })
 
     return messagePact

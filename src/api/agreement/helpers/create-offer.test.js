@@ -201,6 +201,7 @@ describe('createOffer', () => {
     const populated = {
       ...targetGroupDataStructure,
       createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
       payment: {
         agreementEndDate: agreementData.answers.payment.agreementEndDate
       },
@@ -262,8 +263,7 @@ describe('createOffer', () => {
           ),
           clientRef: 'ref-1234',
           status: 'offered',
-          agreementCreateDate: '2025-01-01T00:00:00.000Z',
-          agreementEndDate: '2027-12-31'
+          date: '2025-01-01T00:00:00.000Z'
         })
       },
       mockLogger
@@ -1837,8 +1837,7 @@ describe('createOffer', () => {
           clientRef: agreementData.clientRef,
           status: 'offered',
           code: agreementData.code,
-          agreementCreateDate: expect.any(String),
-          agreementEndDate: agreementData.answers.payment.agreementEndDate
+          date: '2025-01-01T00:00:00.000Z'
         })
       },
       mockLogger

@@ -89,9 +89,8 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
         correlationId: data?.correlationId,
         clientRef,
         status: 'offered',
-        agreementCreateDate: agreement.createdAt,
-        code,
-        agreementEndDate: agreement?.payment?.agreementEndDate
+        date: agreement.updatedAt,
+        code
       }
     },
     logger

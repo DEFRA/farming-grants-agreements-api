@@ -9,6 +9,7 @@ vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
 vi.mock('~/src/api/common/helpers/sns-publisher.js')
 
 describe('SQS message processor', () => {
+  const mockUpdatedAt = '2025-01-01T00:00:00.000Z'
   let mockLogger
 
   beforeEach(() => {
@@ -19,6 +20,7 @@ describe('SQS message processor', () => {
       correlationId: 'mockCorrelationId',
       code: 'mockCode',
       status: 'withdrawn',
+      updatedAt: mockUpdatedAt,
       agreement: { agreementNumber: 'FPTT123456789' }
     })
   })
@@ -51,7 +53,7 @@ describe('SQS message processor', () => {
             clientRef: 'mockClientRef',
             code: 'mockCode',
             correlationId: 'mockCorrelationId',
-            date: expect.any(String),
+            date: mockUpdatedAt,
             status: 'withdrawn'
           },
           time: expect.any(String),
@@ -127,7 +129,7 @@ describe('SQS message processor', () => {
             clientRef: 'mockClientRef',
             code: 'mockCode',
             correlationId: 'mockCorrelationId',
-            date: expect.any(String),
+            date: mockUpdatedAt,
             status: 'withdrawn'
           },
           time: expect.any(String),

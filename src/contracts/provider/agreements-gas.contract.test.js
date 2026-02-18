@@ -73,7 +73,8 @@ const setupMocks = () => {
     clientRef: 'mockClientRef',
     code: 'mockCode',
     correlationId: 'mockCorrelationId',
-    status: 'withdrawn'
+    status: 'withdrawn',
+    updatedAt: MOCK_DATE
   })
 
   getAgreementDataBySbi.mockResolvedValue(mockAgreementData)

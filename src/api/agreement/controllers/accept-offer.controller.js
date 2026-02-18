@@ -49,10 +49,9 @@ const acceptOfferController = async (request, h) => {
           agreementUrl,
           status: agreementData.status,
           code: agreementData?.code,
-          agreementCreateDate: agreementData.createdAt,
-          agreementAcceptedDate: agreementData.signatureDate,
-          agreementStartDate: agreementData?.payment?.agreementStartDate,
-          agreementEndDate: agreementData?.payment?.agreementEndDate,
+          date: agreementData.updatedAt,
+          startDate: agreementData?.payment?.agreementStartDate,
+          endDate: agreementData?.payment?.agreementEndDate,
           claimId
         }
       },
