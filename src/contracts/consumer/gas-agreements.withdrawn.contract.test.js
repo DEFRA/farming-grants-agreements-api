@@ -36,7 +36,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
         id: uuid('12345678-1234-1234-1234-123456789012'),
         source: like('fg-gas-backend'),
         specversion: '1.0',
-        type: 'cloud.defra.test.fg-gas-backend.agreement.withdraw',
+        type: 'cloud.defra.test.fg-gas-backend.application.status.updated',
         datacontenttype: 'application/json',
         data: {
           clientRef: like('client-ref-002'),

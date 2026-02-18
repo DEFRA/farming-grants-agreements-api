@@ -181,7 +181,7 @@ const withdrawnMessageProvider = async () => {
         id: '12-34-56-78-90',
         source: 'fg-gas-backend',
         specversion: '1.0',
-        type: 'cloud.defra.test.fg-gas-backend.agreement.withdraw',
+        type: 'cloud.defra.test.fg-gas-backend.application.status.updated',
         datacontenttype: 'application/json',
         data: {
           clientRef: 'mockClientRef',
