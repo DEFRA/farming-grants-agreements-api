@@ -22,7 +22,7 @@ vi.mock('hapi-pino', () => ({
     name: 'mock-hapi-pino'
   }
 }))
-vi.mock('~/src/api/common/helpers/logging/logger.js', () => ({
+vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
   createLogger: () => ({
     info: (...args) => mockLoggerInfo(...args),
     warn: (...args) => mockLoggerWarn(...args),
@@ -42,11 +42,11 @@ describe('#startServer', () => {
     process.env.PORT = '3098' // Set to obscure port to avoid conflicts
 
     // Explicitly disable DB seeding for test consistency
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     config.set('featureFlags.seedDb', false)
 
-    createServerImport = await import('~/src/api/index.js')
-    startServerImport = await import('~/src/api/common/helpers/start-server.js')
+    createServerImport = await import('#~/api/index.js')
+    startServerImport = await import('#~/api/common/helpers/start-server.js')
 
     createServerSpy = vi.spyOn(createServerImport, 'createServer')
     hapiServerSpy = vi.spyOn(hapi, 'server')

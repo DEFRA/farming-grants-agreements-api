@@ -1,7 +1,7 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { v4 as uuidv4 } from 'uuid'
-import { config } from '~/src/config/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { config } from '#~/config/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 
 const snsClient = new SNSClient(
   process.env.NODE_ENV === 'development'

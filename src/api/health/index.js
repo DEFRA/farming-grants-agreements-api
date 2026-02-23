@@ -1,4 +1,4 @@
-import { healthController } from '~/src/api/health/controller.js'
+import { healthController } from '#~/api/health/controller.js'
 
 /**
  * @satisfies {ServerRegisterPluginObject<void>}

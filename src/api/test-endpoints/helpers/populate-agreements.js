@@ -1,9 +1,9 @@
 import mongoose from 'mongoose'
 import crypto from 'node:crypto'
-import agreements from '~/src/api/common/models/agreements.js'
-import versionsModel from '~/src/api/common/models/versions.js'
-import sampleData from '~/src/api/common/helpers/sample-data/index.js'
-import { generateAgreementNumber } from '~/src/api/agreement/helpers/create-offer.js'
+import agreements from '#~/api/common/models/agreements.js'
+import versionsModel from '#~/api/common/models/versions.js'
+import sampleData from '#~/api/common/helpers/sample-data/index.js'
+import { generateAgreementNumber } from '#~/api/agreement/helpers/create-offer.js'
 
 const DEFAULT_TARGET_COUNT = 70000
 const DEFAULT_BATCH_SIZE = 1000

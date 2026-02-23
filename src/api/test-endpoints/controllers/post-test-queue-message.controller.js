@@ -1,8 +1,8 @@
 import Boom, { isBoom } from '@hapi/boom'
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { config } from '~/src/config/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { getAgreementData } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { config } from '#~/config/index.js'
 
 const maxAttempts = 8
 const backoffDelay = 500

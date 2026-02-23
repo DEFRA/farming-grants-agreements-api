@@ -9,19 +9,19 @@ import {
 import { getAgreementDataById } from './get-agreement-data.js'
 import { createInvoice } from './invoice/create-invoice.js'
 import { updateInvoice } from './invoice/update-invoice.js'
-import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
-import { config } from '~/src/config/index.js'
+import { sendPaymentHubRequest } from '#~/api/common/helpers/payment-hub/index.js'
+import { config } from '#~/config/index.js'
 
 // Mock all dependencies
 vi.mock('./get-agreement-data.js')
 vi.mock('./invoice/create-invoice.js')
 vi.mock('./invoice/update-invoice.js')
-vi.mock('~/src/api/common/helpers/payment-hub/index.js')
+vi.mock('#~/api/common/helpers/payment-hub/index.js')
 vi.mock('@hapi/boom')
 vi.mock('./get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
 }))
-vi.mock('~/src/config/index.js', () => {
+vi.mock('#~/config/index.js', () => {
   const store = {
     'featureFlags.isPaymentHubEnabled': false,
     'paymentHub.defaultSourceSystem': 'FPTT',

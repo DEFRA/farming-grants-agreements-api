@@ -1,9 +1,9 @@
 import { vi } from 'vitest'
 import { handleCreateAgreementEvent } from './create-agreement.js'
 import { processMessage } from '../sqs-client.js'
-import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { createOffer } from '#~/api/agreement/helpers/create-offer.js'
 
-vi.mock('~/src/api/agreement/helpers/create-offer.js')
+vi.mock('#~/api/agreement/helpers/create-offer.js')
 
 describe('SQS message processor', () => {
   let mockLogger

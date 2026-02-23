@@ -1,5 +1,5 @@
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import Boom from '@hapi/boom'
 
 /**

@@ -1,14 +1,14 @@
 import Boom from '@hapi/boom'
-import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
-import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
-import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
-import { formatPaymentDecimal } from '~/src/api/common/helpers/format-payment-decimal.js'
+import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { createInvoice } from '#~/api/agreement/helpers/invoice/create-invoice.js'
+import { updateInvoice } from '#~/api/agreement/helpers/invoice/update-invoice.js'
+import { sendPaymentHubRequest } from '#~/api/common/helpers/payment-hub/index.js'
+import { formatPaymentDecimal } from '#~/api/common/helpers/format-payment-decimal.js'
 import {
   formatPaymentDate,
   validateOptionalPaymentDate
-} from '~/src/api/common/helpers/format-payment-date.js'
-import { config } from '~/src/config/index.js'
+} from '#~/api/common/helpers/format-payment-date.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Sends a payload to the payments hub
@@ -56,7 +56,7 @@ const updatePaymentHub = async ({ server, logger }, agreementNumber) => {
   }
 }
 
-/** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
+/** @import { PaymentHubRequest } from '#~/api/common/types/payment-hub.d.js' */
 
 const buildPaymentHubRequest = (
   agreementData,

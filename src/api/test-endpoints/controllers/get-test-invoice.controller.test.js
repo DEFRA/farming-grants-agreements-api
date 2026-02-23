@@ -1,8 +1,8 @@
 import Boom from '@hapi/boom'
 import { getTestInvoiceController } from './get-test-invoice.controller.js'
-import invoicesModel from '~/src/api/common/models/invoices.js'
+import invoicesModel from '#~/api/common/models/invoices.js'
 
-vi.mock('~/src/api/common/models/invoices.js', () => ({
+vi.mock('#~/api/common/models/invoices.js', () => ({
   default: {
     findOne: vi.fn()
   }

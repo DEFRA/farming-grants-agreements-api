@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
-import models from '~/src/api/common/models/index.js'
-import sampleData from '~/src/api/common/helpers/sample-data/index.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import models from '#~/api/common/models/index.js'
+import sampleData from '#~/api/common/helpers/sample-data/index.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { handleCreateAgreementEvent } from './sqs-message-processor/create-agreement.js'
 
 async function publishSampleAgreementEvents(tableData, logger) {

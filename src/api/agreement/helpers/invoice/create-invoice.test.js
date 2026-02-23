@@ -1,12 +1,12 @@
 import { vi } from 'vitest'
 import { createInvoice, getClaimId } from './create-invoice.js'
 import { formatClaimId } from './generate-original-invoice-number.js'
-import invoicesModel from '~/src/api/common/models/invoices.js'
-import countersModel from '~/src/api/common/models/counters.js'
+import invoicesModel from '#~/api/common/models/invoices.js'
+import countersModel from '#~/api/common/models/counters.js'
 import Boom from '@hapi/boom'
 
 // Mock dependencies
-vi.mock('~/src/api/common/models/invoices.js', () => ({
+vi.mock('#~/api/common/models/invoices.js', () => ({
   __esModule: true,
   default: {
     find: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock('~/src/api/common/models/invoices.js', () => ({
     deleteOne: vi.fn()
   }
 }))
-vi.mock('~/src/api/common/models/counters.js', () => ({
+vi.mock('#~/api/common/models/counters.js', () => ({
   __esModule: true,
   default: {
     findOneAndUpdate: vi.fn()

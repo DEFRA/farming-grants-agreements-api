@@ -5,19 +5,19 @@ import crypto from 'node:crypto'
 
 import { Pact, MatchersV2 } from '@pact-foundation/pact'
 
-import { createServer } from '~/src/api/index.js'
-import { config } from '~/src/config/index.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
-import sampleData from '~/src/api/common/helpers/sample-data/index.js'
-import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
-import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
+import { createServer } from '#~/api/index.js'
+import { config } from '#~/config/index.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
+import sampleData from '#~/api/common/helpers/sample-data/index.js'
+import { withPactDir } from '#~/contracts/test-helpers/pact.js'
+import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
 
 const { like, iso8601Date, eachLike } = MatchersV2
 
 vi.unmock('mongoose')
 
-vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
 

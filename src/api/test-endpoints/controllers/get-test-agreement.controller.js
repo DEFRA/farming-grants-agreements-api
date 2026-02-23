@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
-import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 
 /**
  * GET /api/test/agreement?id={?}

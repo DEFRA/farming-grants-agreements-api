@@ -4,9 +4,9 @@ import {
   toLandGrantsPayload,
   convertParcelsToLandGrantsPayload
 } from './land-grants-adapter.js'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn()
   }
