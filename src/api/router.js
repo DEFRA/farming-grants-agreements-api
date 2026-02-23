@@ -1,7 +1,7 @@
-import { health } from '~/src/api/health/index.js'
-import { agreement } from '~/src/api/agreement/index.js'
-import { config } from '~/src/config/index.js'
-import { testEndpoints } from '~/src/api/test-endpoints/index.js'
+import { health } from '#~/api/health/index.js'
+import { agreement } from '#~/api/agreement/index.js'
+import { config } from '#~/config/index.js'
+import { testEndpoints } from '#~/api/test-endpoints/index.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }

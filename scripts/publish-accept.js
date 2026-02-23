@@ -1,6 +1,6 @@
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
-import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
+import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 
 const logger = createLogger()
 

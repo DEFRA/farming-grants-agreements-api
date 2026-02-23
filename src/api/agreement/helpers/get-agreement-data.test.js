@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 import Boom from '@hapi/boom'
-import versionsModel from '~/src/api/common/models/versions.js'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import versionsModel from '#~/api/common/models/versions.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
 import {
   doesAgreementExist,
   getAgreementDataById,
@@ -9,8 +9,8 @@ import {
 } from './get-agreement-data.js'
 
 vi.mock('@hapi/boom')
-vi.mock('~/src/api/common/models/versions.js')
-vi.mock('~/src/api/common/models/agreements.js')
+vi.mock('#~/api/common/models/versions.js')
+vi.mock('#~/api/common/models/agreements.js')
 
 describe('getAgreementDataById', () => {
   const mockAgreement = {

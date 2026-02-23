@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { config } from '~/src/config/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { config } from '#~/config/index.js'
 
 // use the manual mock in src/api/health/__mocks__/mongoose.js
 vi.mock('mongoose', async () => await import('./__mocks__/mongoose.js'))
@@ -17,7 +17,7 @@ describe('#healthController', () => {
     config.set('serviceVersion', 'versionMock')
 
     // import createServer after mongoose is mocked so controller picks up the mock
-    const { createServer } = await import('~/src/api/index.js')
+    const { createServer } = await import('#~/api/index.js')
 
     server = await createServer({
       disableSQS: true

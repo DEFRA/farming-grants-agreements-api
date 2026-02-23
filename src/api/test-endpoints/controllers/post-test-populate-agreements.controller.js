@@ -1,12 +1,12 @@
 import Boom from '@hapi/boom'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 import {
   populateAgreements,
   DEFAULT_TARGET_COUNT,
   DEFAULT_BATCH_SIZE,
   DEFAULT_CONCURRENCY,
   MAX_CONCURRENCY
-} from '~/src/api/test-endpoints/helpers/populate-agreements.js'
+} from '#~/api/test-endpoints/helpers/populate-agreements.js'
 
 const MAX_TARGET_COUNT = 100000
 const MAX_BATCH_SIZE = 1000

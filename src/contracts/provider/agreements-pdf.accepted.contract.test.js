@@ -3,27 +3,27 @@ import path from 'node:path'
 
 import { MessageProviderPact } from '@pact-foundation/pact'
 
-import { createServer } from '~/src/api/index.js'
-import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
-import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { publishEvent as mockPublishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { getJsonPacts } from '~/src/contracts/test-helpers/pact.js'
+import { createServer } from '#~/api/index.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
+import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
+import { getAgreementDataBySbi } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 
-vi.mock('~/src/api/agreement/helpers/accept-offer.js')
-vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
-vi.mock('~/src/api/agreement/helpers/update-payment-hub.js')
+vi.mock('#~/api/agreement/helpers/accept-offer.js')
+vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
+vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
 vi.mock(
-  '~/src/api/agreement/helpers/get-agreement-data.js',
+  '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
     return { __esModule: true, ...actual, getAgreementDataBySbi: vi.fn() }
   }
 )
-vi.mock('~/src/api/common/helpers/jwt-auth.js')
-vi.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('#~/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/common/helpers/sns-publisher.js')
 
 const localPactDir = path.resolve(
   process.cwd(),

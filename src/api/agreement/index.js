@@ -64,5 +64,5 @@ export { agreement }
  * @import { ServerRegisterPluginObject } from '@hapi/hapi'
  */
 /**
- * @import { Agreement } from '~/src/api/common/types/agreement.d.js'
+ * @import { Agreement } from '#~/api/common/types/agreement.d.js'
  */

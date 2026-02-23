@@ -1,4 +1,4 @@
-import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { createOffer } from '#~/api/agreement/helpers/create-offer.js'
 
 /**
  * Handle an event from the SQS queue

@@ -1,13 +1,13 @@
 import { vi } from 'vitest'
 import { ProxyAgent } from 'undici'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 import { fetchWithTimeout, proxyFetch } from './fetch.js'
 
 vi.mock('undici', () => ({
   ProxyAgent: vi.fn()
 }))
 
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn()
   }

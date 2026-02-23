@@ -1,7 +1,7 @@
 import { SQSClient } from '@aws-sdk/client-sqs'
 import Boom from '@hapi/boom'
 import { Consumer } from 'sqs-consumer'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Process a message from the SQS queue
@@ -109,6 +109,6 @@ export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
 })
 
 /**
- * @import { Agreement } from '~/src/api/common/types/agreement.d.js'
+ * @import { Agreement } from '#~/api/common/types/agreement.d.js'
  * @import { Message } from '@aws-sdk/client-sqs'
  */

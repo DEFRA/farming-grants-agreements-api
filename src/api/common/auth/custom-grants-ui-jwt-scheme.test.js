@@ -7,11 +7,11 @@ const mockValidateJwtAuthentication = vi.fn()
 const mockGetAgreementDataById = vi.fn()
 const mockGetAgreementDataBySbi = vi.fn()
 
-vi.mock('~/src/api/common/helpers/jwt-auth.js', () => ({
+vi.mock('#~/api/common/helpers/jwt-auth.js', () => ({
   validateJwtAuthentication: (...args) => mockValidateJwtAuthentication(...args)
 }))
 
-vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: (...args) => mockGetAgreementDataById(...args),
   getAgreementDataBySbi: (...args) => mockGetAgreementDataBySbi(...args)
 }))

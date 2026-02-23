@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
-import versionsModel from '~/src/api/common/models/versions.js'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import versionsModel from '#~/api/common/models/versions.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
 
 /**
  * Search for an agreement
@@ -121,4 +121,4 @@ const getAgreementDataBySbi = async (sbi) => {
 
 export { getAgreementDataById, doesAgreementExist, getAgreementDataBySbi }
 
-/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Agreement } from '#~/api/common/types/agreement.d.js' */

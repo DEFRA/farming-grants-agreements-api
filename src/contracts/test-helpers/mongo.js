@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
 const SUFFIX_SANITISER = /[^a-z0-9]+/gi
 

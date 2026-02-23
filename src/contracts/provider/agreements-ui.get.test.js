@@ -4,23 +4,23 @@ import path from 'node:path'
 
 import { Verifier } from '@pact-foundation/pact'
 
-import { createServer } from '~/src/api/index.js'
-import { config } from '~/src/config/index.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
-import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
-import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
-import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { getJsonPacts } from '~/src/contracts/test-helpers/pact.js'
-import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
+import { createServer } from '#~/api/index.js'
+import { config } from '#~/config/index.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
+import agreements from '#~/api/common/helpers/sample-data/agreements.js'
+import { fetchWithTimeout } from '#~/api/common/helpers/fetch.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
+import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
+import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
 
 vi.unmock('mongoose')
 
-vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
 
-vi.mock('~/src/api/common/helpers/fetch.js', () => ({
+vi.mock('#~/api/common/helpers/fetch.js', () => ({
   fetchWithTimeout: vi.fn()
 }))
 

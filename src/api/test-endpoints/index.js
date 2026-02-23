@@ -4,7 +4,7 @@ import {
   postTestUnacceptOfferController,
   postTestPopulateAgreementsController,
   getTestInvoiceController
-} from '~/src/api/test-endpoints/controllers/index.js'
+} from '#~/api/test-endpoints/controllers/index.js'
 import Boom from '@hapi/boom'
 
 /**

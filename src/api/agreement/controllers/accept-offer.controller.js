@@ -1,9 +1,9 @@
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
-import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import { config } from '~/src/config/index.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
+import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
+import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
+import { config } from '#~/config/index.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 
 /**
  * Controller to accept agreement offer

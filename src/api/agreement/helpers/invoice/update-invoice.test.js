@@ -1,11 +1,11 @@
 import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 import { updateInvoice } from './update-invoice.js'
-import invoicesModel from '~/src/api/common/models/invoices.js'
+import invoicesModel from '#~/api/common/models/invoices.js'
 
 // Mock dependencies
 vi.mock('@hapi/boom')
-vi.mock('~/src/api/common/models/invoices.js')
+vi.mock('#~/api/common/models/invoices.js')
 
 describe('updateInvoice', () => {
   beforeEach(() => {

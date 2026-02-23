@@ -1,6 +1,6 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { config } from '~/src/config/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { config } from '#~/config/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 
 const s3Client = new S3Client(
   process.env.NODE_ENV === 'development'

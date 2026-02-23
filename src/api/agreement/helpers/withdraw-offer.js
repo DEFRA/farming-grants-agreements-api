@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
 
 /**
  * Withdraws an offer

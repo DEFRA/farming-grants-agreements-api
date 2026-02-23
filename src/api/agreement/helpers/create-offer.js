@@ -2,12 +2,12 @@ import crypto from 'node:crypto'
 import { v4 as uuidv4 } from 'uuid'
 import Boom from '@hapi/boom'
 
-import agreementsModel from '~/src/api/common/models/agreements.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { config } from '~/src/config/index.js'
-import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { config } from '#~/config/index.js'
+import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
-import { generateClaimId } from '~/src/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import { generateClaimId } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 
 export const generateAgreementNumber = async () => {
   const minRandomNumber = 100000000
@@ -104,7 +104,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
 
 export { createOffer }
 
-/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Agreement } from '#~/api/common/types/agreement.d.js' */
 /** @import { Request } from '@hapi/hapi' */
 
 async function ensureAgreementDataIsValid(

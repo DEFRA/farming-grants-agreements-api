@@ -1,8 +1,8 @@
 import Boom from '@hapi/boom'
 import { getTestAgreementController } from './get-test-agreement.controller.js'
-import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 
-vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
 }))
 

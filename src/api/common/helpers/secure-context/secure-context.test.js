@@ -1,9 +1,9 @@
 import { vi } from 'vitest'
 
 import hapi from '@hapi/hapi'
-import { secureContext } from '~/src/api/common/helpers/secure-context/index.js'
-import { requestLogger } from '~/src/api/common/helpers/logging/request-logger.js'
-import { config } from '~/src/config/index.js'
+import { secureContext } from '#~/api/common/helpers/secure-context/index.js'
+import { requestLogger } from '#~/api/common/helpers/logging/request-logger.js'
+import { config } from '#~/config/index.js'
 
 // define mock helpers before mocking modules so factories can reference them
 const mockAddCACert = vi.fn()
@@ -41,7 +41,7 @@ vi.mock('node:tls', async (importOriginal) => {
 // Prevent the plugin from iterating trust store certs (which triggers addCACert)
 // during registration — we'll simulate addCACert calls after registration.
 vi.mock(
-  '~/src/api/common/helpers/secure-context/get-trust-store-certs.js',
+  '#~/api/common/helpers/secure-context/get-trust-store-certs.js',
   () => ({
     getTrustStoreCerts: () => []
   })

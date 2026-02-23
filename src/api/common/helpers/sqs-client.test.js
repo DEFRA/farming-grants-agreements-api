@@ -4,7 +4,7 @@ import { SQSClient } from '@aws-sdk/client-sqs'
 import { Consumer } from 'sqs-consumer'
 import { createSqsClientPlugin } from './sqs-client.js'
 import { handleCreateAgreementEvent } from './sqs-message-processor/create-agreement.js'
-import { createOffer } from '~/src/api/agreement/helpers/create-offer.js'
+import { createOffer } from '#~/api/agreement/helpers/create-offer.js'
 
 // Mock AWS SDK credential provider
 vi.mock('@aws-sdk/credential-provider-node', () => ({
@@ -22,9 +22,9 @@ vi.mock('sqs-consumer', () => ({
   }
 }))
 
-vi.mock('~/src/api/agreement/helpers/create-offer.js')
+vi.mock('#~/api/agreement/helpers/create-offer.js')
 vi.mock('@aws-sdk/client-sqs')
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
       switch (key) {

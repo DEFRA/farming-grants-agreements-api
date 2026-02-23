@@ -1,4 +1,4 @@
-import countersModel from '~/src/api/common/models/counters.js'
+import countersModel from '#~/api/common/models/counters.js'
 
 const CLAIM_ID_COUNTER = 'claimIds'
 

@@ -1,8 +1,8 @@
 // Mock AWS SQS with proper constructor BEFORE importing module under test
 import Boom from '@hapi/boom'
 import { postTestQueueMessageController } from './post-test-queue-message.controller.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { getAgreementData } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 import { __mockSend as sendMock } from '@aws-sdk/client-sqs'
 
 vi.mock('@aws-sdk/client-sqs', () => {
@@ -21,7 +21,7 @@ vi.mock('@aws-sdk/client-sqs', () => {
 })
 
 // Mock config BEFORE importing module under test
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
       if (key === 'aws.region') return 'eu-west-2'
@@ -34,7 +34,7 @@ vi.mock('~/src/config/index.js', () => ({
 }))
 
 // Mock agreement helper and backoff behavior
-vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementData: vi.fn()
 }))
 
