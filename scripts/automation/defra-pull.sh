@@ -14,6 +14,7 @@ repos=(
   "farming-grants-agreements-pdf"
   "farming-grants-agreements-api"
   "farming-grants-agreements-ui"
+  "grants-payment-service"
 )
 
 # Colors for output
