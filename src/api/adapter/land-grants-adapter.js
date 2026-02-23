@@ -1,5 +1,5 @@
-import { config } from '~/src/config/index.js'
-import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
+import { config } from '#~/config/index.js'
+import { fetchWithTimeout } from '#~/api/common/helpers/fetch.js'
 
 const coerceNumber = (raw) => {
   if (raw == null) {

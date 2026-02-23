@@ -1,10 +1,10 @@
 import Boom from '@hapi/boom'
 import hapi from '@hapi/hapi'
-import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
-import { testEndpoints } from '~/src/api/test-endpoints/index.js'
+import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
+import { testEndpoints } from '#~/api/test-endpoints/index.js'
 
 // Mock config
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   get: vi.fn().mockImplementation((key) => {
     if (key === 'featureFlags.testEndpoints') return true
     if (key === 'port') return 0
@@ -12,9 +12,9 @@ vi.mock('~/src/config/index.js', () => ({
   })
 }))
 
-vi.mock('~/src/api/common/helpers/sqs-client.js')
-vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
-vi.mock('~/src/api/agreement/helpers/update-payment-hub.js')
+vi.mock('#~/api/common/helpers/sqs-client.js')
+vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
+vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
 
 describe('unacceptOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */

@@ -1,10 +1,10 @@
 import Boom from '@hapi/boom'
-import invoicesModel from '~/src/api/common/models/invoices.js'
+import invoicesModel from '#~/api/common/models/invoices.js'
 import {
   formatClaimId,
   generateInvoiceNumber
-} from '~/src/api/agreement/helpers/invoice/generate-original-invoice-number.js'
-import countersModel from '~/src/api/common/models/counters.js'
+} from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import countersModel from '#~/api/common/models/counters.js'
 
 const CLAIM_ID_COUNTER = 'claimIds'
 
@@ -88,5 +88,5 @@ async function createInvoice(agreementId, agreementData) {
 
 export { createInvoice, getClaimId }
 
-/** @import { Invoice } from '~/src/api/common/types/invoice.d.js' */
-/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Invoice } from '#~/api/common/types/invoice.d.js' */
+/** @import { Agreement } from '#~/api/common/types/agreement.d.js' */

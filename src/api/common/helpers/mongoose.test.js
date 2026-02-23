@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import mongoose from 'mongoose'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
 import { mongooseDb } from './mongoose.js'
 
@@ -14,7 +14,7 @@ vi.mock('mongoose', () => ({
   }
 }))
 
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn()
   }
@@ -24,15 +24,15 @@ vi.mock('./seed-database.js', () => ({
   seedDatabase: vi.fn().mockResolvedValue(undefined)
 }))
 
-vi.mock('~/src/api/common/models/agreements.js', () => ({
+vi.mock('#~/api/common/models/agreements.js', () => ({
   __esModule: true,
   default: {}
 }))
-vi.mock('~/src/api/common/models/versions.js', () => ({
+vi.mock('#~/api/common/models/versions.js', () => ({
   __esModule: true,
   default: {}
 }))
-vi.mock('~/src/api/common/models/index.js', () => ({
+vi.mock('#~/api/common/models/index.js', () => ({
   __esModule: true,
   default: {}
 }))

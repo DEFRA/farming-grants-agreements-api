@@ -4,10 +4,10 @@ import {
   verifyJwtPayload
 } from './jwt-auth.js'
 import Jwt from '@hapi/jwt'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
 vi.mock('@hapi/jwt')
-vi.mock('~/src/config/index.js')
+vi.mock('#~/config/index.js')
 
 describe('jwt-auth', () => {
   const mockLogger = {

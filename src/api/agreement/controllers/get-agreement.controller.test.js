@@ -1,22 +1,22 @@
 import Boom from '@hapi/boom'
 
-import { createServer } from '~/src/api/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { createServer } from '#~/api/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import * as agreementDataHelper from '#~/api/agreement/helpers/get-agreement-data.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 
 // Mock the modules
-vi.mock('~/src/api/common/helpers/sqs-client.js')
+vi.mock('#~/api/common/helpers/sqs-client.js')
 vi.mock(
-  '~/src/api/agreement/helpers/get-agreement-data.js',
+  '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
     return { __esModule: true, ...actual, getAgreementDataById: vi.fn() }
   }
 )
-vi.mock('~/src/api/common/helpers/jwt-auth.js')
-vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+vi.mock('#~/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
 
@@ -508,16 +508,16 @@ describe('getAgreementController', () => {
 })
 
 // Mock the modules
-vi.mock('~/src/api/common/helpers/sqs-client.js')
+vi.mock('#~/api/common/helpers/sqs-client.js')
 vi.mock(
-  '~/src/api/agreement/helpers/get-agreement-data.js',
+  '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
     return { __esModule: true, ...actual, getAgreementDataById: vi.fn() }
   }
 )
-vi.mock('~/src/api/common/helpers/jwt-auth.js')
-vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+vi.mock('#~/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
 
@@ -1009,5 +1009,5 @@ describe('getAgreementController', () => {
 })
 
 /**
- * @typedef {import('~/src/api/common/types/agreement.d.js').Agreement} Agreement
+ * @typedef {import('#~/api/common/types/agreement.d.js').Agreement} Agreement
  */

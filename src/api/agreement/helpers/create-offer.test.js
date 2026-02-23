@@ -1,18 +1,18 @@
 import { vi } from 'vitest'
 import { v4 as uuidv4 } from 'uuid'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
 import mongoose from 'mongoose'
 import Boom from '@hapi/boom'
 import { createOffer, generateAgreementNumber } from './create-offer.js'
-import versionsModel from '~/src/api/common/models/versions.js'
-import agreementsModel from '~/src/api/common/models/agreements.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import versionsModel from '#~/api/common/models/versions.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 
 vi.mock('@hapi/boom')
-vi.mock('~/src/api/common/models/versions.js')
-vi.mock('~/src/api/common/models/agreements.js', () => {
+vi.mock('#~/api/common/models/versions.js')
+vi.mock('#~/api/common/models/agreements.js', () => {
   let populatedAgreement = null
 
   const api = {
@@ -33,16 +33,16 @@ vi.mock('~/src/api/common/models/agreements.js', () => {
 
   return { __esModule: true, default: api }
 })
-vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
-vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   doesAgreementExist: vi.fn().mockResolvedValue(false),
   // Added explicit mock for getAgreementDataById to satisfy tests that import this module
   getAgreementDataById: vi.fn().mockResolvedValue({})
 }))
 vi.mock(
-  '~/src/api/agreement/helpers/invoice/generate-original-invoice-number.js',
+  '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js',
   () => ({
     generateClaimId: vi.fn().mockResolvedValue('R00000001'),
     generateInvoiceNumber: vi
@@ -456,7 +456,7 @@ describe('createOffer', () => {
 
   it('should generate an agreement number when seedDb is true but agreementNumber is empty', async () => {
     // Enable DB seeding and provide an empty agreementNumber
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', true)
 
@@ -479,7 +479,7 @@ describe('createOffer', () => {
   })
 
   it('uses provided agreementNumber when seedDb is true and agreementNumber is present', async () => {
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', true)
 
@@ -509,7 +509,7 @@ describe('createOffer', () => {
   })
 
   it('ignores provided agreementNumber when seedDb is false (uses generated)', async () => {
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', false)
 
@@ -527,7 +527,7 @@ describe('createOffer', () => {
   })
 
   it('generates an agreement number when seedDb is false and agreementNumber is empty', async () => {
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', false)
 

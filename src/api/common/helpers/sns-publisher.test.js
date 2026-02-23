@@ -1,11 +1,11 @@
 import { publishEvent } from './sns-publisher.js'
 import { PublishCommand } from '@aws-sdk/client-sns'
 import { v4 as uuidv4 } from 'uuid'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
 vi.mock('@aws-sdk/client-sns')
 vi.mock('uuid')
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: { get: vi.fn() }
 }))
 

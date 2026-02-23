@@ -1,7 +1,7 @@
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
-import { config } from '~/src/config/index.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
+import { config } from '#~/config/index.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 
 /**
  * Accept an agreement offer
@@ -66,5 +66,5 @@ async function acceptOffer(agreementNumber, agreementData, logger) {
 
 export { acceptOffer }
 
-/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Agreement } from '#~/api/common/types/agreement.d.js' */
 /** @import { Request } from '@hapi/hapi' */

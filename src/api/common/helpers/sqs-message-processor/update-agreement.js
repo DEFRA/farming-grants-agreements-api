@@ -1,6 +1,6 @@
-import { withdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
+import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { publishEvent } from '../sns-publisher.js'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Handle an event from the SQS queue

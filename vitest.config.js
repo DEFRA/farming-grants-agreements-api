@@ -27,10 +27,5 @@ export default defineConfig({
     },
     setupFiles: ['./.vitest/setup.js'],
     globalSetup: './.vitest/global-setup.js'
-  },
-  resolve: {
-    alias: {
-      '~/src': new URL('./src', import.meta.url).pathname
-    }
   }
 })

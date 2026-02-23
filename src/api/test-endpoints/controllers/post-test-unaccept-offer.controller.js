@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 
 /**
  * Controller to change the status of an agreement document back to offered
