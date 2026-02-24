@@ -11,8 +11,6 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "npm run build:server",
-    "build:server": "NODE_ENV=production babel --delete-dir-on-start --ignore \"**/*.test.js\" --ignore \"**/__fixtures__\" --ignore \"**/test-helpers\" --copy-files --no-copy-ignored --out-dir ./.server ./src",
     "docker:dev": "NODE_ENV=development npm run server:watch",
     "dev": "npm run server:watch",
     "dev:debug": "npm run server:debug",
@@ -33,7 +31,6 @@
     "test:contracts:provider": "vitest run src/contracts/provider",
     "server:watch": "nodemon --exec tsx --enable-source-maps ./src",
     "server:debug": "nodemon --exec tsx --enable-source-maps --inspect ./src",
-    "prestart": "npm run build",
     "start": "NODE_ENV=production node --use-strict .",
     "setup:husky": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module",
     "publish:accept": "tsx ./scripts/publish-accept.js"
