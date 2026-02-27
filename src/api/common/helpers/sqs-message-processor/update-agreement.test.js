@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 import { handleUpdateAgreementEvent } from './update-agreement.js'
+import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
 import { processMessage } from '../sqs-client.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
@@ -7,6 +8,22 @@ import { config } from '#~/config/index.js'
 
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
+
+describe('AGREEMENT_STATUS', () => {
+  it('should define all expected status values', () => {
+    expect(AGREEMENT_STATUS).toMatchObject({
+      WITHDRAWN: 'withdrawn',
+      ACCEPTED: 'accepted',
+      TERMINATED: 'terminated',
+      CANCELLED: 'cancelled',
+      OFFERED: 'offered'
+    })
+  })
+
+  it('should be frozen', () => {
+    expect(Object.isFrozen(AGREEMENT_STATUS)).toBe(true)
+  })
+})
 
 describe('SQS message processor', () => {
   const mockUpdatedAt = '2025-01-01T00:00:00.000Z'
@@ -116,7 +133,9 @@ describe('SQS message processor', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Received application withdrawn from event')
+        expect.stringContaining(
+          'Received application status update (withdrawn) from event'
+        )
       )
       expect(withdrawOffer).toHaveBeenCalledWith(
         'client-ref-001',
