@@ -4,6 +4,10 @@ import { defineConfig } from 'vitest/config'
  * @type {import('vitest/config').UserConfig}
  */
 export default defineConfig({
+  resolve: {
+    // Mirror Node ESM: import file extensions must be fully specified (e.g. "x.js")
+    extensions: []
+  },
   test: {
     globals: true,
     environment: 'node',
