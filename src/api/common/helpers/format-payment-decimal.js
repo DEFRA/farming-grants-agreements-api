@@ -2,7 +2,7 @@ const MAX_PENCE_VALUE = 99999999999999
 const PENCE_PER_UNIT = 100
 
 /**
- * Convert an integer pence value into a negative decimal currency value.
+ * Convert an integer pence value into a decimal currency value.
  * @param {number} valueInPence
  * @returns {number}
  */
@@ -21,8 +21,7 @@ const formatPaymentDecimal = (valueInPence) => {
     )
   }
 
-  const valueInPounds = Number((valueInPence / PENCE_PER_UNIT).toFixed(2))
-  return valueInPounds === 0 ? 0 : -valueInPounds
+  return Number((valueInPence / PENCE_PER_UNIT).toFixed(2))
 }
 
 export { formatPaymentDecimal }

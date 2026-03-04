@@ -95,9 +95,8 @@ const buildPaymentHubRequest = (
       'Farm Payments Technical Test Payment'
     ),
     originalSettlementDate,
-    annualValue: formatPaymentDecimal(
-      agreementData.payment.agreementTotalPence
-    ),
+    annualValue:
+      -formatPaymentDecimal(agreementData.payment.agreementTotalPence) || 0,
     currency: agreementData.payment.currency || 'GBP',
     ledger: config.get('paymentHub.defaultLedger'),
     deliveryBody: config.get('paymentHub.defaultDeliveryBody'),

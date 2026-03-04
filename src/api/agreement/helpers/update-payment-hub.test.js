@@ -147,7 +147,7 @@ describe('updatePaymentHub', () => {
           invoiceLines: [
             [
               {
-                value: -2000,
+                value: 2000,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
                 accountCode: 'SOS710',
@@ -158,7 +158,7 @@ describe('updatePaymentHub', () => {
                 schemeCode: 'ACT001'
               },
               {
-                value: -3000,
+                value: 3000,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
                 accountCode: 'SOS710',
@@ -230,7 +230,7 @@ describe('updatePaymentHub', () => {
         invoiceLines: [
           [
             {
-              value: -2000,
+              value: 2000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               accountCode: 'SOS710',
@@ -241,7 +241,7 @@ describe('updatePaymentHub', () => {
               schemeCode: 'ACT001'
             },
             {
-              value: -3000,
+              value: 3000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               accountCode: 'SOS710',
@@ -426,7 +426,7 @@ describe('updatePaymentHub', () => {
           invoiceLines: [
             [
               {
-                value: -123.45,
+                value: 123.45,
                 agreementNumber: 'FPTT123456789',
                 deliveryBody: 'RP00',
                 accountCode: 'SOS710',
@@ -470,7 +470,7 @@ describe('updatePaymentHub', () => {
         invoiceLines: [
           [
             {
-              value: -2000,
+              value: 2000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               accountCode: 'SOS710',
@@ -481,7 +481,7 @@ describe('updatePaymentHub', () => {
               schemeCode: 'ACT001'
             },
             {
-              value: -3000,
+              value: 3000,
               agreementNumber: 'FPTT123456789',
               deliveryBody: 'RP00',
               accountCode: 'SOS710',
