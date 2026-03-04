@@ -296,6 +296,12 @@ const config = convict({
       format: String,
       default: '',
       env: 'LAND_GRANTS_TOKEN'
+    },
+    calculationUri: {
+      doc: 'URI path for the grants payment calculation endpoint',
+      format: String,
+      default: '/api/v2/payments/calculate',
+      env: 'LAND_GRANTS_CALCULATION_URI'
     }
   },
   paymentHub: {

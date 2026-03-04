@@ -275,7 +275,9 @@ beforeEach(() => {
     if (key === 'landGrants.token') {
       return 'config-token'
     }
-
+    if (key === 'landGrants.calculationUri') {
+      return '/api/v2/payments/calculate'
+    }
     if (key === 'fetchTimeout') {
       return 30000
     }
@@ -312,7 +314,7 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1)
     const [url, request] = global.fetch.mock.calls[0]
     expect(url.toString()).toBe(
-      'https://land-grants.example/payments/calculate'
+      'https://land-grants.example/api/v2/payments/calculate'
     )
     expect(request.headers.Authorization).toBe('Bearer config-token')
     expect(request.headers['Content-Type']).toBe('application/json')

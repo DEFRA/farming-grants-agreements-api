@@ -67,7 +67,8 @@ const postPaymentCalculation = async (body, options = {}) => {
   const { headers: extraHeaders = {} } = options
 
   const landGrantsBaseUrl = config.get('landGrants.uri')
-  const url = new URL('/payments/calculate', landGrantsBaseUrl)
+  const calculationUri = config.get('landGrants.calculationUri')
+  const url = new URL(calculationUri, landGrantsBaseUrl)
 
   const res = await fetchWithTimeout(url, {
     method: 'POST',
