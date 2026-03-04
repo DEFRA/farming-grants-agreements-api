@@ -18,6 +18,8 @@ const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 const STRICT_BOOLEAN_FORMAT = 'strict-boolean'
 const LOCALSTACK_ENDPOINT = 'http://localhost:4566'
+const FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME =
+  'farming-grants-agreements-api'
 
 convict.addFormat({
   name: STRICT_BOOLEAN_FORMAT,
@@ -64,7 +66,7 @@ const config = convict({
   serviceName: {
     doc: 'Api Service Name',
     format: String,
-    default: 'farming-grants-agreements-api'
+    default: FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME
   },
   serviceTitle: {
     doc: 'Service Title',
@@ -183,6 +185,20 @@ const config = convict({
             default: 'io.onsite.agreement.status.updated',
             env: 'SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED'
           }
+        },
+        createPayment: {
+          arn: {
+            doc: 'AWS SNS Topic ARN for create payment events',
+            format: String,
+            default: 'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo',
+            env: 'SNS_TOPIC_ARN_CREATE_PAYMENT'
+          },
+          type: {
+            doc: 'AWS SNS Topic type for create payment events',
+            format: String,
+            default: 'io.onsite.agreement.create-payment',
+            env: 'SNS_TOPIC_TYPE_CREATE_PAYMENT'
+          }
         }
       }
     }
@@ -205,6 +221,13 @@ const config = convict({
       format: String,
       default: 'http://localhost:4566/000000000000/update_agreement_fifo.fifo',
       env: 'SQS_GAS_APPLICATION_STATUS_UPDATED_QUEUE_URL'
+    },
+    grantPaymentsQueueUrl: {
+      doc: 'Grants Payments Service Create Payment Queue URL',
+      format: String,
+      default:
+        'http://localhost:4566/000000000000/gps__sqs__create_payment.fifo',
+      env: 'SQS_GRANT_PAYMENTS_CREATE_PAYMENT_QUEUE_URL'
     },
     interval: {
       doc: 'SQS Interval',
@@ -229,6 +252,12 @@ const config = convict({
       format: Number,
       default: 5,
       env: 'WAIT_TIME_SECONDS'
+    },
+    eventSource: {
+      doc: 'AWS SQS Cloud event source for emitted events',
+      format: String,
+      default: FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME,
+      env: 'SQS_EVENT_SOURCE'
     }
   },
   jwtSecret: {
@@ -246,7 +275,7 @@ const config = convict({
   mongoDatabase: {
     doc: 'database for mongodb',
     format: String,
-    default: 'farming-grants-agreements-api',
+    default: FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME,
     env: 'MONGO_DATABASE'
   },
   httpProxy: {
