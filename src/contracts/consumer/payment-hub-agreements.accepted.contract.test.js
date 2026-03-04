@@ -91,7 +91,7 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
     originalFetch = global.fetch
     global.fetch = vi.fn((url, options) => {
       const urlStr = String(url)
-      if (urlStr.includes('/payments/calculate')) {
+      if (urlStr.includes('/api/v2/payments/calculate')) {
         return Promise.resolve({
           ok: true,
           headers: { get: vi.fn().mockReturnValue('application/json') },

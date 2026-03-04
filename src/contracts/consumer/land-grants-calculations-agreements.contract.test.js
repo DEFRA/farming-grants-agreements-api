@@ -131,7 +131,7 @@ describe('UI sending a POST request to accept an agreement', () => {
         ]
       })
       .uponReceiving('a request from the customer to view their offer')
-      .withRequest('POST', '/payments/calculate', (builder) => {
+      .withRequest('POST', '/api/v2/payments/calculate', (builder) => {
         builder.headers({
           'Content-Type': 'application/json',
           Authorization: 'Bearer mock-token'
@@ -158,6 +158,7 @@ describe('UI sending a POST request to accept an agreement', () => {
       })
       .executeTest(async (mockServer) => {
         config.set('landGrants.uri', mockServer.url)
+        config.set('landGrants.calculationUri', '/api/v2/payments/calculate')
 
         const { statusCode, result } = await server.inject({
           method: 'GET',
