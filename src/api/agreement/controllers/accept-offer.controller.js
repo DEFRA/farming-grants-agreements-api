@@ -1,9 +1,9 @@
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
-import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 
 /**
  * Controller to accept agreement offer
@@ -24,11 +24,24 @@ const acceptOfferController = async (request, h) => {
       request.logger
     )
 
-    let claimId
+    // let claimId
     try {
-      // Update the payment hub
-      const paymentHubResult = await updatePaymentHub(request, agreementNumber)
-      claimId = paymentHubResult.claimId
+      // request.logger?.info?.(`********* Before sending CREATE_GRANT_PAYMENT`)
+
+      await publishEvent(
+        {
+          topicArn: config.get('aws.sns.topic.createPayment.arn'),
+          type: config.get('aws.sns.topic.createPayment.type'),
+          time: new Date().toISOString(),
+          data: await createGrantPaymentFromAgreement(
+            agreementNumber,
+            request.logger
+          )
+        },
+        request.logger
+      )
+
+      // request.logger?.info?.(`********* After sending CREATE_GRANT_PAYMENT`)
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
       await unacceptOffer(agreementNumber)
@@ -51,8 +64,7 @@ const acceptOfferController = async (request, h) => {
           code: agreementData?.code,
           date: agreementData.updatedAt,
           startDate: agreementData?.payment?.agreementStartDate,
-          endDate: agreementData?.payment?.agreementEndDate,
-          claimId
+          endDate: agreementData?.payment?.agreementEndDate
         }
       },
       request.logger
