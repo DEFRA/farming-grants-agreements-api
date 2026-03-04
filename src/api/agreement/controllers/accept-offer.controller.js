@@ -4,6 +4,8 @@ import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { sendMessage } from '#~/api/common/helpers/sqs-send-message.js'
+import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 
 /**
  * Controller to accept agreement offer
@@ -29,6 +31,22 @@ const acceptOfferController = async (request, h) => {
       // Update the payment hub
       const paymentHubResult = await updatePaymentHub(request, agreementNumber)
       claimId = paymentHubResult.claimId
+
+      request.logger?.info?.(`********* Before sending CREATE_GRANT_PAYMENT`)
+
+      await sendMessage(
+        {
+          queueUrl: config.get('sqs.grantPaymentsQueueUrl'),
+          type: 'CREATE_GRANT_PAYMENT',
+          data: await createGrantPaymentFromAgreement(
+            agreementNumber,
+            request.logger
+          )
+        },
+        request.logger
+      )
+
+      request.logger?.info?.(`********* After sending CREATE_GRANT_PAYMENT`)
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
       await unacceptOffer(agreementNumber)
