@@ -76,7 +76,7 @@ const Application = new mongoose.Schema({
 const AgreementLevelItems = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
-  version: { type: Number, required: true },
+  version: { type: String, required: true },
   annualPaymentPence: { type: Number, required: true }
 })
 
