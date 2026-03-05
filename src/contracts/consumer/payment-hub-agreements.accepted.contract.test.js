@@ -32,7 +32,7 @@ const calculatedPayment = {
         rateInPence: 1060,
         annualPaymentPence: 53566,
         parcelId: 'SE12 3456 7890',
-        version: 1
+        version: '1.0.0'
       }
     },
 
@@ -41,7 +41,7 @@ const calculatedPayment = {
         code: 'CMOR1',
         description: 'Agreement-level item',
         annualPaymentPence: 27200,
-        version: 1
+        version: '1.0.0'
       }
     },
 
