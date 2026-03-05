@@ -67,7 +67,7 @@ const targetDataStructure = {
       1: {
         code: 'SPM4',
         description: 'Maintain dry stone walls',
-        version: 1,
+        version: '1.0.0',
         unit: 'metres',
         quantity: 95,
         rateInPence: 2565,
@@ -81,7 +81,7 @@ const targetDataStructure = {
         code: 'CSAM1',
         description:
           'CSAM1: Assess soil, produce a soil management plan and test soil organic matter',
-        version: 1,
+        version: '1.0.0',
         annualPaymentPence: 27200
       }
     },
