@@ -37,7 +37,6 @@ export async function sendMessage({ queueUrl, type, data }, logger) {
   // let attempt = 0
   let lastError
 
-  // while (attempt < maxAttempts) {
   try {
     await sqsClient.send(
       new SendMessageCommand({
