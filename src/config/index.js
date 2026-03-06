@@ -229,6 +229,12 @@ const config = convict({
       format: Number,
       default: 5,
       env: 'WAIT_TIME_SECONDS'
+    },
+    eventSource: {
+      doc: 'AWS SQS Cloud event source for emitted events',
+      format: String,
+      default: 'farming-grants-agreements-api',
+      env: 'SQS_EVENT_SOURCE'
     }
   },
   jwtSecret: {
