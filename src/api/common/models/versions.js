@@ -25,7 +25,7 @@ const ActionApplications = new mongoose.Schema({
 const ParcelItems = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
-  version: { type: Number, required: true },
+  version: { type: String, required: true },
   unit: { type: String, required: true },
   quantity: { type: Decimal128, required: true },
   rateInPence: { type: Number, required: true },
@@ -36,7 +36,7 @@ const ParcelItems = new mongoose.Schema({
 
 const ParcelActions = new mongoose.Schema({
   code: { type: String, required: true },
-  version: { type: Number, required: true },
+  version: { type: String, required: true },
   durationYears: { type: Number, required: true },
   appliedFor: {
     type: new mongoose.Schema({
