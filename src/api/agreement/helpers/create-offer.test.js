@@ -164,6 +164,20 @@ const agreementData = {
   }
 }
 
+const sssiConsentObjects = [
+  {
+    code: 'ne-consent-required',
+    description: 'A consent is required from Natural England',
+    metadata: {
+      actionCode: 'UPL2',
+      parcelId: '9215',
+      sheetId: 'SD5649',
+      percentageOverlap: 99.99,
+      overlapAreaHectares: 764.1672
+    }
+  }
+]
+
 describe('createOffer', () => {
   let mockLogger
 
@@ -312,6 +326,65 @@ describe('createOffer', () => {
         defraId: '1234567890'
       })
     )
+  })
+
+  it('includes consentObjects when provided under answers on the inbound agreement payload', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'aws-message-id',
+      {
+        ...agreementData,
+        answers: {
+          ...agreementData.answers,
+          consentObjects: sssiConsentObjects
+        }
+      },
+      mockLogger
+    )
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].consentObjects).toEqual(sssiConsentObjects)
+  })
+
+  it('includes consentObjects when provided as an empty array under answers on the inbound agreement payload', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'aws-message-id',
+      {
+        ...agreementData,
+        answers: {
+          ...agreementData.answers,
+          consentObjects: []
+        }
+      },
+      mockLogger
+    )
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].consentObjects).toEqual([])
+  })
+
+  it('still creates an agreement when consentObjects are not provided', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('aws-message-id', agreementData, mockLogger)
+    ).resolves.toMatchObject({
+      ...targetGroupDataStructure,
+      agreementNumber: expect.any(String),
+      correlationId: expect.any(String)
+    })
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].consentObjects).toBeUndefined()
   })
 
   it('normalises applicant customer and address from answers payload', async () => {
@@ -495,8 +568,6 @@ describe('createOffer', () => {
       correlationId: 'abc-def'
     }
     populated.agreements = [{ ...targetDataStructure }]
-
-    agreementsModel.__setPopulatedAgreement(populated)
 
     agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
 
