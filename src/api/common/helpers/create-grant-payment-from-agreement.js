@@ -135,7 +135,6 @@ export const createGrantPaymentFromAgreement = async (
   agreementNumber,
   logger
 ) => {
-  logger?.info?.('********* Before getting AgreementDataById ')
   const agreementData = await getAgreementDataById(agreementNumber)
 
   const payments = createPayments(agreementData)
