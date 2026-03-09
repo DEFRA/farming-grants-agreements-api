@@ -48,7 +48,8 @@ export async function sendMessage({ queueUrl, type, data }, logger) {
         error: error.message,
         code: error.name
       },
-      `Failed to send message to SQS: ${queueUrl}`
+      `Failed to send message to SQS: ${queueUrl}.
+       The Error name: ${error.name} and Error message: ${error.message}`
     )
     throw error
   }
