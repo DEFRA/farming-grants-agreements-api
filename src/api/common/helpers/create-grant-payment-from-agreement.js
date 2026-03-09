@@ -18,7 +18,9 @@ function createPaymentInvoice(
     } = parcelItems[lineItem.parcelItemId] || {}
     description = `${agreementPayment.paymentDate}: Parcel: ${parcelId}: ${itemDescription}`
     schemeCode = code
-  } else if (lineItem.agreementLevelItemId) {
+  }
+
+  if (lineItem.agreementLevelItemId) {
     const { description: itemDescription, code } =
       agreementLevelItems[lineItem.agreementLevelItemId] || {}
     description = `${agreementPayment.paymentDate}: One-off payment per agreement per year for ${itemDescription}`
