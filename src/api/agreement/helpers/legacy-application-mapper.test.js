@@ -69,7 +69,7 @@ describe('legacy-application-mapper', () => {
     expect(payment.parcelItems['1']).toEqual({
       code: 'CMOR1',
       description: 'Assess moorland',
-      version: 1,
+      version: '1',
       unit: 'ha',
       quantity: 7.5,
       rateInPence: 1060,
@@ -81,7 +81,7 @@ describe('legacy-application-mapper', () => {
     expect(payment.agreementLevelItems['1']).toEqual({
       code: 'CMOR1',
       description: 'Assess moorland',
-      version: 1,
+      version: '1',
       annualPaymentPence: 27200
     })
 
