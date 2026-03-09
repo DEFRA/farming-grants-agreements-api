@@ -18,6 +18,8 @@ const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 const STRICT_BOOLEAN_FORMAT = 'strict-boolean'
 const LOCALSTACK_ENDPOINT = 'http://localhost:4566'
+const FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME =
+  'farming-grants-agreements-api'
 
 convict.addFormat({
   name: STRICT_BOOLEAN_FORMAT,
@@ -64,7 +66,7 @@ const config = convict({
   serviceName: {
     doc: 'Api Service Name',
     format: String,
-    default: 'farming-grants-agreements-api'
+    default: FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME
   },
   serviceTitle: {
     doc: 'Service Title',
@@ -240,7 +242,7 @@ const config = convict({
     eventSource: {
       doc: 'AWS SQS Cloud event source for emitted events',
       format: String,
-      default: 'farming-grants-agreements-api',
+      default: FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME,
       env: 'SQS_EVENT_SOURCE'
     }
   },
@@ -259,7 +261,7 @@ const config = convict({
   mongoDatabase: {
     doc: 'database for mongodb',
     format: String,
-    default: 'farming-grants-agreements-api',
+    default: FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME,
     env: 'MONGO_DATABASE'
   },
   httpProxy: {
