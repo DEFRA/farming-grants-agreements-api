@@ -191,7 +191,7 @@ const parcelsWithActions = [
     actions: [
       {
         code: 'CMOR1',
-        version: 1,
+        version: '1',
         durationYears: 3,
         appliedFor: {
           unit: 'ha',
@@ -200,7 +200,7 @@ const parcelsWithActions = [
       },
       {
         code: 'UPL3',
-        version: 1,
+        version: '1',
         durationYears: 3,
         appliedFor: {
           unit: 'ha',
@@ -219,7 +219,7 @@ const parcelsWithActions = [
     actions: [
       {
         code: 'CMOR1',
-        version: 1,
+        version: '1',
         durationYears: 3,
         appliedFor: {
           unit: 'ha',
@@ -228,7 +228,7 @@ const parcelsWithActions = [
       },
       {
         code: 'UPL1',
-        version: 1,
+        version: '1',
         durationYears: 3,
         appliedFor: {
           unit: 'ha',

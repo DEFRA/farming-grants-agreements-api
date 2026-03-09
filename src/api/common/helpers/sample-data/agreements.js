@@ -361,7 +361,7 @@ export default [
           1: {
             code: 'SPM4',
             description: 'Maintain dry stone walls',
-            version: 1,
+            version: '1',
             unit: 'metres',
             quantity: 95,
             rateInPence: 2565,
@@ -372,7 +372,7 @@ export default [
           2: {
             code: 'OFM3',
             description: assessHedgerowDescription,
-            version: 1,
+            version: '1',
             unit: 'metres',
             quantity: 207,
             rateInPence: 500,
@@ -383,7 +383,7 @@ export default [
           3: {
             code: 'CSAM1',
             description: assessSoilDescription,
-            version: 1,
+            version: '1',
             unit: 'ha',
             quantity: 0.7287,
             rateInPence: 600,
@@ -394,7 +394,7 @@ export default [
           4: {
             code: 'UPL1',
             description: manageGrasslandDescription,
-            version: 1,
+            version: '1',
             unit: 'ha',
             quantity: 0.7287,
             rateInPence: 15100,
@@ -405,7 +405,7 @@ export default [
           5: {
             code: 'UPL2',
             description: earthBanksDescription,
-            version: 1,
+            version: '1',
             unit: 'metres',
             quantity: 234,
             rateInPence: 1100,
@@ -416,7 +416,7 @@ export default [
           6: {
             code: 'SPM4',
             description: manageHedgerowDescription,
-            version: 1,
+            version: '1',
             unit: 'metres',
             quantity: 207,
             rateInPence: 1300,
@@ -427,7 +427,7 @@ export default [
           7: {
             code: 'SAM1',
             description: manageHedgerowTreesDescription,
-            version: 1,
+            version: '1',
             unit: 'metres',
             quantity: 337,
             rateInPence: 1000,
@@ -438,7 +438,7 @@ export default [
           8: {
             code: 'OFM3',
             description: 'Supplement: Haymaking (late cut)',
-            version: 1,
+            version: '1',
             unit: 'ha',
             quantity: 9.7091,
             rateInPence: 18700,
@@ -451,7 +451,7 @@ export default [
           1: {
             code: 'CSAM1',
             description: assessSoilDescription,
-            version: 1,
+            version: '1',
             annualPaymentPence: 27200
           }
         },
@@ -788,7 +788,7 @@ export default [
             actions: [
               {
                 code: 'CMOR1',
-                version: 1,
+                version: '1',
                 durationYears: 3,
                 appliedFor: {
                   unit: 'ha',
@@ -799,7 +799,7 @@ export default [
               },
               {
                 code: 'UPL3',
-                version: 1,
+                version: '1',
                 durationYears: 3,
                 appliedFor: {
                   unit: 'ha',
@@ -822,7 +822,7 @@ export default [
             actions: [
               {
                 code: 'CMOR1',
-                version: 1,
+                version: '1',
                 durationYears: 3,
                 appliedFor: {
                   unit: 'ha',
@@ -833,7 +833,7 @@ export default [
               },
               {
                 code: 'UPL1',
-                version: 1,
+                version: '1',
                 durationYears: 3,
                 appliedFor: {
                   unit: 'ha',
@@ -879,7 +879,7 @@ export default [
           1: {
             code: 'CMOR1',
             description: 'CMOR1: Assess moorland and produce a written record',
-            version: 1,
+            version: '1',
             unit: 'ha',
             quantity: 4.53411078,
             rateInPence: 1060,
@@ -892,7 +892,7 @@ export default [
           1: {
             code: 'CMOR1',
             description: 'CMOR1: Assess moorland and produce a written record',
-            version: 1,
+            version: '1',
             annualPaymentPence: 27200
           }
         },
@@ -1103,7 +1103,7 @@ export default [
             actions: [
               {
                 code: 'CMOR1',
-                version: 1,
+                version: '1',
                 durationYears: 3,
                 appliedFor: {
                   unit: 'ha',
@@ -1126,7 +1126,7 @@ export default [
             actions: [
               {
                 code: 'CMOR1',
-                version: 1,
+                version: '1',
                 durationYears: 3,
                 appliedFor: {
                   unit: 'ha',
