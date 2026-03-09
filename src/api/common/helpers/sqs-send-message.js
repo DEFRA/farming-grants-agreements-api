@@ -4,10 +4,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { getSqsClient } from './sqs-client.js'
 
 // Initialize client for LocalStack
-const sqsClient = getSqsClient({
-  awsRegion: config.get('aws.region'),
-  sqsEndpoint: config.get('sqs.endpoint')
-})
+export const getClient = () =>
+  getSqsClient({
+    awsRegion: config.get('aws.region'),
+    sqsEndpoint: config.get('sqs.endpoint')
+  })
+
+const sqsClient = getClient()
 
 /**
  * Sends a message to an SQS FIFO Queue with retries and exponential backoff.
@@ -25,10 +28,6 @@ export async function sendMessage({ queueUrl, type, data }, logger) {
     `Publishing event to SQS with data: ${JSON.stringify(messageBody, null, 2)}`
   )
 
-  // const maxAttempts = config.get('aws.sqs.maxAttempts') ?? 3
-  // let attempt = 0
-  let lastError
-
   try {
     await sqsClient.send(
       new SendMessageCommand({
@@ -43,32 +42,14 @@ export async function sendMessage({ queueUrl, type, data }, logger) {
     logger?.info?.(
       `Sent message to SQS queue: ${queueUrl} type: ${type} id: ${messageBody.id}`
     )
-    return
   } catch (error) {
-    lastError = error
-
-    // Determine if error is retryable (5xx or specific network errors)
-    // const isRetryable =
-    //   error?.$metadata?.httpStatusCode >= 500 ||
-    //   ['ThrottlingException', 'TimeoutError', 'NetworkingError'].includes(
-    //     error.name
-    //   )
-
     logger?.error?.(
       {
-        // attempt: attempt + 1,
         error: error.message,
         code: error.name
       },
       `Failed to send message to SQS: ${queueUrl}`
     )
-    // if (!isRetryable || attempt === maxAttempts - 1) break
-    // Exponential backoff
-    // const backoffMs = Math.min(1000 * 2 ** 1, 5000)
-    // await new Promise((resolve) => setTimeout(resolve, backoffMs))
-    // attempt += 1
+    throw error
   }
-  // }
-
-  throw lastError
 }
