@@ -152,7 +152,7 @@ describe('acceptOfferDocumentController', () => {
           agreementNumber: 'FPTT123456789',
           correlationId: 'test-correlation-id',
           version: 1,
-          agreementUrl: `${config.get('viewAgreementURI')}/FPTT123456789`,
+          agreementUrl: `${String(config.get('viewAgreementURI'))}/FPTT123456789`,
           clientRef: 'test-client-ref',
           status: 'accepted',
           code: 'test-code',

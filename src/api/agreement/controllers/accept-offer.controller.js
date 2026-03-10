@@ -17,7 +17,7 @@ const acceptOfferController = async (request, h) => {
 
   if (agreementData.status === 'offered') {
     // Accept the agreement
-    const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
+    const agreementUrl = `${String(config.get('viewAgreementURI'))}/${agreementNumber}`
     agreementData = await acceptOffer(
       agreementNumber,
       agreementData,
