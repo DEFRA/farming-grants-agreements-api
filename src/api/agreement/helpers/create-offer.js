@@ -156,12 +156,12 @@ function resolveAgreementFields(agreementData) {
   }
 }
 
-function resolveConsentObjects(answers = {}, consentObjects) {
+function resolveConsentObjects(answers, consentObjects) {
   if (consentObjects !== undefined) {
     return consentObjects
   }
 
-  return answers.rulesCalculations?.caveats
+  return answers?.rulesCalculations?.caveats
 }
 
 function convertFromLegacyApplicationFormat(agreementData) {
