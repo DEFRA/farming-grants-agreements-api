@@ -152,8 +152,16 @@ function resolveAgreementFields(agreementData) {
     payment: resolvedPayment,
     applicant: normaliseApplicant(resolvedApplicant, agreementData?.answers),
     application,
-    consentObjects
+    consentObjects: resolveConsentObjects(answers, consentObjects)
   }
+}
+
+function resolveConsentObjects(answers = {}, consentObjects) {
+  if (consentObjects !== undefined) {
+    return consentObjects
+  }
+
+  return answers.rulesCalculations?.caveats
 }
 
 function convertFromLegacyApplicationFormat(agreementData) {
