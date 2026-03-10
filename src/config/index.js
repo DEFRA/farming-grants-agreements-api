@@ -185,6 +185,20 @@ const config = convict({
             default: 'io.onsite.agreement.status.updated',
             env: 'SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED'
           }
+        },
+        createPayment: {
+          arn: {
+            doc: 'AWS SNS Topic ARN for create payment events',
+            format: String,
+            default: 'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo',
+            env: 'SNS_TOPIC_ARN_CREATE_PAYMENT'
+          },
+          type: {
+            doc: 'AWS SNS Topic type for create payment events',
+            format: String,
+            default: 'io.onsite.agreement.create-payment',
+            env: 'SNS_TOPIC_TYPE_CREATE_PAYMENT'
+          }
         }
       }
     }

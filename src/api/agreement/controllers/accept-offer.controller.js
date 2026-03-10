@@ -4,7 +4,6 @@ import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
-import { sendMessage } from '#~/api/common/helpers/sqs-send-message.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 
 /**
@@ -34,10 +33,11 @@ const acceptOfferController = async (request, h) => {
 
       request.logger?.info?.(`********* Before sending CREATE_GRANT_PAYMENT`)
 
-      await sendMessage(
+      await publishEvent(
         {
-          queueUrl: config.get('sqs.grantPaymentsQueueUrl'),
-          type: 'CREATE_GRANT_PAYMENT',
+          topicArn: config.get('aws.sns.topic.createPayment.arn'),
+          type: config.get('aws.sns.topic.createPayment.type'),
+          time: new Date().toISOString(),
           data: await createGrantPaymentFromAgreement(
             agreementNumber,
             request.logger
