@@ -21,7 +21,6 @@ import { calculatePaymentsBasedOnActions } from '#~/api/adapter/land-grants-adap
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
-vi.mock('#~/api/common/helpers/sqs-send-message.js')
 vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
 vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',

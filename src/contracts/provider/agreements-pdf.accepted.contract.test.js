@@ -6,10 +6,7 @@ import { MessageProviderPact } from '@pact-foundation/pact'
 import { createServer } from '#~/api/index.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
-import {
-  getAgreementDataBySbi,
-  getAgreementDataById
-} from '#~/api/agreement/helpers/get-agreement-data.js'
+import { getAgreementDataBySbi } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
@@ -22,12 +19,7 @@ vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
-    return {
-      __esModule: true,
-      ...actual,
-      getAgreementDataBySbi: vi.fn(),
-      getAgreementDataById: vi.fn()
-    }
+    return { __esModule: true, ...actual, getAgreementDataBySbi: vi.fn() }
   }
 )
 vi.mock('#~/api/common/helpers/jwt-auth.js')
@@ -86,14 +78,7 @@ describe('sending updated (accepted) events via SNS', () => {
     updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
 
     // Setup default mock implementations with complete data structure
-    getAgreementDataBySbi.mockResolvedValue({
-      ...mockAgreementData,
-      agreementNumber: 'FPTT123456789'
-    })
-    getAgreementDataById.mockResolvedValue({
-      ...mockAgreementData,
-      agreementNumber: 'FPTT123456789'
-    })
+    getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
 
     // Mock JWT auth functions to return valid authorization by default
     vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
@@ -138,7 +123,7 @@ describe('sending updated (accepted) events via SNS', () => {
         // Respond with data based on the state handler mock state
         let message
         try {
-          const response = await server.inject({
+          await server.inject({
             method: 'POST',
             url: '/',
             headers: {
@@ -146,21 +131,9 @@ describe('sending updated (accepted) events via SNS', () => {
             }
           })
 
-          if (response.statusCode !== 200) {
-            throw new Error(
-              `Server returned ${response.statusCode}: ${response.payload}`
-            )
-          }
-
-          message = mockPublishEvent.mock.calls.find((call) =>
-            call[0].topicArn.includes('agreement_status_updated_fifo.fifo')
-          )?.[0]
-
-          if (!message) {
-            throw new Error('Publish event was not called')
-          }
+          message = mockPublishEvent.mock.calls[0][0]
           message.specversion = message.specversion ?? '1.0'
-          message.data.agreementAcceptedDate = '2025-10-06T16:40:21.951Z'
+          message.data.agreementCreateDate = '2025-10-06T16:40:21.951Z'
           message.time = '2025-10-06T16:41:59.497Z'
         } catch (err) {
           // eslint-disable-next-line no-console

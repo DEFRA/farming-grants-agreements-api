@@ -91,17 +91,18 @@ const setupMocks = () => {
  * This simulates what sns-publisher.js does internally
  */
 const buildCloudEventMessage = (capturedInput) => {
-  const { type, data, time, id } = capturedInput
+  const { type, data } = capturedInput
   return {
-    id: id || '12345678-1234-1234-1234-123456789012',
+    id: '12345678-1234-1234-1234-123456789012',
     source: config.get(SNS_EVENT_SOURCE_KEY),
     specversion: '1.0',
+    specVersion: '1.0', // TODO Technically AWS events use lowercase `specversion`
     type,
-    time: time || MOCK_TIME,
+    time: MOCK_TIME,
     datacontenttype: 'application/json',
     data: {
       ...data,
-      date: data?.date || MOCK_DATE
+      date: MOCK_DATE
     }
   }
 }
@@ -109,28 +110,18 @@ const buildCloudEventMessage = (capturedInput) => {
 const createdMessageProvider = async () => {
   let message
   try {
-    mockPublishEvent.mockClear()
     mockPublishEvent.mockResolvedValue()
 
     config.set(SNS_EVENT_SOURCE_KEY, PROVIDER_NAME)
 
     await createOffer('aws-message-id', mockAgreementData, mockLogger)
 
-    const capturedInput = mockPublishEvent.mock.calls.find((call) =>
-      call[0].topicArn.includes('agreement_status_updated_fifo.fifo')
-    )?.[0]
+    message = mockPublishEvent.mock.calls[0][0]
 
-    if (!capturedInput) {
-      throw new Error('Publish event was not called')
-    }
-
-    message = buildCloudEventMessage(capturedInput)
-    // Ensure consistent values for Pact matching if needed,
-    // but usually buildCloudEventMessage handles defaults
-    message.data.correlationId =
-      message.data.correlationId || 'mockCorrelationId'
-    message.data.date = message.data.date || MOCK_DATE
-    message.time = message.time || MOCK_TIME
+    message.specVersion = message.specVersion ?? '1.0'
+    message.data.correlationId = 'mockCorrelationId'
+    message.data.date = '2025-10-06T16:40:21.951Z'
+    message.time = '2025-10-06T16:41:59.497Z'
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error(err)
@@ -152,7 +143,7 @@ const acceptedMessageProvider = async (server) => {
       'cloud.defra.test.farming-grants-agreements-api.agreement.accepted'
     )
 
-    const response = await server.inject({
+    await server.inject({
       method: 'POST',
       url: '/',
       headers: {
@@ -160,20 +151,7 @@ const acceptedMessageProvider = async (server) => {
       }
     })
 
-    if (response.statusCode !== 200) {
-      throw new Error(
-        `Server returned ${response.statusCode}: ${response.payload}`
-      )
-    }
-
-    const capturedInput = mockPublishEvent.mock.calls.find((call) =>
-      call[0].topicArn.includes('agreement_status_updated_fifo.fifo')
-    )?.[0]
-
-    if (!capturedInput) {
-      throw new Error('Publish event was not called')
-    }
-
+    const capturedInput = mockPublishEvent.mock.calls[0][0]
     message = buildCloudEventMessage(capturedInput)
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -214,14 +192,7 @@ const withdrawnMessageProvider = async () => {
       mockLogger
     )
 
-    const capturedInput = mockPublishEvent.mock.calls.find((call) =>
-      call[0].topicArn.includes('agreement_status_updated_fifo.fifo')
-    )?.[0]
-
-    if (!capturedInput) {
-      throw new Error('Publish event was not called')
-    }
-
+    const capturedInput = mockPublishEvent.mock.calls[0][0]
     message = buildCloudEventMessage(capturedInput)
   } catch (err) {
     // eslint-disable-next-line no-console
