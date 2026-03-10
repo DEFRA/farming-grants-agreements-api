@@ -29,7 +29,7 @@ export const generateAgreementNumber = async () => {
  * Create a new offer
  * @param {string} notificationMessageId - The AWS notification message ID
  * @param {Agreement} agreementData - The agreement data
- * @param {Request<ReqRefDefaults>['logger']} logger
+ * @param {Request['logger']} logger
  * @returns {Promise<Agreement>} The agreement data
  */
 const createOffer = async (notificationMessageId, agreementData, logger) => {
@@ -44,7 +44,8 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     actionApplications,
     payment,
     applicant,
-    application
+    application,
+    consentObjects
   } = resolveAgreementFields(agreementData)
 
   const agreementNumber = await determineAgreementNumber(agreementData)
@@ -66,7 +67,8 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     applicant,
     application,
     claimId,
-    originalInvoiceNumber
+    originalInvoiceNumber,
+    ...(consentObjects !== undefined ? { consentObjects } : {})
   }
 
   const agreement = await agreementsModel.createAgreementWithVersions({
@@ -121,19 +123,16 @@ async function ensureAgreementDataIsValid(
 }
 
 function resolveAgreementFields(agreementData) {
+  const { clientRef, code, identifiers, answers = {} } = agreementData
   const {
-    clientRef,
-    code,
-    identifiers,
-    answers: {
-      scheme,
-      agreementName,
-      actionApplications,
-      payment,
-      applicant,
-      application
-    } = {}
-  } = agreementData
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant,
+    application,
+    consentObjects
+  } = answers
 
   const { resolvedActions, resolvedPayment, resolvedApplicant } =
     buildLegacyAgreementContent(
@@ -152,8 +151,17 @@ function resolveAgreementFields(agreementData) {
     actionApplications: resolvedActions,
     payment: resolvedPayment,
     applicant: normaliseApplicant(resolvedApplicant, agreementData?.answers),
-    application
+    application,
+    consentObjects: resolveConsentObjects(answers, consentObjects)
   }
+}
+
+function resolveConsentObjects(answers, consentObjects) {
+  if (consentObjects !== undefined) {
+    return consentObjects
+  }
+
+  return answers?.rulesCalculations?.caveats
 }
 
 function convertFromLegacyApplicationFormat(agreementData) {
@@ -365,9 +373,7 @@ function buildBusinessAddress(business = {}) {
     return business.address
   }
 
-  const extracted = extractAddressFields(business)
-
-  return extracted
+  return extractAddressFields(business)
 }
 
 const addressKeys = [
