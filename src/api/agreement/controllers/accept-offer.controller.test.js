@@ -18,8 +18,6 @@ import * as snsPublisher from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { calculatePaymentsBasedOnActions } from '#~/api/adapter/land-grants-adapter.js'
 
-import { sendMessage } from '#~/api/common/helpers/sqs-send-message.js'
-
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
@@ -112,7 +110,6 @@ describe('acceptOfferDocumentController', () => {
     getAgreementDataById.mockReset()
     updatePaymentHub.mockReset()
     createGrantPaymentFromAgreement.mockReset()
-    sendMessage.mockReset()
 
     acceptOffer.mockResolvedValue({
       ...mockAgreementData,
@@ -125,8 +122,6 @@ describe('acceptOfferDocumentController', () => {
       sbi: '106284736',
       grants: []
     })
-    sendMessage.mockResolvedValue()
-
     // Setup default mock implementations with complete data structure
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
     getAgreementDataById.mockResolvedValue(mockAgreementData)

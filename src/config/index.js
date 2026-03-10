@@ -222,13 +222,6 @@ const config = convict({
       default: 'http://localhost:4566/000000000000/update_agreement_fifo.fifo',
       env: 'SQS_GAS_APPLICATION_STATUS_UPDATED_QUEUE_URL'
     },
-    grantPaymentsQueueUrl: {
-      doc: 'Grants Payments Service Create Payment Queue URL',
-      format: String,
-      default:
-        'http://localhost:4566/000000000000/gps__sqs__create_payment.fifo',
-      env: 'SQS_GRANT_PAYMENTS_CREATE_PAYMENT_QUEUE_URL'
-    },
     interval: {
       doc: 'SQS Interval',
       format: Number,
@@ -252,12 +245,6 @@ const config = convict({
       format: Number,
       default: 5,
       env: 'WAIT_TIME_SECONDS'
-    },
-    eventSource: {
-      doc: 'AWS SQS Cloud event source for emitted events',
-      format: String,
-      default: FARMING_GRANTS_AGREEMENTS_API_SERVICE_NAME,
-      env: 'SQS_EVENT_SOURCE'
     }
   },
   jwtSecret: {

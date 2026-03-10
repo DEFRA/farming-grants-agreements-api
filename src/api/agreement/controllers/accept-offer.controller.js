@@ -24,10 +24,7 @@ const acceptOfferController = async (request, h) => {
       request.logger
     )
 
-    // let claimId
     try {
-      // request.logger?.info?.(`********* Before sending CREATE_GRANT_PAYMENT`)
-
       await publishEvent(
         {
           topicArn: config.get('aws.sns.topic.createPayment.arn'),
@@ -40,8 +37,6 @@ const acceptOfferController = async (request, h) => {
         },
         request.logger
       )
-
-      // request.logger?.info?.(`********* After sending CREATE_GRANT_PAYMENT`)
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
       await unacceptOffer(agreementNumber)

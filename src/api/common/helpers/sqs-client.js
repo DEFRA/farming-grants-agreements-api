@@ -27,17 +27,6 @@ export const processMessage = async (callback, message, logger) => {
 }
 
 /**
- * Get SQSClient instance
- * @param { { awsRegion: string, sqsEndpoint: string } } options
- * @returns {SQSClient}
- */
-export const getSqsClient = (options) =>
-  new SQSClient({
-    region: options.awsRegion,
-    endpoint: options.sqsEndpoint
-  })
-
-/**
  * Hapi plugin for SQS message processing
  * @type {import('@hapi/hapi').Plugin<{
  *   awsRegion: string,
@@ -58,7 +47,10 @@ export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
     register: function (server, options) {
       server.logger.info(`Setting up SQS client (${tag})`)
 
-      const sqsClient = getSqsClient(options)
+      const sqsClient = new SQSClient({
+        region: options.awsRegion,
+        endpoint: options.sqsEndpoint
+      })
 
       const sqsConsumer = Consumer.create({
         queueUrl: options.queueUrl,
