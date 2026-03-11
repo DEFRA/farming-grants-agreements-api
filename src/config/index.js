@@ -1,7 +1,15 @@
-import 'dotenv/config'
+import { loadEnvFile } from 'node:process'
 import convict from 'convict'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+try {
+  loadEnvFile()
+} catch (error) {
+  if (error.code !== 'ENOENT') {
+    throw error
+  }
+}
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -166,7 +174,7 @@ const config = convict({
             doc: 'AWS SNS Topic ARN for Agreement status update events',
             format: String,
             default:
-              'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+              'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo',
             env: 'SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED'
           },
           type: {
@@ -174,6 +182,20 @@ const config = convict({
             format: String,
             default: 'io.onsite.agreement.status.updated',
             env: 'SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED'
+          }
+        },
+        createPayment: {
+          arn: {
+            doc: 'AWS SNS Topic ARN for create payment events',
+            format: String,
+            default: 'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo',
+            env: 'SNS_TOPIC_ARN_CREATE_PAYMENT'
+          },
+          type: {
+            doc: 'AWS SNS Topic type for create payment events',
+            format: String,
+            default: 'io.onsite.agreement.create-payment',
+            env: 'SNS_TOPIC_TYPE_CREATE_PAYMENT'
           }
         }
       }
@@ -189,13 +211,13 @@ const config = convict({
     queueUrl: {
       doc: 'Queue URL',
       format: String,
-      default: 'http://localhost:4566/000000000000/create_agreement',
+      default: 'http://localhost:4566/000000000000/create_agreement_fifo.fifo',
       env: 'QUEUE_URL'
     },
     gasApplicationUpdatedQueueUrl: {
       doc: 'Grants Application Service Queue URL',
       format: String,
-      default: 'http://localhost:4566/000000000000/update_agreement',
+      default: 'http://localhost:4566/000000000000/update_agreement_fifo.fifo',
       env: 'SQS_GAS_APPLICATION_STATUS_UPDATED_QUEUE_URL'
     },
     interval: {
@@ -288,6 +310,12 @@ const config = convict({
       format: String,
       default: '',
       env: 'LAND_GRANTS_TOKEN'
+    },
+    calculationUri: {
+      doc: 'URI path for the grants payment calculation endpoint',
+      format: String,
+      default: '/api/v2/payments/calculate',
+      env: 'LAND_GRANTS_CALCULATION_URI'
     }
   },
   paymentHub: {
@@ -302,6 +330,12 @@ const config = convict({
       format: String,
       default: 'AP',
       env: 'PAYMENT_HUB_DEFAULT_LEDGER'
+    },
+    defaultSchedule: {
+      doc: 'Default schedule for payment hub requests',
+      format: String,
+      default: 'T4',
+      env: 'PAYMENT_HUB_DEFAULT_SCHEDULE'
     },
     defaultDeliveryBody: {
       doc: 'Default delivery body for payment hub requests',

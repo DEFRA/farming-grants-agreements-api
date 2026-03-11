@@ -5,19 +5,19 @@ import crypto from 'node:crypto'
 
 import { Pact, MatchersV2 } from '@pact-foundation/pact'
 
-import { createServer } from '~/src/api/index.js'
-import { config } from '~/src/config/index.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
-import sampleData from '~/src/api/common/helpers/sample-data/index.js'
-import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
-import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
+import { createServer } from '#~/api/index.js'
+import { config } from '#~/config/index.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
+import sampleData from '#~/api/common/helpers/sample-data/index.js'
+import { withPactDir } from '#~/contracts/test-helpers/pact.js'
+import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
 
 const { like, iso8601Date, eachLike } = MatchersV2
 
 vi.unmock('mongoose')
 
-vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
 
@@ -97,7 +97,7 @@ describe('UI sending a POST request to accept an agreement', () => {
             annualPaymentPence: like(4806),
             parcelId: like('8083'),
             sheetId: like('SD6743'),
-            version: like(1)
+            version: like('1.0.0')
           }
         }),
 
@@ -108,7 +108,7 @@ describe('UI sending a POST request to accept an agreement', () => {
               'CMOR1: Assess moorland and produce a written record'
             ),
             annualPaymentPence: like(27200),
-            version: like(1)
+            version: like('1.0.0')
           }
         }),
 
@@ -131,7 +131,7 @@ describe('UI sending a POST request to accept an agreement', () => {
         ]
       })
       .uponReceiving('a request from the customer to view their offer')
-      .withRequest('POST', '/payments/calculate', (builder) => {
+      .withRequest('POST', '/api/v2/payments/calculate', (builder) => {
         builder.headers({
           'Content-Type': 'application/json',
           Authorization: 'Bearer mock-token'
@@ -158,6 +158,7 @@ describe('UI sending a POST request to accept an agreement', () => {
       })
       .executeTest(async (mockServer) => {
         config.set('landGrants.uri', mockServer.url)
+        config.set('landGrants.calculationUri', '/api/v2/payments/calculate')
 
         const { statusCode, result } = await server.inject({
           method: 'GET',

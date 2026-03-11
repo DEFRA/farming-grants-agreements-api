@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
-import invoicesModel from '~/src/api/common/models/invoices.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import invoicesModel from '#~/api/common/models/invoices.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 
 /**
  * GET /api/test/invoice?agreementNumber={?}
@@ -16,7 +16,10 @@ const getTestInvoiceController = {
         throw Boom.badRequest('Missing agreementNumber query parameter')
       }
 
-      const invoice = await invoicesModel.findOne({ agreementNumber }).lean()
+      const invoice = await invoicesModel
+        .findOne({ agreementNumber })
+        .sort({ createdAt: -1 })
+        .lean()
 
       if (!invoice) {
         throw Boom.notFound(

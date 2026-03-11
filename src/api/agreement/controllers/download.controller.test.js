@@ -1,17 +1,17 @@
 import { vi } from 'vitest'
-import { createServer } from '~/src/api/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
+import { createServer } from '#~/api/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import * as agreementDataHelper from '#~/api/agreement/helpers/get-agreement-data.js'
 import { mockClient } from 'aws-sdk-client-mock'
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 import { addYears } from 'date-fns'
 
-vi.mock('~/src/api/common/helpers/sqs-client.js')
-vi.mock('~/src/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/common/helpers/sqs-client.js')
+vi.mock('#~/api/common/helpers/jwt-auth.js')
 vi.mock(
-  '~/src/api/agreement/helpers/get-agreement-data.js',
+  '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
     return { __esModule: true, ...actual, getAgreementDataById: vi.fn() }

@@ -1,27 +1,32 @@
 import { vi } from 'vitest'
 
 import Boom from '@hapi/boom'
-import { updatePaymentHub } from './update-payment-hub.js'
+import {
+  updatePaymentHub,
+  validateDebtType,
+  validateRemittanceDescription
+} from './update-payment-hub.js'
 import { getAgreementDataById } from './get-agreement-data.js'
 import { createInvoice } from './invoice/create-invoice.js'
 import { updateInvoice } from './invoice/update-invoice.js'
-import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
-import { config } from '~/src/config/index.js'
+import { sendPaymentHubRequest } from '#~/api/common/helpers/payment-hub/index.js'
+import { config } from '#~/config/index.js'
 
 // Mock all dependencies
 vi.mock('./get-agreement-data.js')
 vi.mock('./invoice/create-invoice.js')
 vi.mock('./invoice/update-invoice.js')
-vi.mock('~/src/api/common/helpers/payment-hub/index.js')
+vi.mock('#~/api/common/helpers/payment-hub/index.js')
 vi.mock('@hapi/boom')
 vi.mock('./get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
 }))
-vi.mock('~/src/config/index.js', () => {
+vi.mock('#~/config/index.js', () => {
   const store = {
     'featureFlags.isPaymentHubEnabled': false,
     'paymentHub.defaultSourceSystem': 'FPTT',
     'paymentHub.defaultLedger': 'AP',
+    'paymentHub.defaultSchedule': 'T4',
     'paymentHub.defaultDeliveryBody': 'RP00',
     'paymentHub.defaultFesCode': 'FALS_FPTT'
   }
@@ -42,6 +47,8 @@ describe('updatePaymentHub', () => {
     agreementNumber: 'FPTT123456789',
     correlationId: 'test-correlation-id',
     version: 1,
+    claimId: 'R00000001',
+    originalInvoiceNumber: 'R00000001-V001Q1',
     identifiers: {
       sbi: '106284736',
       frn: '1234567890'
@@ -134,19 +141,29 @@ describe('updatePaymentHub', () => {
           invoiceNumber: 'INV-123456',
           agreementNumber: 'FPTT123456789',
           schedule: 'T4',
-          dueDate: '2022-11-09',
-          value: 5000,
+          dueDate: '09/11/2022',
+          annualValue: -5000,
           currency: 'GBP',
           invoiceLines: [
             [
               {
                 value: 2000,
+                agreementNumber: 'FPTT123456789',
+                deliveryBody: 'RP00',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                marketingYear: 2024,
                 description:
                   '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
                 schemeCode: 'ACT001'
               },
               {
                 value: 3000,
+                agreementNumber: 'FPTT123456789',
+                deliveryBody: 'RP00',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                marketingYear: 2024,
                 description:
                   '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
                 schemeCode: 'ACT002'
@@ -196,10 +213,15 @@ describe('updatePaymentHub', () => {
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
         invoiceNumber: 'INV-123456',
+        originalInvoiceNumber: 'R00000001-V001Q1',
         agreementNumber: 'FPTT123456789',
         schedule: 'T4',
-        dueDate: '2022-11-09',
-        value: 5000,
+        dueDate: '09/11/2022',
+        recoveryDate: '',
+        debtType: '',
+        remittanceDescription: 'Farm Payments Technical Test Payment',
+        originalSettlementDate: '',
+        annualValue: -5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
@@ -209,12 +231,22 @@ describe('updatePaymentHub', () => {
           [
             {
               value: 2000,
+              agreementNumber: 'FPTT123456789',
+              deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
               schemeCode: 'ACT001'
             },
             {
               value: 3000,
+              agreementNumber: 'FPTT123456789',
+              deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
               schemeCode: 'ACT002'
@@ -270,7 +302,7 @@ describe('updatePaymentHub', () => {
 
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
-          value: 0,
+          annualValue: 0,
           invoiceLines: [[]]
         })
       })
@@ -388,13 +420,18 @@ describe('updatePaymentHub', () => {
       expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
         paymentHubRequest: expect.objectContaining({
           schedule: undefined,
-          dueDate: '2023-02-01',
-          value: 123.45,
+          dueDate: '01/02/2023',
+          annualValue: -123.45,
           currency: 'GBP',
           invoiceLines: [
             [
               {
                 value: 123.45,
+                agreementNumber: 'FPTT123456789',
+                deliveryBody: 'RP00',
+                accountCode: 'SOS710',
+                fundCode: 'DRD10',
+                marketingYear: 2024,
                 description:
                   '2023-02-01: One-off payment per agreement per year for Annual management payment',
                 schemeCode: 'AL001'
@@ -416,10 +453,15 @@ describe('updatePaymentHub', () => {
         paymentRequestNumber: 1,
         correlationId: 'test-correlation-id',
         invoiceNumber: 'INV-123456',
+        originalInvoiceNumber: 'R00000001-V001Q1',
         agreementNumber: 'FPTT123456789',
         schedule: 'T4',
-        dueDate: '2022-11-09',
-        value: 5000,
+        dueDate: '09/11/2022',
+        recoveryDate: '',
+        originalSettlementDate: '',
+        remittanceDescription: 'Farm Payments Technical Test Payment',
+        debtType: '',
+        annualValue: -5000,
         currency: 'GBP',
         ledger: 'AP',
         deliveryBody: 'RP00',
@@ -429,12 +471,22 @@ describe('updatePaymentHub', () => {
           [
             {
               value: 2000,
+              agreementNumber: 'FPTT123456789',
+              deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL001: ACT001: Test Activity 1',
               schemeCode: 'ACT001'
             },
             {
               value: 3000,
+              agreementNumber: 'FPTT123456789',
+              deliveryBody: 'RP00',
+              accountCode: 'SOS710',
+              fundCode: 'DRD10',
+              marketingYear: 2024,
               description:
                 '2022-11-09: Parcel: PARCEL002: ACT002: Test Activity 2',
               schemeCode: 'ACT002'
@@ -522,6 +574,28 @@ describe('updatePaymentHub', () => {
         )
       }
     })
+
+    it('should include recoveryDate and originalSettlementDate when provided', async () => {
+      const agreementWithOptionalDates = {
+        ...mockAgreementData,
+        payment: {
+          ...mockAgreementData.payment,
+          recoveryDate: '15/03/2023',
+          originalSettlementDate: '20/04/2023'
+        }
+      }
+
+      getAgreementDataById.mockResolvedValue(agreementWithOptionalDates)
+
+      await updatePaymentHub(mockContext, 'FPTT123456789')
+
+      expect(updateInvoice).toHaveBeenCalledWith('INV-123456', {
+        paymentHubRequest: expect.objectContaining({
+          recoveryDate: '15/03/2023',
+          originalSettlementDate: '20/04/2023'
+        })
+      })
+    })
   })
 
   describe('Function Call Order', () => {
@@ -557,5 +631,35 @@ describe('updatePaymentHub', () => {
         'sendPaymentHubRequest'
       ])
     })
+  })
+})
+
+describe('validateDebtType', () => {
+  it('should return the debt type when it is 3 characters or fewer', () => {
+    expect(validateDebtType('')).toBe('')
+    expect(validateDebtType('irr')).toBe('irr')
+    expect(validateDebtType('adm')).toBe('adm')
+  })
+
+  it('should throw when the debt type exceeds 3 characters', () => {
+    expect(() => validateDebtType('irrr')).toThrow(
+      'value of irrr must be no more than 3 characters'
+    )
+  })
+})
+
+describe('validateRemittanceDescription', () => {
+  it('should return the description when it is 60 characters or fewer', () => {
+    expect(validateRemittanceDescription('')).toBe('')
+    expect(validateRemittanceDescription('Short description')).toBe(
+      'Short description'
+    )
+  })
+
+  it('should throw when the description exceeds 60 characters', () => {
+    const longDescription = 'a'.repeat(61)
+    expect(() => validateRemittanceDescription(longDescription)).toThrow(
+      `value of ${longDescription} must be no more than 60 characters`
+    )
   })
 })

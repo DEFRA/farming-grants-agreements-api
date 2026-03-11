@@ -1,5 +1,5 @@
 import { errorHandlerPlugin } from './error-handler.js'
-import { createServer } from '~/src/api/index.js'
+import { createServer } from '#~/api/index.js'
 import Boom from '@hapi/boom'
 
 describe('errorHandlerPlugin', () => {

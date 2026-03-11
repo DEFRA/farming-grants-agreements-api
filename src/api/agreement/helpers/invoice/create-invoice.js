@@ -1,17 +1,12 @@
 import Boom from '@hapi/boom'
-import invoicesModel from '~/src/api/common/models/invoices.js'
-import countersModel from '~/src/api/common/models/counters.js'
+import invoicesModel from '#~/api/common/models/invoices.js'
+import {
+  formatClaimId,
+  generateInvoiceNumber
+} from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import countersModel from '#~/api/common/models/counters.js'
 
 const CLAIM_ID_COUNTER = 'claimIds'
-
-/**
- * Format a claim ID number as a string with 'R' prefix and 8 digit padding
- * @param {number} seq - The sequence number
- * @returns {string} Formatted claim ID (e.g., 'R00000001')
- */
-function formatClaimId(seq) {
-  return `R${String(seq).padStart(8, '0')}`
-}
 
 /**
  * Generate a new claimId using the counter
@@ -29,23 +24,26 @@ async function generateNewClaimId() {
 
 /**
  * Get the claimId for an agreement
- * - If version > 1, returns the existing claimId from the first invoice (or generates new if not found)
- * - If version = 1, generates a new claimId using the counter
+ * - If claimId exists in agreementData, use it
+ * - Otherwise, fallback to finding it from existing invoices
  * @param {string} agreementId - The agreement ID
- * @param {number} version - The agreement version
+ * @param {Agreement} agreementData - The agreement data
  * @returns {Promise<string>} The claim ID
  */
-async function getOrCreateClaimId(agreementId, version) {
-  if (version > 1) {
-    // Find the first invoice for this agreement to get the existing claimId
-    const existingInvoice = await invoicesModel
-      .findOne({ agreementNumber: agreementId })
-      .sort({ createdAt: 1 })
-      .lean()
+async function getClaimId(agreementId, agreementData) {
+  // First check if claimId is stored in agreement data
+  if (agreementData.claimId) {
+    return agreementData.claimId
+  }
 
-    if (existingInvoice?.claimId) {
-      return existingInvoice.claimId
-    }
+  // Fallback: Find the first invoice for this agreement to get the existing claimId
+  const existingInvoice = await invoicesModel
+    .findOne({ agreementNumber: agreementId })
+    .sort({ createdAt: 1 })
+    .lean()
+
+  if (existingInvoice?.claimId) {
+    return existingInvoice.claimId
   }
 
   // Generate a new claimId if version is 1 or no existing claimId found
@@ -59,18 +57,21 @@ async function getOrCreateClaimId(agreementId, version) {
  * @returns {Promise<Invoice>} The created invoice
  */
 async function createInvoice(agreementId, agreementData) {
-  const counter = await countersModel.findOneAndUpdate(
-    { _id: 'invoices' },
-    { $inc: { seq: 1 } },
-    { returnDocument: 'after', upsert: true }
-  )
+  const claimId = await getClaimId(agreementId, agreementData)
 
-  const claimId = await getOrCreateClaimId(agreementId, agreementData.version)
+  // For version 1, use the originalInvoiceNumber from agreement data
+  // For version > 1, generate a new invoiceNumber with the current version and quarter
+  let invoiceNumber
+  if (agreementData.version === 1 && agreementData.originalInvoiceNumber) {
+    invoiceNumber = agreementData.originalInvoiceNumber
+  } else {
+    invoiceNumber = generateInvoiceNumber(claimId, agreementData)
+  }
 
   const invoice = await invoicesModel
     .create({
       agreementNumber: agreementId,
-      invoiceNumber: `FRPS${counter.seq + 1}`,
+      invoiceNumber,
       correlationId: agreementData.correlationId,
       claimId
     })
@@ -85,7 +86,7 @@ async function createInvoice(agreementId, agreementData) {
   return invoice
 }
 
-export { createInvoice, formatClaimId, getOrCreateClaimId }
+export { createInvoice, getClaimId }
 
-/** @import { Invoice } from '~/src/api/common/types/invoice.d.js' */
-/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Invoice } from '#~/api/common/types/invoice.d.js' */
+/** @import { Agreement } from '#~/api/common/types/agreement.d.js' */

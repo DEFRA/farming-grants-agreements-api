@@ -1,24 +1,46 @@
 import Boom from '@hapi/boom'
 
-import { createServer } from '~/src/api/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import * as agreementDataHelper from '~/src/api/agreement/helpers/get-agreement-data.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { createServer } from '#~/api/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import * as agreementDataHelper from '#~/api/agreement/helpers/get-agreement-data.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 
 // Mock the modules
-vi.mock('~/src/api/common/helpers/sqs-client.js')
+vi.mock('#~/api/common/helpers/sqs-client.js')
 vi.mock(
-  '~/src/api/agreement/helpers/get-agreement-data.js',
+  '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
     return { __esModule: true, ...actual, getAgreementDataById: vi.fn() }
   }
 )
-vi.mock('~/src/api/common/helpers/jwt-auth.js')
-vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+vi.mock('#~/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
+
+const mockConsentObjects = [
+  {
+    code: 'ne-consent-required',
+    description: 'A consent is required from Natural England',
+    metadata: {
+      actionCode: 'UPL2',
+      parcelId: '9215',
+      sheetId: 'SD5649',
+      percentageOverlap: 99.99,
+      overlapAreaHectares: 764.1672
+    }
+  },
+  {
+    code: 'hefer-consent-required',
+    description: 'A hefer is needed from Historic England',
+    metadata: {
+      percentageOverlap: 5,
+      overlapAreaHectares: 0.1
+    }
+  }
+]
 
 describe('getAgreementController', () => {
   /** @type {import('@hapi/hapi').Server} */
@@ -157,6 +179,7 @@ describe('getAgreementController', () => {
             agreementNumber: 'FPTT123456789',
             status: 'accepted',
             sbi: '106284736',
+            consentObjects: mockConsentObjects,
             application: {
               parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
             },
@@ -178,6 +201,9 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet()
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+          expect(result.agreementData.consentObjects).toEqual(
+            mockConsentObjects
+          )
           expect(result.auth.source).toBe('defra')
         })
 
@@ -371,6 +397,7 @@ describe('getAgreementController', () => {
             agreementNumber: agreementId,
             status: 'accepted',
             sbi: '106284736',
+            consentObjects: mockConsentObjects,
             application: {
               parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
             },
@@ -392,6 +419,9 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet(agreementId)
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+          expect(result.agreementData.consentObjects).toEqual(
+            mockConsentObjects
+          )
           expect(result.auth.source).toBe('defra')
         })
 
@@ -508,16 +538,16 @@ describe('getAgreementController', () => {
 })
 
 // Mock the modules
-vi.mock('~/src/api/common/helpers/sqs-client.js')
+vi.mock('#~/api/common/helpers/sqs-client.js')
 vi.mock(
-  '~/src/api/agreement/helpers/get-agreement-data.js',
+  '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
     return { __esModule: true, ...actual, getAgreementDataById: vi.fn() }
   }
 )
-vi.mock('~/src/api/common/helpers/jwt-auth.js')
-vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+vi.mock('#~/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
 
@@ -658,6 +688,7 @@ describe('getAgreementController', () => {
             agreementNumber: 'FPTT123456789',
             status: 'accepted',
             sbi: '106284736',
+            consentObjects: mockConsentObjects,
             application: {
               parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
             },
@@ -679,6 +710,9 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet()
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+          expect(result.agreementData.consentObjects).toEqual(
+            mockConsentObjects
+          )
           expect(result.auth.source).toBe('defra')
         })
 
@@ -872,6 +906,7 @@ describe('getAgreementController', () => {
             agreementNumber: agreementId,
             status: 'accepted',
             sbi: '106284736',
+            consentObjects: mockConsentObjects,
             application: {
               parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
             },
@@ -893,6 +928,9 @@ describe('getAgreementController', () => {
           const { statusCode, result } = await doGet(agreementId)
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.status).toContain('accepted')
+          expect(result.agreementData.consentObjects).toEqual(
+            mockConsentObjects
+          )
           expect(result.auth.source).toBe('defra')
         })
 
@@ -1009,5 +1047,5 @@ describe('getAgreementController', () => {
 })
 
 /**
- * @typedef {import('~/src/api/common/types/agreement.d.js').Agreement} Agreement
+ * @typedef {import('#~/api/common/types/agreement.d.js').Agreement} Agreement
  */

@@ -301,7 +301,7 @@ function createParcelItem(
   return {
     code: action.code,
     description: action.description,
-    version: 1,
+    version: '1',
     unit: eligible.unit || null,
     quantity:
       eligible.quantity !== undefined
@@ -332,7 +332,7 @@ function maybeAddAgreementItem(state, action) {
   state.agreementLevelItems[state.agreementLevelIndex] = {
     code: action.code,
     description: action.description,
-    version: 1,
+    version: '1',
     annualPaymentPence: agreementLevelAmount
   }
   state.agreementLevelIndex += 1

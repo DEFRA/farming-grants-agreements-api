@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
-import agreementsModel from '~/src/api/common/models/agreements.js'
-import versionsModel from '~/src/api/common/models/versions.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
+import versionsModel from '#~/api/common/models/versions.js'
 
 vi.mock('./versions.js', () => ({
   __esModule: true,

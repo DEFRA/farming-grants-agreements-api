@@ -1,5 +1,6 @@
+import { config } from '#~/config/index.js'
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
-import { createLogger } from '~/src/api/common/helpers/logging/logger.js'
+import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 
 const logger = createLogger()
 
@@ -11,12 +12,12 @@ const sns = new SNSClient({
 
 async function publishTestEvent() {
   const topicArn =
-    'arn:aws:sns:eu-west-2:000000000000:grant_application_approved'
+    'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo'
 
   const message = {
     id: 'xxxx-xxxx-xxxx-xxxx',
     source: 'fg-gas-backend',
-    specVersion: '1.0',
+    specversion: '1.0',
     type: 'cloud.defra.test.fg-gas-backend.agreement.create',
     datacontenttype: 'application/json',
     data: {
@@ -127,11 +128,12 @@ async function publishTestEvent() {
   await sns.send(
     new PublishCommand({
       TopicArn: topicArn,
-      Message: JSON.stringify(message)
+      Message: JSON.stringify(message),
+      MessageGroupId: config.get('serviceName')
     })
   )
 
-  logger.info('Published test grant_application_approved event')
+  logger.info('Published test grant_application_approved_fifo.fifo event')
 }
 
 publishTestEvent().catch((err) => logger.error(err))

@@ -1,7 +1,7 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { v4 as uuidv4 } from 'uuid'
-import { config } from '~/src/config/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { config } from '#~/config/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 
 const snsClient = new SNSClient(
   process.env.NODE_ENV === 'development'
@@ -52,11 +52,13 @@ export async function publishEvent(
       await client.send(
         new PublishCommand({
           TopicArn: topicArn,
-          Message: JSON.stringify(message)
+          Message: JSON.stringify(message),
+          MessageGroupId: config.get('serviceName'),
+          MessageDeduplicationId: uuidv4()
         })
       )
       logger?.info?.(
-        `Published event to SNS topic: ${topicArn} type: ${type} id: ${message.id} data: ${JSON.stringify(data, null, 2)}`
+        `Published event to SNS topic: ${topicArn} type: ${type} time: ${time} id: ${message.id} data: ${JSON.stringify(data, null, 2)}`
       )
       return
     } catch (error) {

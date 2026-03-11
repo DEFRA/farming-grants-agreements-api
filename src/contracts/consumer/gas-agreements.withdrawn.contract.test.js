@@ -1,11 +1,11 @@
 import { MatchersV2, MessageConsumerPact } from '@pact-foundation/pact'
 
-import { handleUpdateAgreementEvent } from '~/src/api/common/helpers/sqs-message-processor/update-agreement.js'
-import { withdrawOffer as mockWithdrawOffer } from '~/src/api/agreement/helpers/withdraw-offer.js'
-import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
+import { handleUpdateAgreementEvent } from '#~/api/common/helpers/sqs-message-processor/update-agreement.js'
+import { withdrawOffer as mockWithdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
+import { withPactDir } from '#~/contracts/test-helpers/pact.js'
 
-vi.mock('~/src/api/agreement/helpers/withdraw-offer.js')
-vi.mock('~/src/api/common/helpers/sns-publisher.js')
+vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
+vi.mock('#~/api/common/helpers/sns-publisher.js')
 
 const { like, uuid } = MatchersV2
 
@@ -25,7 +25,8 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
     mockWithdrawOffer.mockResolvedValue({
       agreement: {
         agreementNumber: 'mockAgreementNumber'
-      }
+      },
+      updatedAt: '2025-01-01T00:00:00.000Z'
     })
 
     return messagePact
@@ -35,7 +36,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
         id: uuid('12345678-1234-1234-1234-123456789012'),
         source: like('fg-gas-backend'),
         specversion: '1.0',
-        type: 'cloud.defra.test.fg-gas-backend.agreement.withdraw',
+        type: 'cloud.defra.test.fg-gas-backend.application.status.updated',
         datacontenttype: 'application/json',
         data: {
           clientRef: like('client-ref-002'),
@@ -52,7 +53,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
 
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           1,
-          'Received application withdrawn from event: 12345678-1234-1234-1234-123456789012'
+          'Received application status update (withdrawn) from event: 12345678-1234-1234-1234-123456789012'
         )
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           2,

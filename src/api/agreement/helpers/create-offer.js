@@ -2,27 +2,34 @@ import crypto from 'node:crypto'
 import { v4 as uuidv4 } from 'uuid'
 import Boom from '@hapi/boom'
 
-import agreementsModel from '~/src/api/common/models/agreements.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { config } from '~/src/config/index.js'
-import {
-  doesAgreementExist,
-  getAgreementDataById
-} from '~/src/api/agreement/helpers/get-agreement-data.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { config } from '#~/config/index.js'
+import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
+import { generateClaimId } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 
-export const generateAgreementNumber = () => {
+export const generateAgreementNumber = async () => {
   const minRandomNumber = 100000000
   const maxRandomNumber = 999999999
-  const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
-  return `FPTT${randomNum}`
+
+  let agreementNumber
+  let agreementNumberExists
+
+  do {
+    const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
+    agreementNumber = `FPTT${randomNum}`
+    agreementNumberExists = await agreementsModel.exists({ agreementNumber })
+  } while (agreementNumberExists)
+
+  return agreementNumber
 }
 
 /**
  * Create a new offer
  * @param {string} notificationMessageId - The AWS notification message ID
  * @param {Agreement} agreementData - The agreement data
- * @param {Request<ReqRefDefaults>['logger']} logger
+ * @param {Request['logger']} logger
  * @returns {Promise<Agreement>} The agreement data
  */
 const createOffer = async (notificationMessageId, agreementData, logger) => {
@@ -37,10 +44,15 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     actionApplications,
     payment,
     applicant,
-    application
+    application,
+    consentObjects
   } = resolveAgreementFields(agreementData)
 
-  const agreementNumber = determineAgreementNumber(agreementData)
+  const agreementNumber = await determineAgreementNumber(agreementData)
+
+  // Generate claimId and originalInvoiceNumber for version 1
+  const claimId = await generateClaimId()
+  const originalInvoiceNumber = ''
 
   const data = {
     notificationMessageId,
@@ -53,7 +65,10 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     actionApplications,
     payment,
     applicant,
-    application
+    application,
+    claimId,
+    originalInvoiceNumber,
+    ...(consentObjects !== undefined ? { consentObjects } : {})
   }
 
   const agreement = await agreementsModel.createAgreementWithVersions({
@@ -76,23 +91,22 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
         correlationId: data?.correlationId,
         clientRef,
         status: 'offered',
-        date: new Date().toISOString(),
-        code,
-        endDate: payment?.agreementEndDate
+        date: agreement.updatedAt,
+        code
       }
     },
     logger
   )
 
   logger.info(`Successfully created the agreement
-      ${JSON.stringify(await getAgreementDataById(agreementNumber), null, 2)}`)
+      ${JSON.stringify(agreement, null, 2)}`)
 
   return agreement
 }
 
 export { createOffer }
 
-/** @import { Agreement } from '~/src/api/common/types/agreement.d.js' */
+/** @import { Agreement } from '#~/api/common/types/agreement.d.js' */
 /** @import { Request } from '@hapi/hapi' */
 
 async function ensureAgreementDataIsValid(
@@ -109,19 +123,16 @@ async function ensureAgreementDataIsValid(
 }
 
 function resolveAgreementFields(agreementData) {
+  const { clientRef, code, identifiers, answers = {} } = agreementData
   const {
-    clientRef,
-    code,
-    identifiers,
-    answers: {
-      scheme,
-      agreementName,
-      actionApplications,
-      payment,
-      applicant,
-      application
-    } = {}
-  } = agreementData
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant,
+    application,
+    consentObjects
+  } = answers
 
   const { resolvedActions, resolvedPayment, resolvedApplicant } =
     buildLegacyAgreementContent(
@@ -140,8 +151,17 @@ function resolveAgreementFields(agreementData) {
     actionApplications: resolvedActions,
     payment: resolvedPayment,
     applicant: normaliseApplicant(resolvedApplicant, agreementData?.answers),
-    application
+    application,
+    consentObjects: resolveConsentObjects(answers, consentObjects)
   }
+}
+
+function resolveConsentObjects(answers, consentObjects) {
+  if (consentObjects !== undefined) {
+    return consentObjects
+  }
+
+  return answers?.rulesCalculations?.caveats
 }
 
 function convertFromLegacyApplicationFormat(agreementData) {
@@ -316,7 +336,7 @@ function buildLegacyAgreementContent(
   }
 }
 
-function determineAgreementNumber(agreementData) {
+async function determineAgreementNumber(agreementData) {
   if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {
     return agreementData.agreementNumber
   }
@@ -353,9 +373,7 @@ function buildBusinessAddress(business = {}) {
     return business.address
   }
 
-  const extracted = extractAddressFields(business)
-
-  return extracted
+  return extractAddressFields(business)
 }
 
 const addressKeys = [

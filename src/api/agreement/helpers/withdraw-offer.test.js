@@ -1,12 +1,12 @@
 import { vi } from 'vitest'
 import Boom from '@hapi/boom'
-import agreementModel from '~/src/api/common/models/agreements.js'
+import agreementModel from '#~/api/common/models/agreements.js'
 
 // Import the module after setting up the mocks
 import { withdrawOffer } from './withdraw-offer.js'
 
 vi.mock('@hapi/boom')
-vi.mock('~/src/api/common/models/agreements.js', () => ({
+vi.mock('#~/api/common/models/agreements.js', () => ({
   __esModule: true,
   default: {
     updateOneAgreementVersion: vi.fn()

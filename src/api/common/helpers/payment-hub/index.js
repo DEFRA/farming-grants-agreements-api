@@ -1,7 +1,7 @@
 import crypto from 'crypto-js'
-import { proxyFetch } from '~/src/api/common/helpers/fetch.js'
-import { config } from '~/src/config/index.js'
-import { initCache } from '~/src/api/common/helpers/cache.js'
+import { proxyFetch } from '#~/api/common/helpers/fetch.js'
+import { config } from '#~/config/index.js'
+import { initCache } from '#~/api/common/helpers/cache.js'
 
 let cache = null
 
@@ -86,4 +86,4 @@ export const sendPaymentHubRequest = async (server, logger, body) => {
   }
 }
 
-/** @import { PaymentHubPayload } from '~/src/api/common/types/payment-hub.d.js' */
+/** @import { PaymentHubPayload } from '#~/api/common/types/payment-hub.d.js' */

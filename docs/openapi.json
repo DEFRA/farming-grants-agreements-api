@@ -6,7 +6,7 @@
     "description": "Farming Grants Agreements API"
   },
   "swagger": "2.0",
-  "host": "mac-mini.asus-router.local:3555",
+  "host": "Mac-mini.local:3555",
   "schemes": [
     "http"
   ],
@@ -311,9 +311,9 @@
           "example": "CMOR1: Assess moorland and produce a written record"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "unit": {
           "type": "string",
@@ -445,9 +445,9 @@
           "example": "CMOR1: Assess moorland and produce a written record"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "annualPaymentPence": {
           "type": "integer",
@@ -552,17 +552,6 @@
         }
       }
     },
-    "email": {
-      "type": "object",
-      "description": "email field",
-      "properties": {
-        "address": {
-          "type": "string",
-          "description": "address field",
-          "example": "cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test"
-        }
-      }
-    },
     "address": {
       "type": "object",
       "description": "address field",
@@ -602,14 +591,6 @@
           "type": "string",
           "description": "name field",
           "example": "J&S Hartley"
-        },
-        "email": {
-          "$ref": "#/definitions/email"
-        },
-        "phone": {
-          "type": "string",
-          "description": "phone field",
-          "example": "01234031670"
         },
         "address": {
           "$ref": "#/definitions/address"
@@ -714,9 +695,9 @@
           "example": "CMOR1"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "durationYears": {
           "type": "integer",
@@ -933,9 +914,9 @@
           "example": "CMOR1: Assess moorland and produce a written record"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "annualPaymentPence": {
           "type": "integer",
@@ -1049,9 +1030,9 @@
           "example": "CMOR1"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "durationYears": {
           "type": "integer",
@@ -1294,9 +1275,9 @@
           "example": "CMOR1: Assess moorland and produce a written record"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "annualPaymentPence": {
           "type": "integer",
@@ -1410,9 +1391,9 @@
           "example": "CMOR1"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "durationYears": {
           "type": "integer",
@@ -1605,7 +1586,7 @@
         }
       }
     },
-    "Model44": {
+    "email": {
       "type": "object",
       "description": "email field",
       "properties": {
@@ -1627,7 +1608,7 @@
         }
       }
     },
-    "Model45": {
+    "Model44": {
       "type": "object",
       "description": "business field",
       "properties": {
@@ -1637,7 +1618,7 @@
           "example": "J&S Hartley"
         },
         "email": {
-          "$ref": "#/definitions/Model44"
+          "$ref": "#/definitions/email"
         },
         "phone": {
           "$ref": "#/definitions/phone"
@@ -1652,14 +1633,14 @@
       "description": "Applicant business and customer details",
       "properties": {
         "business": {
-          "$ref": "#/definitions/Model45"
+          "$ref": "#/definitions/Model44"
         },
         "customer": {
           "$ref": "#/definitions/customer"
         }
       }
     },
-    "Model46": {
+    "Model45": {
       "type": "object"
     },
     "data": {
@@ -1673,7 +1654,7 @@
           "$ref": "#/definitions/Applicant"
         },
         "answers": {
-          "$ref": "#/definitions/Model46"
+          "$ref": "#/definitions/Model45"
         }
       }
     },
@@ -1686,17 +1667,17 @@
         }
       }
     },
-    "Model47": {
+    "Model46": {
       "type": "object"
     },
-    "Model48": {
+    "Model47": {
       "type": "array",
       "description": "actionApplications field",
       "items": {
-        "$ref": "#/definitions/Model47"
+        "$ref": "#/definitions/Model46"
       }
     },
-    "Model49": {
+    "Model48": {
       "type": "object",
       "description": "1 field",
       "properties": {
@@ -1711,9 +1692,9 @@
           "example": "CMOR1: Assess moorland and produce a written record"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "annualPaymentPence": {
           "type": "integer",
@@ -1722,16 +1703,16 @@
         }
       }
     },
-    "Model50": {
+    "Model49": {
       "type": "object",
       "description": "agreementLevelItems field",
       "properties": {
         "1": {
-          "$ref": "#/definitions/Model49"
+          "$ref": "#/definitions/Model48"
         }
       }
     },
-    "Model51": {
+    "Model50": {
       "type": "object",
       "properties": {
         "parcelItemId": {
@@ -1746,14 +1727,14 @@
         }
       }
     },
-    "Model52": {
+    "Model51": {
       "type": "array",
       "description": "lineItems field",
       "items": {
-        "$ref": "#/definitions/Model51"
+        "$ref": "#/definitions/Model50"
       }
     },
-    "Model53": {
+    "Model52": {
       "type": "object",
       "properties": {
         "totalPaymentPence": {
@@ -1767,18 +1748,18 @@
           "example": "2025-12-05"
         },
         "lineItems": {
-          "$ref": "#/definitions/Model52"
+          "$ref": "#/definitions/Model51"
         }
       }
     },
-    "Model54": {
+    "Model53": {
       "type": "array",
       "description": "payments field",
       "items": {
-        "$ref": "#/definitions/Model53"
+        "$ref": "#/definitions/Model52"
       }
     },
-    "Model55": {
+    "Model54": {
       "type": "object",
       "description": "payment field",
       "properties": {
@@ -1811,14 +1792,14 @@
           "$ref": "#/definitions/parcelItems"
         },
         "agreementLevelItems": {
-          "$ref": "#/definitions/Model50"
+          "$ref": "#/definitions/Model49"
         },
         "payments": {
-          "$ref": "#/definitions/Model54"
+          "$ref": "#/definitions/Model53"
         }
       }
     },
-    "Model56": {
+    "Model55": {
       "type": "object",
       "properties": {
         "code": {
@@ -1827,9 +1808,9 @@
           "example": "CMOR1"
         },
         "version": {
-          "type": "integer",
+          "type": "string",
           "description": "version field",
-          "example": 1
+          "example": "1"
         },
         "durationYears": {
           "type": "integer",
@@ -1846,14 +1827,14 @@
         }
       }
     },
-    "Model57": {
+    "Model56": {
       "type": "array",
       "description": "actions field",
       "items": {
-        "$ref": "#/definitions/Model56"
+        "$ref": "#/definitions/Model55"
       }
     },
-    "Model58": {
+    "Model57": {
       "type": "object",
       "properties": {
         "sheetId": {
@@ -1870,7 +1851,7 @@
           "$ref": "#/definitions/area"
         },
         "actions": {
-          "$ref": "#/definitions/Model57"
+          "$ref": "#/definitions/Model56"
         },
         "_id": {
           "type": "string",
@@ -1879,32 +1860,32 @@
         }
       }
     },
-    "Model59": {
+    "Model58": {
       "type": "array",
       "description": "parcel field",
       "items": {
-        "$ref": "#/definitions/Model58"
+        "$ref": "#/definitions/Model57"
       }
     },
-    "Model60": {
+    "Model59": {
       "type": "object"
     },
-    "Model61": {
+    "Model60": {
       "type": "array",
       "description": "agreement field",
       "items": {
-        "$ref": "#/definitions/Model60"
+        "$ref": "#/definitions/Model59"
       }
     },
-    "Model62": {
+    "Model61": {
       "type": "object",
       "description": "application field",
       "properties": {
         "parcel": {
-          "$ref": "#/definitions/Model59"
+          "$ref": "#/definitions/Model58"
         },
         "agreement": {
-          "$ref": "#/definitions/Model61"
+          "$ref": "#/definitions/Model60"
         },
         "_id": {
           "type": "string",
@@ -1913,7 +1894,7 @@
         }
       }
     },
-    "Model63": {
+    "Model62": {
       "type": "object",
       "description": "answers field",
       "properties": {
@@ -1938,20 +1919,20 @@
           "example": 2025
         },
         "actionApplications": {
-          "$ref": "#/definitions/Model48"
+          "$ref": "#/definitions/Model47"
         },
         "payment": {
-          "$ref": "#/definitions/Model55"
+          "$ref": "#/definitions/Model54"
         },
         "applicant": {
           "$ref": "#/definitions/applicant"
         },
         "application": {
-          "$ref": "#/definitions/Model62"
+          "$ref": "#/definitions/Model61"
         }
       }
     },
-    "Model64": {
+    "Model63": {
       "type": "object",
       "description": "Created agreement data (only for create_agreement queue)",
       "properties": {
@@ -1989,7 +1970,7 @@
           "$ref": "#/definitions/identifiers"
         },
         "answers": {
-          "$ref": "#/definitions/Model63"
+          "$ref": "#/definitions/Model62"
         }
       }
     },
@@ -2001,11 +1982,11 @@
           "description": "Success message"
         },
         "agreementData": {
-          "$ref": "#/definitions/Model64"
+          "$ref": "#/definitions/Model63"
         }
       }
     },
-    "Model65": {
+    "Model64": {
       "type": "string",
       "description": "Success confirmation message",
       "enum": [
@@ -2016,7 +1997,7 @@
       "type": "object",
       "properties": {
         "message": {
-          "$ref": "#/definitions/Model65"
+          "$ref": "#/definitions/Model64"
         }
       }
     }

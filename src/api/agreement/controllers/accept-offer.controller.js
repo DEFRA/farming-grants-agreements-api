@@ -1,9 +1,9 @@
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
-import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import { config } from '~/src/config/index.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
+import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
+import { config } from '#~/config/index.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 
 /**
  * Controller to accept agreement offer
@@ -17,7 +17,7 @@ const acceptOfferController = async (request, h) => {
 
   if (agreementData.status === 'offered') {
     // Accept the agreement
-    const agreementUrl = `${config.get('viewAgreementURI')}/${agreementNumber}`
+    const agreementUrl = `${String(config.get('viewAgreementURI'))}/${agreementNumber}`
     agreementData = await acceptOffer(
       agreementNumber,
       agreementData,
@@ -26,9 +26,21 @@ const acceptOfferController = async (request, h) => {
 
     let claimId
     try {
-      // Update the payment hub
-      const paymentHubResult = await updatePaymentHub(request, agreementNumber)
-      claimId = paymentHubResult.claimId
+      const grantPaymentsData = await createGrantPaymentFromAgreement(
+        agreementNumber,
+        request.logger
+      )
+      claimId = grantPaymentsData.claimId
+
+      await publishEvent(
+        {
+          topicArn: config.get('aws.sns.topic.createPayment.arn'),
+          type: config.get('aws.sns.topic.createPayment.type'),
+          time: new Date().toISOString(),
+          data: grantPaymentsData
+        },
+        request.logger
+      )
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
       await unacceptOffer(agreementNumber)
@@ -40,7 +52,7 @@ const acceptOfferController = async (request, h) => {
       {
         topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
-        time: agreementData.signatureDate,
+        time: new Date().toISOString(),
         data: {
           agreementNumber,
           correlationId: agreementData?.correlationId,
@@ -48,8 +60,9 @@ const acceptOfferController = async (request, h) => {
           version: agreementData?.versions?.length ?? 1,
           agreementUrl,
           status: agreementData.status,
-          date: agreementData.signatureDate,
           code: agreementData?.code,
+          date: agreementData.updatedAt,
+          startDate: agreementData?.payment?.agreementStartDate,
           endDate: agreementData?.payment?.agreementEndDate,
           claimId
         }

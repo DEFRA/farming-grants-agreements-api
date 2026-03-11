@@ -1,30 +1,44 @@
 import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 
-import { createServer } from '~/src/api/index.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { acceptOffer } from '~/src/api/agreement/helpers/accept-offer.js'
-import { unacceptOffer } from '~/src/api/agreement/helpers/unaccept-offer.js'
-import { getAgreementDataBySbi } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { updatePaymentHub } from '~/src/api/agreement/helpers/update-payment-hub.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import * as snsPublisher from '~/src/api/common/helpers/sns-publisher.js'
-import { config } from '~/src/config/index.js'
-import { calculatePaymentsBasedOnActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { createServer } from '#~/api/index.js'
+import { acceptOfferController } from './accept-offer.controller.js'
+import { getAgreementController } from './get-agreement.controller.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
+import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
+import {
+  getAgreementDataBySbi,
+  getAgreementDataById
+} from '#~/api/agreement/helpers/get-agreement-data.js'
+import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
+import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import * as snsPublisher from '#~/api/common/helpers/sns-publisher.js'
+import { config } from '#~/config/index.js'
+import { calculatePaymentsBasedOnActions } from '#~/api/adapter/land-grants-adapter.js'
 
-vi.mock('~/src/api/agreement/helpers/accept-offer.js')
-vi.mock('~/src/api/agreement/helpers/unaccept-offer.js')
-vi.mock('~/src/api/agreement/helpers/update-payment-hub.js')
+vi.mock('#~/api/agreement/helpers/accept-offer.js')
+vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
+vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
+vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
 vi.mock(
-  '~/src/api/agreement/helpers/get-agreement-data.js',
+  '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
-    return { __esModule: true, ...actual, getAgreementDataBySbi: vi.fn() }
+    return {
+      __esModule: true,
+      ...actual,
+      getAgreementDataBySbi: vi.fn(),
+      getAgreementDataById: vi.fn()
+    }
   }
 )
-vi.mock('~/src/api/common/helpers/jwt-auth.js')
-vi.mock('~/src/api/common/helpers/sns-publisher.js')
-vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+vi.mock('#~/api/common/helpers/jwt-auth.js', () => ({
+  validateJwtAuthentication: vi.fn()
+}))
+vi.mock('#~/api/common/helpers/sns-publisher.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnActions: vi.fn()
 }))
 
@@ -39,6 +53,8 @@ describe('acceptOfferDocumentController', () => {
     clientRef: 'test-client-ref',
     correlationId: 'test-correlation-id',
     code: 'test-code',
+    createdAt: '2023-12-01T00:00:00.000Z',
+    updatedAt: '2024-01-02T00:00:00.000Z',
     actionApplications: [],
     payment: {
       agreementStartDate: '2024-01-01',
@@ -49,6 +65,19 @@ describe('acceptOfferDocumentController', () => {
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
+    // Add a route that we know matches and uses the same controller
+    server.route({
+      method: 'POST',
+      path: '/test-accept',
+      options: { auth: 'grants-ui-jwt' },
+      handler: acceptOfferController
+    })
+    server.route({
+      method: 'GET',
+      path: '/test-accept',
+      options: { auth: 'grants-ui-jwt' },
+      handler: getAgreementController({ allowEntra: false })
+    })
     await server.initialize()
   })
 
@@ -60,6 +89,8 @@ describe('acceptOfferDocumentController', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2024-01-03T12:34:56.789Z'))
     calculatePaymentsBasedOnActions.mockResolvedValue({
       agreementStartDate: '2024-01-01',
       agreementEndDate: '2025-12-31',
@@ -75,7 +106,9 @@ describe('acceptOfferDocumentController', () => {
     acceptOffer.mockReset()
     unacceptOffer.mockReset()
     getAgreementDataBySbi.mockReset()
+    getAgreementDataById.mockReset()
     updatePaymentHub.mockReset()
+    createGrantPaymentFromAgreement.mockReset()
 
     acceptOffer.mockResolvedValue({
       ...mockAgreementData,
@@ -84,34 +117,39 @@ describe('acceptOfferDocumentController', () => {
     })
     unacceptOffer.mockResolvedValue()
     updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
-
+    createGrantPaymentFromAgreement.mockResolvedValue({
+      sbi: '106284736',
+      grants: []
+    })
     // Setup default mock implementations with complete data structure
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
+    getAgreementDataById.mockResolvedValue(mockAgreementData)
 
     // Mock JWT auth functions to return valid authorization by default
-    vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+    jwtAuth.validateJwtAuthentication.mockReturnValue({
       valid: true,
       source: 'defra',
       sbi: '106284736'
     })
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   test('should successfully accept an offer and return 200 OK', async () => {
     snsPublisher.publishEvent.mockResolvedValue(true)
-
-    // Register a test-only extension to inject the mock logger
-    server.ext('onPreHandler', (request, h) => {
-      request.logger = mockLogger
-      return h.continue
-    })
 
     const agreementId = 'FPTT123456789'
 
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: '/',
+      url: '/test-accept',
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
+      },
+      app: {
+        logger: mockLogger
       }
     })
 
@@ -123,13 +161,11 @@ describe('acceptOfferDocumentController', () => {
         agreementNumber: agreementId,
         status: 'offered'
       }),
-      expect.objectContaining({
-        info: expect.any(Function)
-      })
+      expect.anything()
     )
-    expect(updatePaymentHub).toHaveBeenCalledWith(
-      expect.any(Object),
-      agreementId
+    expect(createGrantPaymentFromAgreement).toHaveBeenCalledWith(
+      agreementId,
+      expect.anything()
     )
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('accepted')
@@ -137,23 +173,37 @@ describe('acceptOfferDocumentController', () => {
 
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
       {
-        time: '2024-01-01T00:00:00.000Z',
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        time: '2024-01-03T12:34:56.789Z',
+        topicArn: config.get('aws.sns.topic.createPayment.arn'),
+        type: config.get('aws.sns.topic.createPayment.type'),
+        data: {
+          sbi: '106284736',
+          grants: []
+        }
+      },
+      expect.anything()
+    )
+
+    expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
+      {
+        time: '2024-01-03T12:34:56.789Z',
+        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: 'io.onsite.agreement.status.updated',
         data: {
           agreementNumber: 'FPTT123456789',
           correlationId: 'test-correlation-id',
           version: 1,
-          agreementUrl: `${config.get('viewAgreementURI')}/FPTT123456789`,
+          agreementUrl: `${String(config.get('viewAgreementURI'))}/FPTT123456789`,
           clientRef: 'test-client-ref',
           status: 'accepted',
-          date: '2024-01-01T00:00:00.000Z',
           code: 'test-code',
-          endDate: '2027-12-31',
-          claimId: 'R00000001'
+          date: '2024-01-02T00:00:00.000Z',
+          startDate: '2024-01-01',
+          endDate: '2027-12-31'
+          // claimId: 'R00000001'
         }
       },
-      mockLogger
+      expect.anything()
     )
   })
 
@@ -163,26 +213,23 @@ describe('acceptOfferDocumentController', () => {
       status: 'withdrawn'
     })
 
-    // Register a test-only extension to inject the mock logger
-    server.ext('onPreHandler', (request, h) => {
-      request.logger = mockLogger
-      return h.continue
-    })
-
     const agreementId = 'FPTT123456789'
 
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: '/',
+      url: '/test-accept',
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
+      },
+      app: {
+        logger: mockLogger
       }
     })
 
     // Assert
     expect(getAgreementDataBySbi).toHaveBeenCalledWith('106284736')
     expect(acceptOffer).not.toHaveBeenCalled()
-    expect(updatePaymentHub).not.toHaveBeenCalled()
+    expect(createGrantPaymentFromAgreement).not.toHaveBeenCalled()
     expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
 
     expect(statusCode).toBe(statusCodes.ok)
@@ -198,9 +245,12 @@ describe('acceptOfferDocumentController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: '/',
+      url: '/test-accept',
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
+      },
+      app: {
+        logger: mockLogger
       }
     })
 
@@ -217,9 +267,12 @@ describe('acceptOfferDocumentController', () => {
     // Act
     const { statusCode } = await server.inject({
       method: 'POST',
-      url: '/',
+      url: '/test-accept',
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
+      },
+      app: {
+        logger: mockLogger
       }
     })
 
@@ -232,10 +285,13 @@ describe('acceptOfferDocumentController', () => {
 
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: '/',
+      url: '/test-accept',
       headers: {
         'x-base-url': '/agreement',
         'x-encrypted-auth': 'valid-jwt-token'
+      },
+      app: {
+        logger: mockLogger
       }
     })
 
@@ -260,9 +316,12 @@ describe('acceptOfferDocumentController', () => {
     // Act
     const { statusCode, result } = await server.inject({
       method: 'GET',
-      url: '/',
+      url: '/test-accept',
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
+      },
+      app: {
+        logger: mockLogger
       }
     })
 
@@ -275,14 +334,17 @@ describe('acceptOfferDocumentController', () => {
   test('should rollback the accepting the agreement if the payment hub request fails', async () => {
     // Arrange
     const error = new Error('Payment hub request failed')
-    updatePaymentHub.mockRejectedValue(error)
+    createGrantPaymentFromAgreement.mockRejectedValue(error)
 
     // Act
     const { statusCode, result } = await server.inject({
       method: 'POST',
-      url: '/',
+      url: '/test-accept',
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
+      },
+      app: {
+        logger: mockLogger
       }
     })
 

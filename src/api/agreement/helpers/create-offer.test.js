@@ -1,17 +1,18 @@
 import { vi } from 'vitest'
 import { v4 as uuidv4 } from 'uuid'
+import { config } from '#~/config/index.js'
 
 import mongoose from 'mongoose'
 import Boom from '@hapi/boom'
 import { createOffer, generateAgreementNumber } from './create-offer.js'
-import versionsModel from '~/src/api/common/models/versions.js'
-import agreementsModel from '~/src/api/common/models/agreements.js'
-import { publishEvent } from '~/src/api/common/helpers/sns-publisher.js'
-import { doesAgreementExist } from '~/src/api/agreement/helpers/get-agreement-data.js'
+import versionsModel from '#~/api/common/models/versions.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 
 vi.mock('@hapi/boom')
-vi.mock('~/src/api/common/models/versions.js')
-vi.mock('~/src/api/common/models/agreements.js', () => {
+vi.mock('#~/api/common/models/versions.js')
+vi.mock('#~/api/common/models/agreements.js', () => {
   let populatedAgreement = null
 
   const api = {
@@ -22,6 +23,7 @@ vi.mock('~/src/api/common/models/agreements.js', () => {
       })
     })),
     createAgreementWithVersions: vi.fn(() => populatedAgreement),
+    exists: vi.fn().mockResolvedValue(false),
 
     // helper exposed to tests:
     __setPopulatedAgreement: (g) => {
@@ -31,14 +33,25 @@ vi.mock('~/src/api/common/models/agreements.js', () => {
 
   return { __esModule: true, default: api }
 })
-vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
-vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   doesAgreementExist: vi.fn().mockResolvedValue(false),
   // Added explicit mock for getAgreementDataById to satisfy tests that import this module
   getAgreementDataById: vi.fn().mockResolvedValue({})
 }))
+vi.mock(
+  '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js',
+  () => ({
+    generateClaimId: vi.fn().mockResolvedValue('R00000001'),
+    generateInvoiceNumber: vi
+      .fn()
+      .mockImplementation(
+        (claimId, agreementData) => `${claimId}_${agreementData.version}_Q1`
+      )
+  })
+)
 
 const targetDataStructure = {
   notificationMessageId: 'aws-message-id',
@@ -54,7 +67,7 @@ const targetDataStructure = {
       1: {
         code: 'SPM4',
         description: 'Maintain dry stone walls',
-        version: 1,
+        version: '1.0.0',
         unit: 'metres',
         quantity: 95,
         rateInPence: 2565,
@@ -68,7 +81,7 @@ const targetDataStructure = {
         code: 'CSAM1',
         description:
           'CSAM1: Assess soil, produce a soil management plan and test soil organic matter',
-        version: 1,
+        version: '1.0.0',
         annualPaymentPence: 27200
       }
     },
@@ -151,6 +164,20 @@ const agreementData = {
   }
 }
 
+const sssiConsentObjects = [
+  {
+    code: 'ne-consent-required',
+    description: 'A consent is required from Natural England',
+    metadata: {
+      actionCode: 'UPL2',
+      parcelId: '9215',
+      sheetId: 'SD5649',
+      percentageOverlap: 99.99,
+      overlapAreaHectares: 764.1672
+    }
+  }
+]
+
 describe('createOffer', () => {
   let mockLogger
 
@@ -187,6 +214,11 @@ describe('createOffer', () => {
     // Return EXACT group the test asserts against
     const populated = {
       ...targetGroupDataStructure,
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
+      payment: {
+        agreementEndDate: agreementData.answers.payment.agreementEndDate
+      },
       sbi: '106284736',
       frn: '1234567890',
       agreementNumber: 'FPTT999999999', // test uses expect.any(String)
@@ -236,7 +268,7 @@ describe('createOffer', () => {
     expect(publishEvent).toHaveBeenCalledWith(
       {
         time: '2025-01-01T00:00:00.000Z',
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: 'io.onsite.agreement.status.updated',
         data: expect.objectContaining({
           agreementNumber: 'FPTT999999999',
@@ -245,8 +277,7 @@ describe('createOffer', () => {
           ),
           clientRef: 'ref-1234',
           status: 'offered',
-          date: '2025-01-01T00:00:00.000Z',
-          endDate: '2027-12-31'
+          date: '2025-01-01T00:00:00.000Z'
         })
       },
       mockLogger
@@ -297,6 +328,65 @@ describe('createOffer', () => {
     )
   })
 
+  it('includes consentObjects when provided under answers on the inbound agreement payload', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'aws-message-id',
+      {
+        ...agreementData,
+        answers: {
+          ...agreementData.answers,
+          consentObjects: sssiConsentObjects
+        }
+      },
+      mockLogger
+    )
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].consentObjects).toEqual(sssiConsentObjects)
+  })
+
+  it('includes consentObjects when provided as an empty array under answers on the inbound agreement payload', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer(
+      'aws-message-id',
+      {
+        ...agreementData,
+        answers: {
+          ...agreementData.answers,
+          consentObjects: []
+        }
+      },
+      mockLogger
+    )
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].consentObjects).toEqual([])
+  })
+
+  it('still creates an agreement when consentObjects are not provided', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await expect(
+      createOffer('aws-message-id', agreementData, mockLogger)
+    ).resolves.toMatchObject({
+      ...targetGroupDataStructure,
+      agreementNumber: expect.any(String),
+      correlationId: expect.any(String)
+    })
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].consentObjects).toBeUndefined()
+  })
+
   it('normalises applicant customer and address from answers payload', async () => {
     doesAgreementExist.mockResolvedValueOnce(false)
 
@@ -308,8 +398,6 @@ describe('createOffer', () => {
           business: {
             reference: '3577139140',
             name: 'HireContracting',
-            email: { address: 'test@test.com' },
-            phone: '4478673322372323',
             line1: 'Benbrigge House',
             line2: 'ALBRIGHTON',
             city: 'GRIMSBY',
@@ -363,8 +451,6 @@ describe('createOffer', () => {
         applicant: {
           business: {
             name: 'Structured Business',
-            email: { address: 'structured@test.com' },
-            phone: '01234567890',
             address: {
               line1: 'Existing line 1',
               postalCode: 'AB1 2CD'
@@ -422,9 +508,7 @@ describe('createOffer', () => {
         ...agreementData.answers,
         applicant: {
           business: {
-            name: 'No Address Business',
-            email: { address: 'noaddress@test.com' },
-            phone: '07700900000'
+            name: 'No Address Business'
           }
         }
       }
@@ -445,7 +529,7 @@ describe('createOffer', () => {
 
   it('should generate an agreement number when seedDb is true but agreementNumber is empty', async () => {
     // Enable DB seeding and provide an empty agreementNumber
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', true)
 
@@ -468,7 +552,7 @@ describe('createOffer', () => {
   })
 
   it('uses provided agreementNumber when seedDb is true and agreementNumber is present', async () => {
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', true)
 
@@ -485,8 +569,6 @@ describe('createOffer', () => {
     }
     populated.agreements = [{ ...targetDataStructure }]
 
-    agreementsModel.__setPopulatedAgreement(populated)
-
     agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
 
     const data = { ...agreementData, agreementNumber: provided }
@@ -498,7 +580,7 @@ describe('createOffer', () => {
   })
 
   it('ignores provided agreementNumber when seedDb is false (uses generated)', async () => {
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', false)
 
@@ -516,7 +598,7 @@ describe('createOffer', () => {
   })
 
   it('generates an agreement number when seedDb is false and agreementNumber is empty', async () => {
-    const { config } = await import('~/src/config/index.js')
+    const { config } = await import('#~/config/index.js')
     const previous = config.get('featureFlags.seedDb')
     config.set('featureFlags.seedDb', false)
 
@@ -659,11 +741,6 @@ describe('createOffer', () => {
           business: {
             name: 'VAUGHAN FARMS LIMITED',
             reference: '3989509178',
-            email: {
-              address:
-                'cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Mason House Farm Clitheroe Rd',
               line2: 'Bashall Eaves',
@@ -777,10 +854,6 @@ describe('createOffer', () => {
           business: {
             name: 'PARCEL BUSINESS LTD',
             reference: '3989509178',
-            email: {
-              address: 'farmer@example.com'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Farm Lane',
               line2: 'Village',
@@ -895,10 +968,6 @@ describe('createOffer', () => {
             business: {
               name: 'ANSWERS APPLICATION LTD',
               reference: '3989509178',
-              email: {
-                address: 'applicant@example.com'
-              },
-              phone: '01234031670',
               address: {
                 line1: 'Answers Lane',
                 line2: 'Village',
@@ -971,10 +1040,6 @@ describe('createOffer', () => {
           business: {
             name: 'ANSWERS PAYMENTS LTD',
             reference: '3989509178',
-            email: {
-              address: 'payments@example.com'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Payments Lane',
               city: 'Clitheroe',
@@ -1050,10 +1115,6 @@ describe('createOffer', () => {
           business: {
             name: 'ROOT PAYMENTS LTD',
             reference: '3989509178',
-            email: {
-              address: 'rootpayments@example.com'
-            },
-            phone: '01234031670',
             address: {
               line1: 'Root Payments Lane',
               city: 'Clitheroe',
@@ -1129,8 +1190,6 @@ describe('createOffer', () => {
           business: {
             name: 'PARCELS PLURAL LTD',
             reference: '3989509178',
-            email: { address: 'parcels@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Parcels Lane',
               city: 'Clitheroe',
@@ -1192,8 +1251,6 @@ describe('createOffer', () => {
           business: {
             name: 'PAYMENTS TOTAL LTD',
             reference: '3989509178',
-            email: { address: 'total@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Total Lane',
               city: 'Clitheroe',
@@ -1259,8 +1316,6 @@ describe('createOffer', () => {
           business: {
             name: 'CALCULATED TOTAL LTD',
             reference: '3989509178',
-            email: { address: 'calc@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Calc Lane',
               city: 'Clitheroe',
@@ -1334,8 +1389,6 @@ describe('createOffer', () => {
           business: {
             name: 'EMPTY PAYMENTS LTD',
             reference: '3989509178',
-            email: { address: 'empty@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Empty Lane',
               city: 'Clitheroe',
@@ -1381,8 +1434,6 @@ describe('createOffer', () => {
           business: {
             name: 'NULL APPLICATION LTD',
             reference: '3989509178',
-            email: { address: 'null@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Null Lane',
               city: 'Clitheroe',
@@ -1425,8 +1476,6 @@ describe('createOffer', () => {
           business: {
             name: 'SINGLE PARCEL LTD',
             reference: '3989509178',
-            email: { address: 'single@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Single Lane',
               city: 'Clitheroe',
@@ -1490,8 +1539,6 @@ describe('createOffer', () => {
           business: {
             name: 'NULL PARCEL LTD',
             reference: '3989509178',
-            email: { address: 'nullparcel@example.com' },
-            phone: '01234031670',
             address: {
               line1: 'Null Parcel Lane',
               city: 'Clitheroe',
@@ -1517,17 +1564,29 @@ describe('createOffer', () => {
   })
 
   describe('generateAgreementNumber', () => {
-    it('should generate a valid agreement number', () => {
-      const agreementNumber = generateAgreementNumber()
+    it('should generate a valid agreement number', async () => {
+      const agreementNumber = await generateAgreementNumber()
       expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
     })
 
-    it('should generate unique agreement numbers', () => {
+    it('should generate unique agreement numbers', async () => {
       const numbers = new Set()
       for (let i = 0; i < 100; i++) {
-        numbers.add(generateAgreementNumber())
+        numbers.add(await generateAgreementNumber())
       }
       expect(numbers.size).toBe(100)
+    })
+
+    it('should retry until a non-duplicate agreement number is found', async () => {
+      agreementsModel.exists
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false)
+
+      const agreementNumber = await generateAgreementNumber()
+
+      expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
+      expect(agreementsModel.exists).toHaveBeenCalledTimes(3)
     })
   })
 
@@ -1675,8 +1734,6 @@ describe('createOffer', () => {
           business: {
             name: 'TEST BUSINESS',
             reference: '1234567890',
-            email: { address: 'test@example.com' },
-            phone: '01234567890',
             address: {
               line1: 'Test Address',
               city: 'Test City',
@@ -1842,7 +1899,7 @@ describe('createOffer', () => {
 
     expect(publishEvent).toHaveBeenCalledWith(
       {
-        topicArn: 'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
         type: 'io.onsite.agreement.status.updated',
         time: expect.any(String),
         data: expect.objectContaining({
@@ -1850,13 +1907,24 @@ describe('createOffer', () => {
           correlationId: expect.any(String),
           clientRef: agreementData.clientRef,
           status: 'offered',
-          date: expect.any(String),
           code: agreementData.code,
-          endDate: agreementData.answers.payment.agreementEndDate
+          date: '2025-01-01T00:00:00.000Z'
         })
       },
       mockLogger
     )
+  })
+
+  it('should set claimId and originalInvoiceNumber correctly for version 1', async () => {
+    doesAgreementExist.mockResolvedValueOnce(false)
+
+    await createOffer('aws-message-id', agreementData, mockLogger)
+
+    const [[lastCallArgs]] =
+      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+
+    expect(lastCallArgs.versions[0].claimId).toBe('R00000001')
+    expect(lastCallArgs.versions[0].originalInvoiceNumber).toBe('')
   })
 
   describe('Error Handling', () => {

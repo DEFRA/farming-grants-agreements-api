@@ -2,7 +2,7 @@ import Joi from 'joi'
 import { getAgreementController } from './controllers/get-agreement.controller.js'
 import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
-import { getCommonResponseSchemas } from '~/src/api/common/helpers/joi-schema-from-pact.js'
+import { getCommonResponseSchemas } from '#~/api/common/helpers/joi-schema-from-pact.js'
 
 const auth = 'grants-ui-jwt'
 
@@ -128,5 +128,5 @@ export { agreement }
  * @import { ServerRegisterPluginObject } from '@hapi/hapi'
  */
 /**
- * @import { Agreement } from '~/src/api/common/types/agreement.d.js'
+ * @import { Agreement } from '#~/api/common/types/agreement.d.js'
  */

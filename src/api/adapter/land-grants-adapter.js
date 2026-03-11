@@ -1,5 +1,5 @@
-import { config } from '~/src/config/index.js'
-import { fetchWithTimeout } from '~/src/api/common/helpers/fetch.js'
+import { config } from '#~/config/index.js'
+import { fetchWithTimeout } from '#~/api/common/helpers/fetch.js'
 
 const coerceNumber = (raw) => {
   if (raw == null) {
@@ -67,7 +67,8 @@ const postPaymentCalculation = async (body, options = {}) => {
   const { headers: extraHeaders = {} } = options
 
   const landGrantsBaseUrl = config.get('landGrants.uri')
-  const url = new URL('/payments/calculate', landGrantsBaseUrl)
+  const calculationUri = config.get('landGrants.calculationUri')
+  const url = new URL(calculationUri, landGrantsBaseUrl)
 
   const res = await fetchWithTimeout(url, {
     method: 'POST',

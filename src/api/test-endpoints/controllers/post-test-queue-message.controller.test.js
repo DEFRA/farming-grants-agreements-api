@@ -1,8 +1,8 @@
 // Mock AWS SQS with proper constructor BEFORE importing module under test
 import Boom from '@hapi/boom'
 import { postTestQueueMessageController } from './post-test-queue-message.controller.js'
-import { getAgreementData } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { getAgreementData } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 import { __mockSend as sendMock } from '@aws-sdk/client-sqs'
 
 vi.mock('@aws-sdk/client-sqs', () => {
@@ -21,7 +21,7 @@ vi.mock('@aws-sdk/client-sqs', () => {
 })
 
 // Mock config BEFORE importing module under test
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
       if (key === 'aws.region') return 'eu-west-2'
@@ -34,7 +34,7 @@ vi.mock('~/src/config/index.js', () => ({
 }))
 
 // Mock agreement helper and backoff behavior
-vi.mock('~/src/api/agreement/helpers/get-agreement-data.js', () => ({
+vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementData: vi.fn()
 }))
 
@@ -99,7 +99,7 @@ describe('postTestQueueMessageController', () => {
     expect(sendMock).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
-          QueueUrl: 'http://localhost:4566/000000000000/create_agreement',
+          QueueUrl: 'http://localhost:4566/000000000000/test-queue',
           MessageBody: JSON.stringify(payload)
         })
       })
@@ -125,7 +125,7 @@ describe('postTestQueueMessageController', () => {
     )
   })
 
-  test('retrieves agreement data for create_agreement queue', async () => {
+  test('retrieves agreement data for default queue', async () => {
     const mockAgreementData = {
       _id: 'agreement123',
       agreementNumber: 'FPTT123',
@@ -136,7 +136,29 @@ describe('postTestQueueMessageController', () => {
     getAgreementData.mockResolvedValueOnce(mockAgreementData)
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: {} },
+      h
+    )
+
+    expect(res.statusCode).toBe(statusCodes.ok)
+    expect(res.payload.agreementData).toEqual(mockAgreementData)
+    expect(getAgreementData).toHaveBeenCalledWith({
+      sbi: '123456789'
+    })
+  })
+
+  test('retrieves agreement data for test-queue queue', async () => {
+    const mockAgreementData = {
+      _id: 'agreement123',
+      agreementNumber: 'FPTT123',
+      status: 'offered'
+    }
+
+    sendMock.mockResolvedValueOnce({})
+    getAgreementData.mockResolvedValueOnce(mockAgreementData)
+
+    const res = await postTestQueueMessageController.handler(
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
@@ -174,7 +196,7 @@ describe('postTestQueueMessageController', () => {
       .mockResolvedValueOnce(mockAgreementData)
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
@@ -192,13 +214,13 @@ describe('postTestQueueMessageController', () => {
     getAgreementData.mockRejectedValue(Boom.notFound('Not found'))
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
     expect(Boom.isBoom(res)).toBe(true)
     expect(res.message).toBe(
-      'Failed to retrieve agreement data after multiple attempts for SBI: 123456789'
+      'Agreement was added to the queue, but failed to create/retrieve agreement after multiple attempts for SBI: 123456789. Verify data format is correct by checking the logs for errors.'
     )
 
     // Restore setTimeout
@@ -210,7 +232,7 @@ describe('postTestQueueMessageController', () => {
     getAgreementData.mockRejectedValueOnce(new Error('Database error'))
 
     const res = await postTestQueueMessageController.handler(
-      { payload, logger, params: { queueName: 'create_agreement' } },
+      { payload, logger, params: { queueName: 'test-queue' } },
       h
     )
 
@@ -220,6 +242,7 @@ describe('postTestQueueMessageController', () => {
 
   test('logs queue message posting', async () => {
     sendMock.mockResolvedValueOnce({})
+    getAgreementData.mockResolvedValueOnce(undefined)
 
     await postTestQueueMessageController.handler(
       { payload, logger, params: { queueName: 'test-queue' } },

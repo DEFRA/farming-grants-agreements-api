@@ -4,6 +4,10 @@ import { defineConfig } from 'vitest/config'
  * @type {import('vitest/config').UserConfig}
  */
 export default defineConfig({
+  resolve: {
+    // Mirror Node ESM: import file extensions must be fully specified (e.g. "x.js")
+    extensions: []
+  },
   test: {
     globals: true,
     environment: 'node',
@@ -27,10 +31,5 @@ export default defineConfig({
     },
     setupFiles: ['./.vitest/setup.js'],
     globalSetup: './.vitest/global-setup.js'
-  },
-  resolve: {
-    alias: {
-      '~/src': new URL('./src', import.meta.url).pathname
-    }
   }
 })

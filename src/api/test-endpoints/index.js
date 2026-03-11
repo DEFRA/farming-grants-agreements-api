@@ -5,13 +5,13 @@ import {
   postTestUnacceptOfferController,
   postTestPopulateAgreementsController,
   getTestInvoiceController
-} from '~/src/api/test-endpoints/controllers/index.js'
+} from '#~/api/test-endpoints/controllers/index.js'
 import Boom from '@hapi/boom'
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
 import {
   getTestEndpointSchemas,
   getCommonResponseSchemas
-} from '~/src/api/common/helpers/joi-schema-from-pact.js'
+} from '#~/api/common/helpers/joi-schema-from-pact.js'
 
 // Joi schemas for test endpoints (using Pact test data)
 const { queueMessagePayload, queueMessageResponse } = getTestEndpointSchemas()

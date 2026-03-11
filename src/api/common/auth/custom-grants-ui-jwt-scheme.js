@@ -1,10 +1,10 @@
 import Boom from '@hapi/boom'
 
-import { validateJwtAuthentication } from '~/src/api/common/helpers/jwt-auth.js'
+import { validateJwtAuthentication } from '#~/api/common/helpers/jwt-auth.js'
 import {
   getAgreementDataById,
   getAgreementDataBySbi
-} from '~/src/api/agreement/helpers/get-agreement-data.js'
+} from '#~/api/agreement/helpers/get-agreement-data.js'
 
 const customGrantsUiJwtScheme = () => ({
   authenticate: async (request, h) => {

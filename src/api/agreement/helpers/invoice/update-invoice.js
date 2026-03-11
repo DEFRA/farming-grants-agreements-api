@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import invoicesModel from '~/src/api/common/models/invoices.js'
+import invoicesModel from '#~/api/common/models/invoices.js'
 
 /**
  * Create a new invoice for the given agreement ID
@@ -31,4 +31,4 @@ async function updateInvoice(invoiceNumber, updateData) {
 
 export { updateInvoice }
 
-/** @import { Invoice } from '~/src/api/common/types/invoice.d.js' */
+/** @import { Invoice } from '#~/api/common/types/invoice.d.js' */

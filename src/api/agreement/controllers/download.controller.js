@@ -1,7 +1,7 @@
 import Boom from '@hapi/boom'
-import { config } from '~/src/config/index.js'
-import { getPdfStream } from '~/src/api/common/helpers/s3-client.js'
-import { getRetentionPrefix } from '~/src/api/common/helpers/retention-period.js'
+import { config } from '#~/config/index.js'
+import { getPdfStream } from '#~/api/common/helpers/s3-client.js'
+import { getRetentionPrefix } from '#~/api/common/helpers/retention-period.js'
 
 export const downloadController = async (request, h) => {
   const agreementData = request.auth.credentials?.agreementData

@@ -5,7 +5,7 @@
  */
 
 import Joi from 'joi'
-import sampleData from '~/src/api/common/helpers/sample-data/index.js'
+import sampleData from '#~/api/common/helpers/sample-data/index.js'
 
 /**
  * Get a sample agreement object from Pact test data

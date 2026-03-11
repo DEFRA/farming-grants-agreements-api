@@ -57,7 +57,7 @@
                         "1": {
                           "code": "CMOR1",
                           "description": "CMOR1: Assess moorland and produce a written record",
-                          "version": 1,
+                          "version": "1",
                           "unit": "ha",
                           "quantity": 4.53411078,
                           "rateInPence": 1060,
@@ -70,7 +70,7 @@
                         "1": {
                           "code": "CMOR1",
                           "description": "CMOR1: Assess moorland and produce a written record",
-                          "version": 1,
+                          "version": "1",
                           "annualPaymentPence": 27200
                         }
                       },
@@ -248,10 +248,6 @@
                     "applicant": {
                       "business": {
                         "name": "J&S Hartley",
-                        "email": {
-                          "address": "cliffspencetasabbeyfarmf@mrafyebbasatecnepsffilcm.com.test"
-                        },
-                        "phone": "01234031670",
                         "address": {
                           "line1": "Mason House Farm Clitheroe Rd",
                           "line2": "Bashall Eaves",
@@ -285,7 +281,7 @@
                           "actions": [
                             {
                               "code": "CMOR1",
-                              "version": 1,
+                              "version": "1",
                               "durationYears": 3,
                               "appliedFor": {
                                 "unit": "ha",
@@ -308,7 +304,7 @@
                           "actions": [
                             {
                               "code": "CMOR1",
-                              "version": 1,
+                              "version": "1",
                               "durationYears": 3,
                               "appliedFor": {
                                 "unit": "ha",
@@ -777,9 +773,9 @@
                     "example": "CMOR1: Assess moorland and produce a written record"
                   },
                   "version": {
-                    "type": "number",
+                    "type": "string",
                     "description": "",
-                    "example": 1
+                    "example": "1"
                   },
                   "unit": {
                     "type": "string",
@@ -848,9 +844,9 @@
                     "example": "CMOR1: Assess moorland and produce a written record"
                   },
                   "version": {
-                    "type": "number",
+                    "type": "string",
                     "description": "",
-                    "example": 1
+                    "example": "1"
                   },
                   "annualPaymentPence": {
                     "type": "number",

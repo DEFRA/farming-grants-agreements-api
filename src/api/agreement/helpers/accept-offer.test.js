@@ -1,12 +1,12 @@
 import { vi } from 'vitest'
 
 import Boom from '@hapi/boom'
-import agreementsModel from '~/src/api/common/models/agreements.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
 import { acceptOffer } from './accept-offer.js'
-import { config } from '~/src/config/index.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '~/src/api/adapter/land-grants-adapter.js'
+import { config } from '#~/config/index.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 
-vi.mock('~/src/api/common/models/agreements.js', () => ({
+vi.mock('#~/api/common/models/agreements.js', () => ({
   __esModule: true,
   default: {
     find: vi.fn(),
@@ -25,8 +25,8 @@ vi.mock('~/src/api/common/models/agreements.js', () => ({
     createAgreementWithVersions: vi.fn()
   }
 }))
-vi.mock('~/src/config/index.js')
-vi.mock('~/src/api/adapter/land-grants-adapter.js', () => ({
+vi.mock('#~/config/index.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
 
@@ -70,7 +70,7 @@ describe('acceptOffer', () => {
         'files.s3.bucket': 'test-bucket',
         'files.s3.region': 'eu-west-2',
         'aws.sns.topic.agreementStatusUpdate.arn':
-          'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated',
+          'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo',
         'aws.sns.topic.agreementStatusUpdate.type':
           'io.onsite.agreement.status.updated'
       }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set defaults for local testing
-QUEUE_URL="https://sqs.eu-west-2.amazonaws.com/332499610595/create_agreement"
+QUEUE_URL="https://sqs.eu-west-2.amazonaws.com/332499610595/create_agreement_fifo.fifo"
 AWS_ENDPOINT_URL="https://sqs.eu-west-2.amazonaws.com"
 AWS_REGION="eu-west-2"
 
@@ -10,7 +10,7 @@ read -r -d '' MESSAGE << EOM
 {
   "id":"xxxx-xxxx-xxxx-xxxx",
   "source":"fg-gas-backend",
-  "specVersion":"1.0",
+  "specversion":"1.0",
   "type":"cloud.defra.test.fg-gas-backend.agreement.create",
   "datacontenttype":"application/json",
   "data":{

@@ -101,6 +101,7 @@ defra-diff <repository-name> <from-tag> <to-tag>
   - `farming-grants-agreements-ui`
   - `farming-grants-agreements-api`
   - `farming-grants-agreements-pdf`
+  - `grants-payment-service`
 - `from-tag` (required): Starting tag/version
 - `to-tag` (required): Ending tag/version
 
@@ -186,5 +187,6 @@ source ~/.zshrc   # for zsh
 - `farming-grants-agreements-pdf` - PDF generation service
 - `farming-grants-agreements-ui` - Frontend application
 - `farming-grants-agreements-api` - Agreements backend API
+- `grants-payment-service` - Generic Grants Payment service
 
 All repositories should be located in the same parent directory for the scripts to work correctly.

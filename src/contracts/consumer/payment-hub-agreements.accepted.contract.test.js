@@ -4,13 +4,13 @@ import crypto from 'node:crypto'
 
 import { Pact } from '@pact-foundation/pact'
 
-import { createServer } from '~/src/api/index.js'
-import { config } from '~/src/config/index.js'
-import * as jwtAuth from '~/src/api/common/helpers/jwt-auth.js'
-import { seedDatabase } from '~/src/api/common/helpers/seed-database.js'
-import agreements from '~/src/api/common/helpers/sample-data/agreements.js'
-import { withPactDir } from '~/src/contracts/test-helpers/pact.js'
-import { buildIsolatedMongoOptions } from '~/src/contracts/test-helpers/mongo.js'
+import { createServer } from '#~/api/index.js'
+import { config } from '#~/config/index.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
+import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
+import agreements from '#~/api/common/helpers/sample-data/agreements.js'
+import { withPactDir } from '#~/contracts/test-helpers/pact.js'
+import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
 
 vi.unmock('mongoose')
 
@@ -32,7 +32,7 @@ const calculatedPayment = {
         rateInPence: 1060,
         annualPaymentPence: 53566,
         parcelId: 'SE12 3456 7890',
-        version: 1
+        version: '1.0.0'
       }
     },
 
@@ -41,7 +41,7 @@ const calculatedPayment = {
         code: 'CMOR1',
         description: 'Agreement-level item',
         annualPaymentPence: 27200,
-        version: 1
+        version: '1.0.0'
       }
     },
 
@@ -70,7 +70,7 @@ const calculatedPayment = {
   }
 }
 
-vi.mock('~/src/api/common/helpers/sns-publisher.js', () => ({
+vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
 
@@ -91,7 +91,7 @@ describe.skip('UI sending a POST request to accept an agreement', () => {
     originalFetch = global.fetch
     global.fetch = vi.fn((url, options) => {
       const urlStr = String(url)
-      if (urlStr.includes('/payments/calculate')) {
+      if (urlStr.includes('/api/v2/payments/calculate')) {
         return Promise.resolve({
           ok: true,
           headers: { get: vi.fn().mockReturnValue('application/json') },

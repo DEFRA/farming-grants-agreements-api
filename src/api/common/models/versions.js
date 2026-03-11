@@ -25,7 +25,7 @@ const ActionApplications = new mongoose.Schema({
 const ParcelItems = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
-  version: { type: Number, required: true },
+  version: { type: String, required: true, set: String },
   unit: { type: String, required: true },
   quantity: { type: Decimal128, required: true },
   rateInPence: { type: Number, required: true },
@@ -36,7 +36,7 @@ const ParcelItems = new mongoose.Schema({
 
 const ParcelActions = new mongoose.Schema({
   code: { type: String, required: true },
-  version: { type: Number, required: true },
+  version: { type: String, required: true, set: String },
   durationYears: { type: Number, required: true },
   appliedFor: {
     type: new mongoose.Schema({
@@ -76,7 +76,7 @@ const Application = new mongoose.Schema({
 const AgreementLevelItems = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
-  version: { type: Number, required: true },
+  version: { type: String, required: true, set: String },
   annualPaymentPence: { type: Number, required: true }
 })
 
@@ -99,13 +99,6 @@ const Applicant = new mongoose.Schema({
   business: {
     type: new mongoose.Schema({
       name: { type: String, required: true },
-      email: {
-        type: new mongoose.Schema({
-          address: { type: String, required: true }
-        }),
-        required: true
-      },
-      phone: { type: String, required: true },
       address: {
         type: new mongoose.Schema({
           line1: { type: String, required: true },
@@ -114,7 +107,7 @@ const Applicant = new mongoose.Schema({
           line4: { type: String },
           line5: { type: String },
           street: { type: String },
-          city: { type: String },
+          city: { type: String, required: true },
           postalCode: { type: String, required: true }
         }),
         required: true
@@ -172,9 +165,12 @@ const schema = new mongoose.Schema(
     signatureDate: { type: Date },
     scheme: { type: String },
     actionApplications: { type: [ActionApplications], required: true },
+    consentObjects: { type: [mongoose.Schema.Types.Mixed], required: false },
     payment: { type: Payment, required: false },
     applicant: { type: Applicant, required: true },
-    application: { type: Application, required: true }
+    application: { type: Application, required: true },
+    claimId: { type: String },
+    originalInvoiceNumber: { type: String }
   },
   {
     collection,

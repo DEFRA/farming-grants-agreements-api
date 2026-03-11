@@ -1,11 +1,11 @@
 import { publishEvent } from './sns-publisher.js'
 import { PublishCommand } from '@aws-sdk/client-sns'
 import { v4 as uuidv4 } from 'uuid'
-import { config } from '~/src/config/index.js'
+import { config } from '#~/config/index.js'
 
 vi.mock('@aws-sdk/client-sns')
 vi.mock('uuid')
-vi.mock('~/src/config/index.js', () => ({
+vi.mock('#~/config/index.js', () => ({
   config: { get: vi.fn() }
 }))
 
@@ -26,6 +26,25 @@ describe('publishEvent', () => {
 
   const mockClient = { send: mockSend }
 
+  const mockMessageTopicArn = 'arn:aws:sns:eu-west-2:123456789012:test-topic'
+  const mockMessageType = 'TestType'
+  const mockMessageTime = '2025-08-12T14:34:38+01:00'
+  const mockMessageData = { foo: 'bar' }
+  const expectedPublish = {
+    TopicArn: mockMessageTopicArn,
+    Message: JSON.stringify({
+      id: 'mock-uuid',
+      source: 'test-source',
+      specversion: '1.0',
+      type: mockMessageType,
+      time: mockMessageTime,
+      datacontenttype: 'application/json',
+      data: mockMessageData
+    }),
+    MessageGroupId: 'test-service',
+    MessageDeduplicationId: 'mock-uuid'
+  }
+
   beforeEach(() => {
     uuidv4.mockReturnValue('mock-uuid')
     vi.clearAllMocks()
@@ -43,6 +62,8 @@ describe('publishEvent', () => {
           return 'test-source'
         case 'aws.sns.maxAttempts':
           return 3
+        case 'serviceName':
+          return 'test-service'
         default:
           return undefined
       }
@@ -54,10 +75,10 @@ describe('publishEvent', () => {
 
     await publishEvent(
       {
-        topicArn: 'arn:aws:sns:eu-west-2:123456789012:test-topic',
-        type: 'TestType',
-        time: '2025-08-12T14:34:38+01:00',
-        data: { foo: 'bar' }
+        topicArn: mockMessageTopicArn,
+        type: mockMessageType,
+        time: mockMessageTime,
+        data: mockMessageData
       },
       logger,
       mockClient
@@ -67,6 +88,8 @@ describe('publishEvent', () => {
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining('Published event to SNS topic')
     )
+
+    expect(PublishCommand).toHaveBeenCalledWith(expectedPublish)
   })
 
   it('retries on retryable error and succeeds', async () => {
@@ -80,10 +103,10 @@ describe('publishEvent', () => {
 
     await publishEvent(
       {
-        topicArn: 'arn:aws:sns:eu-west-2:123456789012:test-topic',
-        type: 'TestType',
-        time: '2025-08-12T14:34:38+01:00',
-        data: { foo: 'bar' }
+        topicArn: mockMessageTopicArn,
+        type: mockMessageType,
+        time: mockMessageTime,
+        data: mockMessageData
       },
       logger,
       mockClient
@@ -99,6 +122,11 @@ describe('publishEvent', () => {
       'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:123456789012:test-topic type: TestType'
     )
     expect(logger.info).toHaveBeenCalled()
+
+    expect(PublishCommand).toHaveBeenCalledTimes(2)
+    PublishCommand.mock.calls.forEach((call) =>
+      expect(call[0]).toEqual(expectedPublish)
+    )
   })
 
   it('throws after max retries on persistent error', async () => {
@@ -111,10 +139,10 @@ describe('publishEvent', () => {
     await expect(
       publishEvent(
         {
-          topicArn: 'arn:aws:sns:eu-west-2:123456789012:test-topic',
-          type: 'TestType',
-          time: '2025-08-12T14:34:38+01:00',
-          data: { foo: 'bar' }
+          topicArn: mockMessageTopicArn,
+          type: mockMessageType,
+          time: mockMessageTime,
+          data: mockMessageData
         },
         logger,
         mockClient
@@ -126,6 +154,11 @@ describe('publishEvent', () => {
 
     expect(mockSend).toHaveBeenCalledTimes(3)
     expect(logger.error).toHaveBeenCalled()
+
+    expect(PublishCommand).toHaveBeenCalledTimes(3)
+    PublishCommand.mock.calls.forEach((call) =>
+      expect(call[0]).toEqual(expectedPublish)
+    )
   })
 
   it('does not retry on real error', async () => {
@@ -138,10 +171,10 @@ describe('publishEvent', () => {
     await expect(
       publishEvent(
         {
-          topicArn: 'arn:aws:sns:eu-west-2:123456789012:test-topic',
-          type: 'TestType',
-          time: '2025-08-12T14:34:38+01:00',
-          data: { foo: 'bar' }
+          topicArn: mockMessageTopicArn,
+          type: mockMessageType,
+          time: mockMessageTime,
+          data: mockMessageData
         },
         logger,
         mockClient
@@ -160,5 +193,8 @@ describe('publishEvent', () => {
       }),
       'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:123456789012:test-topic type: TestType'
     )
+
+    expect(PublishCommand).toHaveBeenCalledTimes(1)
+    expect(PublishCommand).toHaveBeenCalledWith(expectedPublish)
   })
 })

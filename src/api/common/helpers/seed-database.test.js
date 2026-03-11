@@ -12,7 +12,7 @@ describe('seedDatabase', () => {
 
       // mocks required for this test
       vi.doMock(
-        '~/src/api/common/helpers/sqs-message-processor/create-agreement.js',
+        '#~/api/common/helpers/sqs-message-processor/create-agreement.js',
         () => ({
           handleCreateAgreementEvent: mockProcessMessage
         })
@@ -53,7 +53,7 @@ describe('seedDatabase', () => {
         return { __esModule: true, default: mock }
       })
 
-      vi.doMock('~/src/api/common/models/index.js', () => ({
+      vi.doMock('#~/api/common/models/index.js', () => ({
         __esModule: true,
         default: {
           agreements: {
@@ -64,7 +64,7 @@ describe('seedDatabase', () => {
         }
       }))
 
-      vi.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
+      vi.doMock('#~/api/common/helpers/sample-data/index.js', () => ({
         __esModule: true,
         default: {
           agreements: [{ id: 'abc123', foo: 'bar' }]
@@ -161,7 +161,7 @@ describe('seedDatabase', () => {
         return { __esModule: true, default: mock }
       })
 
-      vi.doMock('~/src/api/common/models/index.js', () => ({
+      vi.doMock('#~/api/common/models/index.js', () => ({
         __esModule: true,
         default: {
           agreements: {
@@ -172,14 +172,14 @@ describe('seedDatabase', () => {
         }
       }))
 
-      vi.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
+      vi.doMock('#~/api/common/helpers/sample-data/index.js', () => ({
         __esModule: true,
         default: {
           agreements: [{ agreementNumber: 'FPTT123456789' }]
         }
       }))
 
-      vi.doMock('~/src/api/common/helpers/sns-publisher.js', () => ({
+      vi.doMock('#~/api/common/helpers/sns-publisher.js', () => ({
         publishEvent: mockPublishEvent
       }))
     })
@@ -240,7 +240,7 @@ describe('seedDatabase', () => {
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
           data: { agreementNumber: 'FPTT123456789' }
@@ -288,7 +288,7 @@ describe('seedDatabase', () => {
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
           data: { agreementNumber: 'CUST1' }
@@ -299,7 +299,7 @@ describe('seedDatabase', () => {
       expect(mockPublishEvent).toHaveBeenCalledWith(
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           time: expect.any(String),
           data: { agreementNumber: 'CUST2' }
@@ -332,13 +332,13 @@ describe('seedDatabase', () => {
       }
 
       vi.doMock(
-        '~/src/api/common/helpers/sqs-message-processor/create-agreement.js',
+        '#~/api/common/helpers/sqs-message-processor/create-agreement.js',
         () => ({
           handleCreateAgreementEvent: mockProcessMessage
         })
       )
 
-      vi.doMock('~/src/api/common/helpers/sample-data/index.js', () => ({
+      vi.doMock('#~/api/common/helpers/sample-data/index.js', () => ({
         __esModule: true,
         default: {
           agreements: [
@@ -363,7 +363,7 @@ describe('seedDatabase', () => {
         'mockNotificationMessageId',
         {
           topicArn:
-            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved',
+            'arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo',
           time: expect.any(String),
           type: 'cloud.defra.test.fg-gas-backend.agreement.create',
           data: {

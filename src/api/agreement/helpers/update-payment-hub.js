@@ -1,10 +1,14 @@
 import Boom from '@hapi/boom'
-import { getAgreementDataById } from '~/src/api/agreement/helpers/get-agreement-data.js'
-import { createInvoice } from '~/src/api/agreement/helpers/invoice/create-invoice.js'
-import { updateInvoice } from '~/src/api/agreement/helpers/invoice/update-invoice.js'
-import { sendPaymentHubRequest } from '~/src/api/common/helpers/payment-hub/index.js'
-import { formatPaymentDecimal } from '~/src/api/common/helpers/format-payment-decimal.js'
-import { config } from '~/src/config/index.js'
+import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { createInvoice } from '#~/api/agreement/helpers/invoice/create-invoice.js'
+import { updateInvoice } from '#~/api/agreement/helpers/invoice/update-invoice.js'
+import { sendPaymentHubRequest } from '#~/api/common/helpers/payment-hub/index.js'
+import { formatPaymentDecimal } from '#~/api/common/helpers/format-payment-decimal.js'
+import {
+  formatPaymentDate,
+  validateOptionalPaymentDate
+} from '#~/api/common/helpers/format-payment-date.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Sends a payload to the payments hub
@@ -13,59 +17,16 @@ import { config } from '~/src/config/index.js'
  * @returns {Promise<*>} Result of the payment hub update
  * @throws {Error} If the agreement data is not found or if there is an error
  */
-async function updatePaymentHub({ server, logger }, agreementNumber) {
+const updatePaymentHub = async ({ server, logger }, agreementNumber) => {
   try {
     const agreementData = await getAgreementDataById(agreementNumber)
     const invoice = await createInvoice(agreementNumber, agreementData)
 
-    const marketingYear = new Date().getFullYear()
-
-    const invoiceLines = agreementData.payment.payments.map((payment) =>
-      payment.lineItems.map((line) => {
-        let description, schemeCode
-        if (line.parcelItemId) {
-          const lineDetails =
-            agreementData.payment.parcelItems[line.parcelItemId]
-          description = `${payment.paymentDate}: Parcel: ${lineDetails.parcelId}: ${lineDetails.description}`
-          schemeCode = lineDetails.code
-        }
-        if (line.agreementLevelItemId) {
-          const lineDetails =
-            agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
-          description = `${payment.paymentDate}: One-off payment per agreement per year for ${lineDetails.description}`
-          schemeCode = lineDetails.code
-        }
-
-        return {
-          value: formatPaymentDecimal(line.paymentPence),
-          description,
-          schemeCode
-        }
-      })
+    const paymentHubRequest = buildPaymentHubRequest(
+      agreementData,
+      invoice.invoiceNumber,
+      invoice.claimId
     )
-
-    // Construct the request payload based on the agreement data
-    /** @type {PaymentHubRequest} */
-    const paymentHubRequest = {
-      sourceSystem: config.get('paymentHub.defaultSourceSystem'),
-      sbi: agreementData.identifiers.sbi,
-      frn: agreementData.identifiers.frn,
-      marketingYear,
-      paymentRequestNumber: agreementData.version,
-      correlationId: agreementData.correlationId,
-      invoiceNumber: invoice.invoiceNumber,
-      agreementNumber: agreementData.agreementNumber,
-      schedule:
-        agreementData.payment.frequency === 'Quarterly' ? 'T4' : undefined,
-      dueDate: agreementData.payment.payments[0].paymentDate,
-      value: formatPaymentDecimal(agreementData.payment.agreementTotalPence),
-      currency: agreementData.payment.currency || 'GBP',
-      ledger: config.get('paymentHub.defaultLedger'),
-      deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
-      fesCode: config.get('paymentHub.defaultFesCode'),
-      claimId: invoice.claimId,
-      invoiceLines
-    }
 
     // update the invoice with the payment hub request
     await updateInvoice(invoice.invoiceNumber, {
@@ -95,6 +56,128 @@ async function updatePaymentHub({ server, logger }, agreementNumber) {
   }
 }
 
-export { updatePaymentHub }
+/** @import { PaymentHubRequest } from '#~/api/common/types/payment-hub.d.js' */
 
-/** @import { PaymentHubRequest } from '~/src/api/common/types/payment-hub.d.js' */
+const buildPaymentHubRequest = (
+  agreementData,
+  invoiceNumber,
+  invoiceClaimId
+) => {
+  const marketingYear = new Date().getFullYear()
+  const invoiceLines = buildInvoiceLines(agreementData)
+  const { dueDate, recoveryDate, originalSettlementDate } =
+    resolvePaymentDates(agreementData)
+
+  // Use claimId from agreement data if available, otherwise fallback to invoice claimId
+  const claimId = agreementData.claimId || invoiceClaimId
+
+  // Use originalInvoiceNumber from agreement data if available
+  const originalInvoiceNumber = agreementData.originalInvoiceNumber
+
+  return {
+    sourceSystem: config.get('paymentHub.defaultSourceSystem'),
+    sbi: agreementData.identifiers.sbi,
+    frn: agreementData.identifiers.frn,
+    marketingYear,
+    paymentRequestNumber: agreementData.version,
+    correlationId: agreementData.correlationId,
+    invoiceNumber,
+    originalInvoiceNumber,
+    agreementNumber: agreementData.agreementNumber,
+    schedule:
+      agreementData.payment.frequency === 'Quarterly'
+        ? config.get('paymentHub.defaultSchedule')
+        : undefined,
+    dueDate,
+    recoveryDate,
+    debtType: validateDebtType(''),
+    remittanceDescription: validateRemittanceDescription(
+      'Farm Payments Technical Test Payment'
+    ),
+    originalSettlementDate,
+    annualValue:
+      -formatPaymentDecimal(agreementData.payment.agreementTotalPence) || 0,
+    currency: agreementData.payment.currency || 'GBP',
+    ledger: config.get('paymentHub.defaultLedger'),
+    deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
+    fesCode: config.get('paymentHub.defaultFesCode'),
+    claimId,
+    invoiceLines
+  }
+}
+
+const resolvePaymentDates = (agreementData) => {
+  const dueDate = formatPaymentDate(
+    agreementData.payment.payments[0].paymentDate
+  )
+  const recoveryDate = agreementData.payment.recoveryDate ?? ''
+  const originalSettlementDate =
+    agreementData.payment.originalSettlementDate ?? ''
+
+  validateOptionalPaymentDate(dueDate, 'dueDate')
+  if (recoveryDate !== '') {
+    validateOptionalPaymentDate(recoveryDate, 'recoveryDate')
+  }
+  if (originalSettlementDate !== '') {
+    validateOptionalPaymentDate(
+      originalSettlementDate,
+      'originalSettlementDate'
+    )
+  }
+
+  return { dueDate, recoveryDate, originalSettlementDate }
+}
+
+const DEBT_TYPE_MAX_LENGTH = 3
+
+const validateDebtType = (debtType) => {
+  if (debtType.length > DEBT_TYPE_MAX_LENGTH) {
+    throw new Error(
+      `value of ${debtType} must be no more than ${DEBT_TYPE_MAX_LENGTH} characters`
+    )
+  }
+  return debtType
+}
+
+const REMITTANCE_DESCRIPTION_MAX_LENGTH = 60
+
+const validateRemittanceDescription = (remittanceDescription) => {
+  if (remittanceDescription.length > REMITTANCE_DESCRIPTION_MAX_LENGTH) {
+    throw new Error(
+      `value of ${remittanceDescription} must be no more than ${REMITTANCE_DESCRIPTION_MAX_LENGTH} characters`
+    )
+  }
+  return remittanceDescription
+}
+
+const buildInvoiceLines = (agreementData) => {
+  return agreementData.payment.payments.map((payment) =>
+    payment.lineItems.map((line) => {
+      let description, schemeCode
+      if (line.parcelItemId) {
+        const lineDetails = agreementData.payment.parcelItems[line.parcelItemId]
+        description = `${payment.paymentDate}: Parcel: ${lineDetails.parcelId}: ${lineDetails.description}`
+        schemeCode = lineDetails.code
+      }
+      if (line.agreementLevelItemId) {
+        const lineDetails =
+          agreementData.payment.agreementLevelItems[line.agreementLevelItemId]
+        description = `${payment.paymentDate}: One-off payment per agreement per year for ${lineDetails.description}`
+        schemeCode = lineDetails.code
+      }
+
+      return {
+        value: formatPaymentDecimal(line.paymentPence),
+        agreementNumber: agreementData.agreementNumber,
+        deliveryBody: config.get('paymentHub.defaultDeliveryBody'),
+        accountCode: 'SOS710',
+        fundCode: 'DRD10',
+        marketingYear: new Date().getFullYear(),
+        description,
+        schemeCode
+      }
+    })
+  )
+}
+
+export { updatePaymentHub, validateDebtType, validateRemittanceDescription }

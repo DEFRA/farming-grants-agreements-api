@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { healthController } from '~/src/api/health/controller.js'
+import { healthController } from '#~/api/health/controller.js'
 
 const healthResponseSchema = Joi.object({
   message: Joi.string()

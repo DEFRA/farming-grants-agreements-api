@@ -1,11 +1,11 @@
 import { vi } from 'vitest'
 import { sendPaymentHubRequest } from './index.js'
-import { config } from '~/src/config/index.js'
-import { initCache } from '~/src/api/common/helpers/cache.js'
+import { config } from '#~/config/index.js'
+import { initCache } from '#~/api/common/helpers/cache.js'
 import crypto from 'crypto'
 
-vi.mock('~/src/config/index.js')
-vi.mock('~/src/api/common/helpers/cache.js')
+vi.mock('#~/config/index.js')
+vi.mock('#~/api/common/helpers/cache.js')
 vi.mock('crypto', () => ({
   __esModule: true,
   default: {
@@ -18,7 +18,7 @@ vi.mock('crypto', () => ({
   }
 }))
 
-vi.mock('~/src/api/common/helpers/logging/logger-options.js', () => ({
+vi.mock('#~/api/common/helpers/logging/logger-options.js', () => ({
   loggerOptions: {
     enabled: true,
     ignorePaths: ['/health'],
@@ -28,7 +28,7 @@ vi.mock('~/src/api/common/helpers/logging/logger-options.js', () => ({
   }
 }))
 
-vi.mock('~/src/api/common/helpers/logging/logger.js', () => ({
+vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
   createLogger: vi.fn().mockReturnValue({
     info: vi.fn(),
     error: vi.fn(),

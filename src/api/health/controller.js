@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
-import { statusCodes } from '~/src/api/common/constants/status-codes.js'
-import { config } from '~/src/config/index.js'
+import { statusCodes } from '#~/api/common/constants/status-codes.js'
+import { config } from '#~/config/index.js'
 
 /**
  * A generic health-check endpoint. Used by the platform to check if the service is up and handling requests.
