@@ -110,7 +110,7 @@ describe('sending a create grant payment event via SNS', () => {
     config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
-    config.set('featureFlags.seedDb', true)
+    config.set('featureFlags.seedDb', false)
 
     server = await createServer({
       disableSQS: true,
@@ -159,6 +159,7 @@ describe('sending a create grant payment event via SNS', () => {
         }),
     stateHandlers: {
       'an agreement offer has been accepted': async () => {
+        mockPublishEvent.mockResolvedValue()
         return Promise.resolve()
       }
     },

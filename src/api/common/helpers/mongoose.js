@@ -36,9 +36,11 @@ export const mongooseDb = {
           'featureFlags.seedDb is enabled. This should not be enabled in production.'
         )
 
-        seedDatabase(server.logger).catch((err) => {
+        try {
+          await seedDatabase(server.logger)
+        } catch (err) {
           server.logger.error(err, 'Error seeding database failed:')
-        })
+        }
       }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
