@@ -16,6 +16,7 @@ import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
+import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
@@ -30,6 +31,7 @@ vi.mock(
 )
 vi.mock('#~/api/common/helpers/jwt-auth.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
+vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
 
 const localPactDir = path.resolve(
   process.cwd(),
@@ -78,6 +80,14 @@ const setupMocks = () => {
   })
 
   getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
+
+  createGrantPaymentFromAgreement.mockReset()
+
+  createGrantPaymentFromAgreement.mockResolvedValue({
+    agreementNumber: 'SFI987654321',
+    clientRef: 'client-ref-002',
+    code: 'frps-private-beta'
+  })
 
   vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
     valid: true,
@@ -133,14 +143,20 @@ const createdMessageProvider = async () => {
 const acceptedMessageProvider = async (server) => {
   let message
   try {
-    // Reset mocks to ensure clean state
     mockPublishEvent.mockClear()
 
-    // Set the config to use the correct event type for accepted
     config.set(SNS_EVENT_SOURCE_KEY, PROVIDER_NAME)
     config.set(
       'aws.sns.topic.agreementStatusUpdate.type',
       'cloud.defra.test.farming-grants-agreements-api.agreement.accepted'
+    )
+    config.set(
+      'aws.sns.topic.createPayment.arn',
+      'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo'
+    )
+    config.set(
+      'aws.sns.topic.createPayment.type',
+      'cloud.defra.test.farming-grants-agreements-api.payment.create'
     )
 
     await server.inject({
@@ -151,10 +167,28 @@ const acceptedMessageProvider = async (server) => {
       }
     })
 
-    const capturedInput = mockPublishEvent.mock.calls[0][0]
+    const acceptedType = config.get('aws.sns.topic.agreementStatusUpdate.type')
+
+    const acceptedPublishCall = mockPublishEvent.mock.calls.find(
+      ([event]) => event?.type === acceptedType
+    )
+
+    if (!acceptedPublishCall) {
+      throw new Error(
+        `Accepted agreement event was not published. Calls were: ${JSON.stringify(
+          mockPublishEvent.mock.calls.map(([event]) => ({
+            type: event?.type,
+            topicArn: event?.topicArn
+          })),
+          null,
+          2
+        )}`
+      )
+    }
+
+    const capturedInput = acceptedPublishCall[0]
     message = buildCloudEventMessage(capturedInput)
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(err)
     message = 'Publish event was not called, check above for errors'
   }

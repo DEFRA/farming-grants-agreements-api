@@ -41,7 +41,8 @@ describe('publishEvent', () => {
       datacontenttype: 'application/json',
       data: mockMessageData
     }),
-    MessageGroupId: 'test-service'
+    MessageGroupId: 'test-service',
+    MessageDeduplicationId: 'mock-uuid'
   }
 
   beforeEach(() => {
