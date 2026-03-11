@@ -199,8 +199,8 @@ describe('acceptOfferDocumentController', () => {
           code: 'test-code',
           date: '2024-01-02T00:00:00.000Z',
           startDate: '2024-01-01',
-          endDate: '2027-12-31',
-          claimId: 'R00000001'
+          endDate: '2027-12-31'
+          // claimId: 'R00000001'
         }
       },
       expect.anything()
