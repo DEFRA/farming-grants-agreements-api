@@ -3,6 +3,20 @@ import * as Jwt from '@hapi/jwt'
 const argv = process.argv.slice(2)
 let source, sbi, jwtSecret
 
+if (argv.length === 0) {
+  // eslint-disable-next-line no-console
+  console.log(`Usage: node gen-auth-header.js --source <defra|entra> [--sbi <sbi>] [--secret <secret>]
+
+Options:
+  --source    Authentication source (required): 'defra' or 'entra'
+  --sbi       SBI number (optional)
+  --secret    JWT secret (optional, defaults to AGREEMENTS_JWT_SECRET env var)
+
+Example:
+  node gen-auth-header.js --source defra --sbi 123456789`)
+  throw new Error('No arguments provided')
+}
+
 for (let i = 0; i < argv.length; i++) {
   const arg = argv[i]
   const [key, val] = arg.split('=')

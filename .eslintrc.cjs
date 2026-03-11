@@ -89,8 +89,12 @@ module.exports = {
           '@typescript-eslint/parser': ['.cjs', '.js']
         },
         'import/resolver': {
-          node: true,
-          typescript: true
+          node: {
+            extensions: ['.js', '.cjs', '.json']
+          },
+          typescript: {
+            alwaysTryTypes: true
+          }
         }
       }
     },
