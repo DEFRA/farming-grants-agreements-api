@@ -100,25 +100,25 @@ describe('createGrantPaymentFromAgreement', () => {
           invoiceNumber: 'ORIG-INV-123',
           originalInvoiceNumber: 'ORIG-INV-123',
           agreementNumber: 'FPTT123456',
-          totalAmount: 10000,
+          totalAmount: '10000',
           currency: 'GBP',
-          marketingYear: new Date().getFullYear(),
+          marketingYear: new Date().getFullYear().toString(),
           accountCode: 'SOS710',
           fundCode: 'DRD10',
           payments: [
             {
               dueDate: '2024-05-01',
-              totalAmount: 10000,
+              totalAmount: '10000',
               status: 'pending',
               invoiceLines: [
                 {
-                  amount: 6000,
+                  amount: '6000',
                   description:
                     '2024-05-01: Parcel: P1: Parcel Item Description',
                   schemeCode: 'CODE-P1'
                 },
                 {
-                  amount: 4000,
+                  amount: '4000',
                   description:
                     '2024-05-01: One-off payment per agreement per year for Agreement Level Description',
                   schemeCode: 'CODE-A1'
@@ -197,16 +197,16 @@ describe('createGrantPaymentFromAgreement', () => {
       expect(result).toEqual([
         {
           dueDate: '2024-05-01',
-          totalAmount: 10000,
+          totalAmount: '10000',
           status: 'pending',
           invoiceLines: [
             {
-              amount: 6000,
+              amount: '6000',
               description: '2024-05-01: Parcel: P1: Parcel Item Description',
               schemeCode: 'CODE-P1'
             },
             {
-              amount: 4000,
+              amount: '4000',
               description:
                 '2024-05-01: One-off payment per agreement per year for Agreement Level Description',
               schemeCode: 'CODE-A1'

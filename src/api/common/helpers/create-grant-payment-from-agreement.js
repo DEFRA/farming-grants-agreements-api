@@ -30,7 +30,7 @@ function createPaymentInvoice(
   }
 
   return {
-    amount: lineItem.paymentPence,
+    amount: lineItem.paymentPence.toString(),
     description,
     schemeCode
   }
@@ -66,7 +66,7 @@ export const createPayments = (agreementData) => {
 
     return {
       dueDate: agreementPayment.paymentDate,
-      totalAmount: agreementPayment.totalPaymentPence,
+      totalAmount: agreementPayment.totalPaymentPence.toString(),
       status: 'pending',
       invoiceLines
     }
@@ -115,7 +115,7 @@ export const createInvoice = async (
         agreementNumber,
         totalAmount: agreementTotalPence,
         currency,
-        marketingYear: new Date().getFullYear(),
+        marketingYear: new Date().getFullYear().toString(),
         accountCode: 'SOS710',
         fundCode: 'DRD10',
         payments
@@ -166,9 +166,9 @@ export const createGrantPaymentFromAgreement = async (
         invoiceNumber,
         originalInvoiceNumber,
         agreementNumber,
-        totalAmount: agreementTotalPence,
+        totalAmount: agreementTotalPence.toString(),
         currency,
-        marketingYear: new Date().getFullYear(),
+        marketingYear: new Date().getFullYear().toString(),
         accountCode: 'SOS710',
         fundCode: 'DRD10',
         payments
