@@ -53,7 +53,8 @@ export async function publishEvent(
         new PublishCommand({
           TopicArn: topicArn,
           Message: JSON.stringify(message),
-          MessageGroupId: config.get('serviceName')
+          MessageGroupId: config.get('serviceName'),
+          MessageDeduplicationId: uuidv4()
         })
       )
       logger?.info?.(
