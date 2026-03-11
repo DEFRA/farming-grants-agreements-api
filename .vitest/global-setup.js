@@ -1,5 +1,4 @@
 // MongoDB memory server setup for Vitest
-// Based on @shelf/jest-mongodb configuration
 import { MongoMemoryReplSet } from 'mongodb-memory-server'
 
 let mongoServer
