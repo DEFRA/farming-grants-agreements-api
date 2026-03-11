@@ -3,11 +3,13 @@ import path from 'node:path'
 
 import { MessageProviderPact } from '@pact-foundation/pact'
 
+import { config } from '#~/config/index.js'
 import { createServer } from '#~/api/index.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { getAgreementDataBySbi } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
+import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
@@ -15,6 +17,7 @@ import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
+vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
 vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
@@ -63,11 +66,11 @@ describe('sending updated (accepted) events via SNS', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Reset mock implementations
     acceptOffer.mockReset()
     unacceptOffer.mockReset()
     getAgreementDataBySbi.mockReset()
     updatePaymentHub.mockReset()
+    createGrantPaymentFromAgreement.mockReset()
 
     acceptOffer.mockResolvedValue({
       ...mockAgreementData,
@@ -77,10 +80,14 @@ describe('sending updated (accepted) events via SNS', () => {
     unacceptOffer.mockResolvedValue()
     updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
 
-    // Setup default mock implementations with complete data structure
+    createGrantPaymentFromAgreement.mockResolvedValue({
+      agreementNumber: 'FPTT123456789',
+      clientRef: 'mockClientRef',
+      code: 'mockCode'
+    })
+
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
 
-    // Mock JWT auth functions to return valid authorization by default
     vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
       source: 'defra',
@@ -105,24 +112,27 @@ describe('sending updated (accepted) events via SNS', () => {
         }
       : {
           logLevel: 'debug',
-          // Hard coded path for local testing
           pactUrls: getJsonPacts(localPactDir)
         }),
-    // Consumer.given
     stateHandlers: {
       'an agreement offer has been accepted': async () => {
-        // Given Setup mock state (like beforeEach)
         mockPublishEvent.mockResolvedValue()
-
         return Promise.resolve()
       }
     },
-    // Consumer.expectsToReceive
     messageProviders: {
       'a request with the accepted agreement': async () => {
-        // Respond with data based on the state handler mock state
         let message
         try {
+          config.set(
+            'aws.sns.topic.createPayment.arn',
+            'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo'
+          )
+          config.set(
+            'aws.sns.topic.createPayment.type',
+            'cloud.defra.test.farming-grants-agreements-api.payment.create'
+          )
+
           await server.inject({
             method: 'POST',
             url: '/',
@@ -131,12 +141,31 @@ describe('sending updated (accepted) events via SNS', () => {
             }
           })
 
-          message = mockPublishEvent.mock.calls[0][0]
+          const acceptedPublishCall = mockPublishEvent.mock.calls.find(
+            ([event]) =>
+              event?.type === 'io.onsite.agreement.status.updated' &&
+              event?.data?.status === 'accepted'
+          )
+
+          if (!acceptedPublishCall) {
+            throw new Error(
+              `Accepted PDF event was not published. Calls were: ${JSON.stringify(
+                mockPublishEvent.mock.calls.map(([event]) => ({
+                  type: event?.type,
+                  topicArn: event?.topicArn,
+                  status: event?.data?.status
+                })),
+                null,
+                2
+              )}`
+            )
+          }
+
+          message = acceptedPublishCall[0]
           message.specversion = message.specversion ?? '1.0'
           message.data.agreementCreateDate = '2025-10-06T16:40:21.951Z'
           message.time = '2025-10-06T16:41:59.497Z'
         } catch (err) {
-          // eslint-disable-next-line no-console
           console.error(err)
           message = 'Publish event was not called, check above for errors'
         }
