@@ -11,8 +11,5 @@ coverage
 .env
 .public
 
-# @shelf/jest-mongodb generated file
-globalConfig.json
-
 tsconfig.tsbuildinfo
 src/contracts/consumer/pacts

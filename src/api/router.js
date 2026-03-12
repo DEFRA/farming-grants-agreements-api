@@ -17,7 +17,7 @@ const router = {
       await server.register([agreement])
 
       if (config.get('featureFlags.testEndpoints') === true) {
-        server.logger.warn(
+        server.logger?.warn(
           'Test endpoints are enabled. These should not be used in production.'
         )
         await server.register([testEndpoints])
