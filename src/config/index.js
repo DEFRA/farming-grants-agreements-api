@@ -71,6 +71,12 @@ const config = convict({
     format: String,
     default: 'Farm payments'
   },
+  serviceHost: {
+    doc: 'The host for this service',
+    format: String,
+    default: 'localhost',
+    env: 'SERVICE_HOST'
+  },
   root: {
     doc: 'Project root',
     format: String,

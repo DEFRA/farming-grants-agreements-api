@@ -1,5 +1,6 @@
 /* eslint-disable no-console, n/no-process-exit */
 import { createServer } from '../src/api/index.js'
+import { config } from '../src/config/index.js'
 import { asyncApiSpec } from '../docs/asyncapi-spec.js'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -15,7 +16,8 @@ try {
 
   const response = await server.inject({
     method: 'GET',
-    url: '/docs/openapi.json'
+    url: '/docs/openapi.json',
+    authority: config.get('serviceHost')
   })
   const openApiSpec = JSON.parse(response.payload)
 

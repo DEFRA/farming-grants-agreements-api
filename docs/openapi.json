@@ -6,7 +6,7 @@
     "description": "Farming Grants Agreements API"
   },
   "swagger": "2.0",
-  "host": "Mac-mini.local:3555",
+  "host": "localhost",
   "schemes": [
     "http"
   ],
@@ -241,8 +241,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "Name of the SQS queue to post the message to (defaults to create_agreement)",
-            "default": "create_agreement",
+            "description": "Name of the SQS queue to post the message to (defaults to QUEUE_URL env var)",
             "name": "queueName",
             "in": "path"
           },
