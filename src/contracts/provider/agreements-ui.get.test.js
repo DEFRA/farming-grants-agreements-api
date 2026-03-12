@@ -41,7 +41,6 @@ describe('UI sending a GET request to get an agreement', () => {
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.seedDb', true)
-    config.set('featureFlags.isPaymentHubEnabled', false)
 
     const sbi = 'mock-sbi'
 

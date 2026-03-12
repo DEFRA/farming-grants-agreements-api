@@ -45,7 +45,6 @@ describe('UI sending a POST request to accept an agreement', () => {
     config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
-    config.set('featureFlags.isPaymentHubEnabled', false)
     config.set('featureFlags.seedDb', false)
     config.set('landGrants.token', 'mock-token')
 

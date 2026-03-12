@@ -14,7 +14,6 @@ vi.mock('#~/config/index.js', () => ({
 
 vi.mock('#~/api/common/helpers/sqs-client.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
-vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
 
 describe('unacceptOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */

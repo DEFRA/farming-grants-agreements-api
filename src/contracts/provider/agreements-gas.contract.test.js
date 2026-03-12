@@ -10,7 +10,6 @@ import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { getAgreementDataBySbi } from '#~/api/agreement/helpers/get-agreement-data.js'
-import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
 import { handleUpdateAgreementEvent } from '#~/api/common/helpers/sqs-message-processor/update-agreement.js'
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
@@ -21,7 +20,6 @@ import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-gr
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
-vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
 vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
@@ -60,7 +58,6 @@ const setupMocks = () => {
   unacceptOffer.mockReset()
   withdrawOffer.mockReset()
   getAgreementDataBySbi.mockReset()
-  updatePaymentHub.mockReset()
 
   acceptOffer.mockResolvedValue({
     ...mockAgreementData,
@@ -68,7 +65,6 @@ const setupMocks = () => {
     status: 'accepted'
   })
   unacceptOffer.mockResolvedValue()
-  updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
 
   withdrawOffer.mockResolvedValue({
     agreement: { agreementNumber: 'FPTT123456789' },

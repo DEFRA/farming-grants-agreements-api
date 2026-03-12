@@ -24,8 +24,7 @@ describe('getTestInvoiceController', () => {
   test('returns 200 with invoice data when found', async () => {
     const mockInvoice = {
       agreementNumber: 'FPTT123456789',
-      invoiceNumber: 'INV-001',
-      paymentHubRequest: { amount: 1000 }
+      invoiceNumber: 'INV-001'
     }
 
     const mockSort = vi.fn().mockReturnValue({
