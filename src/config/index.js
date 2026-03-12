@@ -97,12 +97,6 @@ const config = convict({
     format: STRICT_BOOLEAN_FORMAT,
     default: isTest
   },
-  isPaymentHubLogging: {
-    doc: 'If logging of payment hub requests is enabled',
-    format: STRICT_BOOLEAN_FORMAT,
-    default: false,
-    env: 'PAYMENT_HUB_LOGGING'
-  },
   log: {
     enabled: {
       doc: 'Is logging enabled',
@@ -324,63 +318,6 @@ const config = convict({
       env: 'LAND_GRANTS_CALCULATION_URI'
     }
   },
-  paymentHub: {
-    defaultSourceSystem: {
-      doc: 'Default source system for payment hub requests',
-      format: String,
-      default: 'FPTT',
-      env: 'PAYMENT_HUB_DEFAULT_SOURCE_SYSTEM'
-    },
-    defaultLedger: {
-      doc: 'Default ledger for payment hub requests',
-      format: String,
-      default: 'AP',
-      env: 'PAYMENT_HUB_DEFAULT_LEDGER'
-    },
-    defaultSchedule: {
-      doc: 'Default schedule for payment hub requests',
-      format: String,
-      default: 'T4',
-      env: 'PAYMENT_HUB_DEFAULT_SCHEDULE'
-    },
-    defaultDeliveryBody: {
-      doc: 'Default delivery body for payment hub requests',
-      format: String,
-      default: 'RP00',
-      env: 'PAYMENT_HUB_DEFAULT_DELIVERY_BODY'
-    },
-    defaultFesCode: {
-      doc: 'Default FES code for payment hub requests',
-      format: String,
-      default: 'FALS_FPTT',
-      env: 'PAYMENT_HUB_DEFAULT_FES_CODE'
-    },
-    uri: {
-      doc: 'URI for payment hub service bus',
-      format: String,
-      default: 'https://paymenthub/',
-      env: 'PAYMENT_HUB_URI'
-    },
-    ttl: {
-      doc: 'Time to live for payment hub access token',
-      format: 'nat',
-      default: 86400,
-      env: 'PAYMENT_HUB_TTL'
-    },
-    keyName: {
-      doc: 'Key name for payment hub service bus',
-      format: String,
-      default: 'MyManagedAccessKey',
-      env: 'PAYMENT_HUB_SA_KEY_NAME'
-    },
-    key: {
-      doc: 'Key for payment hub service bus',
-      format: String,
-      default: 'my_key',
-      sensitive: true,
-      env: 'PAYMENT_HUB_SA_KEY'
-    }
-  },
   files: {
     s3: {
       bucket: {
@@ -470,12 +407,6 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
-    },
-    isPaymentHubEnabled: {
-      doc: 'Enable or Disable payments hub',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: false,
-      env: 'ENABLE_PAYMENT_HUB'
     }
   }
 })

@@ -11,7 +11,6 @@ import {
   getAgreementDataBySbi,
   getAgreementDataById
 } from '#~/api/agreement/helpers/get-agreement-data.js'
-import { updatePaymentHub } from '#~/api/agreement/helpers/update-payment-hub.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import * as snsPublisher from '#~/api/common/helpers/sns-publisher.js'
@@ -20,7 +19,6 @@ import { calculatePaymentsBasedOnActions } from '#~/api/adapter/land-grants-adap
 
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
-vi.mock('#~/api/agreement/helpers/update-payment-hub.js')
 vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
 vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',
@@ -107,7 +105,6 @@ describe('acceptOfferDocumentController', () => {
     unacceptOffer.mockReset()
     getAgreementDataBySbi.mockReset()
     getAgreementDataById.mockReset()
-    updatePaymentHub.mockReset()
     createGrantPaymentFromAgreement.mockReset()
 
     acceptOffer.mockResolvedValue({
@@ -116,7 +113,6 @@ describe('acceptOfferDocumentController', () => {
       status: 'accepted'
     })
     unacceptOffer.mockResolvedValue()
-    updatePaymentHub.mockResolvedValue({ claimId: 'R00000001' })
     createGrantPaymentFromAgreement.mockResolvedValue({
       sbi: '106284736',
       grants: []
