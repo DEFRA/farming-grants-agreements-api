@@ -20,9 +20,8 @@ const { agreementArrayResponse } = getCommonResponseSchemas()
 const queueMessageParams = Joi.object({
   queueName: Joi.string()
     .optional()
-    .default('create_agreement')
     .description(
-      'Name of the SQS queue to post the message to (defaults to create_agreement)'
+      'Name of the SQS queue to post the message to (defaults to QUEUE_URL env var)'
     )
 })
 
