@@ -6,7 +6,7 @@
     "description": "Farming Grants Agreements API"
   },
   "swagger": "2.0",
-  "host": "ip-192-168-8-51.eu-west-2.compute.internal:3555",
+  "host": "localhost",
   "schemes": [
     "http"
   ],
