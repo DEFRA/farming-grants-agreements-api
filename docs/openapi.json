@@ -393,20 +393,25 @@
       "type": "object",
       "description": "identifiers field",
       "properties": {
+        "frn": {
+          "type": "string",
+          "description": "frn field",
+          "example": "1234567890"
+        },
         "sbi": {
           "type": "string",
           "description": "sbi field",
           "example": "106284736"
         },
-        "frn": {
-          "type": "string",
-          "description": "frn field",
-          "example": "frn"
-        },
         "crn": {
           "type": "string",
           "description": "crn field",
           "example": "crn"
+        },
+        "defraId": {
+          "type": "string",
+          "description": "defraId field",
+          "example": "defraId"
         }
       }
     },
@@ -830,27 +835,17 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "FPTT987654321"
+          "example": "FPTT123456789"
         },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "client-ref-002"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
           "example": "frps-private-beta"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "createdAt field",
-          "example": "2025-08-19T09:36:45.131Z"
-        },
-        "submittedAt": {
-          "type": "string",
-          "description": "submittedAt field",
-          "example": "2025-08-19T09:36:44.509Z"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"
@@ -1165,27 +1160,17 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "FPTT987654321"
+          "example": "FPTT123456789"
         },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "client-ref-002"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
           "example": "frps-private-beta"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "createdAt field",
-          "example": "2025-08-19T09:36:45.131Z"
-        },
-        "submittedAt": {
-          "type": "string",
-          "description": "submittedAt field",
-          "example": "2025-08-19T09:36:44.509Z"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"
@@ -1526,27 +1511,17 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "FPTT987654321"
+          "example": "FPTT123456789"
         },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "client-ref-002"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
           "example": "frps-private-beta"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "createdAt field",
-          "example": "2025-08-19T09:36:45.131Z"
-        },
-        "submittedAt": {
-          "type": "string",
-          "description": "submittedAt field",
-          "example": "2025-08-19T09:36:44.509Z"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"
@@ -1568,20 +1543,25 @@
       "type": "object",
       "description": "Business and customer identifiers",
       "properties": {
+        "frn": {
+          "type": "string",
+          "description": "frn field",
+          "example": "1234567890"
+        },
         "sbi": {
           "type": "string",
           "description": "sbi field",
           "example": "106284736"
         },
-        "frn": {
-          "type": "string",
-          "description": "frn field",
-          "example": "frn"
-        },
         "crn": {
           "type": "string",
           "description": "crn field",
           "example": "crn"
+        },
+        "defraId": {
+          "type": "string",
+          "description": "defraId field",
+          "example": "defraId"
         }
       }
     },
@@ -1943,27 +1923,17 @@
         "agreementNumber": {
           "type": "string",
           "description": "agreementNumber field",
-          "example": "FPTT987654321"
+          "example": "FPTT123456789"
         },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "client-ref-002"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
           "example": "frps-private-beta"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "createdAt field",
-          "example": "2025-08-19T09:36:45.131Z"
-        },
-        "submittedAt": {
-          "type": "string",
-          "description": "submittedAt field",
-          "example": "2025-08-19T09:36:44.509Z"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"

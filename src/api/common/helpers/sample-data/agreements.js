@@ -853,15 +853,14 @@ export default [
   },
   {
     notificationMessageId: 'sample-notification-2',
-    agreementNumber: 'FPTT987654321',
-    clientRef: 'client-ref-002',
+    agreementNumber: 'FPTT123456789',
+    clientRef: 'client-ref-001',
     code: 'frps-private-beta',
-    createdAt: '2025-08-19T09:36:45.131Z',
-    submittedAt: '2025-08-19T09:36:44.509Z',
     identifiers: {
+      frn: '1234567890',
       sbi: '106284736',
-      frn: 'frn',
-      crn: 'crn'
+      crn: 'crn',
+      defraId: 'defraId'
     },
     answers: {
       hasCheckedLandIsUpToDate: true,

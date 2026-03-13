@@ -31,15 +31,14 @@
                 "datacontenttype": "application/json",
                 "data": {
                   "notificationMessageId": "sample-notification-2",
-                  "agreementNumber": "FPTT987654321",
-                  "clientRef": "client-ref-002",
+                  "agreementNumber": "FPTT123456789",
+                  "clientRef": "client-ref-001",
                   "code": "frps-private-beta",
-                  "createdAt": "2025-08-19T09:36:45.131Z",
-                  "submittedAt": "2025-08-19T09:36:44.509Z",
                   "identifiers": {
+                    "frn": "1234567890",
                     "sbi": "106284736",
-                    "frn": "frn",
-                    "crn": "crn"
+                    "crn": "crn",
+                    "defraId": "defraId"
                   },
                   "answers": {
                     "hasCheckedLandIsUpToDate": true,
@@ -351,8 +350,8 @@
                 "type": "cloud.defra.test.fg-gas-backend.agreement.withdraw",
                 "datacontenttype": "application/json",
                 "data": {
-                  "clientRef": "client-ref-002",
-                  "agreementNumber": "FPTT987654321",
+                  "clientRef": "client-ref-001",
+                  "agreementNumber": "FPTT123456789",
                   "status": "withdrawn"
                 }
               }
@@ -385,9 +384,9 @@
                 "time": "2025-01-15T10:30:00.000Z",
                 "datacontenttype": "application/json",
                 "data": {
-                  "agreementNumber": "FPTT987654321",
+                  "agreementNumber": "FPTT123456789",
                   "correlationId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                  "clientRef": "client-ref-002",
+                  "clientRef": "client-ref-001",
                   "version": 1,
                   "status": "accepted",
                   "date": "2025-01-15T10:30:00.000Z",
@@ -658,26 +657,32 @@
         "type": "object",
         "description": "Business and customer identifiers",
         "properties": {
+          "frn": {
+            "type": "string",
+            "description": "",
+            "example": "1234567890"
+          },
           "sbi": {
             "type": "string",
             "description": "",
             "example": "106284736"
           },
-          "frn": {
-            "type": "string",
-            "description": "",
-            "example": "frn"
-          },
           "crn": {
             "type": "string",
             "description": "",
             "example": "crn"
+          },
+          "defraId": {
+            "type": "string",
+            "description": "",
+            "example": "defraId"
           }
         },
         "required": [
-          "sbi",
           "frn",
-          "crn"
+          "sbi",
+          "crn",
+          "defraId"
         ]
       },
       "Application": {
