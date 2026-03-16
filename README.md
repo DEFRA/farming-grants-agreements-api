@@ -362,4 +362,4 @@ The Open Government Licence (OGL) was developed by the Controller of His Majesty
 information providers in the public sector to license the use and re-use of their information under a common open
 licence.
 
-It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions.
+It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions
