@@ -8,6 +8,7 @@ declare -A QUEUES=(
   [grant_application_approved_fifo.fifo]="create_agreement_fifo.fifo" # Grants UI has approved an application, we need to create the agreement in response
   [gas__sns__update_agreement_status_fifo.fifo]="update_agreement_fifo.fifo" # Grants Application Service update (e.g. withdrawn)
   [agreement_status_updated_fifo.fifo]="create_agreement_pdf_fifo.fifo" # We need to create the agreement PDF in response to the offer being accepted
+  [create_payment.fifo]="gps__sqs__create_payment.fifo"
 )
 
 # SNS Topics we publish to

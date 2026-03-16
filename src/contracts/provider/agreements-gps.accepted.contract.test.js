@@ -59,21 +59,6 @@ const calculatedPayment = {
         paymentDate: '2026-03-05',
         totalPaymentPence: 20197,
         lineItems: [{ agreementLevelItemId: 1, paymentPence: 20197 }]
-      },
-      {
-        paymentDate: '2026-06-05',
-        totalPaymentPence: 20191,
-        lineItems: [{ agreementLevelItemId: 1, paymentPence: 20191 }]
-      },
-      {
-        paymentDate: '2026-09-07',
-        totalPaymentPence: 20191,
-        lineItems: [{ agreementLevelItemId: 1, paymentPence: 20191 }]
-      },
-      {
-        paymentDate: '2026-12-07',
-        totalPaymentPence: 20191,
-        lineItems: [{ agreementLevelItemId: 1, paymentPence: 20191 }]
       }
     ]
   }
