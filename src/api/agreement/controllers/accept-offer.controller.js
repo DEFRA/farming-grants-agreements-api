@@ -18,19 +18,18 @@ const acceptOfferController = async (request, h) => {
   if (agreementData.status === 'offered') {
     // Accept the agreement
     const agreementUrl = `${String(config.get('viewAgreementURI'))}/${agreementNumber}`
-    agreementData = await acceptOffer(
-      agreementNumber,
-      agreementData,
-      request.logger
-    )
+    const logger = request.logger
+    agreementData = await acceptOffer(agreementNumber, agreementData, logger)
 
     let claimId
     try {
-      const grantPaymentsData = await createGrantPaymentFromAgreement(
-        agreementNumber,
-        request.logger
-      )
+      const grantPaymentsData =
+        await createGrantPaymentFromAgreement(agreementNumber)
       claimId = grantPaymentsData.claimId
+
+      logger?.info?.(
+        `Passing the data to Grant Payment service ${JSON.stringify(grantPaymentsData, null, 2)}`
+      )
 
       await publishEvent(
         {
@@ -39,7 +38,7 @@ const acceptOfferController = async (request, h) => {
           time: new Date().toISOString(),
           data: grantPaymentsData
         },
-        request.logger
+        logger
       )
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
@@ -67,7 +66,7 @@ const acceptOfferController = async (request, h) => {
           claimId
         }
       },
-      request.logger
+      logger
     )
   }
 

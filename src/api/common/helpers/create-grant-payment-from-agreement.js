@@ -127,13 +127,9 @@ export const createInvoice = async (
 /**
  * Creates a grant payment object from agreement data.
  * @param {string} agreementNumber - The agreement number.
- * @param {object} [logger] - Optional logger.
  * @returns {Promise<object>} The grant payment object.
  */
-export const createGrantPaymentFromAgreement = async (
-  agreementNumber,
-  logger
-) => {
+export const createGrantPaymentFromAgreement = async (agreementNumber) => {
   const agreementData = await getAgreementDataById(agreementNumber)
 
   const payments = createPayments(agreementData)
@@ -154,10 +150,11 @@ export const createGrantPaymentFromAgreement = async (
       ? originalInvoiceNumber
       : generateInvoiceNumber(claimId, agreementData)
 
-  const grantPaymentsData = {
+  return {
     sbi,
     frn,
     claimId: agreementClaimId,
+    scheme: 'SFI',
     grants: [
       {
         sourceSystem: 'FPTT',
@@ -169,16 +166,10 @@ export const createGrantPaymentFromAgreement = async (
         totalAmountPence: agreementTotalPence.toString(),
         currency,
         marketingYear: new Date().getFullYear().toString(),
-        accountCode: 'SOS710',
-        fundCode: 'DRD10',
+        // accountCode: 'SOS710',
+        // fundCode: 'DRD10',
         payments
       }
     ]
   }
-
-  logger?.info?.(
-    `Passing the data to Grant Payment service ${JSON.stringify(grantPaymentsData, null, 2)}`
-  )
-
-  return grantPaymentsData
 }

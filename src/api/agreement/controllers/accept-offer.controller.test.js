@@ -61,6 +61,46 @@ describe('acceptOfferDocumentController', () => {
     version: 1
   }
 
+  const mockGrantPayments = {
+    sbi: '106284736',
+    frn: 'FRN456',
+    claimId: 'R00000001',
+    scheme: 'SFI',
+    grants: [
+      {
+        sourceSystem: 'FPTT',
+        paymentRequestNumber: 1,
+        correlationId: 'CORR-ID-001',
+        invoiceNumber: 'ORIG-INV-123',
+        originalInvoiceNumber: 'ORIG-INV-123',
+        agreementNumber: 'FPTT123456',
+        totalAmount: 10000,
+        currency: 'GBP',
+        marketingYear: new Date().getFullYear(),
+        payments: [
+          {
+            dueDate: '2024-05-01',
+            totalAmount: 10000,
+            status: 'pending',
+            invoiceLines: [
+              {
+                amount: 6000,
+                description: '2024-05-01: Parcel: P1: Parcel Item Description',
+                schemeCode: 'CODE-P1'
+              },
+              {
+                amount: 4000,
+                description:
+                  '2024-05-01: One-off payment per agreement per year for Agreement Level Description',
+                schemeCode: 'CODE-A1'
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
     // Add a route that we know matches and uses the same controller
@@ -113,10 +153,7 @@ describe('acceptOfferDocumentController', () => {
       status: 'accepted'
     })
     unacceptOffer.mockResolvedValue()
-    createGrantPaymentFromAgreement.mockResolvedValue({
-      sbi: '106284736',
-      grants: []
-    })
+    createGrantPaymentFromAgreement.mockResolvedValue(mockGrantPayments)
     // Setup default mock implementations with complete data structure
     getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
     getAgreementDataById.mockResolvedValue(mockAgreementData)
@@ -159,10 +196,7 @@ describe('acceptOfferDocumentController', () => {
       }),
       expect.anything()
     )
-    expect(createGrantPaymentFromAgreement).toHaveBeenCalledWith(
-      agreementId,
-      expect.anything()
-    )
+    expect(createGrantPaymentFromAgreement).toHaveBeenCalledWith(agreementId)
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain(agreementId)
@@ -172,10 +206,7 @@ describe('acceptOfferDocumentController', () => {
         time: '2024-01-03T12:34:56.789Z',
         topicArn: config.get('aws.sns.topic.createPayment.arn'),
         type: config.get('aws.sns.topic.createPayment.type'),
-        data: {
-          sbi: '106284736',
-          grants: []
-        }
+        data: mockGrantPayments
       },
       expect.anything()
     )
@@ -195,8 +226,8 @@ describe('acceptOfferDocumentController', () => {
           code: 'test-code',
           date: '2024-01-02T00:00:00.000Z',
           startDate: '2024-01-01',
-          endDate: '2027-12-31'
-          // claimId: 'R00000001'
+          endDate: '2027-12-31',
+          claimId: 'R00000001'
         }
       },
       expect.anything()

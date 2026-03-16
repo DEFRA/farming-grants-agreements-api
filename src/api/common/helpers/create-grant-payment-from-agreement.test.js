@@ -23,9 +23,6 @@ vi.mock('#~/api/agreement/helpers/invoice/create-invoice.js', () => ({
 
 describe('createGrantPaymentFromAgreement', () => {
   const agreementNumber = 'FPTT123456'
-  const logger = {
-    info: vi.fn()
-  }
 
   const mockAgreementData = {
     agreementNumber: 'FPTT123456',
@@ -80,15 +77,13 @@ describe('createGrantPaymentFromAgreement', () => {
   })
 
   it('should create grant payment from agreement with version 1 and original invoice number', async () => {
-    const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
-      logger
-    )
+    const result = await createGrantPaymentFromAgreement(agreementNumber)
 
     expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
     expect(getClaimId).toHaveBeenCalledWith(agreementNumber, mockAgreementData)
 
     expect(result).toEqual({
+      scheme: 'SFI',
       sbi: 'SBI123',
       frn: 'FRN456',
       claimId: 'CLAIM-789',
@@ -103,8 +98,8 @@ describe('createGrantPaymentFromAgreement', () => {
           totalAmountPence: '10000',
           currency: 'GBP',
           marketingYear: new Date().getFullYear().toString(),
-          accountCode: 'SOS710',
-          fundCode: 'DRD10',
+          // accountCode: 'SOS710',
+          // fundCode: 'DRD10',
           payments: [
             {
               dueDate: '2024-05-01',
@@ -138,10 +133,7 @@ describe('createGrantPaymentFromAgreement', () => {
     }
     vi.mocked(getAgreementDataById).mockResolvedValue(agreementDataV2)
 
-    const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
-      logger
-    )
+    const result = await createGrantPaymentFromAgreement(agreementNumber)
 
     expect(generateInvoiceNumber).toHaveBeenCalledWith(
       'CLAIM-789',
@@ -158,10 +150,7 @@ describe('createGrantPaymentFromAgreement', () => {
     }
     vi.mocked(getAgreementDataById).mockResolvedValue(agreementDataNoOrig)
 
-    const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
-      logger
-    )
+    const result = await createGrantPaymentFromAgreement(agreementNumber)
 
     expect(generateInvoiceNumber).toHaveBeenCalled()
     expect(result.grants[0].invoiceNumber).toBe('GEN-INV-456')
@@ -177,10 +166,7 @@ describe('createGrantPaymentFromAgreement', () => {
     }
     vi.mocked(getAgreementDataById).mockResolvedValue(agreementDataNoCurrency)
 
-    const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
-      logger
-    )
+    const result = await createGrantPaymentFromAgreement(agreementNumber)
 
     expect(result.grants[0].currency).toBe('GBP')
   })
