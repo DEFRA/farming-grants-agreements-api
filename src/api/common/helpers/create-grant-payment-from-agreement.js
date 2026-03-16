@@ -158,6 +158,7 @@ export const createGrantPaymentFromAgreement = async (
     sbi,
     frn,
     claimId: agreementClaimId,
+    scheme: 'SFI',
     grants: [
       {
         sourceSystem: 'FPTT',
@@ -169,8 +170,6 @@ export const createGrantPaymentFromAgreement = async (
         totalAmountPence: agreementTotalPence.toString(),
         currency,
         marketingYear: new Date().getFullYear().toString(),
-        accountCode: 'SOS710',
-        fundCode: 'DRD10',
         payments
       }
     ]
