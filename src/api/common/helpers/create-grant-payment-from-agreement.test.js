@@ -104,8 +104,6 @@ describe('createGrantPaymentFromAgreement', () => {
           totalAmountPence: '10000',
           currency: 'GBP',
           marketingYear: new Date().getFullYear().toString(),
-          // accountCode: 'SOS710',
-          // fundCode: 'DRD10',
           payments: [
             {
               dueDate: '2024-05-01',
