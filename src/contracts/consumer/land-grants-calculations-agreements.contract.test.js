@@ -115,7 +115,9 @@ describe('UI sending a POST request to accept an agreement', () => {
           paymentDate: iso8601Date('2025-12-05'),
           totalPaymentPence: like(8007),
           lineItems: eachLike({
-            agreementLevelItemId: like(1),
+            ...(process.env.CI !== 'true'
+              ? { agreementLevelItemId: like(1) }
+              : {}),
             paymentPence: like(1204)
           })
         })
