@@ -7,7 +7,8 @@ export const AuditEvent = Object.freeze({
 
 // Human-readable description for each audit event, used in security.details.message
 const eventMessages = {
-  [AuditEvent.PDF_DOWNLOADED_FROM_S3]: 'PDF document downloaded from S3'
+  [AuditEvent.PDF_DOWNLOADED_FROM_S3]:
+    'PDF agreement document downloaded from S3'
 }
 
 // Transaction code for each audit event, used in security.details.transactioncode

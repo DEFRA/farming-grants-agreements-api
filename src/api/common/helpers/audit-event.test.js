@@ -92,7 +92,7 @@ describe('auditEvent', () => {
           pmccode: '0201',
           details: expect.objectContaining({
             transactioncode: '2308',
-            message: 'PDF document downloaded from S3',
+            message: 'PDF agreement document downloaded from S3',
             additionalinfo: 'agreementNumber: FPTT123456789'
           })
         })
