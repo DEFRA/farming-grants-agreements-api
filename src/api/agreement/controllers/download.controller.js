@@ -2,6 +2,7 @@ import Boom from '@hapi/boom'
 import { config } from '#~/config/index.js'
 import { getPdfStream } from '#~/api/common/helpers/s3-client.js'
 import { getRetentionPrefix } from '#~/api/common/helpers/retention-period.js'
+import { auditEvent, AuditEvent } from '#~/api/common/helpers/audit-event.js'
 
 export const downloadController = async (request, h) => {
   const agreementData = request.auth.credentials?.agreementData
@@ -43,6 +44,14 @@ export const downloadController = async (request, h) => {
       )
       throw Boom.notFound('Agreement PDF not found')
     }
+
+    auditEvent(AuditEvent.PDF_DOWNLOADED_FROM_S3, {
+      agreementNumber: agreementId,
+      version,
+      key,
+      bucket,
+      correlationId: agreementData?.correlationId
+    })
 
     return h
       .response(stream)
