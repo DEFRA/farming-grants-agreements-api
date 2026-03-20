@@ -1,5 +1,6 @@
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { publishEvent } from '../sns-publisher.js'
+import { auditEvent, AuditEvent } from '../audit-event.js'
 import { config } from '#~/config/index.js'
 import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
 
@@ -41,6 +42,11 @@ export const handleUpdateAgreementEvent = async (
   }
 
   if (updatedVersion) {
+    auditEvent(AuditEvent.AGREEMENT_UPDATED, {
+      ...updatedVersion,
+      agreementNumber: updatedVersion.agreement.agreementNumber
+    })
+
     await publishEvent(
       {
         topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
