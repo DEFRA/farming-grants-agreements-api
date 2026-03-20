@@ -96,6 +96,7 @@ describe('createGrantPaymentFromAgreement', () => {
       grants: [
         {
           sourceSystem: 'FPTT',
+          deliveryBody: 'RP00',
           paymentRequestNumber: 1,
           correlationId: 'CORR-ID-001',
           invoiceNumber: 'ORIG-INV-123',
@@ -221,6 +222,7 @@ describe('createGrantPaymentFromAgreement', () => {
       const payments = [
         {
           dueDate: '2024-05-01',
+          deliveryBody: 'RP00',
           totalAmountPence: 10000,
           status: 'pending',
           invoiceLines: []

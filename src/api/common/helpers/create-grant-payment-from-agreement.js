@@ -108,6 +108,7 @@ export const createInvoice = async (
     grants: [
       {
         sourceSystem: 'FPTT',
+        deliveryBody: 'RP00',
         paymentRequestNumber: version,
         correlationId,
         invoiceNumber,
@@ -162,6 +163,7 @@ export const createGrantPaymentFromAgreement = async (
     grants: [
       {
         sourceSystem: 'FPTT',
+        deliveryBody: 'RP00',
         paymentRequestNumber: version,
         correlationId,
         invoiceNumber,
