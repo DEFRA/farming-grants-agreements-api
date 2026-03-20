@@ -26,38 +26,6 @@ const parseQuantity = (raw) => {
   return Number.isFinite(value) && value > 0 ? value : null
 }
 
-export const toLandGrantsPayload = (actions = []) => {
-  if (!Array.isArray(actions)) {
-    throw new TypeError('actions must be an array')
-  }
-
-  const grouped = new Map()
-
-  for (const action of actions) {
-    if (!action?.sheetId || !action?.parcelId || !action?.code) {
-      continue
-    }
-
-    const key = `${action.sheetId}|${action.parcelId}`
-    const existing = grouped.get(key) ?? {
-      sheetId: action.sheetId,
-      parcelId: action.parcelId,
-      actions: []
-    }
-
-    const quantity = parseQuantity(action.appliedFor?.quantity)
-    if (quantity == null) {
-      grouped.set(key, existing)
-      continue
-    }
-
-    existing.actions.push({ code: action.code, quantity })
-    grouped.set(key, existing)
-  }
-
-  return { parcel: Array.from(grouped.values()) }
-}
-
 const buildAuthHeader = () => {
   const token = config.get('landGrants.token')
   return { Authorization: `Bearer ${token}` }
@@ -94,7 +62,7 @@ const postPaymentCalculation = async (body, options = {}) => {
   return res.text()
 }
 
-export const convertParcelsToLandGrantsPayload = (parcels = []) => {
+const convertParcelsToLandGrantsPayload = (parcels = []) => {
   if (!Array.isArray(parcels)) {
     throw new TypeError('parcels must be an array')
   }

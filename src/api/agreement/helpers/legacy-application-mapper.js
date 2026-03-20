@@ -245,11 +245,6 @@ function resolveAgreementDates({
   return { startDate, endDate }
 }
 
-export const __private__ = {
-  addMonths,
-  addYears
-}
-
 function updateParcelStateForAction(
   state,
   parcel,

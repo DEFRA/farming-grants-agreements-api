@@ -1,13 +1,23 @@
-import { vi } from 'vitest'
 import { handleUpdateAgreementEvent } from './update-agreement.js'
 import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
-import { processMessage } from '../sqs-client.js'
+import { createSqsClientPlugin } from '../sqs-client.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
+import { Consumer } from 'sqs-consumer'
 
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
+vi.mock('sqs-consumer', () => ({
+  Consumer: {
+    create: vi.fn().mockImplementation((options) => ({
+      options,
+      on: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn().mockResolvedValue()
+    }))
+  }
+}))
 
 describe('AGREEMENT_STATUS', () => {
   it('should define all expected status values', () => {
@@ -43,7 +53,22 @@ describe('SQS message processor', () => {
   })
 
   describe('processMessage', () => {
+    const getHandleMessage = (callback) => {
+      const { plugin, options } = createSqsClientPlugin(
+        'test-tag',
+        'http://test-queue',
+        callback
+      )
+      const mockServer = { logger: mockLogger, events: { on: vi.fn() } }
+      plugin.register(mockServer, options)
+
+      // Get the handleMessage callback from the Consumer.create call
+      return Consumer.create.mock.calls[0][0].handleMessage
+    }
+
     it('should process withdrawn SNS message', async () => {
+      const handleMessage = getHandleMessage(handleUpdateAgreementEvent)
+
       const mockPayload = {
         type: 'gas-backend.agreement.update',
         data: {
@@ -57,7 +82,7 @@ describe('SQS message processor', () => {
         Body: JSON.stringify(mockPayload)
       }
 
-      await processMessage(handleUpdateAgreementEvent, message, mockLogger)
+      await handleMessage(message)
 
       expect(withdrawOffer).toHaveBeenCalledWith(
         'client-ref-001',
@@ -82,23 +107,25 @@ describe('SQS message processor', () => {
     })
 
     it('should handle invalid JSON in message body', async () => {
+      const handleMessage = getHandleMessage(handleUpdateAgreementEvent)
+
       const message = {
         Body: 'invalid json'
       }
 
-      let caughtError
-      try {
-        await processMessage(handleUpdateAgreementEvent, message, mockLogger)
-      } catch (error) {
-        caughtError = error
-      }
+      await handleMessage(message)
 
-      expect(caughtError).toBeDefined()
-      expect(caughtError.message).toContain('Invalid message format')
-      expect(caughtError.message).toContain('invalid json')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.stringContaining(
+          'Failed to process SQS (test-tag) message: Invalid message format'
+        )
+      )
     })
 
     it('should handle non-SyntaxError with Boom.boomify', async () => {
+      const handleMessage = getHandleMessage(handleUpdateAgreementEvent)
+
       const message = {
         Body: JSON.stringify({
           type: 'invalid.type',
@@ -106,7 +133,7 @@ describe('SQS message processor', () => {
         })
       }
 
-      await processMessage(handleUpdateAgreementEvent, message, mockLogger)
+      await handleMessage(message)
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'No action required for GAS application status update event: invalid.type (invalid.status)'

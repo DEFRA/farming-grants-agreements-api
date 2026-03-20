@@ -148,4 +148,4 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
   }
 }
 
-export { extractJwtPayload, verifyJwtPayload, validateJwtAuthentication }
+export { validateJwtAuthentication }

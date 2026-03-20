@@ -38,7 +38,8 @@ module.exports = {
         'jsdoc',
         'n',
         'promise',
-        'prettier'
+        'prettier',
+        'unused-imports'
       ],
       rules: {
         'prettier/prettier': [
@@ -48,6 +49,23 @@ module.exports = {
           }
         ],
         'no-console': 'error',
+        'unused-imports/no-unused-imports': 'error',
+        'unused-imports/no-unused-vars': [
+          'error',
+          {
+            vars: 'all',
+            varsIgnorePattern: '^_',
+            args: 'after-used',
+            argsIgnorePattern: '^_'
+          }
+        ],
+        'import/no-unused-modules': [
+          'error',
+          {
+            unusedExports: true,
+            src: ['src/**/!(*.test).js']
+          }
+        ],
 
         // Turn off strict type checking rules
         '@typescript-eslint/no-unsafe-argument': 'off',
@@ -147,7 +165,7 @@ module.exports = {
         beforeAll: 'readonly',
         afterAll: 'readonly'
       },
-      files: ['**/*.test.{cjs,js}', '**/__mocks__/**'],
+      files: ['**/*.test.{cjs,js}', '**/__mocks__/**', '**/test-helpers/**'],
       plugins: ['vitest'],
       rules: {
         // Allow Vitest to assert on mocked unbound methods
@@ -161,6 +179,17 @@ module.exports = {
           'error',
           {
             allowModules: ['vitest']
+          }
+        ],
+        'import/no-unused-modules': [
+          'error',
+          {
+            unusedExports: true,
+            src: [
+              'src/**/*.test.js',
+              'src/**/__mocks__/**/*.js',
+              'src/**/test-helpers/**/*.js'
+            ]
           }
         ]
       }
