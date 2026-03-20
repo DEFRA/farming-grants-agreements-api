@@ -2,13 +2,8 @@ import { readdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const pactOutputDir = path.resolve(
-  'src',
-  'contracts',
-  'consumer',
-  'pacts'
-)
-export const pactGeneratedDir = path.join(pactOutputDir, 'generated')
+const pactOutputDir = path.resolve('src', 'contracts', 'consumer', 'pacts')
+const pactGeneratedDir = path.join(pactOutputDir, 'generated')
 
 const stripExtension = (filename) =>
   filename.replace(/(\.contract)?\.test\.js$/i, '').replace(/\.js$/i, '')
@@ -19,7 +14,7 @@ const formatSegment = (value) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
-export const resolvePactDirectory = (testFileUrl) => {
+const resolvePactDirectory = (testFileUrl) => {
   const testFilePath = fileURLToPath(testFileUrl)
   const parentName = formatSegment(path.basename(path.dirname(testFilePath)))
   const fileName = formatSegment(path.basename(testFilePath))

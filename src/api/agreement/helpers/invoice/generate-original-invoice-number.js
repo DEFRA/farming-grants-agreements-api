@@ -56,4 +56,4 @@ function generateInvoiceNumber(claimId, agreementData) {
   return `${claimId}-${version}${quarter}`
 }
 
-export { generateClaimId, generateInvoiceNumber, formatClaimId, getQuarter }
+export { generateClaimId, generateInvoiceNumber, formatClaimId }

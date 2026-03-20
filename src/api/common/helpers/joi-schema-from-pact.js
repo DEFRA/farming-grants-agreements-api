@@ -12,7 +12,7 @@ import sampleData from '#~/api/common/helpers/sample-data/index.js'
  * @param {number} index - Index of the agreement to retrieve (default: 1)
  * @returns {object} Sample agreement data
  */
-export function getSampleAgreement(index = 1) {
+function getSampleAgreement(index = 1) {
   return sampleData.agreements[index]
 }
 
@@ -93,7 +93,7 @@ function generatePrimitiveSchema(sampleValue, options) {
  * @param {object} options - Schema options (description, label, etc.)
  * @returns {Joi.Schema} Joi schema object
  */
-export function generateJoiSchemaFromSample(sampleValue, options = {}) {
+function generateJoiSchemaFromSample(sampleValue, options = {}) {
   if (sampleValue === null) {
     return Joi.any()
       .allow(null)
@@ -115,7 +115,7 @@ export function generateJoiSchemaFromSample(sampleValue, options = {}) {
 /**
  * Create Joi schema for agreement identifiers
  */
-export function getIdentifiersJoiSchema() {
+function getIdentifiersJoiSchema() {
   const sample = getSampleAgreement().identifiers
   return generateJoiSchemaFromSample(sample, {
     description: 'Business and customer identifiers',
@@ -126,7 +126,7 @@ export function getIdentifiersJoiSchema() {
 /**
  * Create Joi schema for agreement applicant
  */
-export function getApplicantJoiSchema() {
+function getApplicantJoiSchema() {
   const sample = getSampleAgreement()
 
   const applicantSample = sample.applicant || {
@@ -161,7 +161,7 @@ export function getApplicantJoiSchema() {
 /**
  * Create Joi schema for agreement data response
  */
-export function getAgreementDataJoiSchema() {
+function getAgreementDataJoiSchema() {
   const sample = getSampleAgreement()
 
   return generateJoiSchemaFromSample(sample, {

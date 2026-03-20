@@ -1,7 +1,6 @@
 import { vi } from 'vitest'
-import { ProxyAgent } from 'undici'
 import { config } from '#~/config/index.js'
-import { fetchWithTimeout, proxyFetch } from './fetch.js'
+import { fetchWithTimeout } from './fetch.js'
 
 vi.mock('undici', () => ({
   ProxyAgent: vi.fn()
@@ -89,50 +88,6 @@ describe('fetch helpers', () => {
       expect(fetch).toHaveBeenCalled()
       // Abort should not have been called because the timer should have been cleared
       expect(abortSpy).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('proxyFetch', () => {
-    it('should call fetchWithTimeout without proxy agent when no proxy is configured', async () => {
-      config.get.mockReturnValue(null) // No proxy
-
-      await proxyFetch(mockUrl, mockOptions)
-
-      expect(fetch).toHaveBeenCalledWith(
-        mockUrl,
-        expect.objectContaining({
-          ...mockOptions
-        })
-      )
-
-      // Ensure no dispatcher was added (undici ProxyAgent)
-      const fetchCallArgs = fetch.mock.calls[0][1]
-      expect(fetchCallArgs.dispatcher).toBeUndefined()
-    })
-
-    it('should call fetchWithTimeout with proxy agent when proxy is configured', async () => {
-      const mockProxyUrl = 'http://proxy.example.com'
-      config.get.mockImplementation((key) => {
-        if (key === 'httpProxy') return mockProxyUrl
-        if (key === 'fetchTimeout') return 5000
-        return null
-      })
-
-      await proxyFetch(mockUrl, mockOptions)
-
-      expect(ProxyAgent).toHaveBeenCalledWith({
-        uri: mockProxyUrl,
-        keepAliveTimeout: 10,
-        keepAliveMaxTimeout: 10
-      })
-
-      expect(fetch).toHaveBeenCalledWith(
-        mockUrl,
-        expect.objectContaining({
-          ...mockOptions,
-          dispatcher: expect.any(ProxyAgent)
-        })
-      )
     })
   })
 })

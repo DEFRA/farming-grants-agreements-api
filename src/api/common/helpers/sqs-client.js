@@ -10,7 +10,7 @@ import { config } from '#~/config/index.js'
  * @param { import('@hapi/hapi').Server } logger - The logger instance
  * @returns {Promise<void>}
  */
-export const processMessage = async (callback, message, logger) => {
+const processMessage = async (callback, message, logger) => {
   try {
     const messageBody = JSON.parse(message.Body)
     await callback(message.MessageId, messageBody, logger)

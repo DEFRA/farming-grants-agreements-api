@@ -1,10 +1,5 @@
 import { vi } from 'vitest'
-import {
-  buildLegacyPaymentFromApplication,
-  __private__ as mapperPrivateExports
-} from './legacy-application-mapper.js'
-
-const { addMonths, addYears } = mapperPrivateExports
+import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
 
 describe('legacy-application-mapper', () => {
   afterEach(() => {
@@ -355,10 +350,5 @@ describe('legacy-application-mapper', () => {
     expect(actionApplications).toEqual([])
     expect(payment.parcelItems).toEqual({})
     expect(payment.annualTotalPence).toBe(0)
-  })
-
-  it('falls back to zero dates when addMonths/addYears receive invalid values', () => {
-    expect(addMonths(null, undefined)).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    expect(addYears(null, undefined)).toMatch(/^\d{4}-\d{2}-\d{2}T/)
   })
 })

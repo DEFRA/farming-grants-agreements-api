@@ -276,12 +276,6 @@ const config = convict({
     default: isProduction,
     env: 'ENABLE_SECURE_CONTEXT'
   },
-  isMetricsEnabled: {
-    doc: 'Enable metrics reporting',
-    format: STRICT_BOOLEAN_FORMAT,
-    default: isProduction,
-    env: 'ENABLE_METRICS'
-  },
   tracing: {
     header: {
       doc: 'Which header to track',

@@ -1,9 +1,19 @@
-import { vi } from 'vitest'
 import { handleCreateAgreementEvent } from './create-agreement.js'
-import { processMessage } from '../sqs-client.js'
+import { createSqsClientPlugin } from '../sqs-client.js'
 import { createOffer } from '#~/api/agreement/helpers/create-offer.js'
+import { Consumer } from 'sqs-consumer'
 
 vi.mock('#~/api/agreement/helpers/create-offer.js')
+vi.mock('sqs-consumer', () => ({
+  Consumer: {
+    create: vi.fn().mockImplementation((options) => ({
+      options,
+      on: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn().mockResolvedValue()
+    }))
+  }
+}))
 
 describe('SQS message processor', () => {
   let mockLogger
@@ -17,7 +27,22 @@ describe('SQS message processor', () => {
   })
 
   describe('processMessage', () => {
+    const getHandleMessage = (callback) => {
+      const { plugin, options } = createSqsClientPlugin(
+        'test-tag',
+        'http://test-queue',
+        callback
+      )
+      const mockServer = { logger: mockLogger, events: { on: vi.fn() } }
+      plugin.register(mockServer, options)
+
+      // Get the handleMessage callback from the Consumer.create call
+      return Consumer.create.mock.calls[0][0].handleMessage
+    }
+
     it('should process valid SNS message', async () => {
+      const handleMessage = getHandleMessage(handleCreateAgreementEvent)
+
       const mockPayload = {
         type: 'gas-backend.agreement.create',
         data: { id: '123' }
@@ -27,7 +52,7 @@ describe('SQS message processor', () => {
         Body: JSON.stringify(mockPayload)
       }
 
-      await processMessage(handleCreateAgreementEvent, message, mockLogger)
+      await handleMessage(message)
 
       expect(createOffer).toHaveBeenCalledWith(
         'aws-message-id',
@@ -37,28 +62,30 @@ describe('SQS message processor', () => {
     })
 
     it('should handle invalid JSON in message body', async () => {
+      const handleMessage = getHandleMessage(handleCreateAgreementEvent)
+
       const message = {
         Body: 'invalid json'
       }
 
-      let caughtError
-      try {
-        await processMessage(handleCreateAgreementEvent, message, mockLogger)
-      } catch (error) {
-        caughtError = error
-      }
+      await handleMessage(message)
 
-      expect(caughtError).toBeDefined()
-      expect(caughtError.message).toContain('Invalid message format')
-      expect(caughtError.message).toContain('invalid json')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.stringContaining(
+          'Failed to process SQS (test-tag) message: Invalid message format'
+        )
+      )
     })
 
     it('should info log non-SyntaxError', async () => {
+      const handleMessage = getHandleMessage(handleCreateAgreementEvent)
+
       const message = {
         Body: JSON.stringify({ type: 'invalid.type' })
       }
 
-      await processMessage(handleCreateAgreementEvent, message, mockLogger)
+      await handleMessage(message)
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'No action required for GAS create offer event: invalid.type'

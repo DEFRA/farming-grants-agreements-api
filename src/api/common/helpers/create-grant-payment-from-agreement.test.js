@@ -1,12 +1,8 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import {
-  createGrantPaymentFromAgreement,
-  createPayments,
-  createInvoice
-} from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
+import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
-import { getClaimId } from '#~/api/agreement/helpers/invoice/create-invoice.js'
+import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 
 vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
@@ -17,7 +13,7 @@ vi.mock(
     generateInvoiceNumber: vi.fn()
   })
 )
-vi.mock('#~/api/agreement/helpers/invoice/create-invoice.js', () => ({
+vi.mock('#~/api/agreement/helpers/invoice/claim-id.js', () => ({
   getClaimId: vi.fn()
 }))
 
@@ -189,57 +185,5 @@ describe('createGrantPaymentFromAgreement', () => {
     await expect(
       createGrantPaymentFromAgreement(agreementNumber)
     ).resolves.toBeDefined()
-  })
-
-  describe('createPayments', () => {
-    it('should map agreement payments correctly', () => {
-      const result = createPayments(mockAgreementData)
-      expect(result).toEqual([
-        {
-          dueDate: '2024-05-01',
-          totalAmountPence: '10000',
-          status: 'pending',
-          invoiceLines: [
-            {
-              amountPence: '6000',
-              description: '2024-05-01: Parcel: P1: Parcel Item Description',
-              schemeCode: 'CODE-P1'
-            },
-            {
-              amountPence: '4000',
-              description:
-                '2024-05-01: One-off payment per agreement per year for Agreement Level Description',
-              schemeCode: 'CODE-A1'
-            }
-          ]
-        }
-      ])
-    })
-  })
-
-  describe('createInvoice', () => {
-    it('should create invoice payload correctly', async () => {
-      const payments = [
-        {
-          dueDate: '2024-05-01',
-          deliveryBody: 'RP00',
-          totalAmountPence: 10000,
-          status: 'pending',
-          invoiceLines: []
-        }
-      ]
-      const result = await createInvoice(
-        agreementNumber,
-        mockAgreementData,
-        payments
-      )
-
-      expect(getClaimId).toHaveBeenCalledWith(
-        agreementNumber,
-        mockAgreementData
-      )
-      expect(result.grants[0].payments).toBe(payments)
-      expect(result.sbi).toBe('SBI123')
-    })
   })
 })
