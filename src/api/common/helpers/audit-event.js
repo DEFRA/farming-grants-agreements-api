@@ -1,6 +1,10 @@
 import { audit } from '@defra/cdp-auditing'
 import { config } from '#~/config/index.js'
 
+/**
+ * Audit event types.
+ * @enum {string}
+ */
 export const AuditEvent = Object.freeze({
   PDF_DOWNLOADED_FROM_S3: 'PDF_DOWNLOADED_FROM_S3'
 })
@@ -18,8 +22,7 @@ const eventTransactionCodes = {
 
 /**
  * Builds the full audit payload for a PDF S3 operation.
- *
- * @param {AuditEvent[keyof AuditEvent]} event
+ * @param {AuditEvent} event
  * @param {{ agreementNumber: string, version: string|number, key: string, bucket: string, correlationId?: string }} context
  * @param {'success'|'failure'} status
  */
@@ -53,7 +56,7 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
 
 /**
  * Records a PDF S3 operation audit event.
- * @param {AuditEvent[keyof AuditEvent]} event
+ * @param {AuditEvent} event
  * @param {{ agreementNumber: string, version: string|number, key: string, bucket: string, correlationId?: string }} context
  * @param {'success'|'failure'} [status]
  */

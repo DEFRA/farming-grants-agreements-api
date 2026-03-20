@@ -1,6 +1,6 @@
 import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
-import { getClaimId } from '#~/api/agreement/helpers/invoice/create-invoice.js'
+import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 
 function createPaymentInvoice(
   lineItem,
@@ -41,7 +41,7 @@ function createPaymentInvoice(
  * @param {object} agreementData - The agreement data.
  * @returns {Array<object>} The mapped payments array.
  */
-export const createPayments = (agreementData) => {
+const createPayments = (agreementData) => {
   const {
     payment: {
       payments: agreementPayments = [],
@@ -71,58 +71,6 @@ export const createPayments = (agreementData) => {
       invoiceLines
     }
   })
-}
-
-/**
- * Creates an invoice payload from agreement data and mapped payments.
- * @param {string} agreementNumber - The agreement number.
- * @param {object} agreementData - The agreement data.
- * @param {Array<object>} payments - The mapped payments array.
- * @returns {Promise<object>} The invoice payload.
- */
-export const createInvoice = async (
-  agreementNumber,
-  agreementData,
-  payments
-) => {
-  const {
-    payment: { agreementTotalPence, currency = 'GBP' },
-    version,
-    originalInvoiceNumber,
-    identifiers: { sbi, frn } = {},
-    claimId: agreementClaimId,
-    correlationId
-  } = agreementData
-
-  const claimId = await getClaimId(agreementNumber, agreementData)
-
-  const invoiceNumber =
-    version === 1 && originalInvoiceNumber
-      ? originalInvoiceNumber
-      : generateInvoiceNumber(claimId, agreementData)
-
-  return {
-    sbi,
-    frn,
-    claimId: agreementClaimId,
-    grants: [
-      {
-        sourceSystem: 'FPTT',
-        deliveryBody: 'RP00',
-        paymentRequestNumber: version,
-        correlationId,
-        invoiceNumber,
-        originalInvoiceNumber,
-        agreementNumber,
-        totalAmountPence: agreementTotalPence,
-        currency,
-        marketingYear: new Date().getFullYear().toString(),
-        accountCode: 'SOS710',
-        fundCode: 'DRD10',
-        payments
-      }
-    ]
-  }
 }
 
 /**

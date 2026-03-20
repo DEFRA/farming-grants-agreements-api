@@ -3,8 +3,6 @@ import { publishEvent } from '../sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
 
-export { AGREEMENT_STATUS }
-
 /**
  * Handle an event from the SQS queue
  * @param {string} notificationMessageId - The AWS notification message ID
