@@ -38,8 +38,7 @@ module.exports = {
         'jsdoc',
         'n',
         'promise',
-        'prettier',
-        'unused-imports'
+        'prettier'
       ],
       rules: {
         'prettier/prettier': [
@@ -49,16 +48,6 @@ module.exports = {
           }
         ],
         'no-console': 'error',
-        'unused-imports/no-unused-imports': 'error',
-        'unused-imports/no-unused-vars': [
-          'error',
-          {
-            vars: 'all',
-            varsIgnorePattern: '^_',
-            args: 'after-used',
-            argsIgnorePattern: '^_'
-          }
-        ],
         'import/no-unused-modules': [
           'error',
           {
