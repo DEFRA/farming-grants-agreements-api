@@ -32,6 +32,7 @@ describe('AuditEvent', () => {
 
   test('contains expected event keys', () => {
     expect(AuditEvent.PDF_DOWNLOADED_FROM_S3).toBe('PDF_DOWNLOADED_FROM_S3')
+    expect(AuditEvent.AGREEMENT_UPDATED).toBe('AGREEMENT_UPDATED')
   })
 
   test('cannot be mutated', () => {
@@ -42,7 +43,7 @@ describe('AuditEvent', () => {
   })
 })
 
-describe('auditEvent', () => {
+describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
   let audit
   let auditEvent
   let AuditEvent
@@ -142,6 +143,65 @@ describe('auditEvent', () => {
       expect.objectContaining({
         correlationid: undefined,
         audit: expect.objectContaining({ entityid: undefined })
+      })
+    )
+  })
+})
+
+describe('auditEvent - AGREEMENT_UPDATED', () => {
+  let audit
+  let auditEvent
+  let AuditEvent
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
+    ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
+    ;({ audit } = await import('@defra/cdp-auditing'))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('calls audit with correct security fields', () => {
+    auditEvent(AuditEvent.AGREEMENT_UPDATED, {
+      agreementNumber: 'FPTT123456789'
+    })
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        security: expect.objectContaining({
+          pmccode: '0706',
+          details: expect.objectContaining({
+            transactioncode: '2309',
+            message: 'Agreement updated',
+            additionalinfo: 'agreementNumber: FPTT123456789'
+          })
+        })
+      })
+    )
+  })
+
+  test('calls audit with correct audit fields for agreement update', () => {
+    const context = {
+      agreementNumber: 'FPTT123456789',
+      correlationId: 'corr-xyz'
+    }
+
+    auditEvent(AuditEvent.AGREEMENT_UPDATED, context)
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({
+          eventtype: 'GrantsUpdateAgreement',
+          action: 'AGREEMENT_UPDATED',
+          entity: 'Agreements',
+          entityid: 'FPTT123456789',
+          status: 'success',
+          details: context
+        })
       })
     )
   })
