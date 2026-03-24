@@ -3,6 +3,7 @@ import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
 import { createSqsClientPlugin } from '../sqs-client.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
+import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { auditEvent as mockAuditEvent } from '#~/api/common/helpers/audit-event.js'
 import { config } from '#~/config/index.js'
@@ -10,6 +11,7 @@ import { Consumer } from 'sqs-consumer'
 
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
 vi.mock('#~/api/agreement/helpers/cancel-offer.js')
+vi.mock('#~/api/agreement/helpers/terminate-agreement.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
 vi.mock('#~/api/common/helpers/audit-event.js')
 vi.mock('sqs-consumer', () => ({
@@ -60,6 +62,14 @@ describe('SQS message processor', () => {
       correlationId: 'mockCorrelationId',
       code: 'mockCode',
       status: 'cancelled',
+      updatedAt: mockUpdatedAt,
+      agreement: { agreementNumber: 'FPTT123456789' }
+    })
+    terminateAgreement.mockResolvedValue({
+      clientRef: 'mockClientRef',
+      correlationId: 'mockCorrelationId',
+      code: 'mockCode',
+      status: 'terminated',
       updatedAt: mockUpdatedAt,
       agreement: { agreementNumber: 'FPTT123456789' }
     })
@@ -171,6 +181,55 @@ describe('SQS message processor', () => {
         correlationId: 'mockCorrelationId',
         code: 'mockCode',
         status: 'cancelled',
+        updatedAt: mockUpdatedAt,
+        agreement: { agreementNumber: 'FPTT123456789' },
+        agreementNumber: 'FPTT123456789'
+      })
+    })
+
+    it('should process terminated SNS message', async () => {
+      const handleMessage = getHandleMessage(handleUpdateAgreementEvent)
+
+      const mockPayload = {
+        type: 'gas-backend.agreement.update',
+        data: {
+          status: 'terminated',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+      const message = {
+        MessageId: 'aws-message-id',
+        Body: JSON.stringify(mockPayload)
+      }
+
+      await handleMessage(message)
+
+      expect(terminateAgreement).toHaveBeenCalledWith(
+        'client-ref-001',
+        'FPTT123456789'
+      )
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'FPTT123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: mockUpdatedAt,
+            status: 'terminated'
+          },
+          time: expect.any(String),
+          topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
+      expect(mockAuditEvent).toHaveBeenCalledWith('AGREEMENT_UPDATED', {
+        clientRef: 'mockClientRef',
+        correlationId: 'mockCorrelationId',
+        code: 'mockCode',
+        status: 'terminated',
         updatedAt: mockUpdatedAt,
         agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
@@ -316,6 +375,145 @@ describe('SQS message processor', () => {
         agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
       })
+    })
+
+    it('should terminate agreement for terminated events', async () => {
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'terminated',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Received application status update (terminated) from event'
+        )
+      )
+      expect(terminateAgreement).toHaveBeenCalledWith(
+        'client-ref-001',
+        'FPTT123456789'
+      )
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'FPTT123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: mockUpdatedAt,
+            status: 'terminated'
+          },
+          time: expect.any(String),
+          topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
+      expect(mockAuditEvent).toHaveBeenCalledWith('AGREEMENT_UPDATED', {
+        clientRef: 'mockClientRef',
+        correlationId: 'mockCorrelationId',
+        code: 'mockCode',
+        status: 'terminated',
+        updatedAt: mockUpdatedAt,
+        agreement: { agreementNumber: 'FPTT123456789' },
+        agreementNumber: 'FPTT123456789'
+      })
+    })
+
+    it('should fire a failure audit event and re-throw when withdrawOffer fails', async () => {
+      const error = new Error('DB connection failed')
+      withdrawOffer.mockRejectedValue(error)
+
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'withdrawn',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+
+      await expect(
+        handleUpdateAgreementEvent('aws-message-id', mockPayload, mockLogger)
+      ).rejects.toThrow(error)
+
+      expect(mockAuditEvent).toHaveBeenCalledWith(
+        'AGREEMENT_UPDATED',
+        {
+          agreementNumber: 'FPTT123456789',
+          clientRef: 'client-ref-001',
+          status: 'withdrawn',
+          message: 'DB connection failed'
+        },
+        'failure'
+      )
+    })
+
+    it('should fire a failure audit event and re-throw when cancelOffer fails', async () => {
+      const error = new Error('DB connection failed')
+      cancelOffer.mockRejectedValue(error)
+
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'cancelled',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+
+      await expect(
+        handleUpdateAgreementEvent('aws-message-id', mockPayload, mockLogger)
+      ).rejects.toThrow(error)
+
+      expect(mockAuditEvent).toHaveBeenCalledWith(
+        'AGREEMENT_UPDATED',
+        {
+          agreementNumber: 'FPTT123456789',
+          clientRef: 'client-ref-001',
+          status: 'cancelled',
+          message: 'DB connection failed'
+        },
+        'failure'
+      )
+    })
+
+    it('should fire a failure audit event and re-throw when terminateAgreement fails', async () => {
+      const error = new Error('DB connection failed')
+      terminateAgreement.mockRejectedValue(error)
+
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'terminated',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+
+      await expect(
+        handleUpdateAgreementEvent('aws-message-id', mockPayload, mockLogger)
+      ).rejects.toThrow(error)
+
+      expect(mockAuditEvent).toHaveBeenCalledWith(
+        'AGREEMENT_UPDATED',
+        {
+          agreementNumber: 'FPTT123456789',
+          clientRef: 'client-ref-001',
+          status: 'terminated',
+          message: 'DB connection failed'
+        },
+        'failure'
+      )
     })
 
     it('should not fire an audit event when no update occurred', async () => {

@@ -1,5 +1,6 @@
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
+import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
 import { publishEvent } from '../sns-publisher.js'
 import { auditEvent, AuditEvent } from '../audit-event.js'
 import { config } from '#~/config/index.js'
@@ -35,14 +36,30 @@ export const handleUpdateAgreementEvent = async (
 
   let updatedVersion
 
-  if (status === AGREEMENT_STATUS.WITHDRAWN) {
-    updatedVersion = await withdrawOffer(clientRef, agreementNumber)
-    logger.info(`Offer withdrawn: ${updatedVersion.agreement.agreementNumber}`)
-  }
-
-  if (status === AGREEMENT_STATUS.CANCELLED) {
-    updatedVersion = await cancelOffer(clientRef, agreementNumber)
-    logger.info(`Offer cancelled: ${updatedVersion.agreement.agreementNumber}`)
+  try {
+    if (status === AGREEMENT_STATUS.WITHDRAWN) {
+      updatedVersion = await withdrawOffer(clientRef, agreementNumber)
+      logger.info(
+        `Offer withdrawn: ${updatedVersion.agreement.agreementNumber}`
+      )
+    } else if (status === AGREEMENT_STATUS.CANCELLED) {
+      updatedVersion = await cancelOffer(clientRef, agreementNumber)
+      logger.info(
+        `Offer cancelled: ${updatedVersion.agreement.agreementNumber}`
+      )
+    } else if (status === AGREEMENT_STATUS.TERMINATED) {
+      updatedVersion = await terminateAgreement(clientRef, agreementNumber)
+      logger.info(
+        `Agreement terminated: ${updatedVersion.agreement.agreementNumber}`
+      )
+    }
+  } catch (error) {
+    auditEvent(
+      AuditEvent.AGREEMENT_UPDATED,
+      { agreementNumber, clientRef, status, message: error.message },
+      'failure'
+    )
+    throw error
   }
 
   if (updatedVersion) {
