@@ -429,6 +429,29 @@ describe('SQS message processor', () => {
       })
     })
 
+    it('should take no action for a known status with no handler', async () => {
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'offered',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(withdrawOffer).not.toHaveBeenCalled()
+      expect(cancelOffer).not.toHaveBeenCalled()
+      expect(terminateAgreement).not.toHaveBeenCalled()
+      expect(mockAuditEvent).not.toHaveBeenCalled()
+      expect(mockPublishEvent).not.toHaveBeenCalled()
+    })
+
     it('should fire a failure audit event and re-throw when withdrawOffer fails', async () => {
       const error = new Error('DB connection failed')
       withdrawOffer.mockRejectedValue(error)
