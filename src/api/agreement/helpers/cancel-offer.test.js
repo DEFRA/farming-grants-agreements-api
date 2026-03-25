@@ -39,7 +39,7 @@ describe('cancelOffer', () => {
     // Assert
     expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       {
-        status: 'accepted',
+        status: 'offered',
         clientRef,
         agreementNumber
       },
@@ -90,7 +90,7 @@ describe('cancelOffer', () => {
     // Assert
     expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
       {
-        status: 'accepted',
+        status: 'offered',
         clientRef,
         agreementNumber
       },
