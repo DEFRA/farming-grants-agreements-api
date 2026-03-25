@@ -154,7 +154,7 @@ const schema = new mongoose.Schema(
       type: String,
       required: true,
       default: 'offered',
-      enum: ['offered', 'withdrawn', 'accepted', 'cancelled']
+      enum: ['offered', 'cancelled', 'withdrawn', 'accepted', 'terminated']
     },
     agreement: {
       type: mongoose.Schema.Types.ObjectId,

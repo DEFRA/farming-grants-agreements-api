@@ -11,7 +11,7 @@ async function cancelOffer(clientRef, agreementNumber) {
   const offer = await agreementsModel
     .updateOneAgreementVersion(
       {
-        status: 'accepted',
+        status: 'offered',
         clientRef,
         agreementNumber
       },
