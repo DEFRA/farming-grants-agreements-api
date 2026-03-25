@@ -7,6 +7,8 @@ import { config } from '#~/config/index.js'
 import { createServer } from '#~/api/index.js'
 import { createOffer } from '#~/api/agreement/helpers/create-offer.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
+import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
+import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { getAgreementDataBySbi } from '#~/api/agreement/helpers/get-agreement-data.js'
@@ -20,6 +22,8 @@ import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-gr
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
+vi.mock('#~/api/agreement/helpers/cancel-offer.js')
+vi.mock('#~/api/agreement/helpers/terminate-agreement.js')
 vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
@@ -57,6 +61,8 @@ const setupMocks = () => {
   acceptOffer.mockReset()
   unacceptOffer.mockReset()
   withdrawOffer.mockReset()
+  cancelOffer.mockReset()
+  terminateAgreement.mockReset()
   getAgreementDataBySbi.mockReset()
 
   acceptOffer.mockResolvedValue({
@@ -72,6 +78,24 @@ const setupMocks = () => {
     code: 'mockCode',
     correlationId: 'mockCorrelationId',
     status: 'withdrawn',
+    updatedAt: MOCK_DATE
+  })
+
+  cancelOffer.mockResolvedValue({
+    agreement: { agreementNumber: 'FPTT123456789' },
+    clientRef: 'mockClientRef',
+    code: 'mockCode',
+    correlationId: 'mockCorrelationId',
+    status: 'cancelled',
+    updatedAt: MOCK_DATE
+  })
+
+  terminateAgreement.mockResolvedValue({
+    agreement: { agreementNumber: 'FPTT123456789' },
+    clientRef: 'mockClientRef',
+    code: 'mockCode',
+    correlationId: 'mockCorrelationId',
+    status: 'terminated',
     updatedAt: MOCK_DATE
   })
 
@@ -232,6 +256,82 @@ const withdrawnMessageProvider = async () => {
   return message
 }
 
+const cancelledMessageProvider = async () => {
+  let message
+  try {
+    mockPublishEvent.mockClear()
+
+    config.set(SNS_EVENT_SOURCE_KEY, PROVIDER_NAME)
+    config.set(
+      'aws.sns.topic.agreementStatusUpdate.type',
+      'cloud.defra.test.farming-grants-agreements-api.agreement.cancelled'
+    )
+
+    await handleUpdateAgreementEvent(
+      '123-456-789',
+      {
+        id: '12-34-56-78-90',
+        source: 'fg-gas-backend',
+        specversion: '1.0',
+        type: 'cloud.defra.test.fg-gas-backend.application.status.updated',
+        datacontenttype: 'application/json',
+        data: {
+          clientRef: 'mockClientRef',
+          agreementNumber: 'FPTT123456789',
+          status: 'cancelled'
+        }
+      },
+      mockLogger
+    )
+
+    const capturedInput = mockPublishEvent.mock.calls[0][0]
+    message = buildCloudEventMessage(capturedInput)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    message = 'Publish event was not called, check above for errors'
+  }
+  return message
+}
+
+const terminatedMessageProvider = async () => {
+  let message
+  try {
+    mockPublishEvent.mockClear()
+
+    config.set(SNS_EVENT_SOURCE_KEY, PROVIDER_NAME)
+    config.set(
+      'aws.sns.topic.agreementStatusUpdate.type',
+      'cloud.defra.test.farming-grants-agreements-api.agreement.terminated'
+    )
+
+    await handleUpdateAgreementEvent(
+      '123-456-789',
+      {
+        id: '12-34-56-78-90',
+        source: 'fg-gas-backend',
+        specversion: '1.0',
+        type: 'cloud.defra.test.fg-gas-backend.application.status.updated',
+        datacontenttype: 'application/json',
+        data: {
+          clientRef: 'mockClientRef',
+          agreementNumber: 'FPTT123456789',
+          status: 'terminated'
+        }
+      },
+      mockLogger
+    )
+
+    const capturedInput = mockPublishEvent.mock.calls[0][0]
+    message = buildCloudEventMessage(capturedInput)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    message = 'Publish event was not called, check above for errors'
+  }
+  return message
+}
+
 describe('sending events via SNS to GAS', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
@@ -279,12 +379,20 @@ describe('sending events via SNS to GAS', () => {
       },
       'an agreement offer has been accepted': () => {
         mockPublishEvent.mockResolvedValue()
+      },
+      'an agreement offer has been cancelled': () => {
+        mockPublishEvent.mockResolvedValue()
+      },
+      'an agreement has been terminated': () => {
+        mockPublishEvent.mockResolvedValue()
       }
     },
     messageProviders: {
       'an agreement created message': createdMessageProvider,
       'an agreement withdrawn message': withdrawnMessageProvider,
-      'an agreement accepted message': () => acceptedMessageProvider(server)
+      'an agreement accepted message': () => acceptedMessageProvider(server),
+      'an agreement cancelled message': cancelledMessageProvider,
+      'an agreement terminated message': terminatedMessageProvider
     }
   })
 
