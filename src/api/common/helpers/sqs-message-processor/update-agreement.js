@@ -1,9 +1,35 @@
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
+import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
 import { publishEvent } from '../sns-publisher.js'
 import { auditEvent, AuditEvent } from '../audit-event.js'
 import { config } from '#~/config/index.js'
 import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
+
+/**
+ * @param {string} status
+ * @param {string} clientRef
+ * @param {string} agreementNumber
+ * @param {import('@hapi/hapi').Server} logger
+ * @returns {Promise<object|undefined>}
+ */
+async function applyStatusUpdate(status, clientRef, agreementNumber, logger) {
+  if (status === AGREEMENT_STATUS.WITHDRAWN) {
+    const result = await withdrawOffer(clientRef, agreementNumber)
+    logger.info(`Offer withdrawn: ${result.agreement.agreementNumber}`)
+    return result
+  } else if (status === AGREEMENT_STATUS.CANCELLED) {
+    const result = await cancelOffer(clientRef, agreementNumber)
+    logger.info(`Offer cancelled: ${result.agreement.agreementNumber}`)
+    return result
+  } else if (status === AGREEMENT_STATUS.TERMINATED) {
+    const result = await terminateAgreement(clientRef, agreementNumber)
+    logger.info(`Agreement terminated: ${result.agreement.agreementNumber}`)
+    return result
+  } else {
+    return undefined
+  }
+}
 
 /**
  * Handle an event from the SQS queue
@@ -35,14 +61,20 @@ export const handleUpdateAgreementEvent = async (
 
   let updatedVersion
 
-  if (status === AGREEMENT_STATUS.WITHDRAWN) {
-    updatedVersion = await withdrawOffer(clientRef, agreementNumber)
-    logger.info(`Offer withdrawn: ${updatedVersion.agreement.agreementNumber}`)
-  }
-
-  if (status === AGREEMENT_STATUS.CANCELLED) {
-    updatedVersion = await cancelOffer(clientRef, agreementNumber)
-    logger.info(`Offer cancelled: ${updatedVersion.agreement.agreementNumber}`)
+  try {
+    updatedVersion = await applyStatusUpdate(
+      status,
+      clientRef,
+      agreementNumber,
+      logger
+    )
+  } catch (error) {
+    auditEvent(
+      AuditEvent.AGREEMENT_UPDATED,
+      { agreementNumber, clientRef, status, message: error.message },
+      'failure'
+    )
+    throw error
   }
 
   if (updatedVersion) {
