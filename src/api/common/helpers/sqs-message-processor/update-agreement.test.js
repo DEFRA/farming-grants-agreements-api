@@ -2,12 +2,14 @@ import { handleUpdateAgreementEvent } from './update-agreement.js'
 import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
 import { createSqsClientPlugin } from '../sqs-client.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
+import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { auditEvent as mockAuditEvent } from '#~/api/common/helpers/audit-event.js'
 import { config } from '#~/config/index.js'
 import { Consumer } from 'sqs-consumer'
 
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
+vi.mock('#~/api/agreement/helpers/cancel-offer.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
 vi.mock('#~/api/common/helpers/audit-event.js')
 vi.mock('sqs-consumer', () => ({
@@ -50,6 +52,14 @@ describe('SQS message processor', () => {
       correlationId: 'mockCorrelationId',
       code: 'mockCode',
       status: 'withdrawn',
+      updatedAt: mockUpdatedAt,
+      agreement: { agreementNumber: 'FPTT123456789' }
+    })
+    cancelOffer.mockResolvedValue({
+      clientRef: 'mockClientRef',
+      correlationId: 'mockCorrelationId',
+      code: 'mockCode',
+      status: 'cancelled',
       updatedAt: mockUpdatedAt,
       agreement: { agreementNumber: 'FPTT123456789' }
     })
@@ -112,6 +122,55 @@ describe('SQS message processor', () => {
         correlationId: 'mockCorrelationId',
         code: 'mockCode',
         status: 'withdrawn',
+        updatedAt: mockUpdatedAt,
+        agreement: { agreementNumber: 'FPTT123456789' },
+        agreementNumber: 'FPTT123456789'
+      })
+    })
+
+    it('should process cancelled SNS message', async () => {
+      const handleMessage = getHandleMessage(handleUpdateAgreementEvent)
+
+      const mockPayload = {
+        type: 'gas-backend.agreement.update',
+        data: {
+          status: 'cancelled',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+      const message = {
+        MessageId: 'aws-message-id',
+        Body: JSON.stringify(mockPayload)
+      }
+
+      await handleMessage(message)
+
+      expect(cancelOffer).toHaveBeenCalledWith(
+        'client-ref-001',
+        'FPTT123456789'
+      )
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'FPTT123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: mockUpdatedAt,
+            status: 'cancelled'
+          },
+          time: expect.any(String),
+          topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
+      expect(mockAuditEvent).toHaveBeenCalledWith('AGREEMENT_UPDATED', {
+        clientRef: 'mockClientRef',
+        correlationId: 'mockCorrelationId',
+        code: 'mockCode',
+        status: 'cancelled',
         updatedAt: mockUpdatedAt,
         agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
@@ -201,6 +260,58 @@ describe('SQS message processor', () => {
         correlationId: 'mockCorrelationId',
         code: 'mockCode',
         status: 'withdrawn',
+        updatedAt: mockUpdatedAt,
+        agreement: { agreementNumber: 'FPTT123456789' },
+        agreementNumber: 'FPTT123456789'
+      })
+    })
+
+    it('should cancel offer for cancelled events', async () => {
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'cancelled',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Received application status update (cancelled) from event'
+        )
+      )
+      expect(cancelOffer).toHaveBeenCalledWith(
+        'client-ref-001',
+        'FPTT123456789'
+      )
+      expect(mockPublishEvent).toHaveBeenCalledWith(
+        {
+          data: {
+            agreementNumber: 'FPTT123456789',
+            clientRef: 'mockClientRef',
+            code: 'mockCode',
+            correlationId: 'mockCorrelationId',
+            date: mockUpdatedAt,
+            status: 'cancelled'
+          },
+          time: expect.any(String),
+          topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+          type: 'io.onsite.agreement.status.updated'
+        },
+        mockLogger
+      )
+      expect(mockAuditEvent).toHaveBeenCalledWith('AGREEMENT_UPDATED', {
+        clientRef: 'mockClientRef',
+        correlationId: 'mockCorrelationId',
+        code: 'mockCode',
+        status: 'cancelled',
         updatedAt: mockUpdatedAt,
         agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'

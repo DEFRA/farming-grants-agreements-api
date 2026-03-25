@@ -1,4 +1,5 @@
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
+import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
 import { publishEvent } from '../sns-publisher.js'
 import { auditEvent, AuditEvent } from '../audit-event.js'
 import { config } from '#~/config/index.js'
@@ -37,6 +38,11 @@ export const handleUpdateAgreementEvent = async (
   if (status === AGREEMENT_STATUS.WITHDRAWN) {
     updatedVersion = await withdrawOffer(clientRef, agreementNumber)
     logger.info(`Offer withdrawn: ${updatedVersion.agreement.agreementNumber}`)
+  }
+
+  if (status === AGREEMENT_STATUS.CANCELLED) {
+    updatedVersion = await cancelOffer(clientRef, agreementNumber)
+    logger.info(`Offer cancelled: ${updatedVersion.agreement.agreementNumber}`)
   }
 
   if (updatedVersion) {
