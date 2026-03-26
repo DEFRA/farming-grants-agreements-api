@@ -4,6 +4,7 @@ import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
+import { auditEvent, AuditEvent } from '#~/api/common/helpers/audit-event.js'
 
 /**
  * Controller to accept agreement offer
@@ -44,6 +45,15 @@ const acceptOfferController = async (request, h) => {
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
       await unacceptOffer(agreementNumber)
+      auditEvent(
+        AuditEvent.AGREEMENT_CREATED,
+        {
+          agreementNumber,
+          correlationId: agreementData?.correlationId,
+          message: err.message
+        },
+        'failure'
+      )
       throw err
     }
 
@@ -69,6 +79,11 @@ const acceptOfferController = async (request, h) => {
       },
       request.logger
     )
+
+    auditEvent(AuditEvent.AGREEMENT_CREATED, {
+      ...agreementData,
+      agreementNumber
+    })
   }
 
   // Return JSON response with agreement data
