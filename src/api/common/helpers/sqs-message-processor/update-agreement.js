@@ -56,7 +56,7 @@ export const handleUpdateAgreementEvent = async (
   }
 
   logger.info(
-    `Received application status update (${status}) from event: ${notificationMessageId}`
+    `Received application status update (${status}) from event: ${notificationMessageId} with payload [${JSON.stringify(payload)}]`
   )
 
   let updatedVersion
