@@ -19,7 +19,9 @@ const getAgreementController =
 
     if (
       agreementData.status === 'offered' ||
-      (agreementData.status === 'withdrawn' && !agreementData.payment)
+      ((agreementData.status === 'withdrawn' ||
+        agreementData.status === 'cancelled') &&
+        !agreementData.payment)
     ) {
       agreementData.payment = await calculatePaymentsBasedOnParcelsWithActions(
         agreementData.application.parcel,

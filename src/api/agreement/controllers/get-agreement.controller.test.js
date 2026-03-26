@@ -280,6 +280,36 @@ describe('getAgreementController', () => {
           expect(result.auth.source).toBe('defra')
         })
       })
+
+      describe('cancelled', () => {
+        beforeEach(() => {
+          vi.spyOn(
+            agreementDataHelper,
+            'getAgreementDataBySbi'
+          ).mockResolvedValue({
+            agreementNumber: 'FPTT123456789',
+            status: 'cancelled',
+            sbi: '106284736',
+            application: { parcel: [] },
+            payment: {
+              agreementStartDate: '2025-12-05',
+              annualTotalPence: 0,
+              parcelItems: {},
+              agreementLevelItems: {}
+            }
+          })
+        })
+
+        test('should return cancelled data without recalculating payments', async () => {
+          const { statusCode, result } = await doGet()
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.status).toBe('cancelled')
+          expect(result.auth.source).toBe('defra')
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+        })
+      })
     })
 
     describe('Case worker', () => {
@@ -498,6 +528,36 @@ describe('getAgreementController', () => {
             mockAgreementData.payment
           )
           expect(result.auth.source).toBe('defra')
+        })
+      })
+
+      describe('cancelled', () => {
+        beforeEach(() => {
+          vi.spyOn(
+            agreementDataHelper,
+            'getAgreementDataById'
+          ).mockResolvedValue({
+            agreementNumber: agreementId,
+            status: 'cancelled',
+            sbi: '106284736',
+            application: { parcel: [] },
+            payment: {
+              agreementStartDate: '2025-12-05',
+              annualTotalPence: 0,
+              parcelItems: {},
+              agreementLevelItems: {}
+            }
+          })
+        })
+
+        test('should return cancelled data without recalculating payments', async () => {
+          const { statusCode, result } = await doGet(agreementId)
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.status).toBe('cancelled')
+          expect(result.auth.source).toBe('defra')
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
         })
       })
     })
