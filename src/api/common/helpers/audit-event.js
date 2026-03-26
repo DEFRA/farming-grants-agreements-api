@@ -7,6 +7,7 @@ import { config } from '#~/config/index.js'
  */
 export const AuditEvent = Object.freeze({
   PDF_DOWNLOADED_FROM_S3: 'PDF_DOWNLOADED_FROM_S3',
+  AGREEMENT_CREATED: 'AGREEMENT_CREATED',
   AGREEMENT_UPDATED: 'AGREEMENT_UPDATED'
 })
 
@@ -14,24 +15,28 @@ export const AuditEvent = Object.freeze({
 const eventMessages = {
   [AuditEvent.PDF_DOWNLOADED_FROM_S3]:
     'PDF agreement document downloaded from S3',
+  [AuditEvent.AGREEMENT_CREATED]: 'Agreement created',
   [AuditEvent.AGREEMENT_UPDATED]: 'Agreement updated'
 }
 
 // Transaction code for each audit event, used in security.details.transactioncode
 const eventTransactionCodes = {
   [AuditEvent.PDF_DOWNLOADED_FROM_S3]: '2308',
+  [AuditEvent.AGREEMENT_CREATED]: '2311',
   [AuditEvent.AGREEMENT_UPDATED]: '2309'
 }
 
 // PMC code for each audit event, used in security.pmccode
 const eventPmcCodes = {
   [AuditEvent.PDF_DOWNLOADED_FROM_S3]: '0201', // content imported/exported by any user or system component
+  [AuditEvent.AGREEMENT_CREATED]: '0704', // record added/created
   [AuditEvent.AGREEMENT_UPDATED]: '0706' // record updated
 }
 
 // Audit event type for each audit event, used in audit.eventtype
 const eventTypes = {
   [AuditEvent.PDF_DOWNLOADED_FROM_S3]: 'GrantsDownloadAgreement',
+  [AuditEvent.AGREEMENT_CREATED]: 'GrantsCreateAgreement',
   [AuditEvent.AGREEMENT_UPDATED]: 'GrantsUpdateAgreement'
 }
 

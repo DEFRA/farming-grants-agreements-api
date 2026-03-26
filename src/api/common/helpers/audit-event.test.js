@@ -32,6 +32,7 @@ describe('AuditEvent', () => {
 
   test('contains expected event keys', () => {
     expect(AuditEvent.PDF_DOWNLOADED_FROM_S3).toBe('PDF_DOWNLOADED_FROM_S3')
+    expect(AuditEvent.AGREEMENT_CREATED).toBe('AGREEMENT_CREATED')
     expect(AuditEvent.AGREEMENT_UPDATED).toBe('AGREEMENT_UPDATED')
   })
 
@@ -143,6 +144,65 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       expect.objectContaining({
         correlationid: undefined,
         audit: expect.objectContaining({ entityid: undefined })
+      })
+    )
+  })
+})
+
+describe('auditEvent - AGREEMENT_CREATED', () => {
+  let audit
+  let auditEvent
+  let AuditEvent
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
+    ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
+    ;({ audit } = await import('@defra/cdp-auditing'))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('calls audit with correct security fields', () => {
+    auditEvent(AuditEvent.AGREEMENT_CREATED, {
+      agreementNumber: 'FPTT123456789'
+    })
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        security: expect.objectContaining({
+          pmccode: '0704',
+          details: expect.objectContaining({
+            transactioncode: '2311',
+            message: 'Agreement created',
+            additionalinfo: 'agreementNumber: FPTT123456789'
+          })
+        })
+      })
+    )
+  })
+
+  test('calls audit with correct audit fields for agreement created', () => {
+    const context = {
+      agreementNumber: 'FPTT123456789',
+      correlationId: 'corr-xyz'
+    }
+
+    auditEvent(AuditEvent.AGREEMENT_CREATED, context)
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit: expect.objectContaining({
+          eventtype: 'GrantsCreateAgreement',
+          action: 'AGREEMENT_CREATED',
+          entity: 'Agreements',
+          entityid: 'FPTT123456789',
+          status: 'success',
+          details: context
+        })
       })
     )
   })

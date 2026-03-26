@@ -53,7 +53,9 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
 
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           1,
-          'Received application status update (withdrawn) from event: 12345678-1234-1234-1234-123456789012'
+          expect.stringContaining(
+            'Received application status update (withdrawn) from event: 12345678-1234-1234-1234-123456789012'
+          )
         )
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           2,

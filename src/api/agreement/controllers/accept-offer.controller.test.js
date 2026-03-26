@@ -16,10 +16,18 @@ import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import * as snsPublisher from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { calculatePaymentsBasedOnActions } from '#~/api/adapter/land-grants-adapter.js'
+import {
+  auditEvent as mockAuditEvent,
+  AuditEvent
+} from '#~/api/common/helpers/audit-event.js'
 
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
+vi.mock('#~/api/common/helpers/audit-event.js', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, auditEvent: vi.fn() }
+})
 vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
@@ -106,6 +114,7 @@ describe('acceptOfferDocumentController', () => {
     getAgreementDataBySbi.mockReset()
     getAgreementDataById.mockReset()
     createGrantPaymentFromAgreement.mockReset()
+    mockAuditEvent.mockReturnValue(undefined)
 
     acceptOffer.mockResolvedValue({
       ...mockAgreementData,
@@ -201,6 +210,14 @@ describe('acceptOfferDocumentController', () => {
       },
       expect.anything()
     )
+
+    expect(mockAuditEvent).toHaveBeenCalledWith(
+      AuditEvent.AGREEMENT_CREATED,
+      expect.objectContaining({
+        agreementNumber: 'FPTT123456789',
+        status: 'accepted'
+      })
+    )
   })
 
   test('should not accept an offer if the status is not offered', async () => {
@@ -227,6 +244,7 @@ describe('acceptOfferDocumentController', () => {
     expect(acceptOffer).not.toHaveBeenCalled()
     expect(createGrantPaymentFromAgreement).not.toHaveBeenCalled()
     expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
+    expect(mockAuditEvent).not.toHaveBeenCalled()
 
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('withdrawn')
@@ -351,6 +369,14 @@ describe('acceptOfferDocumentController', () => {
       errorMessage: 'Payment hub request failed'
     })
     expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
+    expect(mockAuditEvent).toHaveBeenCalledWith(
+      AuditEvent.AGREEMENT_CREATED,
+      expect.objectContaining({
+        agreementNumber: 'FPTT123456789',
+        message: 'Payment hub request failed'
+      }),
+      'failure'
+    )
   })
 })
 
