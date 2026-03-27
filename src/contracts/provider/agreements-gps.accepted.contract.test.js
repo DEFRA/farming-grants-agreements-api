@@ -232,11 +232,12 @@ describe('sending a create grant payment event via SNS', () => {
       )
 
       if (pactLoadErrors.length > 0) {
-        console.warn(
-          `⚠️ Pact loading failed / Pact consumer test(s) have not been implemented yet for: ${pactLoadErrors
-            .map((e) => e.mismatch?.message || 'Unknown error')
-            .join(', ')}`
-        )
+        const message = pactLoadErrors
+          .map((e) => e.mismatch?.message || 'Unknown error')
+          .join(', ')
+        const warn = `Pact loading failed / Pact consumer test(s) have not been implemented yet: ${message}`
+        console.warn(`⚠️ ${warn}`)
+        console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
         return
       }
 
@@ -249,11 +250,10 @@ describe('sending a create grant payment event via SNS', () => {
       )
 
       if (missingHandlers.length > 0) {
-        console.warn(
-          `⚠️ Pact consumer test(s) have not been implemented yet for: ${[
-            ...new Set(missingHandlers)
-          ].join(', ')}`
-        )
+        const message = [...new Set(missingHandlers)].join(', ')
+        const warn = `Pact consumer test(s) have not been implemented yet: ${message}`
+        console.warn(`⚠️ ${warn}`)
+        console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
       }
 
       if (realFailures.length > 0) {
