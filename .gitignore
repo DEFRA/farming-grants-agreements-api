@@ -9,7 +9,6 @@ coverage
 .cache
 .eslintcache
 .env
-.pact-warning
 .public
 
 tsconfig.tsbuildinfo
