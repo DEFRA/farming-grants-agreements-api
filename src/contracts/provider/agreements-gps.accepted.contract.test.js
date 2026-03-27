@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
+import fs from 'node:fs'
 
 import { vi } from 'vitest'
 import { MessageProviderPact } from '@pact-foundation/pact'
@@ -114,10 +115,16 @@ describe('sending a create grant payment event via SNS', () => {
     global.fetch = originalFetch
 
     if (testWarnings.length > 0) {
-      console.log('\n' + '━'.repeat(60))
-      console.log('::warning::⚠️ PACT VERIFICATION WARNING SUMMARY')
-      testWarnings.forEach((w) => console.log(`  - ${w}`))
-      console.log('━'.repeat(60) + '\n')
+      console.warn(
+        `${'━'.repeat(60)}\n⚠️ PACT VERIFICATION WARNING SUMMARY\n${testWarnings.map((w) => `  - ${w}`).join('\n')}\n${'━'.repeat(60)}`
+      )
+
+      if (process.env.GITHUB_STEP_SUMMARY) {
+        fs.appendFileSync(
+          process.env.GITHUB_STEP_SUMMARY,
+          `⚠️ PACT VERIFICATION WARNING SUMMARY\n${testWarnings.join(', ')}`
+        )
+      }
     }
   })
 
