@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
+import fs from 'node:fs'
 
 import { vi } from 'vitest'
 import { MessageProviderPact } from '@pact-foundation/pact'
@@ -237,7 +238,15 @@ describe('sending a create grant payment event via SNS', () => {
           .join(', ')
         const warn = `Pact loading failed / Pact consumer test(s) have not been implemented yet: ${message}`
         console.warn(`⚠️ ${warn}`)
-        console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
+
+        // Signal to CI that we have warnings
+        fs.writeFileSync('.pact-warning', warn)
+        if (process.env.GITHUB_STEP_SUMMARY) {
+          fs.appendFileSync(
+            process.env.GITHUB_STEP_SUMMARY,
+            `### ⚠️ Pact Warning\n\n${warn}\n`
+          )
+        }
         return
       }
 
@@ -253,7 +262,15 @@ describe('sending a create grant payment event via SNS', () => {
         const message = [...new Set(missingHandlers)].join(', ')
         const warn = `Pact consumer test(s) have not been implemented yet: ${message}`
         console.warn(`⚠️ ${warn}`)
-        console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
+
+        // Signal to CI that we have warnings
+        fs.writeFileSync('.pact-warning', warn)
+        if (process.env.GITHUB_STEP_SUMMARY) {
+          fs.appendFileSync(
+            process.env.GITHUB_STEP_SUMMARY,
+            `### ⚠️ Unimplemented Pact Handlers\n\n${warn}\n`
+          )
+        }
       }
 
       if (realFailures.length > 0) {

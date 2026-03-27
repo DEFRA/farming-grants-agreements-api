@@ -89,6 +89,7 @@ jobs:
         run: npm ci
 
       - name: Run contract tests on PRs
+        id: pact
         env:
           PACT_PUBLISH_VERIFICATION: false
         shell: bash
@@ -97,3 +98,14 @@ jobs:
           PACT_BROKER_USERNAME="${PACT_BROKER_USERNAME:-$PACT_USER}" \
           PACT_BROKER_PASSWORD="${PACT_BROKER_PASSWORD:-$PACT_PASS}" \
           npm run test:contracts
+          if [ -f .pact-warning ]; then
+            echo "has_warning=true" >> $GITHUB_OUTPUT
+            rm .pact-warning
+          fi
+
+      - name: Mark as warning if unimplemented handlers or loading issues
+        if: steps.pact.outputs.has_warning == 'true'
+        continue-on-error: true
+        run: |
+          echo "::warning::Pact tests passed with warnings (unimplemented handlers or loading issues). See job summary for details."
+          exit 1
