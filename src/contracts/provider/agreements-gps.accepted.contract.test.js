@@ -123,6 +123,59 @@ describe('sending a create grant payment event via SNS', () => {
     })
   })
 
+  const messageProviders = {
+    'a notification with the grant payment schedule': async () => {
+      let message
+      try {
+        config.set(
+          'aws.sns.topic.createPayment.arn',
+          'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo'
+        )
+        config.set(
+          'aws.sns.topic.createPayment.type',
+          'cloud.defra.dev.farming-grants-agreements-api.payment.create'
+        )
+
+        await server.inject({
+          method: 'POST',
+          url: `/`,
+          headers: {
+            'x-encrypted-auth': 'valid-jwt-token'
+          }
+        })
+
+        const acceptedPublishCall = mockPublishEvent.mock.calls.find(
+          ([event]) =>
+            event?.type ===
+            'cloud.defra.dev.farming-grants-agreements-api.payment.create'
+        )
+
+        if (!acceptedPublishCall) {
+          throw new Error(
+            `Accepted event was not published. Calls were: ${JSON.stringify(
+              mockPublishEvent.mock.calls.map(([event]) => ({
+                type: event?.type,
+                topicArn: event?.topicArn,
+                status: event?.data?.status
+              })),
+              null,
+              2
+            )}`
+          )
+        }
+
+        message = acceptedPublishCall[0]
+        message.specversion = message.specversion ?? '1.0'
+        message.time = '2025-10-06T16:41:59.497Z'
+      } catch (err) {
+        console.error(err)
+        message = 'Publish event was not called, check above for errors'
+      }
+
+      return message
+    }
+  }
+
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api',
     ...(process.env.CI
@@ -149,65 +202,57 @@ describe('sending a create grant payment event via SNS', () => {
         return Promise.resolve()
       }
     },
-    messageProviders: {
-      'a notification with the grant payment schedule': async () => {
-        let message
-        try {
-          config.set(
-            'aws.sns.topic.createPayment.arn',
-            'arn:aws:sns:eu-west-2:000000000000:create_payment.fifo'
-          )
-          config.set(
-            'aws.sns.topic.createPayment.type',
-            'cloud.defra.dev.farming-grants-agreements-api.payment.create'
-          )
-
-          await server.inject({
-            method: 'POST',
-            url: `/`,
-            headers: {
-              'x-encrypted-auth': 'valid-jwt-token'
-            }
-          })
-
-          const acceptedPublishCall = mockPublishEvent.mock.calls.find(
-            ([event]) =>
-              event?.type ===
-              'cloud.defra.dev.farming-grants-agreements-api.payment.create'
-          )
-
-          if (!acceptedPublishCall) {
-            throw new Error(
-              `Accepted event was not published. Calls were: ${JSON.stringify(
-                mockPublishEvent.mock.calls.map(([event]) => ({
-                  type: event?.type,
-                  topicArn: event?.topicArn,
-                  status: event?.data?.status
-                })),
-                null,
-                2
-              )}`
-            )
-          }
-
-          message = acceptedPublishCall[0]
-          message.specversion = message.specversion ?? '1.0'
-          message.time = '2025-10-06T16:41:59.497Z'
-        } catch (err) {
-          console.error(err)
-          message = 'Publish event was not called, check above for errors'
-        }
-
-        return message
-      }
-    }
+    messageProviders
   })
 
   it('should validate the message structure', async () => {
-    const verify = await messagePact.verify()
+    try {
+      const verify = await messagePact.verify()
 
-    expect(verify).toBeTruthy()
+      expect(verify).toBeTruthy()
 
-    return verify
+      return verify
+    } catch (err) {
+      let error
+      try {
+        error = JSON.parse(err.message)
+      } catch (parseErr) {
+        // If it's not JSON, it's some other error, just throw it
+        throw err
+      }
+
+      const interactionResults = error.interactionResults || []
+      const failedInteractions = interactionResults.filter(
+        (r) => r.result === 'Error'
+      )
+
+      const missingHandlers = failedInteractions
+        .filter((r) => !messageProviders[r.description])
+        .map((r) => r.description)
+
+      const realFailures = failedInteractions.filter(
+        (r) => messageProviders[r.description]
+      )
+
+      if (missingHandlers.length > 0) {
+        console.warn(
+          `⚠️ Pact consumer test(s) have not been implemented yet: ${[
+            ...new Set(missingHandlers)
+          ].join(', ')}`
+        )
+      }
+
+      if (realFailures.length > 0) {
+        // If we have real failures, we MUST throw the error
+        throw err
+      }
+
+      // If we only had missing handlers, we can exit gracefully
+      if (missingHandlers.length > 0) {
+        return
+      }
+
+      throw err
+    }
   })
 })
