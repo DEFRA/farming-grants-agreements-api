@@ -136,7 +136,8 @@ describe('sending a create grant payment event via SNS', () => {
           publishVerificationResult:
             process.env.PACT_PUBLISH_VERIFICATION === 'true',
           providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
-          failIfNoPactsFound: false
+          failIfNoPactsFound: false,
+          enablePending: true
         }
       : {
           logLevel: 'debug',
