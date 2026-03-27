@@ -68,6 +68,7 @@ describe('sending a create grant payment event via SNS', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
   let originalFetch
+  const testWarnings = []
 
   const agreement = agreements[1]
   const mockSbi = agreement.identifiers.sbi
@@ -111,6 +112,13 @@ describe('sending a create grant payment event via SNS', () => {
     }
 
     global.fetch = originalFetch
+
+    if (testWarnings.length > 0) {
+      console.log('\n' + '━'.repeat(60))
+      console.log('::warning::⚠️ PACT VERIFICATION WARNING SUMMARY')
+      testWarnings.forEach((w) => console.log(`  - ${w}`))
+      console.log('━'.repeat(60) + '\n')
+    }
   })
 
   beforeEach(() => {
@@ -238,6 +246,7 @@ describe('sending a create grant payment event via SNS', () => {
         const warn = `Pact loading failed / Pact consumer test(s) have not been implemented yet: ${message}`
         console.warn(`⚠️ ${warn}`)
         console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
+        testWarnings.push(warn)
         return
       }
 
@@ -254,6 +263,7 @@ describe('sending a create grant payment event via SNS', () => {
         const warn = `Pact consumer test(s) have not been implemented yet: ${message}`
         console.warn(`⚠️ ${warn}`)
         console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
+        testWarnings.push(warn)
       }
 
       if (realFailures.length > 0) {
