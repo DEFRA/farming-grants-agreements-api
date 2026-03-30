@@ -58,7 +58,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
           )
         )
         expect(mockLogger.info).toHaveBeenNthCalledWith(
-          2,
+          3,
           'Offer withdrawn: mockAgreementNumber'
         )
         expect(mockWithdrawOffer).toHaveBeenCalledWith(
