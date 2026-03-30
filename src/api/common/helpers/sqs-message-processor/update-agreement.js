@@ -14,6 +14,13 @@ import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
  * @returns {Promise<object|undefined>}
  */
 async function applyStatusUpdate(status, clientRef, agreementNumber, logger) {
+  logger.info(
+    `Processing agreement update message: ${JSON.stringify({
+      status,
+      clientRef,
+      agreementNumber
+    })}`
+  )
   if (status === AGREEMENT_STATUS.WITHDRAWN) {
     const result = await withdrawOffer(clientRef, agreementNumber)
     logger.info(`Offer withdrawn: ${result.agreement.agreementNumber}`)
