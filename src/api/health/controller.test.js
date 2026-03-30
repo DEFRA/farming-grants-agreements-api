@@ -15,6 +15,11 @@ describe('#healthController', () => {
     mongooseModule = await import('mongoose')
 
     config.set('serviceVersion', 'versionMock')
+    config.set('featureFlags', {
+      someFlag: true,
+      seedDb: false,
+      testEndpoints: false
+    })
 
     // import createServer after mongoose is mocked so controller picks up the mock
     const { createServer } = await import('#~/api/index.js')
@@ -41,7 +46,11 @@ describe('#healthController', () => {
         url: '/health'
       })
 
-      expect(result).toEqual({ message: 'success', version: 'versionMock' })
+      expect(result).toEqual({
+        message: 'success',
+        version: 'versionMock',
+        featureFlags: { someFlag: true, seedDb: false, testEndpoints: false }
+      })
       expect(statusCode).toBe(statusCodes.ok)
     })
   })
