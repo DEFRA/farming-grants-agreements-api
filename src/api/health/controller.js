@@ -24,7 +24,11 @@ const healthController = {
     }
 
     return h
-      .response({ message: 'success', version: config.get('serviceVersion') })
+      .response({
+        message: 'success',
+        version: config.get('serviceVersion'),
+        featureFlags: config.get('featureFlags')
+      })
       .code(statusCodes.ok)
   }
 }
