@@ -89,25 +89,30 @@ export const createGrantPaymentFromAgreement = async (
 
   const {
     payment: { agreementTotalPence, currency = 'GBP' },
+    version,
     originalInvoiceNumber,
     identifiers: { sbi, frn } = {},
+    claimId: agreementClaimId,
     correlationId
   } = agreementData
 
   const claimId = await getClaimId(agreementNumber, agreementData)
-  const paymentRequestNumber = 1
-  const invoiceNumber = generateInvoiceNumber(paymentRequestNumber)
+
+  const invoiceNumber =
+    version === 1 && originalInvoiceNumber
+      ? originalInvoiceNumber
+      : generateInvoiceNumber(claimId, agreementData)
 
   const grantPaymentsData = {
     sbi,
     frn,
-    claimId,
+    claimId: agreementClaimId,
     scheme: 'SFI',
     grants: [
       {
         sourceSystem: 'FPTT',
         deliveryBody: 'RP00',
-        paymentRequestNumber,
+        paymentRequestNumber: version,
         correlationId,
         invoiceNumber,
         originalInvoiceNumber,

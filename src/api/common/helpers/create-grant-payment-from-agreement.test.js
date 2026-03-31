@@ -1,9 +1,20 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 
 vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
+}))
+vi.mock(
+  '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js',
+  () => ({
+    generateInvoiceNumber: vi.fn()
+  })
+)
+vi.mock('#~/api/agreement/helpers/invoice/claim-id.js', () => ({
+  getClaimId: vi.fn()
 }))
 
 describe('createGrantPaymentFromAgreement', () => {
@@ -60,15 +71,18 @@ describe('createGrantPaymentFromAgreement', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getAgreementDataById).mockResolvedValue(mockAgreementData)
+    vi.mocked(getClaimId).mockResolvedValue('CLAIM-789')
+    vi.mocked(generateInvoiceNumber).mockReturnValue('GEN-INV-456')
   })
 
-  it('should create grant payment from agreement', async () => {
+  it('should create grant payment from agreement with version 1 and original invoice number', async () => {
     const result = await createGrantPaymentFromAgreement(
       agreementNumber,
       logger
     )
 
     expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
+    expect(getClaimId).toHaveBeenCalledWith(agreementNumber, mockAgreementData)
 
     expect(result).toEqual({
       sbi: 'SBI123',
@@ -81,7 +95,7 @@ describe('createGrantPaymentFromAgreement', () => {
           deliveryBody: 'RP00',
           paymentRequestNumber: 1,
           correlationId: 'CORR-ID-001',
-          invoiceNumber: 'V001',
+          invoiceNumber: 'ORIG-INV-123',
           originalInvoiceNumber: 'ORIG-INV-123',
           agreementNumber: 'FPTT123456',
           totalAmountPence: '10000',
@@ -111,6 +125,42 @@ describe('createGrantPaymentFromAgreement', () => {
         }
       ]
     })
+  })
+
+  it('should generate invoice number if version is not 1', async () => {
+    const agreementDataV2 = {
+      ...mockAgreementData,
+      version: 2
+    }
+    vi.mocked(getAgreementDataById).mockResolvedValue(agreementDataV2)
+
+    const result = await createGrantPaymentFromAgreement(
+      agreementNumber,
+      logger
+    )
+
+    expect(generateInvoiceNumber).toHaveBeenCalledWith(
+      'CLAIM-789',
+      agreementDataV2
+    )
+    expect(result.grants[0].invoiceNumber).toBe('GEN-INV-456')
+    expect(result.grants[0].paymentRequestNumber).toBe(2)
+  })
+
+  it('should generate invoice number if originalInvoiceNumber is missing even if version is 1', async () => {
+    const agreementDataNoOrig = {
+      ...mockAgreementData,
+      originalInvoiceNumber: undefined
+    }
+    vi.mocked(getAgreementDataById).mockResolvedValue(agreementDataNoOrig)
+
+    const result = await createGrantPaymentFromAgreement(
+      agreementNumber,
+      logger
+    )
+
+    expect(generateInvoiceNumber).toHaveBeenCalled()
+    expect(result.grants[0].invoiceNumber).toBe('GEN-INV-456')
   })
 
   it('should use default currency GBP if not provided', async () => {
