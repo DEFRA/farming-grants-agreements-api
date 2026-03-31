@@ -1,6 +1,8 @@
 import countersModel from '#~/api/common/models/counters.js'
 
 const CLAIM_ID_COUNTER = 'claimIds'
+const INVOICE_NUMBER_PADDING = 3
+const MONTHS_PER_QUARTER = 3
 
 /**
  * Format a claim ID number as a string with 'R' prefix and 8 digit padding
@@ -17,10 +19,9 @@ function formatClaimId(seq) {
  * @returns {string} The quarter (Q1, Q2, Q3, or Q4)
  */
 function getQuarter(date) {
-  const monthsPerQuarter = 3
   const dateObj = new Date(date)
   const month = dateObj.getMonth() // 0-11
-  const quarter = Math.floor(month / monthsPerQuarter) + 1
+  const quarter = Math.floor(month / MONTHS_PER_QUARTER) + 1
   return `Q${quarter}`
 }
 
@@ -39,21 +40,17 @@ async function generateClaimId() {
 }
 
 /**
- * Generate invoice number based on claimId, version and quarter from due date
- * @param {string} claimId - The claim ID
- * @param {object} agreementData - The agreement data containing payment information
- * @param {object} agreementData.payment - Payment information
- * @param {string} agreementData.payment.payments[0].paymentDate - The first payment date
- * @param {number} agreementData.version - The agreement version
- * @returns {string} Invoice number in format: claimId-versionQuarter (e.g., 'R00000001-V001Q1')
+ * Generate invoice number from claimId, payment request number and due date
+ * @param {string} claimId - The claim ID (e.g., 'R00000001')
+ * @param {number} paymentRequestNumber - The payment request number
+ * @param {string|Date} dueDate - The due date used to determine the quarter
+ * @returns {string} Invoice number in format: claimId-V00xQy (e.g., 'R00000001-V001Q2')
  */
-function generateInvoiceNumber(claimId, agreementData) {
-  const dueDate = agreementData.payment?.payments?.[0]?.paymentDate
-  const paymentRequestNumberPadding = 3
-  const version = `V${String(agreementData.version).padStart(paymentRequestNumberPadding, '0')}`
+function generateInvoiceNumber(claimId, paymentRequestNumber, dueDate) {
+  const paddedPaymentRequestNumber = `V${String(paymentRequestNumber).padStart(INVOICE_NUMBER_PADDING, '0')}`
   const quarter = getQuarter(dueDate)
 
-  return `${claimId}-${version}${quarter}`
+  return `${claimId}-${paddedPaymentRequestNumber}${quarter}`
 }
 
 export { generateClaimId, generateInvoiceNumber, formatClaimId }
