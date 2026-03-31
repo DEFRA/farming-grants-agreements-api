@@ -1,6 +1,7 @@
 import countersModel from '#~/api/common/models/counters.js'
 
 const CLAIM_ID_COUNTER = 'claimIds'
+const INVOICE_NUMBER_PADDING = 3
 
 /**
  * Format a claim ID number as a string with 'R' prefix and 8 digit padding
@@ -9,19 +10,6 @@ const CLAIM_ID_COUNTER = 'claimIds'
  */
 function formatClaimId(seq) {
   return `R${String(seq).padStart(8, '0')}`
-}
-
-/**
- * Get the quarter (Q1-Q4) from a date
- * @param {string|Date} date - The date to get the quarter from
- * @returns {string} The quarter (Q1, Q2, Q3, or Q4)
- */
-function getQuarter(date) {
-  const monthsPerQuarter = 3
-  const dateObj = new Date(date)
-  const month = dateObj.getMonth() // 0-11
-  const quarter = Math.floor(month / monthsPerQuarter) + 1
-  return `Q${quarter}`
 }
 
 /**
@@ -39,21 +27,12 @@ async function generateClaimId() {
 }
 
 /**
- * Generate invoice number based on claimId, version and quarter from due date
- * @param {string} claimId - The claim ID
- * @param {object} agreementData - The agreement data containing payment information
- * @param {object} agreementData.payment - Payment information
- * @param {string} agreementData.payment.payments[0].paymentDate - The first payment date
- * @param {number} agreementData.version - The agreement version
- * @returns {string} Invoice number in format: claimId-versionQuarter (e.g., 'R00000001-V001Q1')
+ * Generate invoice number from payment request number
+ * @param {number} paymentRequestNumber - The payment request number
+ * @returns {string} Invoice number in format: V00x (e.g., 'V001')
  */
-function generateInvoiceNumber(claimId, agreementData) {
-  const dueDate = agreementData.payment?.payments?.[0]?.paymentDate
-  const paymentRequestNumberPadding = 3
-  const version = `V${String(agreementData.version).padStart(paymentRequestNumberPadding, '0')}`
-  const quarter = getQuarter(dueDate)
-
-  return `${claimId}-${version}${quarter}`
+function generateInvoiceNumber(paymentRequestNumber) {
+  return `V${String(paymentRequestNumber).padStart(INVOICE_NUMBER_PADDING, '0')}`
 }
 
 export { generateClaimId, generateInvoiceNumber, formatClaimId }
