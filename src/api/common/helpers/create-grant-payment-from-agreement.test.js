@@ -1,9 +1,20 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 
 vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
+}))
+vi.mock(
+  '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js',
+  () => ({
+    generateInvoiceNumber: vi.fn()
+  })
+)
+vi.mock('#~/api/agreement/helpers/invoice/claim-id.js', () => ({
+  getClaimId: vi.fn()
 }))
 
 describe('createGrantPaymentFromAgreement', () => {
@@ -16,8 +27,8 @@ describe('createGrantPaymentFromAgreement', () => {
     agreementNumber: 'FPTT123456',
     version: 1,
     originalInvoiceNumber: 'ORIG-INV-123',
-    claimId: 'CLAIM-789',
-    correlationId: 'CORR-ID-001',
+    claimId: 'R00000001',
+    correlationId: '123e4567-e89b-12d3-a456-426614174000',
     identifiers: {
       sbi: 'SBI123',
       frn: 'FRN456'
@@ -60,6 +71,8 @@ describe('createGrantPaymentFromAgreement', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getAgreementDataById).mockResolvedValue(mockAgreementData)
+    vi.mocked(getClaimId).mockResolvedValue('R00000001')
+    vi.mocked(generateInvoiceNumber).mockReturnValue('R00000001-V001Q2')
   })
 
   it('should create grant payment from agreement', async () => {
@@ -69,19 +82,25 @@ describe('createGrantPaymentFromAgreement', () => {
     )
 
     expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
+    expect(getClaimId).toHaveBeenCalledWith(agreementNumber, mockAgreementData)
+    expect(generateInvoiceNumber).toHaveBeenCalledWith(
+      'R00000001',
+      1,
+      '2024-05-01'
+    )
 
     expect(result).toEqual({
       sbi: 'SBI123',
       frn: 'FRN456',
-      claimId: 'CLAIM-789',
+      claimId: 'R00000001',
       scheme: 'SFI',
       grants: [
         {
           sourceSystem: 'FPTT',
           deliveryBody: 'RP00',
           paymentRequestNumber: 1,
-          correlationId: 'CORR-ID-001',
-          invoiceNumber: 'V001',
+          correlationId: '123e4567-e89b-12d3-a456-426614174000',
+          invoiceNumber: 'R00000001-V001Q2',
           originalInvoiceNumber: 'ORIG-INV-123',
           agreementNumber: 'FPTT123456',
           totalAmountPence: '10000',
