@@ -1,25 +1,42 @@
 services:
-  localstack:
-    image: localstack/localstack:3.0.2
+  floci:
+    image: hectorvent/floci:1.1.0
     ports:
-      - '4566:4566' # LocalStack Gateway
+      - '4566:4566' # Floci Gateway
       - '4510-4559:4510-4559' # external services port range
     env_file:
       - 'compose/aws.env'
     environment:
       DEBUG: ${DEBUG:-1}
-      LS_LOG: WARN # Localstack DEBUG Level
+      LS_LOG: WARN # Floci DEBUG Level
       SERVICES: s3,sqs,sns,firehose
       MONITOR_SQS: ${MONITOR_SQS:-true}
-    volumes:
-      - '${TMPDIR:-/tmp}/localstack:/var/lib/localstack'
-      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
-      - ./compose/monitor-sqs.sh:/etc/localstack/init/ready.d/monitor-sqs.sh
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: eu-west-2
     healthcheck:
-      test: ['CMD', 'curl', 'localhost:4566']
+      test: ['CMD', 'curl', '--fail', 'http://127.0.0.1:4566']
       interval: 5s
       start_period: 5s
       retries: 3
+    networks:
+      - cdp-tenant
+
+  floci-init:
+    image: amazon/aws-cli
+    entrypoint: /bin/sh
+    command: /setup/start-floci.sh
+    depends_on:
+      floci:
+        condition: service_healthy
+    env_file:
+      - 'compose/aws.env'
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: eu-west-2
+    volumes:
+      - ./compose/start-floci.sh:/setup/start-floci.sh
     networks:
       - cdp-tenant
 
@@ -42,14 +59,18 @@ services:
   ################################################################################
 
   farming-grants-agreements-api:
+    profiles:
+      - full
     build:
       context: ./
       target: development
     ports:
       - '3555:3555'
     depends_on:
-      localstack:
+      floci:
         condition: service_healthy
+      floci-init:
+        condition: service_completed_successfully
       mongodb:
         condition: service_healthy
     extra_hosts:
@@ -58,19 +79,19 @@ services:
       [
         '/bin/sh',
         '-c',
-        "echo 'Waiting 10 seconds for localstack and mongodb to fully initialize...' && sleep 10 && echo 'Starting farming-grants-agreements-api...' && npm run docker:dev"
+        "echo 'Starting farming-grants-agreements-api...' && npm run docker:dev"
       ]
     env_file:
       - 'compose/aws.env'
     environment:
       PORT: 3555
       NODE_ENV: ${NODE_ENV:-development}
-      LOCALSTACK_ENDPOINT: http://localstack:4566
+      FLOCI_ENDPOINT: http://floci:4566
       MONGO_URI: mongodb://mongodb:27017/
       SEED_DB: ${SEED_DB:-true}
-      AWS_ENDPOINT: http://localstack:4566
-      SQS_ENDPOINT: http://localstack:4566
-      QUEUE_URL: http://localstack:4566/000000000000/create_agreement_fifo.fifo
+      AWS_ENDPOINT: http://floci:4566
+      SQS_ENDPOINT: http://floci:4566
+      QUEUE_URL: http://floci:4566/000000000000/create_agreement_fifo.fifo
       S3_ENDPOINT: http://host.docker.internal:4568
       GA_TRACKING_ID: ${GA_TRACKING_ID:-''}
       QUEUE_NAME: ${QUEUE_NAME:-create_agreement_fifo.fifo}
@@ -80,7 +101,7 @@ services:
       ENABLE_PAYMENT_HUB: ${ENABLE_PAYMENT_HUB:-false}
       VIEW_AGREEMENT_URI: http://host.docker.internal:3555
       SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED: ${SNS_TOPIC_TYPE_AGREEMENT_STATUS_UPDATED:-io.onsite.agreement.status.updated}
-      SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED": ${SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED:-arn:aws:sns:eu-west-2:332499610595:agreement_status_updated_fifo.fifo}
+      SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED: ${SNS_TOPIC_ARN_AGREEMENT_STATUS_UPDATED:-arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo}
       FILES_S3_BUCKET: ${FILES_S3_BUCKET:-farming-grants-agreements-pdf-bucket}
       FILES_S3_BASE_TERM_PREFIX: ${FILES_S3_BASE_TERM_PREFIX:-base}
       FILES_S3_EXTENDED_TERM_PREFIX: ${FILES_S3_EXTENDED_TERM_PREFIX:-extended}
@@ -100,6 +121,7 @@ services:
     image: pactfoundation/pact-stub-server:0.7.0
     profiles:
       - mock
+      - full
     restart: unless-stopped
     ports:
       - '8081:8081'
