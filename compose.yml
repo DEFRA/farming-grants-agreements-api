@@ -11,9 +11,6 @@ services:
       LS_LOG: WARN # Floci DEBUG Level
       SERVICES: s3,sqs,sns,firehose
       MONITOR_SQS: ${MONITOR_SQS:-true}
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      AWS_DEFAULT_REGION: eu-west-2
     healthcheck:
       test: ['CMD', 'curl', '--fail', 'http://127.0.0.1:4566']
       interval: 5s
@@ -31,10 +28,6 @@ services:
         condition: service_healthy
     env_file:
       - 'compose/aws.env'
-    environment:
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      AWS_DEFAULT_REGION: eu-west-2
     volumes:
       - ./compose/start-floci.sh:/setup/start-floci.sh
     networks:
