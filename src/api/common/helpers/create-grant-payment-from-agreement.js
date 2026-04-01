@@ -1,6 +1,13 @@
 import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
+import { config } from '#~/config/index.js'
+
+function getTomorrowDateString() {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  return tomorrow.toISOString().slice(0, 10)
+}
 
 function createPaymentInvoice(
   lineItem,
@@ -41,7 +48,7 @@ function createPaymentInvoice(
  * @param {object} agreementData - The agreement data.
  * @returns {Array<object>} The mapped payments array.
  */
-const createPayments = (agreementData) => {
+const createPayments = (agreementData, dueDateOverride) => {
   const {
     payment: {
       payments: agreementPayments = [],
@@ -65,7 +72,7 @@ const createPayments = (agreementData) => {
     })
 
     return {
-      dueDate: agreementPayment.paymentDate,
+      dueDate: dueDateOverride ?? agreementPayment.paymentDate,
       totalAmountPence: agreementPayment.totalPaymentPence.toString(),
       status: 'pending',
       invoiceLines
@@ -85,7 +92,9 @@ export const createGrantPaymentFromAgreement = async (
 ) => {
   const agreementData = await getAgreementDataById(agreementNumber)
 
-  const payments = createPayments(agreementData)
+  const isProduction = config.get('env') === 'production'
+  const dueDateOverride = isProduction ? undefined : getTomorrowDateString()
+  const payments = createPayments(agreementData, dueDateOverride)
 
   const {
     payment: {
