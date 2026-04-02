@@ -82,14 +82,14 @@ describe('createGrantPaymentFromAgreement', () => {
     vi.mocked(getAgreementDataById).mockResolvedValue(mockAgreementData)
     vi.mocked(getClaimId).mockResolvedValue('R00000001')
     vi.mocked(generateInvoiceNumber).mockReturnValue('R00000001-V001Q2')
-    vi.mocked(config.get).mockReturnValue('test')
+    vi.mocked(config.get).mockReturnValue(true)
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('should create grant payment from agreement with tomorrow as dueDate in non-production', async () => {
+  it('should create grant payment from agreement with tomorrow as dueDate when test mode is enabled', async () => {
     const result = await createGrantPaymentFromAgreement(
       agreementNumber,
       logger
@@ -146,8 +146,8 @@ describe('createGrantPaymentFromAgreement', () => {
     })
   })
 
-  it('should use the original payment dueDate in production', async () => {
-    vi.mocked(config.get).mockReturnValue('production')
+  it('should use the original payment dueDate when test mode is disabled', async () => {
+    vi.mocked(config.get).mockReturnValue(false)
 
     const result = await createGrantPaymentFromAgreement(
       agreementNumber,
