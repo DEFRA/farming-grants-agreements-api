@@ -75,6 +75,8 @@ export async function publishEvent(
           maxAttempts,
           error: error?.message,
           code: error?.name,
+          endpoint: config.get('aws.sns.endpoint'),
+          region: config.get('aws.region'),
           stack: error?.stack
         },
         `Failed to publish event to SNS topic: ${topicArn} type: ${type}`
