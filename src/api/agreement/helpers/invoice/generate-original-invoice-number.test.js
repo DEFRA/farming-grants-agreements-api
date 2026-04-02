@@ -40,33 +40,11 @@ describe('generateClaimId', () => {
 })
 
 describe('generateInvoiceNumber', () => {
-  it('returns invoice number in R00000001-V001Q1 format for Q1 date', () => {
-    expect(generateInvoiceNumber('R00000001', 1, '2024-01-15')).toBe(
-      'R00000001-V001Q1'
-    )
+  it('returns invoice number with claimId and padded request number', () => {
+    expect(generateInvoiceNumber('R00000001', 1)).toBe('R00000001-V001QX')
   })
 
-  it('returns invoice number in R00000001-V001Q2 format for Q2 date', () => {
-    expect(generateInvoiceNumber('R00000001', 1, '2024-05-01')).toBe(
-      'R00000001-V001Q2'
-    )
-  })
-
-  it('returns invoice number in R00000001-V001Q3 format for Q3 date', () => {
-    expect(generateInvoiceNumber('R00000001', 1, '2024-08-20')).toBe(
-      'R00000001-V001Q3'
-    )
-  })
-
-  it('returns invoice number in R00000001-V001Q4 format for Q4 date', () => {
-    expect(generateInvoiceNumber('R00000001', 1, '2024-11-30')).toBe(
-      'R00000001-V001Q4'
-    )
-  })
-
-  it('pads the payment request number to 3 digits', () => {
-    expect(generateInvoiceNumber('R00000001', 10, '2024-05-01')).toBe(
-      'R00000001-V010Q2'
-    )
+  it('pads the payment request number to 3 digits with QX', () => {
+    expect(generateInvoiceNumber('R00000001', 10)).toBe('R00000001-V010QX')
   })
 })
