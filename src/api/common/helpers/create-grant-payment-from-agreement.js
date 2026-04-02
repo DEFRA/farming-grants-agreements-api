@@ -92,8 +92,10 @@ export const createGrantPaymentFromAgreement = async (
 ) => {
   const agreementData = await getAgreementDataById(agreementNumber)
 
-  const isProduction = !['development', 'test'].includes(config.get('env'))
-  const dueDateOverride = isProduction ? undefined : getTomorrowDateString()
+  const isTestModeEnabled = config.get('featureFlags.paymentHubTestModeEnabled')
+  const dueDateOverride = isTestModeEnabled
+    ? getTomorrowDateString()
+    : undefined
   const payments = createPayments(agreementData, dueDateOverride)
 
   const {
