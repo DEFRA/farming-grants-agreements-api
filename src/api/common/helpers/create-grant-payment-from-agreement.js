@@ -92,7 +92,7 @@ export const createGrantPaymentFromAgreement = async (
 ) => {
   const agreementData = await getAgreementDataById(agreementNumber)
 
-  const isProduction = config.get('env') === 'production'
+  const isProduction = !['development', 'test'].includes(config.get('env'))
   const dueDateOverride = isProduction ? undefined : getTomorrowDateString()
   const payments = createPayments(agreementData, dueDateOverride)
 
