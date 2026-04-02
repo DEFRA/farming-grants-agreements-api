@@ -22,7 +22,7 @@ Core delivery platform Node.js Backend Template.
   - [Development image](#development-image)
   - [Production image](#production-image)
   - [Docker Compose](#docker-compose)
-  - [Viewing messages in LocalStack SQS](#viewing-messages-in-localstack-sqs)
+  - [Viewing messages in Floci SQS](#viewing-messages-in-floci-sqs)
   - [The Google Analytics trackingId secret configuration GA_TRACKING_ID(googleAnalytics.trackingId)](#the-google-analytics-trackingid-secret-configuration-ga_tracking_idgoogleanalyticstrackingid)
   - [Dependabot](#dependabot)
   - [SonarCloud](#sonarcloud)
@@ -90,7 +90,7 @@ To manually test the listener, run the following to build the required Docker co
 docker compose -f compose.yml up -d --build
 ```
 
-It might be helpful to use localstack's dashboard to view the SQS queue and any messages: [https://app.localstack.cloud/inst/default/resources/sqs](https://app.localstack.cloud/inst/default/resources/sqs)
+It might be helpful to use floci's dashboard to view the SQS queue and any messages: [https://app.floci.cloud/inst/default/resources/sqs](https://app.floci.cloud/inst/default/resources/sqs)
 
 You can send a test `grant_application_approved_fifo.fifo` event by running:
 
@@ -142,7 +142,7 @@ git config --global core.autocrlf false
 
 1. Ensure JWT is enabled in your .env file:
    - `JWT_ENABLED=true`
-2. Start the stack (MongoDB, LocalStack and this service):
+2. Start the stack (MongoDB, Floci and this service):
 
    ```bash
    docker compose up -d --build
@@ -153,7 +153,7 @@ git config --global core.autocrlf false
    ```
    NAME                                                           COMMAND                  STATE     PORTS
    farming-grants-agreements-api-farming-grants-agreements-api-1  "/sbin/tini -- node ."  running   0.0.0.0:3555->3555/tcp, [::]:3555->3555/tcp
-   farming-grants-agreements-api-localstack-1                     "docker-entrypoint.sh"  running   0.0.0.0:4510-4559->4510-4559/tcp, [::]:4510-4559->4510-4559/tcp, 0.0.0.0:4566->4566/tcp, [::]:4566->4566/tcp
+   farming-grants-agreements-api-floci-1                     "docker-entrypoint.sh"  running   0.0.0.0:4510-4559->4510-4559/tcp, [::]:4510-4559->4510-4559/tcp, 0.0.0.0:4566->4566/tcp, [::]:4566->4566/tcp
    farming-grants-agreements-api-mongodb-1                        "docker-entrypoint.s…"  running   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
    ```
 
@@ -302,7 +302,7 @@ docker run -e PORT=3555 -p 3555:3555 defradigital/farming-grants-agreements-api:
 
 A local environment with:
 
-- Localstack for AWS services (S3, SQS)
+- Floci for AWS services (S3, SQS)
 - MongoDB
 - This service.
 
@@ -310,15 +310,15 @@ A local environment with:
 docker compose up --build -d
 ```
 
-### Viewing messages in LocalStack SQS
+### Viewing messages in Floci SQS
 
-By default, our LocalStack monitor only shows **message counts** (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue.
+By default, our Floci monitor only shows **message counts** (`ApproximateNumberOfMessages`, `ApproximateNumberOfMessagesNotVisible`) for each queue.
 This is intentional, so we don’t interfere with the application’s consumers — pulling messages removes them from visibility until they are deleted or the visibility timeout expires.
 
 If you want to **peek at the actual messages** (for debugging or development only), you can run:
 
 ```bash
-docker compose exec localstack sh -lc '
+docker compose exec floci sh -lc '
   QURL=$(awslocal sqs get-queue-url \
     --queue-name record_agreement_status_update \
     --query QueueUrl --output text)

@@ -13,7 +13,14 @@ import { config } from '#~/config/index.js'
 const processMessage = async (callback, message, logger) => {
   try {
     const messageBody = JSON.parse(message.Body)
-    await callback(message.MessageId, messageBody, logger)
+
+    // Handle both SNS-wrapped messages and raw messages (AWS production)
+    let payload = messageBody
+    if (messageBody.Type === 'Notification' && messageBody.Message) {
+      payload = JSON.parse(messageBody.Message)
+    }
+
+    await callback(message.MessageId, payload, logger)
   } catch (error) {
     if (error.name === 'SyntaxError') {
       throw Boom.badData(

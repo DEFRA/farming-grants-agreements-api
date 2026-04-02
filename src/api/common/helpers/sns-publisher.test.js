@@ -26,7 +26,7 @@ describe('publishEvent', () => {
 
   const mockClient = { send: mockSend }
 
-  const mockMessageTopicArn = 'arn:aws:sns:eu-west-2:123456789012:test-topic'
+  const mockMessageTopicArn = 'arn:aws:sns:eu-west-2:000000000000:test-topic'
   const mockMessageType = 'TestType'
   const mockMessageTime = '2025-08-12T14:34:38+01:00'
   const mockMessageData = { foo: 'bar' }
@@ -119,7 +119,7 @@ describe('publishEvent', () => {
         error: 'fail',
         code: 'InternalError'
       }),
-      'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:123456789012:test-topic type: TestType'
+      'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:000000000000:test-topic type: TestType'
     )
     expect(logger.info).toHaveBeenCalled()
 
@@ -191,7 +191,7 @@ describe('publishEvent', () => {
         error: 'bad request',
         code: 'BadRequest'
       }),
-      'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:123456789012:test-topic type: TestType'
+      'Failed to publish event to SNS topic: arn:aws:sns:eu-west-2:000000000000:test-topic type: TestType'
     )
 
     expect(PublishCommand).toHaveBeenCalledTimes(1)

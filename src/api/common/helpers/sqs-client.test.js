@@ -141,7 +141,7 @@ describe('SQS Client', () => {
 
   describe('sqsClientPlugin', () => {
     const options = {
-      awsRegion: 'us-east-1',
+      awsRegion: 'eu-west-2',
       sqsEndpoint: 'http://localhost:4566',
       queueUrl: 'test-queue-url'
     }
@@ -301,6 +301,157 @@ describe('SQS Client', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'SQS Consumer (test) started'
+      )
+    })
+  })
+
+  describe('processMessage', () => {
+    let mockCallback
+    const options = {
+      awsRegion: 'eu-west-2',
+      sqsEndpoint: 'http://localhost:4566',
+      queueUrl: 'test-queue-url'
+    }
+
+    beforeEach(() => {
+      mockCallback = vi.fn()
+    })
+
+    it('should process SNS-wrapped messages correctly', async () => {
+      const cloudEvent = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+        data: { id: '123', status: 'approved' }
+      }
+
+      const snsMessage = {
+        Type: 'Notification',
+        MessageId: 'sns-message-id',
+        TopicArn: 'arn:aws:sns:us-east-1:123456789012:test-topic',
+        Message: JSON.stringify(cloudEvent),
+        Timestamp: '2023-01-01T00:00:00.000Z',
+        SignatureVersion: '1',
+        Signature: 'fake-signature',
+        SigningCertURL:
+          'https://sns.us-east-1.amazonaws.com/SimpleNotificationService.pem',
+        UnsubscribeURL:
+          'https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe'
+      }
+
+      const sqsMessage = {
+        Body: JSON.stringify(snsMessage),
+        MessageId: 'sqs-message-id'
+      }
+
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        mockCallback
+      )
+      sqsClientPlugin.plugin.register(server, options)
+
+      // Get the message handler
+      const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
+
+      await messageHandler(sqsMessage)
+
+      expect(mockCallback).toHaveBeenCalledWith(
+        'sqs-message-id',
+        cloudEvent,
+        mockLogger
+      )
+    })
+
+    it('should process raw messages correctly', async () => {
+      const cloudEvent = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.create',
+        data: { id: '123', status: 'approved' }
+      }
+
+      const sqsMessage = {
+        Body: JSON.stringify(cloudEvent),
+        MessageId: 'sqs-message-id'
+      }
+
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        mockCallback
+      )
+      sqsClientPlugin.plugin.register(server, options)
+
+      // Get the message handler
+      const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
+
+      await messageHandler(sqsMessage)
+
+      expect(mockCallback).toHaveBeenCalledWith(
+        'sqs-message-id',
+        cloudEvent,
+        mockLogger
+      )
+    })
+
+    it('should handle malformed SNS Message field', async () => {
+      const snsMessage = {
+        Type: 'Notification',
+        MessageId: 'sns-message-id',
+        TopicArn: 'arn:aws:sns:us-east-1:123456789012:test-topic',
+        Message: 'invalid-json',
+        Timestamp: '2023-01-01T00:00:00.000Z'
+      }
+
+      const sqsMessage = {
+        Body: JSON.stringify(snsMessage),
+        MessageId: 'sqs-message-id'
+      }
+
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        mockCallback
+      )
+      sqsClientPlugin.plugin.register(server, options)
+
+      // Get the message handler
+      const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
+
+      await messageHandler(sqsMessage)
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'Failed to process SQS (test) message: Invalid message format: {"Body":"{\\"Type\\":\\"Notification\\",\\"MessageId\\":\\"sns-message-id\\",\\"TopicArn\\":\\"arn:aws:sns:us-east-1:123456789012:test-topic\\",\\"Message\\":\\"invalid-json\\",\\"Timestamp\\":\\"2023-01-01T00:00:00.000Z\\"}","MessageId":"sqs-message-id"}'
+      )
+    })
+
+    it('should handle SNS message without Message field', async () => {
+      const snsMessage = {
+        Type: 'Notification',
+        MessageId: 'sns-message-id',
+        TopicArn: 'arn:aws:sns:us-east-1:123456789012:test-topic',
+        Timestamp: '2023-01-01T00:00:00.000Z'
+      }
+
+      const sqsMessage = {
+        Body: JSON.stringify(snsMessage),
+        MessageId: 'sqs-message-id'
+      }
+
+      const sqsClientPlugin = createSqsClientPlugin(
+        'test',
+        options.queueUrl,
+        mockCallback
+      )
+      sqsClientPlugin.plugin.register(server, options)
+
+      // Get the message handler
+      const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
+
+      await messageHandler(sqsMessage)
+
+      expect(mockCallback).toHaveBeenCalledWith(
+        'sqs-message-id',
+        snsMessage,
+        mockLogger
       )
     })
   })

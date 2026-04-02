@@ -9,7 +9,7 @@ AWS_ENDPOINT_URL="https://sqs.eu-west-2.amazonaws.com"
 AWS_REGION="eu-west-2"
 MAX_MESSAGES=10
 WAIT_TIME=1
-USE_LOCALSTACK=false
+USE_FLOCI=false
 
 # Show usage information
 usage() {
@@ -22,8 +22,8 @@ usage() {
   echo "  -m MAX_MESSAGES     Maximum number of messages to retrieve (default: 10)"
   echo "  -w WAIT_TIME        Wait time in seconds for long polling (default: 1)"
   echo "  -d                  Delete messages after reading"
-  echo "  -L                  Use LocalStack (sets endpoint to http://localhost:4566)"
-  echo "  -q QUEUE_NAME       Queue name (for use with LocalStack)"
+  echo "  -L                  Use Floci (sets endpoint to http://localhost:4566)"
+  echo "  -q QUEUE_NAME       Queue name (for use with Floci)"
   exit 0
 }
 
@@ -36,7 +36,7 @@ while getopts ":l:e:r:m:w:dLq:h" opt; do
     m) MAX_MESSAGES="$OPTARG" ;;
     w) WAIT_TIME="$OPTARG" ;;
     d) DELETE_AFTER_READ=true ;;
-    L) USE_LOCALSTACK=true ;;
+    L) USE_FLOCI=true ;;
     q) QUEUE_NAME="$OPTARG" ;;
     h) usage ;;
     \?) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
@@ -44,11 +44,11 @@ while getopts ":l:e:r:m:w:dLq:h" opt; do
   esac
 done
 
-# Apply LocalStack settings if requested
-if [ "$USE_LOCALSTACK" = true ]; then
+# Apply Floci settings if requested
+if [ "$USE_FLOCI" = true ]; then
   AWS_ENDPOINT_URL="http://localhost:4566"
   QUEUE_URL="$AWS_ENDPOINT_URL/000000000000/$QUEUE_NAME"
-  echo "Using LocalStack configuration"
+  echo "Using Floci configuration"
 fi
 
 echo "Checking messages on queue: $QUEUE_URL"
