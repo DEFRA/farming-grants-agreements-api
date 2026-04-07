@@ -99,11 +99,7 @@ export const createGrantPaymentFromAgreement = async (
   const payments = createPayments(agreementData, dueDateOverride)
 
   const {
-    payment: {
-      agreementTotalPence,
-      currency = 'GBP',
-      payments: agreementPayments = []
-    },
+    payment: { agreementTotalPence, currency = 'GBP' },
     originalInvoiceNumber,
     identifiers: { sbi, frn } = {},
     correlationId
@@ -111,12 +107,7 @@ export const createGrantPaymentFromAgreement = async (
 
   const claimId = await getClaimId(agreementNumber, agreementData)
   const paymentRequestNumber = 1
-  const dueDate = agreementPayments[0]?.paymentDate
-  const invoiceNumber = generateInvoiceNumber(
-    claimId,
-    paymentRequestNumber,
-    dueDate
-  )
+  const invoiceNumber = generateInvoiceNumber(claimId, paymentRequestNumber)
 
   const grantPaymentsData = {
     sbi,
