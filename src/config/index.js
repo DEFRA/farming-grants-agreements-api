@@ -401,12 +401,6 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
-    },
-    paymentHubTestModeEnabled: {
-      doc: 'Override payment due dates to tomorrow for testing purposes',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: false,
-      env: 'PAYMENT_HUB_TEST_MODE_ENABLED'
     }
   }
 })
