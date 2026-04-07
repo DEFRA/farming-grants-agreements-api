@@ -1,9 +1,8 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
-import { config } from '#~/config/index.js'
 
 vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
   getAgreementDataById: vi.fn()
@@ -17,18 +16,12 @@ vi.mock(
 vi.mock('#~/api/agreement/helpers/invoice/claim-id.js', () => ({
   getClaimId: vi.fn()
 }))
-vi.mock('#~/config/index.js', () => ({
-  config: { get: vi.fn() }
-}))
 
 describe('createGrantPaymentFromAgreement', () => {
   const agreementNumber = 'FPTT123456'
   const logger = {
     info: vi.fn()
   }
-
-  const FIXED_NOW = new Date('2026-04-01T12:00:00.000Z')
-  const TOMORROW = '2026-04-02'
 
   const mockAgreementData = {
     agreementNumber: 'FPTT123456',
@@ -76,20 +69,13 @@ describe('createGrantPaymentFromAgreement', () => {
   }
 
   beforeEach(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(FIXED_NOW)
     vi.clearAllMocks()
     vi.mocked(getAgreementDataById).mockResolvedValue(mockAgreementData)
     vi.mocked(getClaimId).mockResolvedValue('R00000001')
     vi.mocked(generateInvoiceNumber).mockReturnValue('R00000001-V001Q2')
-    vi.mocked(config.get).mockReturnValue(true)
   })
 
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  it('should create grant payment from agreement with tomorrow as dueDate when test mode is enabled', async () => {
+  it('should create grant payment from agreement', async () => {
     const result = await createGrantPaymentFromAgreement(
       agreementNumber,
       logger
@@ -118,7 +104,7 @@ describe('createGrantPaymentFromAgreement', () => {
           marketingYear: new Date().getFullYear().toString(),
           payments: [
             {
-              dueDate: TOMORROW,
+              dueDate: '2024-05-01',
               totalAmountPence: '10000',
               status: 'pending',
               invoiceLines: [
@@ -140,17 +126,6 @@ describe('createGrantPaymentFromAgreement', () => {
         }
       ]
     })
-  })
-
-  it('should use the original payment dueDate when test mode is disabled', async () => {
-    vi.mocked(config.get).mockReturnValue(false)
-
-    const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
-      logger
-    )
-
-    expect(result.grants[0].payments[0].dueDate).toBe('2024-05-01')
   })
 
   it('should use default currency GBP if not provided', async () => {
