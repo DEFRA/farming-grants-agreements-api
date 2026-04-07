@@ -97,11 +97,7 @@ describe('createGrantPaymentFromAgreement', () => {
 
     expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
     expect(getClaimId).toHaveBeenCalledWith(agreementNumber, mockAgreementData)
-    expect(generateInvoiceNumber).toHaveBeenCalledWith(
-      'R00000001',
-      1,
-      '2024-05-01'
-    )
+    expect(generateInvoiceNumber).toHaveBeenCalledWith('R00000001', 1)
 
     expect(result).toEqual({
       sbi: 'SBI123',
