@@ -1,6 +1,5 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
-import fs from 'node:fs'
 
 import { vi } from 'vitest'
 import { MessageProviderPact } from '@pact-foundation/pact'
@@ -69,7 +68,6 @@ describe('sending a create grant payment event via SNS', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
   let originalFetch
-  const testWarnings = []
 
   const agreement = agreements[1]
   const mockSbi = agreement.identifiers.sbi
@@ -113,19 +111,6 @@ describe('sending a create grant payment event via SNS', () => {
     }
 
     global.fetch = originalFetch
-
-    if (testWarnings.length > 0) {
-      console.warn(
-        `${'━'.repeat(60)}\n⚠️ PACT VERIFICATION WARNING SUMMARY\n${testWarnings.map((w) => `  - ${w}`).join('\n')}\n${'━'.repeat(60)}`
-      )
-
-      if (process.env.GITHUB_STEP_SUMMARY) {
-        fs.appendFileSync(
-          process.env.GITHUB_STEP_SUMMARY,
-          `⚠️ PACT VERIFICATION WARNING SUMMARY\n${testWarnings.join(', ')}`
-        )
-      }
-    }
   })
 
   beforeEach(() => {
@@ -204,8 +189,7 @@ describe('sending a create grant payment event via SNS', () => {
           publishVerificationResult:
             process.env.PACT_PUBLISH_VERIFICATION === 'true',
           providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
-          failIfNoPactsFound: false,
-          enablePending: true
+          failIfNoPactsFound: false
         }
       : {
           logLevel: 'debug',
@@ -221,69 +205,10 @@ describe('sending a create grant payment event via SNS', () => {
   })
 
   it('should validate the message structure', async () => {
-    try {
-      const verify = await messagePact.verify()
+    const verify = await messagePact.verify()
 
-      expect(verify).toBeTruthy()
+    expect(verify).toBeTruthy()
 
-      return verify
-    } catch (err) {
-      let error
-      try {
-        error = JSON.parse(err.message)
-      } catch (parseErr) {
-        // If it's not JSON, it's some other error, just throw it
-        throw err
-      }
-
-      const interactionResults = error.interactionResults || []
-      const failedInteractions = interactionResults.filter(
-        (r) => r.result === 'Error'
-      )
-
-      // Handle cases where pacts fail to load (e.g. no pacts found in broker or misconfiguration)
-      const pactLoadErrors = (error.errors || []).filter(
-        (e) => e.interaction === 'Failed to load pact'
-      )
-
-      if (pactLoadErrors.length > 0) {
-        const message = pactLoadErrors
-          .map((e) => e.mismatch?.message || 'Unknown error')
-          .join(', ')
-        const warn = `Pact loading failed / Pact consumer test(s) have not been implemented yet: ${message}`
-        console.warn(`⚠️ ${warn}`)
-        console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
-        testWarnings.push(warn)
-        return
-      }
-
-      const missingHandlers = failedInteractions
-        .filter((r) => !messageProviders[r.description])
-        .map((r) => r.description)
-
-      const realFailures = failedInteractions.filter(
-        (r) => messageProviders[r.description]
-      )
-
-      if (missingHandlers.length > 0) {
-        const message = [...new Set(missingHandlers)].join(', ')
-        const warn = `Pact consumer test(s) have not been implemented yet: ${message}`
-        console.warn(`⚠️ ${warn}`)
-        console.log(`::warning title=Unimplemented Pact Handlers::${warn}`)
-        testWarnings.push(warn)
-      }
-
-      if (realFailures.length > 0) {
-        // If we have real failures, we MUST throw the error
-        throw err
-      }
-
-      // If we only had missing handlers, we can exit gracefully
-      if (missingHandlers.length > 0) {
-        return
-      }
-
-      throw err
-    }
+    return verify
   })
 })
