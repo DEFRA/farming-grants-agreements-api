@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs'
+import { readdirSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -28,11 +28,15 @@ export const withPactDir = (testFileUrl, overrides = {}) => ({
   ...overrides
 })
 
-export const getJsonPacts = (dir) =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+export const getJsonPacts = (dir) => {
+  if (!existsSync(dir)) {
+    return []
+  }
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const entryPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
       return getJsonPacts(entryPath)
     }
     return entry.name.endsWith('.json') ? [entryPath] : []
   })
+}

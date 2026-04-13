@@ -36,6 +36,17 @@ vi.mock('#~/config/index.js', () => ({
           return 30
         case 'featureFlags.seedDb':
           return true
+        case 'log':
+          return {
+            enabled: true,
+            level: 'info',
+            format: 'pino-pretty',
+            redact: []
+          }
+        case 'serviceName':
+          return 'farming-grants-agreements-api'
+        case 'serviceVersion':
+          return '0.0.0'
         default:
           return undefined
       }

@@ -353,6 +353,7 @@ describe('sending events via SNS to GAS', () => {
 
   const messagePact = new MessageProviderPact({
     provider: 'farming-grants-agreements-api',
+    failIfNoPactsFound: false,
     ...(process.env.CI
       ? {
           consumerVersionSelectors: [
@@ -363,8 +364,7 @@ describe('sending events via SNS to GAS', () => {
           ],
           publishVerificationResult:
             process.env.PACT_PUBLISH_VERIFICATION === 'true',
-          providerVersion: process.env.SERVICE_VERSION ?? '1.0.0',
-          failIfNoPactsFound: false
+          providerVersion: process.env.SERVICE_VERSION ?? '1.0.0'
         }
       : {
           logLevel: 'debug',
