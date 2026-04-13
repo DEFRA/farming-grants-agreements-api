@@ -273,7 +273,10 @@ function updateParcelStateForAction(
 }
 
 function derivePaymentDetails(action, eligible, defaultDurationYears) {
-  const ratePerUnit = toNumber(action.paymentRates?.ratePerUnitPence, NaN)
+  const ratePerUnit = toNumber(
+    action.paymentRates?.ratePerUnitPence,
+    Number.NaN
+  )
   const annualPayment =
     action.annualPaymentPence ??
     (Number.isFinite(ratePerUnit) && eligible?.quantity !== undefined
@@ -299,9 +302,9 @@ function createParcelItem(
     version: '1',
     unit: eligible.unit || null,
     quantity:
-      eligible.quantity !== undefined
-        ? Number(eligible.quantity)
-        : eligible.quantity,
+      eligible.quantity === undefined
+        ? eligible.quantity
+        : Number(eligible.quantity),
     rateInPence: ratePerUnit,
     annualPaymentPence: annualPayment,
     sheetId: parcel.sheetId,

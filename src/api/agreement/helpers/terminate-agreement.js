@@ -7,8 +7,8 @@ import agreementsModel from '#~/api/common/models/agreements.js'
  * @param {string} agreementNumber - The agreement number of the agreement to update
  * @returns {Promise<object>} If the agreement was successfully terminated
  */
-async function terminateAgreement(clientRef, agreementNumber) {
-  return await agreementsModel
+const terminateAgreement = (clientRef, agreementNumber) =>
+  agreementsModel
     .updateOneAgreementVersion(
       {
         status: 'accepted',
@@ -27,6 +27,5 @@ async function terminateAgreement(clientRef, agreementNumber) {
         error
       )
     })
-}
 
 export { terminateAgreement }

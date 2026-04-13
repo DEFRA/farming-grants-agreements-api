@@ -26,7 +26,7 @@ const cloneValue = (value, fallback) => {
   if (typeof globalThis.structuredClone === 'function') {
     return globalThis.structuredClone(value)
   }
-  return JSON.parse(JSON.stringify(value))
+  return structuredClone(value)
 }
 
 const createDateRange = () => {
