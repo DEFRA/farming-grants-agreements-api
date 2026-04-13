@@ -67,13 +67,9 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
     return true
   }
 
-  const jwtSbi =
-    jwtPayload?.sbi === null || jwtPayload?.sbi === undefined
-      ? null
-      : String(jwtPayload.sbi)
+  const jwtSbi = jwtPayload?.sbi == null ? null : String(jwtPayload.sbi)
   const agreementSbi =
-    agreementData?.identifiers?.sbi === null ||
-    agreementData?.identifiers?.sbi === undefined
+    agreementData?.identifiers?.sbi == null
       ? null
       : String(agreementData.identifiers.sbi)
 
@@ -81,11 +77,9 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
     return false
   }
 
-  const isSbiMatch = jwtSbi === agreementSbi
-  const isSbiMissingInAgreement = jwtSbi !== null && agreementSbi === null
-
   return Boolean(
-    jwtPayload.source === 'defra' && (isSbiMatch || isSbiMissingInAgreement)
+    jwtPayload.source === 'defra' &&
+      (jwtSbi === agreementSbi || (jwtSbi && !agreementSbi))
   )
 }
 
