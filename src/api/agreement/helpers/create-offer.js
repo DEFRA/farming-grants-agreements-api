@@ -68,7 +68,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     application,
     claimId,
     originalInvoiceNumber,
-    ...(consentObjects !== undefined ? { consentObjects } : {})
+    ...(consentObjects === undefined ? {} : { consentObjects })
   }
 
   const agreement = await agreementsModel.createAgreementWithVersions({

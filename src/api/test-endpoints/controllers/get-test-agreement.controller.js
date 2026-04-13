@@ -30,6 +30,7 @@ const getTestAgreementController = {
           try {
             return await getAgreementDataById(id)
           } catch (e) {
+            request.logger?.error?.(e, `Error fetching agreement ${id}`)
             return null
           }
         })

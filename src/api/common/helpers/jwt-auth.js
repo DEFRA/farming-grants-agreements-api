@@ -67,11 +67,11 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
     return true
   }
 
-  const jwtSbi = jwtPayload?.sbi != null ? String(jwtPayload.sbi) : null
+  const jwtSbi = jwtPayload?.sbi == null ? null : String(jwtPayload.sbi)
   const agreementSbi =
-    agreementData?.identifiers?.sbi != null
-      ? String(agreementData.identifiers.sbi)
-      : null
+    agreementData?.identifiers?.sbi == null
+      ? null
+      : String(agreementData.identifiers.sbi)
 
   if (jwtSbi === null && agreementSbi === null) {
     return false

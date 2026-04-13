@@ -1,6 +1,9 @@
 import mongoose from 'mongoose'
 import versionsModel from './versions.js'
 import Boom from '@hapi/boom'
+import { createLogger } from '#~/api/common/helpers/logging/logger.js'
+
+const logger = createLogger()
 
 const collection = 'agreements'
 
@@ -83,7 +86,7 @@ schema.statics.createAgreementWithVersions = async function ({
     //    (If parent was newly created, it’s just all insertedIds)
     let idsToAppend = insertedIds
     if (existing?.versions?.length) {
-      const existingSet = new Set(existing.versions.map((id) => String(id)))
+      const existingSet = new Set(existing.versions.map(String))
       idsToAppend = insertedIds.filter((id) => !existingSet.has(String(id)))
     }
 
@@ -113,8 +116,9 @@ schema.statics.createAgreementWithVersions = async function ({
           _id: { $in: createdversions.map((a) => a._id) }
         })
       }
-    } catch (_) {
+    } catch (cleanupErr) {
       // swallow cleanup errors, original error wins
+      logger.info(cleanupErr, 'Cleanup failed after agreement creation error:')
     }
     throw err
   }

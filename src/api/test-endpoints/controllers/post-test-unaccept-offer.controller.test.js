@@ -5,11 +5,21 @@ import { testEndpoints } from '#~/api/test-endpoints/index.js'
 
 // Mock config
 vi.mock('#~/config/index.js', () => ({
-  get: vi.fn().mockImplementation((key) => {
-    if (key === 'featureFlags.testEndpoints') return true
-    if (key === 'port') return 0
-    return ''
-  })
+  config: {
+    get: vi.fn().mockImplementation((key) => {
+      if (key === 'featureFlags.testEndpoints') return true
+      if (key === 'port') return 0
+      if (key === 'log') {
+        return {
+          enabled: true,
+          level: 'info',
+          format: 'pino-pretty',
+          redact: []
+        }
+      }
+      return ''
+    })
+  }
 }))
 
 vi.mock('#~/api/common/helpers/sqs-client.js')

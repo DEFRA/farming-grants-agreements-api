@@ -7,8 +7,8 @@ import agreementsModel from '#~/api/common/models/agreements.js'
  * @param {string} agreementNumber - The agreement number of the offer to update
  * @returns {Promise<object>} If the offer was successfully cancelled
  */
-async function cancelOffer(clientRef, agreementNumber) {
-  return await agreementsModel
+const cancelOffer = (clientRef, agreementNumber) =>
+  agreementsModel
     .updateOneAgreementVersion(
       {
         status: 'offered',
@@ -27,6 +27,5 @@ async function cancelOffer(clientRef, agreementNumber) {
         error
       )
     })
-}
 
 export { cancelOffer }
