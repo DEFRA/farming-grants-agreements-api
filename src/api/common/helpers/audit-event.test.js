@@ -117,8 +117,8 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       expect.objectContaining({
         audit: expect.objectContaining({
           eventtype: 'GrantsDownloadAgreement',
-          action: 'PDF_DOWNLOADED_FROM_S3',
-          entity: 'Agreements',
+          action: 'read',
+          entity: 'agreement',
           entityid: 'FPTT123456789',
           status: 'success',
           details: context
@@ -197,8 +197,8 @@ describe('auditEvent - AGREEMENT_CREATED', () => {
       expect.objectContaining({
         audit: expect.objectContaining({
           eventtype: 'GrantsCreateAgreement',
-          action: 'AGREEMENT_CREATED',
-          entity: 'Agreements',
+          action: 'created',
+          entity: 'agreement',
           entityid: 'FPTT123456789',
           status: 'success',
           details: context
@@ -256,8 +256,8 @@ describe('auditEvent - AGREEMENT_UPDATED', () => {
       expect.objectContaining({
         audit: expect.objectContaining({
           eventtype: 'GrantsUpdateAgreement',
-          action: 'AGREEMENT_UPDATED',
-          entity: 'Agreements',
+          action: 'updated',
+          entity: 'agreement',
           entityid: 'FPTT123456789',
           status: 'success',
           details: context

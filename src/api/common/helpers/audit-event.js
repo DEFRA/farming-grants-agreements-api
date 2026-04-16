@@ -40,6 +40,13 @@ const eventTypes = {
   [AuditEvent.AGREEMENT_UPDATED]: 'GrantsUpdateAgreement'
 }
 
+// Action for each audit event, used in audit.action
+const eventActions = {
+  [AuditEvent.PDF_DOWNLOADED_FROM_S3]: 'read',
+  [AuditEvent.AGREEMENT_CREATED]: 'created',
+  [AuditEvent.AGREEMENT_UPDATED]: 'updated'
+}
+
 /**
  * Builds the full audit payload for an agreement operation.
  * @param {AuditEvent} event
@@ -66,8 +73,8 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
 
   audit: {
     eventtype: eventTypes[event],
-    action: event,
-    entity: 'Agreements',
+    action: eventActions[event],
+    entity: 'agreement',
     entityid: context.agreementNumber,
     status,
     details: context
