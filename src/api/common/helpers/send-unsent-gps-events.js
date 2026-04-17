@@ -1,6 +1,5 @@
 import { config } from '#~/config/index.js'
-import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
-import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
+import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 import versionsModel from '#~/api/common/models/versions.js'
 
 const sendUnsetGPSEventsPlugin = {
@@ -23,9 +22,10 @@ const sendUnsetGPSEventsPlugin = {
             grantsPaymentServiceRequestMade: { $ne: true }
           })
           .populate('agreement')
+          .lean()
 
         server.logger.info(
-          `Found ${missedPayments.length} agreements with missed payments.`
+          `Found ${missedPayments.length} agreements with missed GPS payment events`
         )
 
         for (const version of missedPayments) {
@@ -42,25 +42,13 @@ const sendUnsetGPSEventsPlugin = {
             `Processing missed payment for agreement ${agreementNumber}`
           )
 
+          // Attach agreementNumber to version object so sendGrantPaymentEvent can find it
+          version.agreementNumber = agreementNumber
+
           try {
-            const grantPaymentsData = await createGrantPaymentFromAgreement(
-              agreementNumber,
+            await sendGrantPaymentEvent(
+              version,
               server.logger || console // Fallback if server.logger is not available
-            )
-
-            await publishEvent(
-              {
-                topicArn: config.get('aws.sns.topic.createPayment.arn'),
-                type: config.get('aws.sns.topic.createPayment.type'),
-                time: new Date().toISOString(),
-                data: grantPaymentsData
-              },
-              server.logger || console
-            )
-
-            await versionsModel.updateOne(
-              { _id: version._id },
-              { $set: { grantsPaymentServiceRequestMade: true } }
             )
 
             server.logger.info(

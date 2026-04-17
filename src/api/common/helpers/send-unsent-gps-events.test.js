@@ -1,8 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { sendUnsetGPSEventsPlugin } from './send-unsent-gps-events.js'
 import { config } from '#~/config/index.js'
-import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
-import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
+import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 import versionsModel from '#~/api/common/models/versions.js'
 
 vi.mock('#~/config/index.js', () => ({
@@ -22,8 +21,7 @@ vi.mock('#~/config/index.js', () => ({
     })
   }
 }))
-vi.mock('#~/api/common/helpers/sns-publisher.js')
-vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
+vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
 vi.mock('#~/api/common/models/versions.js')
 
 describe('sendUnsetGPSEventsPlugin', () => {
@@ -79,11 +77,15 @@ describe('sendUnsetGPSEventsPlugin', () => {
       }
     ]
 
-    vi.mocked(versionsModel.find).mockReturnValue({
-      populate: vi.fn().mockResolvedValue(mockMissedPayments)
+    const populateMock = vi.fn().mockReturnValue({
+      lean: vi.fn().mockResolvedValue(mockMissedPayments)
     })
 
-    vi.mocked(createGrantPaymentFromAgreement).mockResolvedValue({
+    vi.mocked(versionsModel.find).mockReturnValue({
+      populate: populateMock
+    })
+
+    vi.mocked(sendGrantPaymentEvent).mockResolvedValue({
       claimId: 'C1',
       some: 'data'
     })
@@ -95,26 +97,23 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
     await startHandler()
 
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'Found 1 agreements with missed GPS payment events'
+    )
+
     expect(versionsModel.find).toHaveBeenCalledWith({
       status: 'accepted',
       grantsPaymentServiceRequestMade: { $ne: true }
     })
 
-    expect(createGrantPaymentFromAgreement).toHaveBeenCalledWith(
-      'AG1',
-      expect.anything()
-    )
-    expect(publishEvent).toHaveBeenCalledWith(
+    expect(populateMock).toHaveBeenCalledWith('agreement')
+
+    expect(sendGrantPaymentEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        topicArn: 'arn:test',
-        data: expect.objectContaining({ claimId: 'C1' })
+        agreementNumber: 'AG1',
+        agreement: { agreementNumber: 'AG1' }
       }),
       expect.anything()
-    )
-
-    expect(versionsModel.updateOne).toHaveBeenCalledWith(
-      { _id: 'v1' },
-      { $set: { grantsPaymentServiceRequestMade: true } }
     )
   })
 
@@ -134,12 +133,12 @@ describe('sendUnsetGPSEventsPlugin', () => {
     ]
 
     vi.mocked(versionsModel.find).mockReturnValue({
-      populate: vi.fn().mockResolvedValue(mockMissedPayments)
+      populate: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(mockMissedPayments)
+      })
     })
 
-    vi.mocked(createGrantPaymentFromAgreement).mockRejectedValue(
-      new Error('Test error')
-    )
+    vi.mocked(sendGrantPaymentEvent).mockRejectedValue(new Error('Test error'))
 
     sendUnsetGPSEventsPlugin.register(server)
     const startHandler = server.events.on.mock.calls.find(

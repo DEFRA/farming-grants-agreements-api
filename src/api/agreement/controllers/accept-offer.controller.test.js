@@ -11,21 +11,19 @@ import {
   getAgreementDataBySbi,
   getAgreementDataById
 } from '#~/api/agreement/helpers/get-agreement-data.js'
-import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
-import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import * as snsPublisher from '#~/api/common/helpers/sns-publisher.js'
+import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { config } from '#~/config/index.js'
 import { calculatePaymentsBasedOnActions } from '#~/api/adapter/land-grants-adapter.js'
 import {
   auditEvent as mockAuditEvent,
   AuditEvent
 } from '#~/api/common/helpers/audit-event.js'
-import agreementsModel from '#~/api/common/models/agreements.js'
+import * as sendGrantPaymentEventHelper from '#~/api/common/helpers/send-grant-payment-event.js'
 
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
-vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
-vi.mock('#~/api/common/models/agreements.js')
+vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
 vi.mock('#~/api/common/helpers/audit-event.js', async (importOriginal) => {
   const actual = await importOriginal()
   return { ...actual, auditEvent: vi.fn() }
@@ -115,7 +113,7 @@ describe('acceptOfferDocumentController', () => {
     unacceptOffer.mockReset()
     getAgreementDataBySbi.mockReset()
     getAgreementDataById.mockReset()
-    createGrantPaymentFromAgreement.mockReset()
+    sendGrantPaymentEventHelper.sendGrantPaymentEvent.mockReset()
     mockAuditEvent.mockReturnValue(undefined)
 
     acceptOffer.mockResolvedValue({
@@ -124,7 +122,7 @@ describe('acceptOfferDocumentController', () => {
       status: 'accepted'
     })
     unacceptOffer.mockResolvedValue()
-    createGrantPaymentFromAgreement.mockResolvedValue({
+    sendGrantPaymentEventHelper.sendGrantPaymentEvent.mockResolvedValue({
       sbi: '106284736',
       grants: []
     })
@@ -170,31 +168,15 @@ describe('acceptOfferDocumentController', () => {
       }),
       expect.anything()
     )
-    expect(createGrantPaymentFromAgreement).toHaveBeenCalledWith(
-      agreementId,
+    expect(
+      sendGrantPaymentEventHelper.sendGrantPaymentEvent
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ agreementNumber: agreementId }),
       expect.anything()
     )
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain(agreementId)
-
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
-      { agreementNumber: agreementId },
-      { $set: { grantsPaymentServiceRequestMade: true } }
-    )
-
-    expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
-      {
-        time: '2024-01-03T12:34:56.789Z',
-        topicArn: config.get('aws.sns.topic.createPayment.arn'),
-        type: config.get('aws.sns.topic.createPayment.type'),
-        data: {
-          sbi: '106284736',
-          grants: []
-        }
-      },
-      expect.anything()
-    )
 
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
       {
@@ -249,7 +231,9 @@ describe('acceptOfferDocumentController', () => {
     // Assert
     expect(getAgreementDataBySbi).toHaveBeenCalledWith('106284736')
     expect(acceptOffer).not.toHaveBeenCalled()
-    expect(createGrantPaymentFromAgreement).not.toHaveBeenCalled()
+    expect(
+      sendGrantPaymentEventHelper.sendGrantPaymentEvent
+    ).not.toHaveBeenCalled()
     expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
     expect(mockAuditEvent).not.toHaveBeenCalled()
 
@@ -355,7 +339,7 @@ describe('acceptOfferDocumentController', () => {
   test('should rollback the accepting the agreement if the payment hub request fails', async () => {
     // Arrange
     const error = new Error('Payment hub request failed')
-    createGrantPaymentFromAgreement.mockRejectedValue(error)
+    sendGrantPaymentEventHelper.sendGrantPaymentEvent.mockRejectedValue(error)
 
     // Act
     const { statusCode, result } = await server.inject({
