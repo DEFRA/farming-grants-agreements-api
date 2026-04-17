@@ -2,6 +2,14 @@ import mongoose from 'mongoose'
 
 import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
+import { creatGrantForExistingAgreements } from '#~/api/common/models/creatGrantForExistingAgreements.js'
+
+// const creatGrantForExistingAgreements = (server) => {
+//   server.logger.warn(
+//     'featureFlags.migrationForCS is enabled. ' +
+//       ' This is to create default grant for existing agreement in production to work with new database restructuring.'
+//   )
+// }
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -38,6 +46,19 @@ export const mongooseDb = {
 
         try {
           await seedDatabase(server.logger)
+        } catch (err) {
+          server.logger.error(err, 'Error seeding database failed:')
+        }
+      }
+
+      if (config.get('featureFlags.migrationForCS') === true) {
+        server.logger.warn(
+          'featureFlags.migrationForCS is enabled. ' +
+            ' This is to create default grant for existing agreement in production to work with new database restructuring.'
+        )
+
+        try {
+          await creatGrantForExistingAgreements(server.logger)
         } catch (err) {
           server.logger.error(err, 'Error seeding database failed:')
         }

@@ -1,6 +1,8 @@
 import Boom from '@hapi/boom'
 import versionsModel from '#~/api/common/models/versions.js'
+import grantsModel from '#~/api/common/models/grants.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
+import { config } from '#~/config/index.js'
 
 /**
  * Search for an agreement
@@ -40,13 +42,33 @@ export const getAgreementData = async (searchTerms) => {
     )
   }
 
-  const agreementVersion = await versionsModel
-    .findOne({ agreement: agreementsData._id })
-    .sort({ createdAt: -1, _id: -1 })
-    .lean()
-    .catch((err) => {
-      throw Boom.internal(err)
-    })
+  let agreementVersion = null
+
+  if (config.get('featureFlags.migrationForCS') === true) {
+    const grantData = await grantsModel
+      .findOne({ agreementNumber: agreementsData.agreementNumber })
+      .sort({ createdAt: -1, _id: -1 })
+      .lean()
+      .catch((err) => {
+        throw Boom.internal(err)
+      })
+
+    agreementVersion = await versionsModel
+      .findOne({ grant: grantData._id })
+      .sort({ createdAt: -1, _id: -1 })
+      .lean()
+      .catch((err) => {
+        throw Boom.internal(err)
+      })
+  } else {
+    agreementVersion = await versionsModel
+      .findOne({ agreement: agreementsData._id })
+      .sort({ createdAt: -1, _id: -1 })
+      .lean()
+      .catch((err) => {
+        throw Boom.internal(err)
+      })
+  }
 
   if (!agreementVersion) {
     throw Boom.notFound(

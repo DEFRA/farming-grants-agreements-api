@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 import Boom from '@hapi/boom'
 import versionsModel from '#~/api/common/models/versions.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
+import { config } from '#~/config/index.js'
 import {
   doesAgreementExist,
   getAgreementDataById,
@@ -11,6 +12,7 @@ import {
 vi.mock('@hapi/boom')
 vi.mock('#~/api/common/models/versions.js')
 vi.mock('#~/api/common/models/agreements.js')
+vi.mock('#~/config/index.js')
 
 describe('getAgreementDataById', () => {
   const mockAgreement = {
@@ -36,6 +38,13 @@ describe('getAgreementDataById', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.migrationForCS') {
+        return false
+      }
+      return null
+    })
 
     // Setup Boom mocks
     Boom.badRequest = vi.fn((message) => {
@@ -205,6 +214,13 @@ describe('getAgreementDataBySbi', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.migrationForCS') {
+        return false
+      }
+      return null
+    })
+
     // Setup Boom mocks
     Boom.badRequest = vi.fn((message) => {
       const error = new Error(message)
@@ -362,6 +378,13 @@ describe('doesAgreementExist', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.migrationForCS') {
+        return false
+      }
+      return null
+    })
 
     // Setup Boom mocks
     Boom.internal = vi.fn((error) => {
