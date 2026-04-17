@@ -60,7 +60,13 @@ describe('acceptOffer', () => {
       annualTotalPence: 1200,
       parcelItems: [],
       agreementLevelItems: [],
-      payments: []
+      payments: [
+        {
+          totalPaymentPence: 1200,
+          paymentDate: '2024-05-01',
+          lineItems: []
+        }
+      ]
     }
     calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(mockPayments)
 
@@ -226,7 +232,17 @@ describe('acceptOffer', () => {
         $set: {
           status: 'accepted',
           signatureDate: new Date().toISOString(),
-          payment: mockPayments
+          payment: {
+            ...mockPayments,
+            payments: [
+              expect.objectContaining({
+                totalPaymentPence: 1200,
+                paymentDate: '2024-05-01',
+                lineItems: [],
+                correlationId: expect.any(String)
+              })
+            ]
+          }
         }
       }
     )
@@ -261,7 +277,17 @@ describe('acceptOffer', () => {
         $set: {
           status: 'accepted',
           signatureDate: new Date().toISOString(),
-          payment: mockPayments
+          payment: {
+            ...mockPayments,
+            payments: [
+              expect.objectContaining({
+                totalPaymentPence: 1200,
+                paymentDate: '2024-05-01',
+                lineItems: [],
+                correlationId: expect.any(String)
+              })
+            ]
+          }
         }
       }
     )

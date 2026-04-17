@@ -40,6 +40,7 @@ describe('createGrantPaymentFromAgreement', () => {
         {
           paymentDate: '2024-05-01',
           totalPaymentPence: 10000,
+          correlationId: '324b1946-7c0f-4be0-8573-020e482c9a8d',
           lineItems: [
             {
               parcelItemId: 'PARCEL-1',
@@ -104,6 +105,7 @@ describe('createGrantPaymentFromAgreement', () => {
           marketingYear: new Date().getFullYear().toString(),
           payments: [
             {
+              correlationId: '324b1946-7c0f-4be0-8573-020e482c9a8d',
               dueDate: '2024-05-01',
               totalAmountPence: '10000',
               status: 'pending',
