@@ -44,6 +44,7 @@ describe('#startServer', () => {
     // Explicitly disable DB seeding for test consistency
     const { config } = await import('#~/config/index.js')
     config.set('featureFlags.seedDb', false)
+    config.set('featureFlags.migrationForCS', false)
 
     createServerImport = await import('#~/api/index.js')
     startServerImport = await import('#~/api/common/helpers/start-server.js')

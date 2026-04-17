@@ -211,7 +211,7 @@ describe('seedDatabase', () => {
       const promise = seedDatabase(logger)
       // Fast-forward timers to trigger the wait
       await Promise.resolve()
-      vi.advanceTimersByTime(1000)
+      await vi.advanceTimersByTimeAsync(1000)
       await Promise.resolve()
       // Should have logged waiting message
       expect(logger.info).toHaveBeenCalledWith(
@@ -220,7 +220,7 @@ describe('seedDatabase', () => {
       // Now set readyState to connected
       readyState = 1
       // Fast-forward again to let the loop exit and finish
-      vi.advanceTimersByTime(1000)
+      await vi.advanceTimersByTimeAsync(1000)
       await promise
       vi.useRealTimers()
     })

@@ -1,7 +1,8 @@
-import { vi } from 'vitest'
+import { vi, describe, beforeEach, test, expect } from 'vitest'
 import Boom from '@hapi/boom'
 import versionsModel from '#~/api/common/models/versions.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
+import { config } from '#~/config/index.js'
 import {
   doesAgreementExist,
   getAgreementDataById,
@@ -10,7 +11,17 @@ import {
 
 vi.mock('@hapi/boom')
 vi.mock('#~/api/common/models/versions.js')
+vi.mock('#~/api/common/models/grant.js')
 vi.mock('#~/api/common/models/agreements.js')
+vi.mock('#~/config/index.js')
+vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
+  createLogger: () => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn()
+  })
+}))
 
 describe('getAgreementDataById', () => {
   const mockAgreement = {
@@ -36,6 +47,13 @@ describe('getAgreementDataById', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.migrationForCS') {
+        return false
+      }
+      return null
+    })
 
     // Setup Boom mocks
     Boom.badRequest = vi.fn((message) => {
@@ -205,6 +223,13 @@ describe('getAgreementDataBySbi', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.migrationForCS') {
+        return false
+      }
+      return null
+    })
+
     // Setup Boom mocks
     Boom.badRequest = vi.fn((message) => {
       const error = new Error(message)
@@ -363,6 +388,13 @@ describe('doesAgreementExist', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.migrationForCS') {
+        return false
+      }
+      return null
+    })
+
     // Setup Boom mocks
     Boom.internal = vi.fn((error) => {
       const boomError = new Error(error?.message || 'Internal server error')
@@ -471,5 +503,91 @@ describe('doesAgreementExist', () => {
       { $limit: 1 }
     ])
     expect(result).toBe(true)
+  })
+})
+
+describe('getAgreementData with migrationForCS enabled', () => {
+  const mockAgreement = {
+    agreementNumber: 'FPTT123456789',
+    agreementName: 'Test Agreement',
+    signatureDate: '1/1/2024'
+  }
+
+  const mockGroup = {
+    _id: '507f1f77bcf86cd799439011',
+    agreementNumber: 'FPTT123456789',
+    agreementName: 'Test Agreement'
+  }
+
+  const mockGrant = {
+    _id: '69e623df2d4ba43701cf5b1f',
+    name: 'FPTT',
+    agreementNumber: 'FPTT123456789'
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    config.get.mockImplementation((key) => {
+      if (key === 'featureFlags.migrationForCS') {
+        return true
+      }
+      return null
+    })
+
+    // Setup Boom mocks
+    Boom.badRequest = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.notFound = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.internal = vi.fn((error) => {
+      const boomError = new Error(error?.message || 'Internal server error')
+      boomError.isBoom = true
+      return boomError
+    })
+  })
+
+  test('should find agreement version using grantModel when migrationForCS is enabled', async () => {
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const agreementId = 'FPTT123456789'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: vi.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [],
+          versions: [{ version: '1' }]
+        }
+      ])
+    })
+
+    grantModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => Promise.resolve(mockGrant)
+      })
+    })
+
+    versionsModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => Promise.resolve({ ...mockAgreement })
+      })
+    })
+
+    const result = await getAgreementDataById(agreementId)
+
+    expect(grantModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: mockGroup.agreementNumber
+    })
+    expect(versionsModel.findOne).toHaveBeenCalledWith({
+      grantModel: mockGrant._id
+    })
+    expect(result).toBeDefined()
+    expect(result.agreementNumber).toBe(mockGroup.agreementNumber)
   })
 })
