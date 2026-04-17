@@ -5,14 +5,31 @@ import { seedDatabase } from './seed-database.js'
 import { mongooseDb } from './mongoose.js'
 
 // Mock dependencies
-vi.mock('mongoose', () => ({
-  __esModule: true,
-  default: {
-    connect: vi.fn().mockResolvedValue(undefined),
-    disconnect: vi.fn().mockResolvedValue(undefined),
-    connection: {}
+vi.mock('mongoose', () => {
+  class MockSchema {
+    constructor() {
+      this.index = vi.fn()
+      this.statics = {}
+      this.methods = {}
+      this.pre = vi.fn()
+      this.post = vi.fn()
+    }
   }
-}))
+  MockSchema.Types = {
+    ObjectId: String,
+    Mixed: Object
+  }
+  return {
+    __esModule: true,
+    default: {
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn().mockResolvedValue(undefined),
+      connection: {},
+      Schema: MockSchema,
+      model: vi.fn().mockReturnValue({})
+    }
+  }
+})
 
 vi.mock('#~/config/index.js', () => ({
   config: {

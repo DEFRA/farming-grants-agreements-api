@@ -81,7 +81,7 @@ describe('createGrantPaymentFromAgreement', () => {
     vi.mocked(generateInvoiceNumber).mockReturnValue('R00000001-V001Q2')
   })
 
-  it('should create grant payment from agreement', async () => {
+  it('should create scheme payment from agreement', async () => {
     const result = await createGrantPaymentFromAgreement(
       agreementNumber,
       logger

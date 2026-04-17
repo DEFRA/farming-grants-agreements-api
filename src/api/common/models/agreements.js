@@ -13,7 +13,8 @@ const schema = new mongoose.Schema(
     clientRef: { type: String, required: true },
     sbi: { type: String, required: true },
     frn: { type: String },
-    versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }]
+    versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }],
+    grants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'grants' }]
   },
   { collection, timestamps: true }
 )

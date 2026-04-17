@@ -399,6 +399,12 @@ const config = convict({
       default: false,
       env: 'SEED_DB'
     },
+    migrationForCS: {
+      doc: 'Migration for CS',
+      format: STRICT_BOOLEAN_FORMAT,
+      default: true,
+      env: 'MIGRATION_FOR_CS'
+    },
     testEndpoints: {
       doc: 'Enable test endpoints',
       format: STRICT_BOOLEAN_FORMAT,

@@ -163,6 +163,12 @@ const schema = new mongoose.Schema(
       default: null,
       index: true
     },
+    grantModel: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'grants',
+      default: null,
+      index: true
+    },
     signatureDate: { type: Date },
     scheme: { type: String },
     actionApplications: { type: [ActionApplications], required: true },
