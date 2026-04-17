@@ -401,6 +401,12 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
+    },
+    sendUnsentGPSEvents: {
+      doc: 'Send unsent GPS events to the payments service',
+      format: STRICT_BOOLEAN_FORMAT,
+      default: false,
+      env: 'SEND_UNSENT_GPS_EVENTS'
     }
   }
 })

@@ -20,10 +20,12 @@ import {
   auditEvent as mockAuditEvent,
   AuditEvent
 } from '#~/api/common/helpers/audit-event.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
 
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
+vi.mock('#~/api/common/models/agreements.js')
 vi.mock('#~/api/common/helpers/audit-event.js', async (importOriginal) => {
   const actual = await importOriginal()
   return { ...actual, auditEvent: vi.fn() }
@@ -175,6 +177,11 @@ describe('acceptOfferDocumentController', () => {
     expect(statusCode).toBe(statusCodes.ok)
     expect(result.agreementData.status).toContain('accepted')
     expect(result.agreementData.agreementNumber).toContain(agreementId)
+
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+      { agreementNumber: agreementId },
+      { $set: { grantsPaymentServiceRequestMade: true } }
+    )
 
     expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
       {

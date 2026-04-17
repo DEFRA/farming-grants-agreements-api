@@ -156,6 +156,10 @@ const schema = new mongoose.Schema(
       default: 'offered',
       enum: ['offered', 'cancelled', 'withdrawn', 'accepted', 'terminated']
     },
+    grantsPaymentServiceRequestMade: {
+      type: Boolean,
+      default: false
+    },
     agreement: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'agreements',
@@ -184,6 +188,7 @@ schema.index({ 'identifiers.sbi': 1 })
 schema.index({ clientRef: 1 })
 schema.index({ 'payment.agreementStartDate': 1 })
 schema.index({ 'payment.agreementEndDate': 1 })
+schema.index({ status: 1, grantsPaymentServiceRequestMade: 1 })
 schema.index({ agreement: 1, createdAt: -1, _id: -1 })
 
 export default mongoose.model(collection, schema)
