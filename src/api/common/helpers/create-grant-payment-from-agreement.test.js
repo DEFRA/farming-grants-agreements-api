@@ -1,8 +1,12 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { randomUUID } from 'node:crypto'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 
+vi.mock('node:crypto', () => ({
+  randomUUID: vi.fn()
+}))
 vi.mock(
   '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js',
   () => ({
@@ -36,6 +40,7 @@ describe('createGrantPaymentFromAgreement', () => {
         {
           paymentDate: '2024-05-01',
           totalPaymentPence: 10000,
+          correlationId: '324b1946-7c0f-4be0-8573-020e482c9a8d',
           lineItems: [
             {
               parcelItemId: 'PARCEL-1',
@@ -66,6 +71,7 @@ describe('createGrantPaymentFromAgreement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(randomUUID).mockReturnValue('generated-payment-correlation-id')
     vi.mocked(getClaimId).mockResolvedValue('R00000001')
     vi.mocked(generateInvoiceNumber).mockReturnValue('R00000001-V001Q2')
   })
@@ -98,6 +104,7 @@ describe('createGrantPaymentFromAgreement', () => {
           marketingYear: new Date().getFullYear().toString(),
           payments: [
             {
+              correlationId: '324b1946-7c0f-4be0-8573-020e482c9a8d',
               dueDate: '2024-05-01',
               totalAmountPence: '10000',
               status: 'pending',
@@ -143,5 +150,87 @@ describe('createGrantPaymentFromAgreement', () => {
     await expect(
       createGrantPaymentFromAgreement(mockAgreementData)
     ).resolves.toBeDefined()
+  })
+
+  it('should generate a payment correlationId when one is missing', async () => {
+    const agreementDataWithoutPaymentCorrelationId = {
+      ...mockAgreementData,
+      payment: {
+        ...mockAgreementData.payment,
+        payments: [
+          {
+            paymentDate: '2024-05-01',
+            totalPaymentPence: 10000,
+            lineItems: [
+              {
+                parcelItemId: 'PARCEL-1',
+                paymentPence: 6000
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = await createGrantPaymentFromAgreement(
+      agreementDataWithoutPaymentCorrelationId,
+      logger
+    )
+
+    expect(randomUUID).toHaveBeenCalledTimes(1)
+    expect(result.grants[0].payments[0]).toEqual(
+      expect.objectContaining({
+        correlationId: 'generated-payment-correlation-id',
+        invoiceLines: [
+          {
+            amountPence: '6000',
+            description: '2024-05-01: Parcel: P1: Parcel Item Description',
+            schemeCode: 'CODE-P1'
+          }
+        ]
+      })
+    )
+  })
+
+  it('should tolerate missing parcel and agreement-level item metadata', async () => {
+    const agreementData = {
+      ...mockAgreementData,
+      payment: {
+        ...mockAgreementData.payment,
+        payments: [
+          {
+            paymentDate: '2024-05-01',
+            totalPaymentPence: 10000,
+            correlationId: 'known-correlation-id',
+            lineItems: [
+              {
+                parcelItemId: 'UNKNOWN-PARCEL',
+                paymentPence: 6000
+              },
+              {
+                agreementLevelItemId: 'UNKNOWN-AGREEMENT',
+                paymentPence: 4000
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = await createGrantPaymentFromAgreement(agreementData, logger)
+
+    expect(result.grants[0].payments[0].invoiceLines).toEqual([
+      {
+        amountPence: '6000',
+        description: '2024-05-01: Parcel: undefined: undefined',
+        schemeCode: undefined
+      },
+      {
+        amountPence: '4000',
+        description:
+          '2024-05-01: One-off payment per agreement per year for undefined',
+        schemeCode: undefined
+      }
+    ])
   })
 })

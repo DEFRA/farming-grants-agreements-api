@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { config } from '#~/config/index.js'
 
 import mongoose from 'mongoose'
@@ -541,7 +541,11 @@ describe('createOffer', () => {
     // Ensure the notification id hasn't been used
     doesAgreementExist.mockResolvedValueOnce(false)
 
-    const result = await createOffer(uuidv4(), emptyAgreementData, mockLogger)
+    const result = await createOffer(
+      randomUUID(),
+      emptyAgreementData,
+      mockLogger
+    )
 
     // Should fall back to a generated FPTT number
     expect(result.agreementNumber).toMatch(/^FPTT\d{9}$/)
@@ -572,7 +576,7 @@ describe('createOffer', () => {
     agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
 
     const data = { ...agreementData, agreementNumber: provided }
-    const result = await createOffer(uuidv4(), data, mockLogger)
+    const result = await createOffer(randomUUID(), data, mockLogger)
 
     expect(result.agreementNumber).toBe(provided)
 
@@ -589,7 +593,7 @@ describe('createOffer', () => {
     const provided = 'FPTT888888888'
     const data = { ...agreementData, agreementNumber: provided }
 
-    const result = await createOffer(uuidv4(), data, mockLogger)
+    const result = await createOffer(randomUUID(), data, mockLogger)
 
     expect(result.agreementNumber).toMatch(/^FPTT\d{9}$/)
     expect(result.agreementNumber).not.toBe(provided)
@@ -605,7 +609,7 @@ describe('createOffer', () => {
     doesAgreementExist.mockResolvedValueOnce(false)
 
     const data = { ...agreementData, agreementNumber: '' }
-    const result = await createOffer(uuidv4(), data, mockLogger)
+    const result = await createOffer(randomUUID(), data, mockLogger)
 
     expect(result.agreementNumber).toMatch(/^FPTT\d{9}$/)
     expect(result.agreementNumber).not.toBe('')
@@ -1950,7 +1954,7 @@ describe('createOffer', () => {
       )
 
       await expect(
-        createOffer(uuidv4(), agreementData, mockLogger)
+        createOffer(randomUUID(), agreementData, mockLogger)
       ).rejects.toThrow('Database connection error')
 
       expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
@@ -1963,7 +1967,7 @@ describe('createOffer', () => {
       )
 
       await expect(
-        createOffer(uuidv4(), agreementData, mockLogger)
+        createOffer(randomUUID(), agreementData, mockLogger)
       ).rejects.toThrow('Generic error')
 
       expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
@@ -1977,7 +1981,7 @@ describe('createOffer', () => {
         answers: { scheme: 'FPTT' }
       }
       doesAgreementExist.mockResolvedValueOnce(false)
-      await expect(createOffer(uuidv4(), bad, mockLogger)).rejects.toThrow(
+      await expect(createOffer(randomUUID(), bad, mockLogger)).rejects.toThrow(
         'Offer data is missing payment and applicant'
       )
 

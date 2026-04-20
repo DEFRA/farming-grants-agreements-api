@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import Boom from '@hapi/boom'
 import agreementsModel from '#~/api/common/models/agreements.js'
 import { config } from '#~/config/index.js'
@@ -38,6 +40,13 @@ async function acceptOffer(agreementNumber, agreementData, logger) {
     agreementData.application.parcel,
     logger
   )
+  const paymentWithCorrelationIds = {
+    ...expectedPayments,
+    payments: expectedPayments.payments.map((payment) => ({
+      ...payment,
+      correlationId: payment.correlationId || randomUUID()
+    }))
+  }
 
   // Update the agreement in the database
   const agreement = await agreementsModel
@@ -49,11 +58,14 @@ async function acceptOffer(agreementNumber, agreementData, logger) {
         $set: {
           status: acceptedStatus,
           signatureDate: acceptanceTime,
-          payment: expectedPayments
+          payment: paymentWithCorrelationIds
         }
       }
     )
     .catch((error) => {
+      if (error?.isBoom) {
+        throw error
+      }
       throw Boom.internal(error)
     })
 
