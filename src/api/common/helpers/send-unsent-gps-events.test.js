@@ -154,4 +154,60 @@ describe('sendUnsetGPSEventsPlugin', () => {
     )
     expect(versionsModel.updateOne).not.toHaveBeenCalled()
   })
+
+  it('should skip processing when agreement number is missing', async () => {
+    vi.mocked(config.get).mockImplementation((key) => {
+      if (key === 'featureFlags.sendUnsentGPSEvents') return true
+      return null
+    })
+
+    const mockMissedPayments = [
+      {
+        _id: 'v1',
+        agreement: null,
+        status: 'accepted',
+        grantsPaymentServiceRequestMade: false
+      }
+    ]
+
+    vi.mocked(versionsModel.find).mockReturnValue({
+      populate: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(mockMissedPayments)
+      })
+    })
+
+    sendUnsetGPSEventsPlugin.register(server)
+    const startHandler = server.events.on.mock.calls.find(
+      (call) => call[0] === 'start'
+    )[1]
+
+    await startHandler()
+
+    expect(server.logger.error).toHaveBeenCalledWith(
+      'Agreement number not found for version v1'
+    )
+    expect(sendGrantPaymentEvent).not.toHaveBeenCalled()
+  })
+
+  it('should handle errors gracefully while fetching missed payments', async () => {
+    vi.mocked(config.get).mockImplementation((key) => {
+      if (key === 'featureFlags.sendUnsentGPSEvents') return true
+      return null
+    })
+
+    vi.mocked(versionsModel.find).mockImplementation(() => {
+      throw new Error('Database connection failed')
+    })
+
+    sendUnsetGPSEventsPlugin.register(server)
+    const startHandler = server.events.on.mock.calls.find(
+      (call) => call[0] === 'start'
+    )[1]
+
+    await startHandler()
+
+    expect(server.logger.error).toHaveBeenCalledWith(
+      'Error while checking for missed GPS payments events: Database connection failed'
+    )
+  })
 })
