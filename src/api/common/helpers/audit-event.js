@@ -1,3 +1,4 @@
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
 import { audit } from '@defra/cdp-auditing'
 import { config } from '#~/config/index.js'
 
@@ -40,17 +41,30 @@ const eventTypes = {
   [AuditEvent.AGREEMENT_UPDATED]: 'GrantsUpdateAgreement'
 }
 
-// Action for each audit event, used in audit.action
+// Action for each audit event, used in audit.entities[].action
 const eventActions = {
   [AuditEvent.PDF_DOWNLOADED_FROM_S3]: 'read',
   [AuditEvent.AGREEMENT_CREATED]: 'created',
   [AuditEvent.AGREEMENT_UPDATED]: 'updated'
 }
 
+const snsClient = new SNSClient(
+  process.env.NODE_ENV === 'development'
+    ? {
+        region: config.get('aws.region'),
+        endpoint: config.get('aws.sns.endpoint'),
+        credentials: {
+          accessKeyId: config.get('aws.accessKeyId'),
+          secretAccessKey: config.get('aws.secretAccessKey')
+        }
+      }
+    : {}
+)
+
 /**
  * Builds the full audit payload for an agreement operation.
  * @param {AuditEvent} event
- * @param {{ agreementNumber: string, correlationId?: string }} context
+ * @param {{ agreementNumber?: string, correlationId?: string, sbi?: string|number, frn?: string|number, crn?: string|number }} context
  * @param {'success'|'failure'} status
  */
 const buildAuditPayload = (event, context = {}, status = 'success') => ({
@@ -73,9 +87,18 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
 
   audit: {
     eventtype: eventTypes[event],
-    action: eventActions[event],
-    entity: 'agreement',
-    entityid: context.agreementNumber,
+    entities: [
+      {
+        entity: 'agreement',
+        action: eventActions[event],
+        id: context.agreementNumber
+      }
+    ],
+    accounts: {
+      sbi: context.sbi,
+      frn: context.frn,
+      crn: context.crn
+    },
     status,
     details: context
   }
@@ -84,9 +107,27 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
 /**
  * Records an agreement operation audit event.
  * @param {AuditEvent} event
- * @param {{ agreementNumber: string, correlationId?: string }} context
+ * @param {{ agreementNumber?: string, correlationId?: string, sbi?: string|number, frn?: string|number, crn?: string|number }} context
  * @param {'success'|'failure'} [status]
+ * @param {object} [client] - SNS client, injectable for testing
  */
-export const auditEvent = (event, context = {}, status = 'success') => {
-  audit(buildAuditPayload(event, context, status))
+export const auditEvent = (
+  event,
+  context = {},
+  status = 'success',
+  client = snsClient
+) => {
+  const payload = buildAuditPayload(event, context, status)
+  audit(payload)
+
+  client
+    .send(
+      new PublishCommand({
+        TopicArn: config.get('aws.sns.topic.audit.arn'),
+        Message: JSON.stringify(payload)
+      })
+    )
+    .catch(() => {
+      // fire and forget — SNS publish failure must not block the caller
+    })
 }
