@@ -1,7 +1,8 @@
+import { randomUUID } from 'node:crypto'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
-import agreementsModel from '#~/api/common/models/agreements.js'
+import versionsModel from '#~/api/common/models/versions.js'
 
 /**
  * Sends a grant payment event to the payments service and updates the agreement status.
@@ -10,7 +11,17 @@ import agreementsModel from '#~/api/common/models/agreements.js'
  * @returns {Promise<object>} The grant payment data sent.
  */
 export const sendGrantPaymentEvent = async (agreementData, logger) => {
-  const agreementNumber = agreementData.agreementNumber
+  if (!agreementData.correlationId) {
+    agreementData.correlationId = randomUUID()
+  }
+
+  if (agreementData.payment?.payments?.length) {
+    agreementData.payment.payments.forEach((payment) => {
+      if (!payment.correlationId) {
+        payment.correlationId = randomUUID()
+      }
+    })
+  }
 
   const grantPaymentsData = await createGrantPaymentFromAgreement(
     agreementData,
@@ -27,9 +38,15 @@ export const sendGrantPaymentEvent = async (agreementData, logger) => {
     logger
   )
 
-  await agreementsModel.updateOneAgreementVersion(
-    { agreementNumber },
-    { $set: { grantsPaymentServiceRequestMade: true } }
+  await versionsModel.updateOne(
+    { _id: agreementData._id },
+    {
+      $set: {
+        grantsPaymentServiceRequestMade: true,
+        correlationId: agreementData.correlationId,
+        'payment.payments': agreementData.payment.payments
+      }
+    }
   )
 
   return grantPaymentsData

@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { sendGrantPaymentEvent } from './send-grant-payment-event.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
-import agreementsModel from '#~/api/common/models/agreements.js'
+import versionsModel from '#~/api/common/models/versions.js'
 
 vi.mock('#~/config/index.js', () => ({
   config: {
@@ -26,12 +26,17 @@ vi.mock('#~/config/index.js', () => ({
 vi.mock('#~/api/common/helpers/sns-publisher.js')
 vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
 vi.mock('#~/api/common/models/agreements.js')
+vi.mock('#~/api/common/models/versions.js')
 
 describe('sendGrantPaymentEvent', () => {
   const mockLogger = { info: vi.fn(), error: vi.fn() }
   const mockAgreementData = {
+    _id: 'mock-id',
     agreementNumber: 'FPTT123',
-    some: 'data'
+    correlationId: 'existing-id',
+    payment: {
+      payments: [{ correlationId: 'p1' }, { correlationId: 'p2' }]
+    }
   }
   const mockGrantPaymentsData = {
     claimId: 'CLAIM1',
@@ -43,6 +48,7 @@ describe('sendGrantPaymentEvent', () => {
     vi.mocked(createGrantPaymentFromAgreement).mockResolvedValue(
       mockGrantPaymentsData
     )
+    vi.mocked(versionsModel.updateOne).mockResolvedValue({ acknowledged: true })
   })
 
   it('should create payment data, publish event, and update agreement', async () => {
@@ -63,12 +69,45 @@ describe('sendGrantPaymentEvent', () => {
       mockLogger
     )
 
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
-      { agreementNumber: 'FPTT123' },
-      { $set: { grantsPaymentServiceRequestMade: true } }
+    expect(versionsModel.updateOne).toHaveBeenCalledWith(
+      { _id: 'mock-id' },
+      {
+        $set: {
+          grantsPaymentServiceRequestMade: true,
+          correlationId: mockAgreementData.correlationId,
+          'payment.payments': mockAgreementData.payment.payments
+        }
+      }
     )
 
     expect(result).toEqual(mockGrantPaymentsData)
+  })
+
+  it('should generate and save missing correlationIds along with status', async () => {
+    const incompleteData = {
+      _id: 'mock-id',
+      agreementNumber: 'FPTT123',
+      payment: {
+        payments: [{ amount: 100 }, { correlationId: 'existing-p2' }]
+      }
+    }
+
+    await sendGrantPaymentEvent(incompleteData, mockLogger)
+
+    expect(incompleteData.correlationId).toBeDefined()
+    expect(incompleteData.payment.payments[0].correlationId).toBeDefined()
+    expect(incompleteData.payment.payments[1].correlationId).toBe('existing-p2')
+
+    expect(versionsModel.updateOne).toHaveBeenCalledWith(
+      { _id: 'mock-id' },
+      {
+        $set: {
+          grantsPaymentServiceRequestMade: true,
+          correlationId: incompleteData.correlationId,
+          'payment.payments': incompleteData.payment.payments
+        }
+      }
+    )
   })
 
   it('should throw if createGrantPaymentFromAgreement fails', async () => {
@@ -80,7 +119,7 @@ describe('sendGrantPaymentEvent', () => {
     ).rejects.toThrow('Creation failed')
 
     expect(publishEvent).not.toHaveBeenCalled()
-    expect(agreementsModel.updateOneAgreementVersion).not.toHaveBeenCalled()
+    expect(versionsModel.updateOne).not.toHaveBeenCalled()
   })
 
   it('should throw if publishEvent fails', async () => {
@@ -91,6 +130,6 @@ describe('sendGrantPaymentEvent', () => {
       sendGrantPaymentEvent(mockAgreementData, mockLogger)
     ).rejects.toThrow('Publish failed')
 
-    expect(agreementsModel.updateOneAgreementVersion).not.toHaveBeenCalled()
+    expect(versionsModel.updateOne).not.toHaveBeenCalled()
   })
 })
