@@ -1,5 +1,4 @@
 import crypto from 'node:crypto'
-import { v4 as uuidv4 } from 'uuid'
 import Boom from '@hapi/boom'
 
 import agreementsModel from '#~/api/common/models/agreements.js'
@@ -56,7 +55,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
 
   const data = {
     notificationMessageId,
-    correlationId: uuidv4(),
+    correlationId: crypto.randomUUID(),
     clientRef,
     code,
     identifiers,

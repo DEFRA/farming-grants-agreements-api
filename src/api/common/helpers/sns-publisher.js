@@ -1,5 +1,6 @@
+import { randomUUID } from 'node:crypto'
+
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns'
-import { v4 as uuidv4 } from 'uuid'
 import { config } from '#~/config/index.js'
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
 
@@ -34,7 +35,7 @@ export async function publishEvent(
   client = snsClient
 ) {
   const message = {
-    id: uuidv4(),
+    id: randomUUID(),
     source: config.get('aws.sns.eventSource'),
     specversion: '1.0',
     type,
@@ -54,7 +55,7 @@ export async function publishEvent(
           TopicArn: topicArn,
           Message: JSON.stringify(message),
           MessageGroupId: config.get('serviceName'),
-          MessageDeduplicationId: uuidv4()
+          MessageDeduplicationId: randomUUID()
         })
       )
       logger?.info?.(

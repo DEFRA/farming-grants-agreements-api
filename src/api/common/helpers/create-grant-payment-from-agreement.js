@@ -1,6 +1,7 @@
 import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
+import { randomUUID } from 'node:crypto'
 
 function createPaymentInvoice(
   lineItem,
@@ -68,7 +69,8 @@ const createPayments = (agreementData) => {
       dueDate: agreementPayment.paymentDate,
       totalAmountPence: agreementPayment.totalPaymentPence.toString(),
       status: 'pending',
-      invoiceLines
+      invoiceLines,
+      correlationId: agreementPayment.correlationId || randomUUID()
     }
   })
 }

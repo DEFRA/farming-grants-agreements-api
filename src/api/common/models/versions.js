@@ -83,6 +83,7 @@ const AgreementLevelItems = new mongoose.Schema({
 const Payments = new mongoose.Schema({
   totalPaymentPence: { type: Number, required: true },
   paymentDate: { type: String, required: true },
+  correlationId: { type: String, required: true },
   lineItems: {
     type: [
       new mongoose.Schema({

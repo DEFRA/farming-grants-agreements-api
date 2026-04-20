@@ -35,7 +35,7 @@ services:
 
   mongodb:
     image: mongo:6.0.13
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    command: ['mongod', '--replSet', 'rs0', '--bind_ip_all']
     networks:
       - cdp-tenant
     ports:
@@ -59,7 +59,7 @@ services:
       mongosh "mongodb://mongodb:27017" --eval 'try { rs.status(); print("Replica set already initialized"); } catch (e) { if (e.message.includes("no replset config")) { rs.initiate({_id: "rs0", members: [{ _id: 0, host: "localhost:27017" }]}); print("Replica set initialized"); } else { throw e; } }'
     networks:
       - cdp-tenant
-    restart: "no"
+    restart: 'no'
 
   ################################################################################
 
