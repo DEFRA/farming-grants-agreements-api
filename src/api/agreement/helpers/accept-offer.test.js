@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import { randomUUID } from 'node:crypto'
 
 import Boom from '@hapi/boom'
 import agreementsModel from '#~/api/common/models/agreements.js'
@@ -6,6 +7,9 @@ import { acceptOffer } from './accept-offer.js'
 import { config } from '#~/config/index.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 
+vi.mock('node:crypto', () => ({
+  randomUUID: vi.fn()
+}))
 vi.mock('#~/api/common/models/agreements.js', () => ({
   __esModule: true,
   default: {
@@ -51,6 +55,7 @@ describe('acceptOffer', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.setSystemTime(new Date('2024-01-01'))
+    vi.mocked(randomUUID).mockReturnValue('generated-correlation-id')
     mockLogger = { info: vi.fn(), error: vi.fn() }
     mockPayments = {
       agreementStartDate: '2024-01-01',
@@ -60,7 +65,13 @@ describe('acceptOffer', () => {
       annualTotalPence: 1200,
       parcelItems: [],
       agreementLevelItems: [],
-      payments: []
+      payments: [
+        {
+          totalPaymentPence: 1200,
+          paymentDate: '2024-05-01',
+          lineItems: []
+        }
+      ]
     }
     calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(mockPayments)
 
@@ -226,7 +237,17 @@ describe('acceptOffer', () => {
         $set: {
           status: 'accepted',
           signatureDate: new Date().toISOString(),
-          payment: mockPayments
+          payment: {
+            ...mockPayments,
+            payments: [
+              expect.objectContaining({
+                totalPaymentPence: 1200,
+                paymentDate: '2024-05-01',
+                lineItems: [],
+                correlationId: expect.any(String)
+              })
+            ]
+          }
         }
       }
     )
@@ -261,7 +282,17 @@ describe('acceptOffer', () => {
         $set: {
           status: 'accepted',
           signatureDate: new Date().toISOString(),
-          payment: mockPayments
+          payment: {
+            ...mockPayments,
+            payments: [
+              expect.objectContaining({
+                totalPaymentPence: 1200,
+                paymentDate: '2024-05-01',
+                lineItems: [],
+                correlationId: expect.any(String)
+              })
+            ]
+          }
         }
       }
     )
@@ -335,6 +366,70 @@ describe('acceptOffer', () => {
         mockLogger
       )
     ).rejects.toEqual(boomError)
+
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
+  })
+
+  test('should preserve an existing payment correlationId', async () => {
+    const agreementId = 'FPTT123456789'
+    const existingPaymentCorrelationId = 'existing-payment-correlation-id'
+    agreementsModel.updateOneAgreementVersion.mockResolvedValue(
+      mockUpdateResult
+    )
+    calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue({
+      ...mockPayments,
+      payments: [
+        {
+          ...mockPayments.payments[0],
+          correlationId: existingPaymentCorrelationId
+        }
+      ]
+    })
+
+    await acceptOffer(
+      agreementId,
+      {
+        agreementNumber: agreementId,
+        application: { parcel: [] },
+        actionApplications: []
+      },
+      mockLogger
+    )
+
+    expect(randomUUID).not.toHaveBeenCalled()
+    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+      { agreementNumber: agreementId },
+      {
+        $set: expect.objectContaining({
+          payment: expect.objectContaining({
+            payments: [
+              expect.objectContaining({
+                correlationId: existingPaymentCorrelationId
+              })
+            ]
+          })
+        })
+      }
+    )
+  })
+
+  test('should wrap non-Boom database errors', async () => {
+    const agreementId = 'FPTT123456789'
+    agreementsModel.updateOneAgreementVersion.mockRejectedValue(
+      new Error('Database connection failed')
+    )
+
+    await expect(
+      acceptOffer(
+        agreementId,
+        {
+          agreementNumber: agreementId,
+          application: { parcel: [] },
+          actionApplications: []
+        },
+        mockLogger
+      )
+    ).rejects.toThrow('Database connection failed')
 
     expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
   })

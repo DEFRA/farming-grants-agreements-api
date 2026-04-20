@@ -1,10 +1,14 @@
+import { randomUUID } from 'node:crypto'
+
+import { vi } from 'vitest'
 import { publishEvent } from './sns-publisher.js'
 import { PublishCommand } from '@aws-sdk/client-sns'
-import { v4 as uuidv4 } from 'uuid'
 import { config } from '#~/config/index.js'
 
 vi.mock('@aws-sdk/client-sns')
-vi.mock('uuid')
+vi.mock('node:crypto', () => ({
+  randomUUID: vi.fn()
+}))
 vi.mock('#~/config/index.js', () => ({
   config: { get: vi.fn() }
 }))
@@ -46,8 +50,8 @@ describe('publishEvent', () => {
   }
 
   beforeEach(() => {
-    uuidv4.mockReturnValue('mock-uuid')
     vi.clearAllMocks()
+    vi.mocked(randomUUID).mockReturnValue('mock-uuid')
     config.get.mockImplementation((key) => {
       switch (key) {
         case 'aws.region':
