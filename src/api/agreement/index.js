@@ -1,8 +1,14 @@
 import Joi from 'joi'
+import { config as migrateMongoConfig, up } from 'migrate-mongo'
 import { getAgreementController } from './controllers/get-agreement.controller.js'
 import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
 import { getCommonResponseSchemas } from '#~/api/common/helpers/joi-schema-from-pact.js'
+import { createLogger } from '#~/api/common/helpers/logging/logger.js'
+import { db, mongoClient } from '#~/api/common/helpers/mongo-client.js'
+import migrateMongoConfigInternal from '../../../migrate-mongo-config.js'
+
+const logger = createLogger()
 
 const auth = 'grants-ui-jwt'
 
@@ -32,7 +38,15 @@ const downloadParams = Joi.object({
 const agreement = {
   plugin: {
     name: 'agreement',
-    register: (server) => {
+    async register(server) {
+      migrateMongoConfig.set(migrateMongoConfigInternal)
+
+      logger.info('Running migrations')
+      const migrated = await up(db, mongoClient)
+
+      migrated.forEach((fileName) => logger.info(`Migrated: ${fileName}`))
+      logger.info('Finished running migrations')
+
       server.route({
         method: 'GET',
         path: '/',
@@ -59,10 +73,10 @@ const agreement = {
         path: '/',
         options: {
           auth,
-          tags: ['api', 'agreement'],
+          tags: ['api', 'agreements'],
           description: 'Accept agreement offer',
           notes:
-            'Accepts the agreement offer for the authenticated user. This endpoint updates the payment hub, records the signature date, and publishes a status update event to SNS. Only agreements with status "offered" can be accepted.',
+            'Accepts the agreement offer for the authenticated user. This endpoint updates the payment hub, records the signature date, and publishes a status update event to SNS. Only agreement with status "offered" can be accepted.',
           response: {
             schema: acceptOfferResponse,
             failAction: 'log'
@@ -80,7 +94,7 @@ const agreement = {
         path: '/{agreementId}',
         options: {
           auth,
-          tags: ['api', 'agreement'],
+          tags: ['api', 'agreements'],
           description: 'Get agreement by ID',
           notes:
             'Returns agreement data for the specified agreement ID. This endpoint supports both DefraID and Entra authentication methods.',
@@ -104,7 +118,7 @@ const agreement = {
         path: '/{agreementId}/{version}/download',
         options: {
           auth,
-          tags: ['api', 'agreement'],
+          tags: ['api', 'agreements'],
           description: 'Download agreement PDF',
           notes:
             'Downloads the agreement PDF document for the specified agreement ID and version from S3. The PDF filename follows the pattern {agreementId}-{version}.pdf.',

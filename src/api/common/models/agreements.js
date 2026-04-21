@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import versionsModel from './versions.js'
+import grantModel from './grant.js'
 import Boom from '@hapi/boom'
 import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 
@@ -13,7 +14,8 @@ const schema = new mongoose.Schema(
     clientRef: { type: String, required: true },
     sbi: { type: String, required: true },
     frn: { type: String },
-    versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }]
+    versions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'versions' }],
+    grants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'grants' }]
   },
   { collection, timestamps: true }
 )
@@ -132,7 +134,7 @@ schema.statics.createAgreementWithVersions = async function ({
 schema.statics.findLatestAgreementVersion = async function (agreementFilter) {
   const agreement = await this.findOne(agreementFilter)
     .sort({ createdAt: -1, _id: -1 })
-    .select('versions')
+    .select('versions agreementNumber')
     .lean()
     .catch((err) => {
       throw Boom.internal(err)
@@ -142,6 +144,28 @@ schema.statics.findLatestAgreementVersion = async function (agreementFilter) {
     throw Boom.notFound(
       `Agreement not found using filter: ${JSON.stringify(agreementFilter)}`
     )
+  }
+
+  const grant = await grantModel
+    .findOne({ agreementNumber: agreement.agreementNumber })
+    .sort({ createdAt: -1, _id: -1 })
+    .lean()
+    .catch((err) => {
+      throw Boom.internal(err)
+    })
+
+  if (grant) {
+    const version = await versionsModel
+      .findOne({ grant: grant._id })
+      .sort({ createdAt: -1, _id: -1 })
+      .lean()
+      .catch((err) => {
+        throw Boom.internal(err)
+      })
+
+    if (version) {
+      return version
+    }
   }
 
   if (!agreement.versions || agreement.versions.length === 0) {

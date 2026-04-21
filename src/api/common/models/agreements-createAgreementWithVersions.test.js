@@ -3,6 +3,7 @@ import { vi } from 'vitest'
 
 import agreementsModel from '#~/api/common/models/agreements.js'
 import versionsModel from '#~/api/common/models/versions.js'
+import grantModel from '#~/api/common/models/grant.js'
 
 vi.unmock('mongoose')
 
@@ -158,6 +159,14 @@ describe('agreements.createAgreementWithVersions', () => {
 describe('agreements.findLatestAgreementVersion', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mock('#~/api/common/models/grant.js', () => ({
+      default: {
+        findOne: vi.fn().mockReturnValue({
+          sort: vi.fn().mockReturnThis(),
+          lean: vi.fn().mockResolvedValue(null)
+        })
+      }
+    }))
   })
 
   it('should find latest agreement version successfully', async () => {
@@ -173,17 +182,19 @@ describe('agreements.findLatestAgreementVersion', () => {
     }
 
     agreementsModel.findOne = vi.fn().mockReturnValue({
-      sort: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockAgreement)
-        })
-      })
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockAgreement)
+    })
+
+    grantModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(null)
     })
 
     versionsModel.findOne = vi.fn().mockReturnValue({
-      sort: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockVersion)
-      })
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockVersion)
     })
 
     const result = await agreementsModel.findLatestAgreementVersion({
@@ -196,13 +207,50 @@ describe('agreements.findLatestAgreementVersion', () => {
     })
   })
 
+  it('should find latest version via grant successfully', async () => {
+    const mockAgreement = {
+      _id: 'agreement123',
+      agreementNumber: 'FPTT123',
+      versions: ['version1']
+    }
+    const mockGrant = { _id: 'grant123' }
+    const mockVersion = {
+      _id: 'version_from_grant',
+      agreementNumber: 'FPTT123'
+    }
+
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockAgreement)
+    })
+
+    grantModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockGrant)
+    })
+
+    versionsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockVersion)
+    })
+
+    const result = await agreementsModel.findLatestAgreementVersion({
+      agreementNumber: 'FPTT123'
+    })
+
+    expect(result).toEqual(mockVersion)
+    expect(grantModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: 'FPTT123'
+    })
+    expect(versionsModel.findOne).toHaveBeenCalledWith({ grant: 'grant123' })
+  })
+
   it('should throw 404 when agreement not found', async () => {
     agreementsModel.findOne = vi.fn().mockReturnValue({
-      sort: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(null)
-        })
-      })
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(null)
     })
 
     await expect(
@@ -217,15 +265,19 @@ describe('agreements.findLatestAgreementVersion', () => {
   it('should throw 404 when agreement has no versions', async () => {
     const mockAgreement = {
       _id: 'agreement123',
+      agreementNumber: 'FPTT123',
       versions: []
     }
 
     agreementsModel.findOne = vi.fn().mockReturnValue({
-      sort: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockAgreement)
-        })
-      })
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockAgreement)
+    })
+
+    grantModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(null)
     })
 
     await expect(
@@ -240,15 +292,19 @@ describe('agreements.findLatestAgreementVersion', () => {
   it('should throw 404 when agreement has null versions', async () => {
     const mockAgreement = {
       _id: 'agreement123',
+      agreementNumber: 'FPTT123',
       versions: null
     }
 
     agreementsModel.findOne = vi.fn().mockReturnValue({
-      sort: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(mockAgreement)
-        })
-      })
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockAgreement)
+    })
+
+    grantModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(null)
     })
 
     await expect(
@@ -262,11 +318,9 @@ describe('agreements.findLatestAgreementVersion', () => {
 
   it('should handle database errors', async () => {
     agreementsModel.findOne = vi.fn().mockReturnValue({
-      sort: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          lean: vi.fn().mockRejectedValue(new Error('Database error'))
-        })
-      })
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockRejectedValue(new Error('Database error'))
     })
 
     await expect(
@@ -276,6 +330,93 @@ describe('agreements.findLatestAgreementVersion', () => {
     expect(agreementsModel.findOne).toHaveBeenCalledWith({
       agreementNumber: 'FPTT123'
     })
+  })
+
+  it('should throw Boom.internal if grantModel.findOne fails', async () => {
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi
+        .fn()
+        .mockResolvedValue({ agreementNumber: 'FPTT123', versions: ['v1'] })
+    })
+
+    grantModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockRejectedValue(new Error('Grant DB error'))
+    })
+
+    await expect(
+      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'FPTT123' })
+    ).rejects.toThrow('Grant DB error')
+  })
+
+  it('should throw Boom.internal if versionsModel.findOne fails when searching via grant', async () => {
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi
+        .fn()
+        .mockResolvedValue({ agreementNumber: 'FPTT123', versions: ['v1'] })
+    })
+
+    grantModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ _id: 'grant123' })
+    })
+
+    versionsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockRejectedValue(new Error('Version DB error'))
+    })
+
+    await expect(
+      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'FPTT123' })
+    ).rejects.toThrow('Version DB error')
+  })
+
+  it('should throw Boom.internal if versionsModel.findOne fails when searching via agreement', async () => {
+    agreementsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      lean: vi
+        .fn()
+        .mockResolvedValue({ agreementNumber: 'FPTT123', versions: ['v1'] })
+    })
+
+    grantModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(null)
+    })
+
+    versionsModel.findOne = vi.fn().mockReturnValue({
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockRejectedValue(new Error('Version DB error fallback'))
+    })
+
+    await expect(
+      agreementsModel.findLatestAgreementVersion({ agreementNumber: 'FPTT123' })
+    ).rejects.toThrow('Version DB error fallback')
+  })
+
+  it('should throw Boom.internal if findOneAndUpdate fails in updateOneAgreementVersion', async () => {
+    const mockLatestVersion = { _id: 'version123' }
+    agreementsModel.findLatestAgreementVersion = vi
+      .fn()
+      .mockResolvedValue(mockLatestVersion)
+
+    versionsModel.findOneAndUpdate = vi.fn().mockReturnValue({
+      populate: vi.fn().mockReturnThis(),
+      sort: vi.fn().mockReturnThis(),
+      catch: vi.fn().mockRejectedValue(new Error('Update error in catch'))
+    })
+
+    await expect(
+      agreementsModel.updateOneAgreementVersion(
+        { agreementNumber: 'FPTT123' },
+        { status: 'accepted' }
+      )
+    ).rejects.toThrow('Update error in catch')
   })
 })
 

@@ -5,6 +5,10 @@ import { config } from '#~/config/index.js'
 import mongoose from 'mongoose'
 import Boom from '@hapi/boom'
 import { createOffer, generateAgreementNumber } from './create-offer.js'
+import {
+  createAgreementWithGrantAndVersions,
+  __setPopulatedAgreement
+} from '#~/api/agreement/helpers/create-agreement-with-grant-and-versions.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
@@ -12,23 +16,29 @@ import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.
 
 vi.mock('@hapi/boom')
 vi.mock('#~/api/common/models/versions.js')
-vi.mock('#~/api/common/models/agreements.js', () => {
-  let populatedAgreement = null
+vi.mock(
+  '#~/api/agreement/helpers/create-agreement-with-grant-and-versions.js',
+  () => {
+    let populatedAgreement = null
 
+    return {
+      createAgreementWithGrantAndVersions: vi.fn(() => populatedAgreement),
+      __setPopulatedAgreement: (g) => {
+        populatedAgreement = g
+      }
+    }
+  }
+)
+vi.mock('#~/api/common/models/agreements.js', () => {
   const api = {
     create: vi.fn(() => ({ _id: 'mockG1' })),
     findById: vi.fn(() => ({
       populate: () => ({
-        lean: () => Promise.resolve(populatedAgreement)
+        lean: () => Promise.resolve({})
       })
     })),
-    createAgreementWithVersions: vi.fn(() => populatedAgreement),
-    exists: vi.fn().mockResolvedValue(false),
-
-    // helper exposed to tests:
-    __setPopulatedAgreement: (g) => {
-      populatedAgreement = g
-    }
+    createAgreementWithVersions: vi.fn(() => ({})),
+    exists: vi.fn().mockResolvedValue(false)
   }
 
   return { __esModule: true, default: api }
@@ -226,12 +236,12 @@ describe('createOffer', () => {
     }
     populated.agreements = [{ ...targetDataStructure }]
 
-    agreementsModel.__setPopulatedAgreement(populated)
+    __setPopulatedAgreement(populated)
 
-    if (!vi.isMockFunction(agreementsModel.createAgreementWithVersions)) {
+    if (!vi.isMockFunction(createAgreementWithGrantAndVersions)) {
       vi.spyOn(agreementsModel, 'createAgreementWithVersions')
     }
-    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
+    createAgreementWithGrantAndVersions.mockResolvedValue(populated)
 
     publishEvent.mockResolvedValue(true)
 
@@ -290,7 +300,7 @@ describe('createOffer', () => {
     await createOffer('aws-message-id', agreementData, mockLogger)
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].identifiers).toEqual(
       expect.objectContaining({
@@ -316,7 +326,7 @@ describe('createOffer', () => {
     await createOffer('aws-message-id', withDefraId, mockLogger)
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].identifiers).toEqual(
       expect.objectContaining({
@@ -344,7 +354,7 @@ describe('createOffer', () => {
     )
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].consentObjects).toEqual(sssiConsentObjects)
   })
@@ -365,7 +375,7 @@ describe('createOffer', () => {
     )
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].consentObjects).toEqual([])
   })
@@ -382,7 +392,7 @@ describe('createOffer', () => {
     })
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].consentObjects).toBeUndefined()
   })
@@ -418,7 +428,7 @@ describe('createOffer', () => {
     await createOffer('aws-message-id', payload, mockLogger)
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].applicant).toEqual(
       expect.objectContaining({
@@ -477,7 +487,7 @@ describe('createOffer', () => {
     await createOffer('aws-message-id', payload, mockLogger)
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].applicant).toEqual(
       expect.objectContaining({
@@ -517,7 +527,7 @@ describe('createOffer', () => {
     await createOffer('aws-message-id', payload, mockLogger)
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].applicant.business).toEqual(
       expect.objectContaining({
@@ -573,7 +583,7 @@ describe('createOffer', () => {
     }
     populated.agreements = [{ ...targetDataStructure }]
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValue(populated)
+    createAgreementWithGrantAndVersions.mockResolvedValue(populated)
 
     const data = { ...agreementData, agreementNumber: provided }
     const result = await createOffer(randomUUID(), data, mockLogger)
@@ -692,7 +702,7 @@ describe('createOffer', () => {
       ]
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -708,8 +718,7 @@ describe('createOffer', () => {
 
     await createOffer('application-message', payload, mockLogger)
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment, actionApplications } = callPayload.versions[0]
 
     expect(payment.annualTotalPence).toBe(35150)
@@ -791,7 +800,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -804,8 +813,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment, actionApplications, applicant } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -904,7 +912,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -917,8 +925,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment, actionApplications, applicant } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1004,7 +1011,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1017,8 +1024,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment, actionApplications, applicant } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1082,7 +1088,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1094,8 +1100,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment, actionApplications } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1157,7 +1162,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1169,8 +1174,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment, actionApplications } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1223,7 +1227,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1231,8 +1235,7 @@ describe('createOffer', () => {
 
     await createOffer('parcels-plural-message', payloadWithParcels, mockLogger)
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1284,7 +1287,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1296,8 +1299,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1356,7 +1358,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1368,8 +1370,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1507,7 +1508,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1519,8 +1520,7 @@ describe('createOffer', () => {
       mockLogger
     )
 
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     const { payment } = callPayload.versions[0]
 
     expect(payment).toBeDefined()
@@ -1768,7 +1768,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1783,8 +1783,7 @@ describe('createOffer', () => {
     )
 
     expect(result).toBeDefined()
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     // Payment should come from conversion (not null)
     expect(callPayload.versions[0].payment).toBeDefined()
     expect(callPayload.versions[0].payment.annualTotalPence).toBe(4806)
@@ -1838,7 +1837,7 @@ describe('createOffer', () => {
       }
     }
 
-    agreementsModel.createAgreementWithVersions.mockResolvedValueOnce({
+    createAgreementWithGrantAndVersions.mockResolvedValueOnce({
       agreementNumber: 'FPTT123456789',
       agreements: []
     })
@@ -1849,8 +1848,7 @@ describe('createOffer', () => {
 
     expect(result).toBeDefined()
     // Existing payment should be used (not converted one)
-    const callPayload =
-      agreementsModel.createAgreementWithVersions.mock.calls[0][0]
+    const callPayload = createAgreementWithGrantAndVersions.mock.calls[0][0]
     expect(callPayload.versions[0].payment.annualTotalPence).toBe(1000)
     // But actionApplications should come from conversion
     expect(callPayload.versions[0].actionApplications).toBeDefined()
@@ -1866,7 +1864,7 @@ describe('createOffer', () => {
     await createOffer(notificationMessageId, agreementData, mockLogger)
 
     // Assert
-    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalledWith({
+    expect(createAgreementWithGrantAndVersions).toHaveBeenCalledWith({
       agreement: {
         agreementNumber: expect.any(String),
         clientRef: agreementData.clientRef,
@@ -1925,7 +1923,7 @@ describe('createOffer', () => {
     await createOffer('aws-message-id', agreementData, mockLogger)
 
     const [[lastCallArgs]] =
-      agreementsModel.createAgreementWithVersions.mock.calls.slice(-1)
+      createAgreementWithGrantAndVersions.mock.calls.slice(-1)
 
     expect(lastCallArgs.versions[0].claimId).toBe('R00000001')
     expect(lastCallArgs.versions[0].originalInvoiceNumber).toBe('')
@@ -1949,7 +1947,7 @@ describe('createOffer', () => {
 
     it('should handle database errors gracefully', async () => {
       doesAgreementExist.mockResolvedValueOnce(false)
-      agreementsModel.createAgreementWithVersions.mockRejectedValue(
+      createAgreementWithGrantAndVersions.mockRejectedValue(
         new Error('Database connection error')
       )
 
@@ -1957,12 +1955,12 @@ describe('createOffer', () => {
         createOffer(randomUUID(), agreementData, mockLogger)
       ).rejects.toThrow('Database connection error')
 
-      expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
+      expect(createAgreementWithGrantAndVersions).toHaveBeenCalled()
     })
 
     it('should handle generic errors when creating an agreement', async () => {
       doesAgreementExist.mockResolvedValueOnce(false)
-      agreementsModel.createAgreementWithVersions.mockRejectedValue(
+      createAgreementWithGrantAndVersions.mockRejectedValue(
         new Error('Generic error')
       )
 
@@ -1970,7 +1968,7 @@ describe('createOffer', () => {
         createOffer(randomUUID(), agreementData, mockLogger)
       ).rejects.toThrow('Generic error')
 
-      expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalled()
+      expect(createAgreementWithGrantAndVersions).toHaveBeenCalled()
     })
 
     it('should propagate Boom error when payment/applicant missing', async () => {

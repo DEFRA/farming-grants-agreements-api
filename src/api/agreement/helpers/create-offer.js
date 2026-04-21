@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import Boom from '@hapi/boom'
 
 import agreementsModel from '#~/api/common/models/agreements.js'
+import { createAgreementWithGrantAndVersions } from '#~/api/agreement/helpers/create-agreement-with-grant-and-versions.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
@@ -47,6 +48,8 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     consentObjects
   } = resolveAgreementFields(agreementData)
 
+  logger.info(`Creating offer related to Scheme: ${scheme}`)
+
   const agreementNumber = await determineAgreementNumber(agreementData)
 
   // Generate claimId and originalInvoiceNumber for version 1
@@ -70,7 +73,7 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     ...(consentObjects === undefined ? {} : { consentObjects })
   }
 
-  const agreement = await agreementsModel.createAgreementWithVersions({
+  const agreement = await createAgreementWithGrantAndVersions({
     agreement: {
       agreementNumber,
       clientRef,

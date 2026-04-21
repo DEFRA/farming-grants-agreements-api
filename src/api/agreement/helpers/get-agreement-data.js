@@ -1,6 +1,10 @@
 import Boom from '@hapi/boom'
 import versionsModel from '#~/api/common/models/versions.js'
+import grantModel from '#~/api/common/models/grant.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
+import { createLogger } from '#~/api/common/helpers/logging/logger.js'
+
+const logger = createLogger()
 
 /**
  * Search for an agreement
@@ -40,13 +44,44 @@ export const getAgreementData = async (searchTerms) => {
     )
   }
 
-  const agreementVersion = await versionsModel
-    .findOne({ agreement: agreementsData._id })
+  logger.info(
+    { agreementNumber: agreementsData.agreementNumber },
+    'getAgreementData: searching for grant'
+  )
+  const grantData = await grantModel
+    .findOne({ agreementNumber: agreementsData.agreementNumber })
     .sort({ createdAt: -1, _id: -1 })
     .lean()
     .catch((err) => {
       throw Boom.internal(err)
     })
+
+  logger.info({ grantData }, 'getAgreementData: grant search result')
+
+  if (!grantData) {
+    logger.error(
+      { agreementNumber: agreementsData.agreementNumber },
+      'getAgreementData: grant not found for agreement'
+    )
+    throw Boom.notFound(
+      `Grant not found for agreement number ${agreementsData.agreementNumber}`
+    )
+  }
+
+  const agreementVersion = await versionsModel
+    .findOne({ grant: grantData._id })
+    .sort({ createdAt: -1, _id: -1 })
+    .lean()
+    .catch(() => {
+      throw Boom.notFound(
+        `No version was found in association with Grant Id ${grantData._id.toString()} for agreement Id ${grantData._id.toString()}`
+      )
+    })
+
+  logger.info(
+    { agreementVersion, grantId: grantData._id },
+    'getAgreementData: version search result'
+  )
 
   if (!agreementVersion) {
     throw Boom.notFound(

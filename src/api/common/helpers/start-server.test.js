@@ -41,7 +41,7 @@ describe('#startServer', () => {
     process.env = { ...PROCESS_ENV }
     process.env.PORT = '3098' // Set to obscure port to avoid conflicts
 
-    // Explicitly disable DB seeding for test consistency
+    // Explicitly disable DB seeding and migration for test consistency
     const { config } = await import('#~/config/index.js')
     config.set('featureFlags.seedDb', false)
 

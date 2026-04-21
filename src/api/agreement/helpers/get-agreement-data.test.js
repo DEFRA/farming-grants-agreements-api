@@ -1,7 +1,8 @@
-import { vi } from 'vitest'
+import { vi, describe, beforeEach, test, expect } from 'vitest'
 import Boom from '@hapi/boom'
 import versionsModel from '#~/api/common/models/versions.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
+import { config } from '#~/config/index.js'
 import {
   doesAgreementExist,
   getAgreementDataById,
@@ -10,7 +11,17 @@ import {
 
 vi.mock('@hapi/boom')
 vi.mock('#~/api/common/models/versions.js')
+vi.mock('#~/api/common/models/grant.js')
 vi.mock('#~/api/common/models/agreements.js')
+vi.mock('#~/config/index.js')
+vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
+  createLogger: () => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn()
+  })
+}))
 
 describe('getAgreementDataById', () => {
   const mockAgreement = {
@@ -36,6 +47,10 @@ describe('getAgreementDataById', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    config.get.mockImplementation(() => {
+      return null
+    })
 
     // Setup Boom mocks
     Boom.badRequest = vi.fn((message) => {
@@ -101,11 +116,18 @@ describe('getAgreementDataById', () => {
       ])
     })
 
-    versionsModel.findOne.mockReturnValue({
-      sort: () => ({
-        lean: () => Promise.resolve({ ...mockAgreement })
-      })
-    })
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const mockGrantFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ _id: 'grant-id' })
+    }
+    grantModel.findOne.mockReturnValue(mockGrantFindOne)
+
+    const mockVersionsFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ ...mockAgreement })
+    }
+    versionsModel.findOne.mockReturnValue(mockVersionsFindOne)
 
     // Act
     const result = await getAgreementDataById(agreementId)
@@ -117,8 +139,11 @@ describe('getAgreementDataById', () => {
       { $sort: { createdAt: -1, _id: -1 } },
       { $limit: 1 }
     ])
+    expect(grantModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: agreementId
+    })
     expect(versionsModel.findOne).toHaveBeenCalledWith({
-      agreement: mockGroup._id
+      grant: 'grant-id'
     })
     expect(result).toEqual({
       ...mockAgreement,
@@ -159,11 +184,18 @@ describe('getAgreementDataById', () => {
       catch: vi.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
     })
 
-    versionsModel.findOne.mockReturnValue({
-      sort: () => ({
-        lean: () => Promise.resolve({ ...mockAgreement })
-      })
-    })
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const mockGrantFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ _id: 'grant-id' })
+    }
+    grantModel.findOne.mockReturnValue(mockGrantFindOne)
+
+    const mockVersionsFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ ...mockAgreement })
+    }
+    versionsModel.findOne.mockReturnValue(mockVersionsFindOne)
 
     // Act
     const result = await getAgreementDataById(agreementId)
@@ -204,6 +236,10 @@ describe('getAgreementDataBySbi', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    config.get.mockImplementation(() => {
+      return null
+    })
 
     // Setup Boom mocks
     Boom.badRequest = vi.fn((message) => {
@@ -269,11 +305,18 @@ describe('getAgreementDataBySbi', () => {
       ])
     })
 
-    versionsModel.findOne.mockReturnValue({
-      sort: () => ({
-        lean: () => Promise.resolve({ ...mockAgreement })
-      })
-    })
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const mockGrantFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ _id: 'grant-id' })
+    }
+    grantModel.findOne.mockReturnValue(mockGrantFindOne)
+
+    const mockVersionsFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ ...mockAgreement })
+    }
+    versionsModel.findOne.mockReturnValue(mockVersionsFindOne)
 
     // Act
     const result = await getAgreementDataBySbi(sbi)
@@ -286,8 +329,12 @@ describe('getAgreementDataBySbi', () => {
       { $limit: 1 }
     ])
 
+    expect(grantModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: mockGroup.agreementNumber
+    })
+
     expect(versionsModel.findOne).toHaveBeenCalledWith({
-      agreement: mockGroup._id
+      grant: 'grant-id'
     })
 
     expect(result.identifiers.sbi).toBe(sbi) // value check
@@ -331,11 +378,18 @@ describe('getAgreementDataBySbi', () => {
       catch: vi.fn().mockResolvedValue([{ ...mockGroup, invoice: [] }])
     })
 
-    versionsModel.findOne.mockReturnValue({
-      sort: () => ({
-        lean: () => Promise.resolve({ ...mockAgreement })
-      })
-    })
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const mockGrantFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ _id: 'grant-id' })
+    }
+    grantModel.findOne.mockReturnValue(mockGrantFindOne)
+
+    const mockVersionsFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ ...mockAgreement })
+    }
+    versionsModel.findOne.mockReturnValue(mockVersionsFindOne)
 
     // Act
     const result = await getAgreementDataBySbi(sbi)
@@ -362,6 +416,10 @@ describe('doesAgreementExist', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    config.get.mockImplementation(() => {
+      return null
+    })
 
     // Setup Boom mocks
     Boom.internal = vi.fn((error) => {
@@ -471,5 +529,243 @@ describe('doesAgreementExist', () => {
       { $limit: 1 }
     ])
     expect(result).toBe(true)
+  })
+})
+
+describe('getAgreementData', () => {
+  const mockAgreement = {
+    agreementNumber: 'FPTT123456789',
+    agreementName: 'Test Agreement',
+    signatureDate: '1/1/2024'
+  }
+
+  const mockGroup = {
+    _id: '507f1f77bcf86cd799439011',
+    agreementNumber: 'FPTT123456789',
+    agreementName: 'Test Agreement'
+  }
+
+  const mockGrant = {
+    _id: '69e623df2d4ba43701cf5b1f',
+    name: 'FPTT',
+    agreementNumber: 'FPTT123456789'
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    config.get.mockImplementation(() => {
+      return null
+    })
+
+    // Setup Boom mocks
+    Boom.badRequest = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.notFound = vi.fn((message) => {
+      const error = new Error(message)
+      error.isBoom = true
+      return error
+    })
+    Boom.internal = vi.fn((error) => {
+      const boomError = new Error(error?.message || 'Internal server error')
+      boomError.isBoom = true
+      return boomError
+    })
+  })
+
+  test('should find agreement version using grantModel', async () => {
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const agreementId = 'FPTT123456789'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: vi.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [],
+          versions: [{ version: '1' }]
+        }
+      ])
+    })
+
+    const mockGrantFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue(mockGrant)
+    }
+    grantModel.findOne.mockReturnValue(mockGrantFindOne)
+
+    const mockVersionsFindOne = {
+      sort: vi.fn().mockReturnThis(),
+      lean: vi.fn().mockResolvedValue({ ...mockAgreement })
+    }
+    versionsModel.findOne.mockReturnValue(mockVersionsFindOne)
+
+    const result = await getAgreementDataById(agreementId)
+
+    expect(grantModel.findOne).toHaveBeenCalledWith({
+      agreementNumber: mockGroup.agreementNumber
+    })
+    expect(versionsModel.findOne).toHaveBeenCalledWith({
+      grant: mockGrant._id
+    })
+    expect(result).toBeDefined()
+    expect(result.agreementNumber).toBe(mockGroup.agreementNumber)
+  })
+
+  test('should throw Boom.internal when grantModel.findOne throws', async () => {
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const agreementId = 'FPTT123456789'
+    const mockError = new Error('Database error')
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: vi.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [],
+          versions: [{ version: '1' }]
+        }
+      ])
+    })
+
+    grantModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => ({
+          catch: (cb) => Promise.reject(cb(mockError))
+        })
+      })
+    })
+
+    const boomError = new Error('Boom internal error')
+    boomError.isBoom = true
+    Boom.internal.mockReturnValue(boomError)
+
+    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
+      'Boom internal error'
+    )
+    expect(Boom.internal).toHaveBeenCalledWith(mockError)
+  })
+
+  test('should throw Boom.notFound when grantData is not found', async () => {
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const agreementId = 'FPTT123456789'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: vi.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [],
+          versions: [{ version: '1' }]
+        }
+      ])
+    })
+
+    grantModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => ({
+          catch: () => Promise.resolve(null)
+        })
+      })
+    })
+
+    const boomError = new Error(
+      `Grant not found for agreement number ${agreementId}`
+    )
+    boomError.isBoom = true
+    Boom.notFound.mockReturnValue(boomError)
+
+    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
+      `Grant not found for agreement number ${agreementId}`
+    )
+    expect(Boom.notFound).toHaveBeenCalledWith(
+      `Grant not found for agreement number ${agreementId}`
+    )
+  })
+
+  test('should throw Boom.internal when versionsModel.findOne throws', async () => {
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const agreementId = 'FPTT123456789'
+    const mockError = new Error('Database error')
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: vi.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [],
+          versions: [{ version: '1' }]
+        }
+      ])
+    })
+
+    grantModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => ({
+          catch: () => Promise.resolve(mockGrant)
+        })
+      })
+    })
+
+    versionsModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => ({
+          catch: (cb) => Promise.reject(cb(mockError))
+        })
+      })
+    })
+
+    const boomError = new Error(
+      `No version was found in association with Grant Id ${mockGrant._id.toString()} for agreement Id ${mockGrant._id.toString()}`
+    )
+    boomError.isBoom = true
+    Boom.notFound.mockReturnValue(boomError)
+
+    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
+      `No version was found in association with Grant Id ${mockGrant._id.toString()} for agreement Id ${mockGrant._id.toString()}`
+    )
+    expect(Boom.notFound).toHaveBeenCalledWith(
+      `No version was found in association with Grant Id ${mockGrant._id.toString()} for agreement Id ${mockGrant._id.toString()}`
+    )
+  })
+
+  test('should throw Boom.notFound when agreement version is not found', async () => {
+    const grantModel = (await import('#~/api/common/models/grant.js')).default
+    const agreementId = 'FPTT123456789'
+
+    agreementsModel.aggregate.mockReturnValue({
+      catch: vi.fn().mockResolvedValue([
+        {
+          ...mockGroup,
+          invoice: [],
+          versions: [{ version: '1' }]
+        }
+      ])
+    })
+
+    grantModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => ({
+          catch: () => Promise.resolve(mockGrant)
+        })
+      })
+    })
+
+    versionsModel.findOne.mockReturnValue({
+      sort: () => ({
+        lean: () => ({
+          catch: () => Promise.resolve(null)
+        })
+      })
+    })
+
+    const boomError = new Error(
+      `Agreement version not found associated with the agreement Id ${mockGroup._id}`
+    )
+    boomError.isBoom = true
+    Boom.notFound.mockReturnValue(boomError)
+
+    await expect(getAgreementDataById(agreementId)).rejects.toThrow(
+      `Agreement version not found associated with the agreement Id ${mockGroup._id}`
+    )
   })
 })

@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
 
-import agreementsModel from '#~/api/common/models/agreements.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 /**
  * Unaccepts an agreement and changes its status back to Offered
@@ -15,11 +15,12 @@ async function unacceptOffer(agreementId) {
     }
   }
 
-  await agreementsModel
-    .updateOneAgreementVersion({ agreementNumber: agreementId }, update)
-    .catch((error) => {
-      throw Boom.internal(error)
-    })
+  await updateAgreementWithVersionViaGrant(
+    { agreementNumber: agreementId },
+    update
+  ).catch((error) => {
+    throw Boom.internal(error)
+  })
 
   return { success: true, updatedVersions: 1 }
 }
