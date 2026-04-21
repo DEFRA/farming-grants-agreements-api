@@ -3,8 +3,8 @@ import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
-import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { auditEvent, AuditEvent } from '#~/api/common/helpers/audit-event.js'
+import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 
 /**
  * Controller to accept agreement offer
@@ -27,21 +27,11 @@ const acceptOfferController = async (request, h) => {
 
     let claimId
     try {
-      const grantPaymentsData = await createGrantPaymentFromAgreement(
-        agreementNumber,
+      const grantPaymentsData = await sendGrantPaymentEvent(
+        agreementData,
         request.logger
       )
       claimId = grantPaymentsData.claimId
-
-      await publishEvent(
-        {
-          topicArn: config.get('aws.sns.topic.createPayment.arn'),
-          type: config.get('aws.sns.topic.createPayment.type'),
-          time: new Date().toISOString(),
-          data: grantPaymentsData
-        },
-        request.logger
-      )
     } catch (err) {
       // If payments hub has an error rollback the previous accept offer
       await unacceptOffer(agreementNumber)

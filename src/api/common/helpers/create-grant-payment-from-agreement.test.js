@@ -1,15 +1,11 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
-import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 
 vi.mock('node:crypto', () => ({
   randomUUID: vi.fn()
-}))
-vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
-  getAgreementDataById: vi.fn()
 }))
 vi.mock(
   '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js',
@@ -76,18 +72,16 @@ describe('createGrantPaymentFromAgreement', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(randomUUID).mockReturnValue('generated-payment-correlation-id')
-    vi.mocked(getAgreementDataById).mockResolvedValue(mockAgreementData)
     vi.mocked(getClaimId).mockResolvedValue('R00000001')
     vi.mocked(generateInvoiceNumber).mockReturnValue('R00000001-V001Q2')
   })
 
   it('should create grant payment from agreement', async () => {
     const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
+      mockAgreementData,
       logger
     )
 
-    expect(getAgreementDataById).toHaveBeenCalledWith(agreementNumber)
     expect(getClaimId).toHaveBeenCalledWith(agreementNumber, mockAgreementData)
     expect(generateInvoiceNumber).toHaveBeenCalledWith('R00000001', 1)
 
@@ -143,10 +137,9 @@ describe('createGrantPaymentFromAgreement', () => {
         currency: undefined
       }
     }
-    vi.mocked(getAgreementDataById).mockResolvedValue(agreementDataNoCurrency)
 
     const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
+      agreementDataNoCurrency,
       logger
     )
 
@@ -155,7 +148,7 @@ describe('createGrantPaymentFromAgreement', () => {
 
   it('should handle missing logger gracefully', async () => {
     await expect(
-      createGrantPaymentFromAgreement(agreementNumber)
+      createGrantPaymentFromAgreement(mockAgreementData)
     ).resolves.toBeDefined()
   })
 
@@ -179,12 +172,8 @@ describe('createGrantPaymentFromAgreement', () => {
       }
     }
 
-    vi.mocked(getAgreementDataById).mockResolvedValue(
-      agreementDataWithoutPaymentCorrelationId
-    )
-
     const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
+      agreementDataWithoutPaymentCorrelationId,
       logger
     )
 
@@ -204,7 +193,7 @@ describe('createGrantPaymentFromAgreement', () => {
   })
 
   it('should tolerate missing parcel and agreement-level item metadata', async () => {
-    vi.mocked(getAgreementDataById).mockResolvedValue({
+    const agreementData = {
       ...mockAgreementData,
       payment: {
         ...mockAgreementData.payment,
@@ -226,12 +215,9 @@ describe('createGrantPaymentFromAgreement', () => {
           }
         ]
       }
-    })
+    }
 
-    const result = await createGrantPaymentFromAgreement(
-      agreementNumber,
-      logger
-    )
+    const result = await createGrantPaymentFromAgreement(agreementData, logger)
 
     expect(result.grants[0].payments[0].invoiceLines).toEqual([
       {

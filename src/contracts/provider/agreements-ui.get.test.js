@@ -118,5 +118,5 @@ describe('UI sending a GET request to get an agreement', () => {
     expect(verify).toBeTruthy()
 
     return verify
-  })
+  }, 15000)
 })

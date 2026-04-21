@@ -1,4 +1,3 @@
-import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 import { randomUUID } from 'node:crypto'
@@ -77,19 +76,18 @@ const createPayments = (agreementData) => {
 
 /**
  * Creates a grant payment object from agreement data.
- * @param {string} agreementNumber - The agreement number.
+ * @param {object} agreementData - The agreement data.
  * @param {object} [logger] - Optional logger.
  * @returns {Promise<object>} The grant payment object.
  */
 export const createGrantPaymentFromAgreement = async (
-  agreementNumber,
+  agreementData,
   logger
 ) => {
-  const agreementData = await getAgreementDataById(agreementNumber)
-
   const payments = createPayments(agreementData)
 
   const {
+    agreementNumber,
     payment: { agreementTotalPence, currency = 'GBP' },
     originalInvoiceNumber,
     identifiers: { sbi, frn } = {},

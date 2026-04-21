@@ -18,6 +18,7 @@ import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publ
 import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
+import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
@@ -34,6 +35,7 @@ vi.mock(
 vi.mock('#~/api/common/helpers/jwt-auth.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
 vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
+vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
 
 const localPactDir = path.resolve(
   process.cwd(),
@@ -64,6 +66,7 @@ const setupMocks = () => {
   cancelOffer.mockReset()
   terminateAgreement.mockReset()
   getAgreementDataBySbi.mockReset()
+  sendGrantPaymentEvent.mockReset()
 
   acceptOffer.mockResolvedValue({
     ...mockAgreementData,
@@ -71,6 +74,10 @@ const setupMocks = () => {
     status: 'accepted'
   })
   unacceptOffer.mockResolvedValue()
+
+  sendGrantPaymentEvent.mockResolvedValue({
+    claimId: 'R00000001'
+  })
 
   withdrawOffer.mockResolvedValue({
     agreement: { agreementNumber: 'FPTT123456789' },

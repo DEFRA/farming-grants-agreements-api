@@ -18,7 +18,9 @@ describe('#healthController', () => {
     config.set('featureFlags', {
       someFlag: true,
       seedDb: false,
-      testEndpoints: false
+      testEndpoints: false,
+      isJwtEnabled: true,
+      sendUnsentGPSEvents: false
     })
 
     // import createServer after mongoose is mocked so controller picks up the mock
@@ -49,7 +51,13 @@ describe('#healthController', () => {
       expect(result).toEqual({
         message: 'success',
         version: 'versionMock',
-        featureFlags: { someFlag: true, seedDb: false, testEndpoints: false }
+        featureFlags: {
+          someFlag: true,
+          seedDb: false,
+          testEndpoints: false,
+          isJwtEnabled: true,
+          sendUnsentGPSEvents: false
+        }
       })
       expect(statusCode).toBe(statusCodes.ok)
     })
