@@ -19,6 +19,7 @@ import { createSqsClientPlugin } from '#~/api/common/helpers/sqs-client.js'
 import { handleCreateAgreementEvent } from './common/helpers/sqs-message-processor/create-agreement.js'
 import { handleUpdateAgreementEvent } from './common/helpers/sqs-message-processor/update-agreement.js'
 import { returnDataHandlerPlugin } from './common/helpers/return-data-handler.js'
+import { sendUnsetGPSEventsPlugin } from './common/helpers/send-unsent-gps-events.js'
 
 function getServerConfig() {
   return {
@@ -114,7 +115,8 @@ function getPlugins(serverOptions) {
                 )
               ]),
           errorHandlerPlugin,
-          returnDataHandlerPlugin
+          returnDataHandlerPlugin,
+          sendUnsetGPSEventsPlugin
         ]),
     router
   ].filter(Boolean)
