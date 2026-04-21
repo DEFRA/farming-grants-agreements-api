@@ -197,6 +197,15 @@ const config = convict({
             default: 'io.onsite.agreement.create-payment',
             env: 'SNS_TOPIC_TYPE_CREATE_PAYMENT'
           }
+        },
+        audit: {
+          arn: {
+            doc: 'AWS SNS Topic ARN for audit events',
+            format: String,
+            default:
+              'arn:aws:sns:eu-west-2:000000000000:fcp_audit_farming_grants_agreements_api',
+            env: 'SNS_TOPIC_ARN_AUDIT'
+          }
         }
       }
     }

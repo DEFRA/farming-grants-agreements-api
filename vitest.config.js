@@ -29,6 +29,7 @@ export default defineConfig({
         '**test-helper**'
       ]
     },
+    hookTimeout: 30000,
     setupFiles: ['./.vitest/setup.js'],
     globalSetup: './.vitest/global-setup.js'
   }

@@ -18,6 +18,14 @@ declare -A TOPICS=(
   [create_agreement_pdf_fifo.fifo]="agreement_status_updated_fifo.fifo"     # - Used to generate the PDF of the agreement
 )
 
+# Standard (non-FIFO) SNS topics we publish to
+STANDARD_TOPICS=(
+  fcp_audit_farming_grants_agreements_api
+  fcp_audit_farming_grants_agreements_ui
+  fcp_audit_farming_grants_agreements_pdf
+  fcp_audit_grants_payment_service
+)
+
 # Associative arrays for ARNs and URLs
 declare -A TOPIC_ARNS
 declare -A QUEUE_URLS
@@ -31,6 +39,12 @@ ENDPOINT="${AWS_ENDPOINT:-http://floci:4566}"
 run() {
   aws --endpoint-url "$ENDPOINT" "$@"
 }
+
+# Create standard SNS topics
+for topic_name in "${STANDARD_TOPICS[@]}"; do
+  arn="$(run sns create-topic --name "$topic_name" --query 'TopicArn' --output text)"
+  echo "✅ Created standard topic: $arn"
+done
 
 # Create SNS topics
 for key in "${!TOPICS[@]}"; do
