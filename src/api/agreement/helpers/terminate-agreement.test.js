@@ -1,8 +1,8 @@
 import { vi } from 'vitest'
 import Boom from '@hapi/boom'
-import agreementModel from '#~/api/common/models/agreements.js'
 
 import { terminateAgreement } from './terminate-agreement.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 vi.mock('@hapi/boom')
 vi.mock('#~/api/common/models/agreements.js', () => ({
@@ -11,6 +11,7 @@ vi.mock('#~/api/common/models/agreements.js', () => ({
     updateOneAgreementVersion: vi.fn()
   }
 }))
+vi.mock('#~/api/agreement/helpers/update-agreement-with-version-via-grant.js')
 
 describe('terminateAgreement', () => {
   beforeEach(() => {
@@ -28,11 +29,11 @@ describe('terminateAgreement', () => {
     const agreementNumber = 'FPTT123456789'
     const mockResult = { modifiedCount: 1 }
 
-    agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)
+    updateAgreementWithVersionViaGrant.mockResolvedValueOnce(mockResult)
 
     const result = await terminateAgreement(clientRef, agreementNumber)
 
-    expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       {
         status: 'accepted',
         clientRef,
@@ -47,12 +48,12 @@ describe('terminateAgreement', () => {
     expect(result).toEqual(mockResult)
   })
 
-  test('should throw Boom.internal when updateOneAgreementVersion fails', async () => {
+  test('should throw Boom.internal when updateAgreementWithVersionViaGrant fails', async () => {
     const clientRef = 'client-ref-001'
     const agreementNumber = 'FPTT123456789'
     const error = new Error('Database error')
 
-    agreementModel.updateOneAgreementVersion.mockRejectedValueOnce(error)
+    updateAgreementWithVersionViaGrant.mockRejectedValueOnce(error)
     Boom.internal.mockReturnValue(
       new Error(
         'Agreement is not in the correct state to be terminated or was not found'
@@ -76,11 +77,11 @@ describe('terminateAgreement', () => {
     const agreementNumber = 'FPTT987654321'
     const mockResult = { modifiedCount: 1 }
 
-    agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)
+    updateAgreementWithVersionViaGrant.mockResolvedValueOnce(mockResult)
 
     const result = await terminateAgreement(clientRef, agreementNumber)
 
-    expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       {
         status: 'accepted',
         clientRef,

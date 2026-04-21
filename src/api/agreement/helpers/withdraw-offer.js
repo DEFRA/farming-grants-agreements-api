@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import agreementsModel from '#~/api/common/models/agreements.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 /**
  * Withdraws an offer
@@ -7,25 +7,24 @@ import agreementsModel from '#~/api/common/models/agreements.js'
  * @param {string} agreementNumber - The agreement number of the offer to update
  * @returns {Promise<object>} If the offer was successfully withdrawn
  */
-const withdrawOffer = (clientRef, agreementNumber) =>
-  agreementsModel
-    .updateOneAgreementVersion(
-      {
-        status: 'offered',
-        clientRef,
-        agreementNumber
-      },
-      {
-        $set: {
-          status: 'withdrawn'
-        }
+const withdrawOffer = (clientRef, agreementNumber) => {
+  return updateAgreementWithVersionViaGrant(
+    {
+      status: 'offered',
+      clientRef,
+      agreementNumber
+    },
+    {
+      $set: {
+        status: 'withdrawn'
       }
+    }
+  ).catch((error) => {
+    throw Boom.internal(
+      'Offer is not in the correct state to be withdrawn or was not found',
+      error
     )
-    .catch((error) => {
-      throw Boom.internal(
-        'Offer is not in the correct state to be withdrawn or was not found',
-        error
-      )
-    })
+  })
+}
 
 export { withdrawOffer }

@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import agreementsModel from '#~/api/common/models/agreements.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 /**
  * Terminates an agreement
@@ -7,25 +7,24 @@ import agreementsModel from '#~/api/common/models/agreements.js'
  * @param {string} agreementNumber - The agreement number of the agreement to update
  * @returns {Promise<object>} If the agreement was successfully terminated
  */
-const terminateAgreement = (clientRef, agreementNumber) =>
-  agreementsModel
-    .updateOneAgreementVersion(
-      {
-        status: 'accepted',
-        clientRef,
-        agreementNumber
-      },
-      {
-        $set: {
-          status: 'terminated'
-        }
+const terminateAgreement = (clientRef, agreementNumber) => {
+  return updateAgreementWithVersionViaGrant(
+    {
+      status: 'accepted',
+      clientRef,
+      agreementNumber
+    },
+    {
+      $set: {
+        status: 'terminated'
       }
+    }
+  ).catch((error) => {
+    throw Boom.internal(
+      'Agreement is not in the correct state to be terminated or was not found',
+      error
     )
-    .catch((error) => {
-      throw Boom.internal(
-        'Agreement is not in the correct state to be terminated or was not found',
-        error
-      )
-    })
+  })
+}
 
 export { terminateAgreement }

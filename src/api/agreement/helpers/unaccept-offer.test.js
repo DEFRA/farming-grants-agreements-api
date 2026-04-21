@@ -1,10 +1,10 @@
 import { vi } from 'vitest'
 
 import Boom from '@hapi/boom'
-import agreementsModel from '#~/api/common/models/agreements.js'
 
 // Import the module after setting up the mocks
 import { unacceptOffer } from './unaccept-offer.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 vi.mock('@hapi/boom')
 vi.mock('#~/api/common/models/agreements.js', () => ({
@@ -13,6 +13,7 @@ vi.mock('#~/api/common/models/agreements.js', () => ({
     updateOneAgreementVersion: vi.fn()
   }
 }))
+vi.mock('#~/api/agreement/helpers/update-agreement-with-version-via-grant.js')
 
 describe('unacceptOffer', () => {
   beforeAll(() => {
@@ -39,27 +40,25 @@ describe('unacceptOffer', () => {
     const agreementId = 'FPTT123456789'
     const updateResult = { modifiedCount: 1 }
 
-    agreementsModel.updateOneAgreementVersion.mockResolvedValueOnce(
-      updateResult
-    )
+    updateAgreementWithVersionViaGrant.mockResolvedValueOnce(updateResult)
 
     // Act
     const result = await unacceptOffer(agreementId)
 
     // Assert
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       { $set: { status: 'offered', signatureDate: null } }
     )
     expect(result).toEqual({ success: true, updatedVersions: 1 })
   })
 
-  test('should throw a boom error when updateOneAgreementVersion fails', async () => {
+  test('should throw a boom error when updateAgreementWithVersionViaGrant fails', async () => {
     // Arrange
     const agreementId = 'FPTT123456789'
     const mockError = 'Mock error'
 
-    agreementsModel.updateOneAgreementVersion.mockRejectedValueOnce(mockError)
+    updateAgreementWithVersionViaGrant.mockRejectedValueOnce(mockError)
     Boom.internal.mockReturnValue(new Error('Mock error'))
 
     // Act
