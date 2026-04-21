@@ -1689,8 +1689,9 @@ describe('createOffer', () => {
       }
     })
 
-    const { createOffer: createOfferUnderTest } =
-      await import('./create-offer.js')
+    const { createOffer: createOfferUnderTest } = await import(
+      './create-offer.js'
+      )
 
     // Create a payload that will trigger conversion
     const payloadWithParcels = {
