@@ -164,9 +164,11 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
   test('includes accounts when sbi/frn/crn are provided in context', () => {
     const context = {
       agreementNumber: 'FPTT123456789',
-      sbi: 123456789,
-      frn: 9876543210,
-      crn: 'CRN001'
+      identifiers: {
+        sbi: 123456789,
+        frn: 9876543210,
+        crn: 'CRN001'
+      }
     }
 
     auditEvent(

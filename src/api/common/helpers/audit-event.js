@@ -106,9 +106,9 @@ const buildAuditPayload = (
       }
     ],
     accounts: {
-      sbi: context.sbi,
-      frn: context.frn,
-      crn: context.crn
+      sbi: context.identifiers?.sbi,
+      frn: context.identifiers?.frn,
+      crn: context.identifiers?.crn
     },
     status,
     details: context
