@@ -89,10 +89,10 @@ describe('createGrantPaymentFromAgreement', () => {
       sbi: 'SBI123',
       frn: 'FRN456',
       claimId: 'R00000001',
-      scheme: 'SFI',
       grants: [
         {
           sourceSystem: 'FPTT',
+          scheme: 'SFI',
           deliveryBody: 'RP00',
           paymentRequestNumber: 1,
           correlationId: '123e4567-e89b-12d3-a456-426614174000',

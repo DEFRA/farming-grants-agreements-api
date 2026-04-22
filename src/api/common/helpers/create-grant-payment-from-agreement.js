@@ -102,10 +102,10 @@ export const createGrantPaymentFromAgreement = async (
     sbi,
     frn,
     claimId,
-    scheme: 'SFI',
     grants: [
       {
         sourceSystem: 'FPTT',
+        scheme: 'SFI',
         deliveryBody: 'RP00',
         paymentRequestNumber,
         correlationId,
