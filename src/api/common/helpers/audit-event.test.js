@@ -91,6 +91,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       AuditEvent.PDF_DOWNLOADED_FROM_S3,
       context,
       'success',
+      undefined,
       mockSnsClient
     )
 
@@ -110,6 +111,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       AuditEvent.PDF_DOWNLOADED_FROM_S3,
       { agreementNumber: 'FPTT123456789' },
       'success',
+      undefined,
       mockSnsClient
     )
 
@@ -140,6 +142,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       AuditEvent.PDF_DOWNLOADED_FROM_S3,
       context,
       'success',
+      undefined,
       mockSnsClient
     )
 
@@ -170,6 +173,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       AuditEvent.PDF_DOWNLOADED_FROM_S3,
       context,
       'success',
+      undefined,
       mockSnsClient
     )
 
@@ -183,7 +187,13 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
   })
 
   test('passes failure status through to the audit payload', () => {
-    auditEvent(AuditEvent.PDF_DOWNLOADED_FROM_S3, {}, 'failure', mockSnsClient)
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      {},
+      'failure',
+      undefined,
+      mockSnsClient
+    )
 
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -197,6 +207,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       AuditEvent.PDF_DOWNLOADED_FROM_S3,
       undefined,
       'success',
+      undefined,
       mockSnsClient
     )
 
@@ -220,10 +231,65 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       AuditEvent.PDF_DOWNLOADED_FROM_S3,
       context,
       'success',
+      undefined,
       mockSnsClient
     )
 
     expect(mockSnsClient.send).toHaveBeenCalledWith(expect.any(Object))
+  })
+
+  test('extracts ip from x-forwarded-for header', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      { headers: { 'x-forwarded-for': '10.0.0.1' } },
+      mockSnsClient
+    )
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '10.0.0.1' })
+    )
+  })
+
+  test('uses first ip when x-forwarded-for contains multiple addresses', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      { headers: { 'x-forwarded-for': '10.0.0.1, 10.0.0.2, 10.0.0.3' } },
+      mockSnsClient
+    )
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '10.0.0.1' })
+    )
+  })
+
+  test('falls back to remoteAddress when x-forwarded-for is absent', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      { headers: {}, info: { remoteAddress: '192.168.1.1' } },
+      mockSnsClient
+    )
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '192.168.1.1' })
+    )
+  })
+
+  test('defaults ip to empty string when no request provided', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      undefined,
+      mockSnsClient
+    )
+
+    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ ip: '' }))
   })
 
   test('does not throw when SNS publish fails', () => {
@@ -234,6 +300,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
         AuditEvent.PDF_DOWNLOADED_FROM_S3,
         { agreementNumber: 'FPTT123456789' },
         'success',
+        undefined,
         mockSnsClient
       )
     ).not.toThrow()
@@ -267,6 +334,7 @@ describe('auditEvent - AGREEMENT_CREATED', () => {
       AuditEvent.AGREEMENT_CREATED,
       { agreementNumber: 'FPTT123456789' },
       'success',
+      undefined,
       mockSnsClient
     )
 
@@ -290,7 +358,13 @@ describe('auditEvent - AGREEMENT_CREATED', () => {
       correlationId: 'corr-xyz'
     }
 
-    auditEvent(AuditEvent.AGREEMENT_CREATED, context, 'success', mockSnsClient)
+    auditEvent(
+      AuditEvent.AGREEMENT_CREATED,
+      context,
+      'success',
+      undefined,
+      mockSnsClient
+    )
 
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -335,6 +409,7 @@ describe('auditEvent - AGREEMENT_UPDATED', () => {
       AuditEvent.AGREEMENT_UPDATED,
       { agreementNumber: 'FPTT123456789' },
       'success',
+      undefined,
       mockSnsClient
     )
 
@@ -358,7 +433,13 @@ describe('auditEvent - AGREEMENT_UPDATED', () => {
       correlationId: 'corr-xyz'
     }
 
-    auditEvent(AuditEvent.AGREEMENT_UPDATED, context, 'success', mockSnsClient)
+    auditEvent(
+      AuditEvent.AGREEMENT_UPDATED,
+      context,
+      'success',
+      undefined,
+      mockSnsClient
+    )
 
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
