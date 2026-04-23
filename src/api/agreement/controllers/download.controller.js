@@ -45,13 +45,18 @@ export const downloadController = async (request, h) => {
       throw Boom.notFound('Agreement PDF not found')
     }
 
-    auditEvent(AuditEvent.PDF_DOWNLOADED_FROM_S3, {
-      agreementNumber: agreementId,
-      version,
-      key,
-      bucket,
-      correlationId: agreementData?.correlationId
-    })
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      {
+        agreementNumber: agreementId,
+        version,
+        key,
+        bucket,
+        correlationId: agreementData?.correlationId
+      },
+      'success',
+      request
+    )
 
     return h
       .response(stream)

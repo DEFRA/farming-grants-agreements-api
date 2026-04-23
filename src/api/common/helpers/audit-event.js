@@ -61,20 +61,31 @@ const snsClient = new SNSClient(
     : {}
 )
 
+const extractIp = (request) =>
+  request?.headers?.['x-forwarded-for']?.split(',')[0].trim() ||
+  request?.info?.remoteAddress ||
+  ''
+
 /**
  * Builds the full audit payload for an agreement operation.
  * @param {AuditEvent} event
  * @param {{ agreementNumber?: string, correlationId?: string, sbi?: string|number, frn?: string|number, crn?: string|number }} context
  * @param {'success'|'failure'} status
+ * @param {string} [ip]
  */
-const buildAuditPayload = (event, context = {}, status = 'success') => ({
+const buildAuditPayload = (
+  event,
+  context = {},
+  status = 'success',
+  ip = ''
+) => ({
   correlationid: context.correlationId,
   datetime: new Date().toISOString(),
   environment: config.get('env'),
   version: '0.1.0',
   application: 'Grants',
   component: config.get('serviceName'),
-
+  ip,
   security: {
     pmccode: eventPmcCodes[event],
     priority: '0',
@@ -95,9 +106,9 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
       }
     ],
     accounts: {
-      sbi: context.sbi,
-      frn: context.frn,
-      crn: context.crn
+      sbi: context.identifiers?.sbi,
+      frn: context.identifiers?.frn,
+      crn: context.identifiers?.crn
     },
     status,
     details: context
@@ -109,15 +120,18 @@ const buildAuditPayload = (event, context = {}, status = 'success') => ({
  * @param {AuditEvent} event
  * @param {{ agreementNumber?: string, correlationId?: string, sbi?: string|number, frn?: string|number, crn?: string|number }} context
  * @param {'success'|'failure'} [status]
+ * @param {object} [request] - Hapi request object, used to extract the originating client IP
  * @param {object} [client] - SNS client, injectable for testing
  */
 export const auditEvent = (
   event,
   context = {},
   status = 'success',
+  request = null,
   client = snsClient
 ) => {
-  const payload = buildAuditPayload(event, context, status)
+  const payload = buildAuditPayload(event, context, status, extractIp(request))
+
   audit(payload)
 
   client

@@ -205,7 +205,9 @@ describe('acceptOfferDocumentController', () => {
       expect.objectContaining({
         agreementNumber: 'FPTT123456789',
         status: 'accepted'
-      })
+      }),
+      'success',
+      expect.anything()
     )
   })
 
@@ -366,7 +368,8 @@ describe('acceptOfferDocumentController', () => {
         agreementNumber: 'FPTT123456789',
         message: 'Payment hub request failed'
       }),
-      'failure'
+      'failure',
+      expect.anything()
     )
   })
 })

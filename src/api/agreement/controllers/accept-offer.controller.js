@@ -42,7 +42,8 @@ const acceptOfferController = async (request, h) => {
           correlationId: agreementData?.correlationId,
           message: err.message
         },
-        'failure'
+        'failure',
+        request
       )
       throw err
     }
@@ -70,10 +71,12 @@ const acceptOfferController = async (request, h) => {
       request.logger
     )
 
-    auditEvent(AuditEvent.AGREEMENT_CREATED, {
-      ...agreementData,
-      agreementNumber
-    })
+    auditEvent(
+      AuditEvent.AGREEMENT_CREATED,
+      { ...agreementData, agreementNumber },
+      'success',
+      request
+    )
   }
 
   // Return JSON response with agreement data
