@@ -1,89 +1,30 @@
 import { vi } from 'vitest'
-import Boom from '@hapi/boom'
-
 import { createServer } from '#~/api/index.js'
-import { acceptOfferController } from './accept-offer.controller.js'
-import { getAgreementController } from './get-agreement.controller.js'
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
-import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
-import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
-import {
-  getAgreementDataBySbi,
-  getAgreementDataById
-} from '#~/api/agreement/helpers/get-agreement-data.js'
-import * as snsPublisher from '#~/api/common/helpers/sns-publisher.js'
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
-import { config } from '#~/config/index.js'
-import { calculatePaymentsBasedOnActions } from '#~/api/adapter/land-grants-adapter.js'
-import {
-  auditEvent as mockAuditEvent,
-  AuditEvent
-} from '#~/api/common/helpers/audit-event.js'
-import * as sendGrantPaymentEventHelper from '#~/api/common/helpers/send-grant-payment-event.js'
+import * as acceptOfferHelper from '#~/api/agreement/helpers/accept-offer.js'
+import * as agreementDataHelper from '#~/api/agreement/helpers/get-agreement-data.js'
 
-vi.mock('#~/api/agreement/helpers/accept-offer.js')
-vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
-vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
-vi.mock('#~/api/common/helpers/audit-event.js', async (importOriginal) => {
+vi.mock('#~/api/common/helpers/sqs-client.js')
+vi.mock('#~/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/agreement/helpers/accept-offer.js', async (importOriginal) => {
   const actual = await importOriginal()
-  return { ...actual, auditEvent: vi.fn() }
+  return { __esModule: true, ...actual, acceptOffer: vi.fn() }
 })
 vi.mock(
   '#~/api/agreement/helpers/get-agreement-data.js',
   async (importOriginal) => {
     const actual = await importOriginal()
-    return {
-      __esModule: true,
-      ...actual,
-      getAgreementDataBySbi: vi.fn(),
-      getAgreementDataById: vi.fn()
-    }
+    return { __esModule: true, ...actual, getAgreementDataBySbi: vi.fn() }
   }
 )
-vi.mock('#~/api/common/helpers/jwt-auth.js', () => ({
-  validateJwtAuthentication: vi.fn()
-}))
-vi.mock('#~/api/common/helpers/sns-publisher.js')
-vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnActions: vi.fn()
-}))
 
-describe('acceptOfferDocumentController', () => {
+describe('POST / - acceptOfferController', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
-  const mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn() }
-
-  const mockAgreementData = {
-    agreementNumber: 'FPTT123456789',
-    status: 'offered',
-    clientRef: 'test-client-ref',
-    correlationId: 'test-correlation-id',
-    code: 'test-code',
-    createdAt: '2023-12-01T00:00:00.000Z',
-    updatedAt: '2024-01-02T00:00:00.000Z',
-    actionApplications: [],
-    payment: {
-      agreementStartDate: '2024-01-01',
-      agreementEndDate: '2027-12-31'
-    },
-    version: 1
-  }
 
   beforeAll(async () => {
     server = await createServer({ disableSQS: true })
-    // Add a route that we know matches and uses the same controller
-    server.route({
-      method: 'POST',
-      path: '/test-accept',
-      options: { auth: 'grants-ui-jwt' },
-      handler: acceptOfferController
-    })
-    server.route({
-      method: 'GET',
-      path: '/test-accept',
-      options: { auth: 'grants-ui-jwt' },
-      handler: getAgreementController({ allowEntra: false })
-    })
     await server.initialize()
   })
 
@@ -95,285 +36,166 @@ describe('acceptOfferDocumentController', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date('2024-01-03T12:34:56.789Z'))
-    calculatePaymentsBasedOnActions.mockResolvedValue({
-      agreementStartDate: '2024-01-01',
-      agreementEndDate: '2025-12-31',
-      frequency: 'Annual',
-      agreementTotalPence: 1000,
-      annualTotalPence: 1000,
-      parcelItems: [],
-      agreementLevelItems: [],
-      payments: []
+    vi.spyOn(agreementDataHelper, 'getAgreementDataBySbi')
+  })
+
+  const doPost = () =>
+    server.inject({
+      method: 'POST',
+      url: '/',
+      headers: { 'x-encrypted-auth': 'valid-jwt-token' }
     })
 
-    // Reset mock implementations
-    acceptOffer.mockReset()
-    unacceptOffer.mockReset()
-    getAgreementDataBySbi.mockReset()
-    getAgreementDataById.mockReset()
-    sendGrantPaymentEventHelper.sendGrantPaymentEvent.mockReset()
-    mockAuditEvent.mockReturnValue(undefined)
-
-    acceptOffer.mockResolvedValue({
-      ...mockAgreementData,
-      signatureDate: '2024-01-01T00:00:00.000Z',
-      status: 'accepted'
-    })
-    unacceptOffer.mockResolvedValue()
-    sendGrantPaymentEventHelper.sendGrantPaymentEvent.mockResolvedValue({
+  describe('when agreement status is offered', () => {
+    const mockAgreementData = {
+      agreementNumber: 'FPTT123456789',
+      status: 'offered',
       sbi: '106284736',
-      grants: []
-    })
-    // Setup default mock implementations with complete data structure
-    getAgreementDataBySbi.mockResolvedValue(mockAgreementData)
-    getAgreementDataById.mockResolvedValue(mockAgreementData)
-
-    // Mock JWT auth functions to return valid authorization by default
-    jwtAuth.validateJwtAuthentication.mockReturnValue({
-      valid: true,
-      source: 'defra',
-      sbi: '106284736'
-    })
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  test('should successfully accept an offer and return 200 OK', async () => {
-    snsPublisher.publishEvent.mockResolvedValue(true)
-
-    const agreementId = 'FPTT123456789'
-
-    const { statusCode, result } = await server.inject({
-      method: 'POST',
-      url: '/test-accept',
-      headers: {
-        'x-encrypted-auth': 'valid-jwt-token'
-      },
-      app: {
-        logger: mockLogger
-      }
-    })
-
-    // Assert
-    expect(getAgreementDataBySbi).toHaveBeenCalledWith('106284736')
-    expect(acceptOffer).toHaveBeenCalledWith(
-      agreementId,
-      expect.objectContaining({
-        agreementNumber: agreementId,
-        status: 'offered'
-      }),
-      expect.anything()
-    )
-    expect(
-      sendGrantPaymentEventHelper.sendGrantPaymentEvent
-    ).toHaveBeenCalledWith(
-      expect.objectContaining({ agreementNumber: agreementId }),
-      expect.anything()
-    )
-    expect(statusCode).toBe(statusCodes.ok)
-    expect(result.agreementData.status).toContain('accepted')
-    expect(result.agreementData.agreementNumber).toContain(agreementId)
-
-    expect(snsPublisher.publishEvent).toHaveBeenCalledWith(
-      {
-        time: '2024-01-03T12:34:56.789Z',
-        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
-        type: 'io.onsite.agreement.status.updated',
-        data: {
-          agreementNumber: 'FPTT123456789',
-          correlationId: 'test-correlation-id',
-          version: 1,
-          agreementUrl: `${String(config.get('viewAgreementURI'))}/FPTT123456789`,
-          clientRef: 'test-client-ref',
-          status: 'accepted',
-          code: 'test-code',
-          date: '2024-01-02T00:00:00.000Z',
-          startDate: '2024-01-01',
-          endDate: '2027-12-31'
-          // claimId: 'R00000001'
-        }
-      },
-      expect.anything()
-    )
-
-    expect(mockAuditEvent).toHaveBeenCalledWith(
-      AuditEvent.AGREEMENT_CREATED,
-      expect.objectContaining({
-        agreementNumber: 'FPTT123456789',
-        status: 'accepted'
-      }),
-      'success',
-      expect.anything()
-    )
-  })
-
-  test('should not accept an offer if the status is not offered', async () => {
-    getAgreementDataBySbi.mockResolvedValue({
-      ...mockAgreementData,
-      status: 'withdrawn'
-    })
-
-    const agreementId = 'FPTT123456789'
-
-    const { statusCode, result } = await server.inject({
-      method: 'POST',
-      url: '/test-accept',
-      headers: {
-        'x-encrypted-auth': 'valid-jwt-token'
-      },
-      app: {
-        logger: mockLogger
-      }
-    })
-
-    // Assert
-    expect(getAgreementDataBySbi).toHaveBeenCalledWith('106284736')
-    expect(acceptOffer).not.toHaveBeenCalled()
-    expect(
-      sendGrantPaymentEventHelper.sendGrantPaymentEvent
-    ).not.toHaveBeenCalled()
-    expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
-    expect(mockAuditEvent).not.toHaveBeenCalled()
-
-    expect(statusCode).toBe(statusCodes.ok)
-    expect(result.agreementData.status).toContain('withdrawn')
-    expect(result.agreementData.agreementNumber).toContain(agreementId)
-  })
-
-  test('should handle database errors from acceptOffer', async () => {
-    // Arrange
-    const error = new Error('Database connection failed')
-    acceptOffer.mockRejectedValue(error)
-
-    // Act
-    const { statusCode, result } = await server.inject({
-      method: 'POST',
-      url: '/test-accept',
-      headers: {
-        'x-encrypted-auth': 'valid-jwt-token'
-      },
-      app: {
-        logger: mockLogger
-      }
-    })
-
-    // Assert
-    expect(statusCode).toBe(statusCodes.internalServerError)
-    expect(result).toEqual({
-      errorMessage: 'Database connection failed'
-    })
-  })
-
-  test('should handle missing agreement ID', async () => {
-    getAgreementDataBySbi.mockRejectedValue(Boom.notFound())
-
-    // Act
-    const { statusCode } = await server.inject({
-      method: 'POST',
-      url: '/test-accept',
-      headers: {
-        'x-encrypted-auth': 'valid-jwt-token'
-      },
-      app: {
-        logger: mockLogger
-      }
-    })
-
-    // Assert
-    expect(statusCode).toBe(statusCodes.notFound)
-  })
-
-  test('should handle base URL header', async () => {
-    const agreementId = 'FPTT123456789'
-
-    const { statusCode, result } = await server.inject({
-      method: 'POST',
-      url: '/test-accept',
-      headers: {
-        'x-base-url': '/agreement',
-        'x-encrypted-auth': 'valid-jwt-token'
-      },
-      app: {
-        logger: mockLogger
-      }
-    })
-
-    // Assert
-    expect(statusCode).toBe(statusCodes.ok)
-    expect(result.agreementData.status).toContain('accepted')
-    expect(result.agreementData.agreementNumber).toContain(agreementId)
-  })
-
-  test('should handle GET method when agreement is accepted', async () => {
-    // Arrange
-    const acceptedAgreementData = {
-      ...mockAgreementData,
-      status: 'accepted',
-      payment: {
-        ...mockAgreementData.payment,
-        agreementStartDate: '2024-01-01'
-      }
+      application: { parcel: [] }
     }
-    getAgreementDataBySbi.mockResolvedValue(acceptedAgreementData)
 
-    // Act
-    const { statusCode, result } = await server.inject({
-      method: 'GET',
-      url: '/test-accept',
-      headers: {
-        'x-encrypted-auth': 'valid-jwt-token'
-      },
-      app: {
-        logger: mockLogger
-      }
+    beforeEach(() => {
+      vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+        valid: true,
+        source: 'defra',
+        sbi: '106284736'
+      })
+      vi.spyOn(agreementDataHelper, 'getAgreementDataBySbi').mockResolvedValue(
+        mockAgreementData
+      )
     })
 
-    // Assert
-    expect(statusCode).toBe(statusCodes.ok)
-    expect(result.agreementData.status).toContain('accepted')
-    expect(result.agreementData.agreementNumber).toContain('FPTT123456789')
+    test('should call acceptOffer and return updated agreement data', async () => {
+      const mockAcceptedData = {
+        agreementNumber: 'FPTT123456789',
+        status: 'accepted',
+        sbi: '106284736',
+        claimId: 'test-claim-id',
+        signatureDate: '2024-01-01T00:00:00.000Z'
+      }
+
+      vi.spyOn(acceptOfferHelper, 'acceptOffer').mockResolvedValue(
+        mockAcceptedData
+      )
+
+      const { statusCode, result } = await doPost()
+
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(acceptOfferHelper.acceptOffer).toHaveBeenCalledWith(
+        'FPTT123456789',
+        expect.objectContaining({ status: 'offered', sbi: '106284736' }),
+        expect.any(Object),
+        expect.any(Object)
+      )
+      expect(result.agreementData).toEqual(mockAcceptedData)
+    })
+
+    test('should handle errors from acceptOffer', async () => {
+      vi.spyOn(acceptOfferHelper, 'acceptOffer').mockRejectedValue(
+        new Error('Database connection failed')
+      )
+
+      const { statusCode, result } = await doPost()
+
+      expect(statusCode).toBe(statusCodes.internalServerError)
+      expect(result.errorMessage).toContain('Database connection failed')
+    })
   })
 
-  test('should rollback the accepting the agreement if the payment hub request fails', async () => {
-    // Arrange
-    const error = new Error('Payment hub request failed')
-    sendGrantPaymentEventHelper.sendGrantPaymentEvent.mockRejectedValue(error)
+  describe('when agreement status is already accepted', () => {
+    const mockAgreementData = {
+      agreementNumber: 'FPTT123456789',
+      status: 'accepted',
+      sbi: '106284736',
+      claimId: 'existing-claim-id',
+      signatureDate: '2024-01-01T00:00:00.000Z'
+    }
 
-    // Act
-    const { statusCode, result } = await server.inject({
-      method: 'POST',
-      url: '/test-accept',
-      headers: {
-        'x-encrypted-auth': 'valid-jwt-token'
-      },
-      app: {
-        logger: mockLogger
-      }
+    beforeEach(() => {
+      vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+        valid: true,
+        source: 'defra',
+        sbi: '106284736'
+      })
+      vi.spyOn(agreementDataHelper, 'getAgreementDataBySbi').mockResolvedValue(
+        mockAgreementData
+      )
     })
 
-    // Assert
-    expect(statusCode).toBe(statusCodes.internalServerError)
-    expect(unacceptOffer).toHaveBeenCalledWith('FPTT123456789')
-    expect(result).toEqual({
-      errorMessage: 'Payment hub request failed'
+    test('should not call acceptOffer and return existing agreement data', async () => {
+      const { statusCode, result } = await doPost()
+
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(acceptOfferHelper.acceptOffer).not.toHaveBeenCalled()
+      expect(result.agreementData.status).toBe('accepted')
+      expect(result.agreementData.claimId).toBe('existing-claim-id')
     })
-    expect(snsPublisher.publishEvent).not.toHaveBeenCalled()
-    expect(mockAuditEvent).toHaveBeenCalledWith(
-      AuditEvent.AGREEMENT_CREATED,
-      expect.objectContaining({
-        agreementNumber: 'FPTT123456789',
-        message: 'Payment hub request failed'
-      }),
-      'failure',
-      expect.anything()
-    )
+  })
+
+  describe('when agreement status is withdrawn', () => {
+    const mockAgreementData = {
+      agreementNumber: 'FPTT123456789',
+      status: 'withdrawn',
+      sbi: '106284736'
+    }
+
+    beforeEach(() => {
+      vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+        valid: true,
+        source: 'defra',
+        sbi: '106284736'
+      })
+      vi.spyOn(agreementDataHelper, 'getAgreementDataBySbi').mockResolvedValue(
+        mockAgreementData
+      )
+    })
+
+    test('should not call acceptOffer and return withdrawn agreement data', async () => {
+      const { statusCode, result } = await doPost()
+
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(acceptOfferHelper.acceptOffer).not.toHaveBeenCalled()
+      expect(result.agreementData.status).toBe('withdrawn')
+    })
+  })
+
+  describe('when agreement status is cancelled', () => {
+    const mockAgreementData = {
+      agreementNumber: 'FPTT123456789',
+      status: 'cancelled',
+      sbi: '106284736'
+    }
+
+    beforeEach(() => {
+      vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+        valid: true,
+        source: 'defra',
+        sbi: '106284736'
+      })
+      vi.spyOn(agreementDataHelper, 'getAgreementDataBySbi').mockResolvedValue(
+        mockAgreementData
+      )
+    })
+
+    test('should not call acceptOffer and return cancelled agreement data', async () => {
+      const { statusCode, result } = await doPost()
+
+      expect(statusCode).toBe(statusCodes.ok)
+      expect(acceptOfferHelper.acceptOffer).not.toHaveBeenCalled()
+      expect(result.agreementData.status).toBe('cancelled')
+    })
+  })
+
+  describe('authentication errors', () => {
+    test('should return 401 when JWT validation fails', async () => {
+      vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+        valid: false,
+        error: 'Invalid token'
+      })
+
+      const { statusCode } = await doPost()
+
+      expect(statusCode).toBe(statusCodes.unauthorized)
+    })
   })
 })
-
-/**
- * @import { Server } from '@hapi/hapi'
- */

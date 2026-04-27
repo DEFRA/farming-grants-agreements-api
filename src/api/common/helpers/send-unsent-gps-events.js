@@ -1,5 +1,5 @@
 import { config } from '#~/config/index.js'
-import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
@@ -200,10 +200,13 @@ const sendUnsetGPSEventsPlugin = {
               )
             }
 
-            // Attach agreementNumber to version object so sendGrantPaymentEvent can find it
-            versionToProcess.agreementNumber = agreementNumber
-
-            await sendGrantPaymentEvent(versionToProcess, server.logger)
+            // Process the agreement acceptance with the full flow including payment event, SNS publishing, and audit logging
+            await acceptOffer(
+              agreementNumber,
+              versionToProcess,
+              server.logger,
+              null
+            )
 
             server.logger.info(
               `Successfully processed missed payment for agreement ${agreementNumber}`

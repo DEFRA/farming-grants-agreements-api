@@ -2,6 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { sendUnsetGPSEventsPlugin } from './send-unsent-gps-events.js'
 import { config } from '#~/config/index.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
@@ -24,6 +25,7 @@ vi.mock('#~/config/index.js', () => ({
   }
 }))
 vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
+vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/adapter/land-grants-adapter.js')
 vi.mock('#~/api/common/models/versions.js')
 vi.mock('#~/api/common/models/agreements.js')
@@ -111,7 +113,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       mockPayment
     )
 
-    vi.mocked(sendGrantPaymentEvent).mockResolvedValue({
+    vi.mocked(acceptOffer).mockResolvedValue({
       claimId: 'C1',
       some: 'data'
     })
@@ -135,12 +137,17 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
     expect(populateMock).toHaveBeenCalledWith('agreement')
 
-    expect(sendGrantPaymentEvent).toHaveBeenCalledWith(
+    expect(acceptOffer).toHaveBeenCalledWith(
+      'AG1',
       expect.objectContaining({
-        agreementNumber: 'AG1',
-        agreement: { agreementNumber: 'AG1' }
+        _id: 'v1',
+        agreement: { agreementNumber: 'AG1' },
+        status: 'accepted',
+        application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] },
+        payment: mockPayment
       }),
-      expect.anything()
+      server.logger,
+      null
     )
   })
 
@@ -412,7 +419,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       payment
     )
 
-    vi.mocked(sendGrantPaymentEvent).mockResolvedValue({
+    vi.mocked(acceptOffer).mockResolvedValue({
       claimId: 'C1',
       some: 'data'
     })
@@ -432,12 +439,17 @@ describe('sendUnsetGPSEventsPlugin', () => {
       server.logger
     )
     expect(versionsModel.create).not.toHaveBeenCalled()
-    expect(sendGrantPaymentEvent).toHaveBeenCalledWith(
+    expect(acceptOffer).toHaveBeenCalledWith(
+      'AG1',
       expect.objectContaining({
-        agreementNumber: 'AG1',
-        _id: 'v1'
+        _id: 'v1',
+        agreement: { agreementNumber: 'AG1', _id: 'agreement1' },
+        status: 'accepted',
+        payment,
+        application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] }
       }),
-      expect.anything()
+      server.logger,
+      null
     )
   })
 

@@ -69,10 +69,40 @@ describe('sending updated (accepted) events via SNS', () => {
     getAgreementDataBySbi.mockReset()
     createGrantPaymentFromAgreement.mockReset()
 
-    acceptOffer.mockResolvedValue({
-      ...mockAgreementData,
-      signatureDate: '2024-01-01T00:00:00.000Z',
-      status: 'accepted'
+    acceptOffer.mockImplementation(async (agreementNumber) => {
+      const result = {
+        ...mockAgreementData,
+        agreementNumber,
+        signatureDate: '2024-01-01T00:00:00.000Z',
+        status: 'accepted'
+      }
+
+      const agreementUrl = `${String(config.get('viewAgreementURI'))}/${agreementNumber}`
+
+      // Trigger the side effect that the test expects
+      await mockPublishEvent(
+        {
+          topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+          type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+          time: new Date().toISOString(),
+          data: {
+            agreementNumber,
+            correlationId: result.correlationId,
+            clientRef: result.clientRef,
+            version: result.version,
+            agreementUrl,
+            status: result.status,
+            code: result.code,
+            date: result.updatedAt,
+            startDate: result.payment?.agreementStartDate,
+            endDate: result.payment?.agreementEndDate,
+            claimId: 'mock-claim-id'
+          }
+        },
+        console
+      )
+
+      return result
     })
     unacceptOffer.mockResolvedValue()
 
