@@ -1,6 +1,7 @@
 import { config } from '#~/config/index.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 import versionsModel from '#~/api/common/models/versions.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
 
 const sendUnsetGPSEventsPlugin = {
   name: 'send-unsent-gps-events',
@@ -16,10 +17,22 @@ const sendUnsetGPSEventsPlugin = {
       server.logger.info('Checking for missed GPS payments events...')
 
       try {
+        // Find agreements with only one version
+        const singleVersionAgreements = await agreementsModel
+          .find({ versions: { $size: 1 } })
+          .select('_id')
+          .lean()
+
+        const agreementIds = singleVersionAgreements.map((a) =>
+          a._id.toString()
+        )
+
+        // Find accepted versions with start date before 2026-05-01 belonging to single-version agreements
         const missedPayments = await versionsModel
           .find({
             status: 'accepted',
-            grantsPaymentServiceRequestMade: { $ne: true }
+            agreement: { $in: agreementIds },
+            'payment.agreementStartDate': { $lt: '2026-05-01' }
           })
           .populate('agreement')
           .lean()

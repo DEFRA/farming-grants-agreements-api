@@ -3,6 +3,7 @@ import { sendUnsetGPSEventsPlugin } from './send-unsent-gps-events.js'
 import { config } from '#~/config/index.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 import versionsModel from '#~/api/common/models/versions.js'
+import agreementsModel from '#~/api/common/models/agreements.js'
 
 vi.mock('#~/config/index.js', () => ({
   config: {
@@ -23,6 +24,7 @@ vi.mock('#~/config/index.js', () => ({
 }))
 vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
 vi.mock('#~/api/common/models/versions.js')
+vi.mock('#~/api/common/models/agreements.js')
 
 describe('sendUnsetGPSEventsPlugin', () => {
   let server
@@ -68,12 +70,19 @@ describe('sendUnsetGPSEventsPlugin', () => {
       return null
     })
 
+    const mockAgreements = [{ _id: { toString: () => 'agreement1' } }]
+
+    vi.mocked(agreementsModel.find).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(mockAgreements)
+      })
+    })
+
     const mockMissedPayments = [
       {
         _id: 'v1',
         agreement: { agreementNumber: 'AG1' },
-        status: 'accepted',
-        grantsPaymentServiceRequestMade: false
+        status: 'accepted'
       }
     ]
 
@@ -103,7 +112,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
     expect(versionsModel.find).toHaveBeenCalledWith({
       status: 'accepted',
-      grantsPaymentServiceRequestMade: { $ne: true }
+      agreement: { $in: ['agreement1'] },
+      'payment.agreementStartDate': { $lt: '2026-05-01' }
     })
 
     expect(populateMock).toHaveBeenCalledWith('agreement')
@@ -123,12 +133,19 @@ describe('sendUnsetGPSEventsPlugin', () => {
       return null
     })
 
+    const mockAgreements = [{ _id: { toString: () => 'agreement1' } }]
+
+    vi.mocked(agreementsModel.find).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(mockAgreements)
+      })
+    })
+
     const mockMissedPayments = [
       {
         _id: 'v1',
         agreement: { agreementNumber: 'AG1' },
-        status: 'accepted',
-        grantsPaymentServiceRequestMade: false
+        status: 'accepted'
       }
     ]
 
@@ -161,12 +178,19 @@ describe('sendUnsetGPSEventsPlugin', () => {
       return null
     })
 
+    const mockAgreements = [{ _id: { toString: () => 'agreement1' } }]
+
+    vi.mocked(agreementsModel.find).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(mockAgreements)
+      })
+    })
+
     const mockMissedPayments = [
       {
         _id: 'v1',
         agreement: null,
-        status: 'accepted',
-        grantsPaymentServiceRequestMade: false
+        status: 'accepted'
       }
     ]
 
@@ -195,7 +219,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       return null
     })
 
-    vi.mocked(versionsModel.find).mockImplementation(() => {
+    vi.mocked(agreementsModel.find).mockImplementation(() => {
       throw new Error('Database connection failed')
     })
 
