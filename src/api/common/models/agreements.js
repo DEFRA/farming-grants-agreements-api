@@ -42,10 +42,13 @@ function ignorePayments(versions) {
 
 schema.statics.createAgreementWithVersions = async function ({
   agreement,
-  versions
+  versions,
+  ignorePayments: shouldIgnorePayments = true
 }) {
   assertValidCreateArgs(agreement, versions)
-  ignorePayments(versions)
+  if (shouldIgnorePayments) {
+    ignorePayments(versions) // fetches payments from Land Grants
+  }
 
   const createdversions = []
   let agreementId = null

@@ -4,6 +4,7 @@ import Boom from '@hapi/boom'
 import agreementsModel from '#~/api/common/models/agreements.js'
 import { config } from '#~/config/index.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { isWmpAgreement } from '#~/api/agreement/helpers/wmp-payload-mapper.js'
 
 /**
  * Accept an agreement offer
@@ -36,16 +37,24 @@ async function acceptOffer(agreementNumber, agreementData, logger) {
     )
   }
 
-  const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
-    agreementData.application.parcel,
-    logger
-  )
-  const paymentWithCorrelationIds = {
-    ...expectedPayments,
-    payments: expectedPayments.payments.map((payment) => ({
-      ...payment,
-      correlationId: payment.correlationId || randomUUID()
-    }))
+  // WMP: payment was persisted from the payload at create time and Land
+  // Grants does not know WMP action codes — skip the lookup and reuse the
+  // existing payment subdoc (plan.md §4.3 / §12.2 edit #8).
+  let paymentWithCorrelationIds
+  if (isWmpAgreement(agreementData)) {
+    paymentWithCorrelationIds = agreementData.payment
+  } else {
+    const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
+      agreementData.application.parcel,
+      logger
+    )
+    paymentWithCorrelationIds = {
+      ...expectedPayments,
+      payments: expectedPayments.payments.map((payment) => ({
+        ...payment,
+        correlationId: payment.correlationId || randomUUID()
+      }))
+    }
   }
 
   // Update the agreement in the database

@@ -153,6 +153,101 @@ describe('agreements.createAgreementWithVersions', () => {
     updateOneSpy.mockRestore()
     findByIdSpy.mockRestore()
   })
+
+  describe('ignorePayments option', () => {
+    const POPULATED_PAYMENT = {
+      agreementStartDate: '2026-04-20',
+      agreementEndDate: '2027-04-20',
+      frequency: 'OneOff',
+      agreementTotalPence: 166200,
+      annualTotalPence: 166200
+    }
+
+    function makeMocks() {
+      const mockId = '507f1f77bcf86cd799439012'
+      const findOne = vi.spyOn(agreementsModel, 'findOne').mockReturnValue({
+        sort: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        lean: vi.fn().mockResolvedValue(null)
+      })
+      const create = vi
+        .spyOn(agreementsModel, 'create')
+        .mockResolvedValue({ _id: mockId })
+      const insertMany = vi
+        .spyOn(versionsModel, 'insertMany')
+        .mockImplementation((docs) => docs.map((d) => ({ ...d, _id: 'v1' })))
+      const updateMany = vi
+        .spyOn(versionsModel, 'updateMany')
+        .mockResolvedValue({})
+      const updateOne = vi
+        .spyOn(agreementsModel, 'updateOne')
+        .mockResolvedValue({})
+      const findById = vi.spyOn(agreementsModel, 'findById').mockReturnValue({
+        populate: vi.fn().mockReturnThis(),
+        lean: vi.fn().mockResolvedValue({ _id: mockId })
+      })
+      return {
+        insertMany,
+        restore: () => {
+          findOne.mockRestore()
+          create.mockRestore()
+          insertMany.mockRestore()
+          updateMany.mockRestore()
+          updateOne.mockRestore()
+          findById.mockRestore()
+        }
+      }
+    }
+
+    it('wipes version.payment by default (preserves SFI behaviour)', async () => {
+      const { insertMany, restore } = makeMocks()
+      const versions = [
+        { ...VERSION_PAYLOADS[0], payment: { ...POPULATED_PAYMENT } }
+      ]
+
+      await agreementsModel.createAgreementWithVersions({
+        agreement: AGREEMENT_BASE,
+        versions
+      })
+
+      const insertedDocs = insertMany.mock.calls[0][0]
+      expect(insertedDocs[0].payment).toBeNull()
+      restore()
+    })
+
+    it('wipes version.payment when ignorePayments: true is explicit', async () => {
+      const { insertMany, restore } = makeMocks()
+      const versions = [
+        { ...VERSION_PAYLOADS[0], payment: { ...POPULATED_PAYMENT } }
+      ]
+
+      await agreementsModel.createAgreementWithVersions({
+        agreement: AGREEMENT_BASE,
+        versions,
+        ignorePayments: true
+      })
+
+      expect(insertMany.mock.calls[0][0][0].payment).toBeNull()
+      restore()
+    })
+
+    it('preserves version.payment when ignorePayments: false (WMP path)', async () => {
+      const { insertMany, restore } = makeMocks()
+      const versions = [
+        { ...VERSION_PAYLOADS[0], payment: { ...POPULATED_PAYMENT } }
+      ]
+
+      await agreementsModel.createAgreementWithVersions({
+        agreement: AGREEMENT_BASE,
+        versions,
+        ignorePayments: false
+      })
+
+      const insertedDocs = insertMany.mock.calls[0][0]
+      expect(insertedDocs[0].payment).toEqual(POPULATED_PAYMENT)
+      restore()
+    })
+  })
 })
 
 describe('agreements.findLatestAgreementVersion', () => {

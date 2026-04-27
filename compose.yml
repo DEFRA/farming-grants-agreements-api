@@ -94,7 +94,7 @@ services:
       PORT: 3555
       NODE_ENV: ${NODE_ENV:-development}
       FLOCI_ENDPOINT: http://floci:4566
-      MONGO_URI: mongodb://mongodb:27017/
+      MONGO_URI: mongodb://mongodb:27017/?directConnection=true
       SEED_DB: ${SEED_DB:-true}
       AWS_ENDPOINT: http://floci:4566
       SQS_ENDPOINT: http://floci:4566
