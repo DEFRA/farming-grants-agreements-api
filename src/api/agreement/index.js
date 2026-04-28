@@ -73,10 +73,10 @@ const agreement = {
         path: '/',
         options: {
           auth,
-          tags: ['api', 'agreements'],
+          tags: ['api', 'agreement'],
           description: 'Accept agreement offer',
           notes:
-            'Accepts the agreement offer for the authenticated user. This endpoint updates the payment hub, records the signature date, and publishes a status update event to SNS. Only agreement with status "offered" can be accepted.',
+            'Accepts the agreements offer for the authenticated user. This endpoint updates the payment hub, records the signature date, and publishes a status update event to SNS. Only agreement with status "offered" can be accepted.',
           response: {
             schema: acceptOfferResponse,
             failAction: 'log'
@@ -94,7 +94,7 @@ const agreement = {
         path: '/{agreementId}',
         options: {
           auth,
-          tags: ['api', 'agreements'],
+          tags: ['api', 'agreement'],
           description: 'Get agreement by ID',
           notes:
             'Returns agreement data for the specified agreement ID. This endpoint supports both DefraID and Entra authentication methods.',
@@ -118,7 +118,7 @@ const agreement = {
         path: '/{agreementId}/{version}/download',
         options: {
           auth,
-          tags: ['api', 'agreements'],
+          tags: ['api', 'agreement'],
           description: 'Download agreement PDF',
           notes:
             'Downloads the agreement PDF document for the specified agreement ID and version from S3. The PDF filename follows the pattern {agreementId}-{version}.pdf.',

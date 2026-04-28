@@ -48,8 +48,6 @@ const createOffer = async (notificationMessageId, agreementData, logger) => {
     consentObjects
   } = resolveAgreementFields(agreementData)
 
-  logger.info(`Creating offer related to Scheme: ${scheme}`)
-
   const agreementNumber = await determineAgreementNumber(agreementData)
 
   // Generate claimId and originalInvoiceNumber for version 1
