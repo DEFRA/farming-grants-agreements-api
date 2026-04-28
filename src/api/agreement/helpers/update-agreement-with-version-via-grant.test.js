@@ -18,8 +18,7 @@ describe('updateAgreementWithVersionViaGrant', () => {
     const mockGrant = { _id: 'grant123' }
     const mockVersion = { _id: 'version456' }
     const mockUpdatedVersion = {
-      _id: 'version456',
-      agreement: { _id: 'agreement123' }
+      _id: 'version456'
     }
 
     agreementsModel.findOne.mockReturnValue({
@@ -41,7 +40,6 @@ describe('updateAgreementWithVersionViaGrant', () => {
     const findOneAndUpdateSpy = vi
       .spyOn(versionsModel, 'findOneAndUpdate')
       .mockReturnValue({
-        populate: vi.fn().mockReturnThis(),
         sort: vi.fn().mockReturnThis(),
         lean: vi.fn().mockResolvedValue(mockUpdatedVersion),
         catch: vi.fn().mockResolvedValue(mockUpdatedVersion)
@@ -187,7 +185,6 @@ describe('updateAgreementWithVersionViaGrant', () => {
     })
 
     versionsModel.findOneAndUpdate.mockReturnValue({
-      populate: vi.fn().mockReturnThis(),
       sort: vi.fn().mockReturnThis(),
       catch: vi.fn().mockRejectedValue(new Error('Update Error'))
     })
@@ -218,7 +215,6 @@ describe('updateAgreementWithVersionViaGrant', () => {
     })
 
     versionsModel.findOneAndUpdate.mockReturnValue({
-      populate: vi.fn().mockReturnThis(),
       sort: vi.fn().mockReturnThis(),
       catch: vi.fn().mockResolvedValue(null)
     })

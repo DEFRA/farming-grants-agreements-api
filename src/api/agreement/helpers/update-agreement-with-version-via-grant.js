@@ -67,7 +67,6 @@ export const updateAgreementWithVersionViaGrant = async (
       runValidators: true,
       lean: true
     })
-    .populate('agreement')
     .sort({ createdAt: -1, _id: -1 })
     .catch((err) => {
       throw Boom.internal(err)
