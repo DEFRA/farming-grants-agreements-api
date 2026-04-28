@@ -1,6 +1,5 @@
 import { MongoClient } from 'mongodb'
 import tls from 'node:tls'
-// import { config } from './config.js'
 import { config } from '#~/config/index.js'
 
 // eslint-disable-next-line import/no-unused-modules
