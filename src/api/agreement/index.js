@@ -1,12 +1,11 @@
 import Joi from 'joi'
-import { config as migrateMongoConfig, up } from 'migrate-mongo'
+import { up } from 'migrate-mongo'
 import { getAgreementController } from './controllers/get-agreement.controller.js'
 import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
 import { getCommonResponseSchemas } from '#~/api/common/helpers/joi-schema-from-pact.js'
 import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { db, mongoClient } from '#~/api/common/helpers/mongo-client.js'
-import migrateMongoConfigInternal from '../../../migrate-mongo-config.js'
 
 const logger = createLogger()
 
@@ -39,11 +38,8 @@ const agreement = {
   plugin: {
     name: 'agreement',
     async register(server) {
-      migrateMongoConfig.set(migrateMongoConfigInternal)
-
       logger.info('Running migrations')
       const migrated = await up(db, mongoClient)
-
       migrated.forEach((fileName) => logger.info(`Migrated: ${fileName}`))
       logger.info('Finished running migrations')
 
