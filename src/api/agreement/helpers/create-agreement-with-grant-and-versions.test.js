@@ -59,7 +59,6 @@ describe('createAgreementWithGrantAndVersions', () => {
     })
 
     expect(result.agreementNumber).toBe(AGREEMENT_BASE.agreementNumber)
-    expect(result.versions).toHaveLength(1)
     expect(result.grants).toHaveLength(1)
 
     // Check database
@@ -77,10 +76,8 @@ describe('createAgreementWithGrantAndVersions', () => {
     expect(grant).toBeDefined()
     expect(version).toBeDefined()
 
-    expect(version.agreement.toString()).toBe(agreement._id.toString())
     expect(version.grant.toString()).toBe(grant._id.toString())
 
-    expect(agreement.versions).toContainEqual(version._id)
     expect(agreement.grants).toContainEqual(grant._id)
     expect(grant.versions).toContainEqual(version._id)
   })
@@ -113,7 +110,6 @@ describe('createAgreementWithGrantAndVersions', () => {
       versions: NEW_VERSION_PAYLOADS
     })
 
-    expect(result.versions).toHaveLength(2)
     expect(result.grants).toHaveLength(1) // Should still be 1 grant
 
     const finalAgreement = await agreementsModel.findOne({
@@ -125,15 +121,12 @@ describe('createAgreementWithGrantAndVersions', () => {
 
     expect(finalAgreement._id.toString()).toBe(initialAgreement._id.toString())
     expect(finalGrant._id.toString()).toBe(initialGrant._id.toString())
-    expect(finalAgreement.versions).toHaveLength(2)
     expect(finalGrant.versions).toHaveLength(2)
 
     const v1 = await versionsModel.findOne({ notificationMessageId: 'msg-1' })
     const v2 = await versionsModel.findOne({ notificationMessageId: 'msg-2' })
 
-    expect(v1.agreement.toString()).toBe(finalAgreement._id.toString())
     expect(v1.grant.toString()).toBe(finalGrant._id.toString())
-    expect(v2.agreement.toString()).toBe(finalAgreement._id.toString())
     expect(v2.grant.toString()).toBe(finalGrant._id.toString())
   })
 

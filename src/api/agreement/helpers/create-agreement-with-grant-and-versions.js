@@ -31,7 +31,7 @@ async function findOrCreateAgreement(agreement) {
   const existing = await agreementsModel
     .findOne({ sbi: agreement.sbi })
     .sort({ createdAt: -1, _id: -1 })
-    .select('_id versions agreementNumber grants')
+    .select('_id agreementNumber grants')
     .lean()
 
   if (existing) {
@@ -43,7 +43,6 @@ async function findOrCreateAgreement(agreement) {
     clientRef: agreement.clientRef,
     sbi: agreement.sbi,
     frn: agreement.frn,
-    versions: [],
     grants: []
   })
 }
@@ -97,24 +96,17 @@ async function findOrCreateGrant({
  * Inserts versions and links them to agreement and grant.
  * @param {object} params - Parameters
  * @param {Array<object>} params.versions - The version payloads
- * @param {string} params.agreementId - The agreement ID
  * @param {string} params.grantId - The grant ID
  * @returns {Promise<Array<object>>} The inserted versions
  */
-async function insertAndAssociateVersions({ versions, agreementId, grantId }) {
+async function insertAndAssociateVersions({ versions, grantId }) {
   const versionsToInsert = versions.map((v) => ({
     ...v,
-    agreement: agreementId,
     grant: grantId
   }))
 
   const inserted = await versionsModel.insertMany(versionsToInsert)
   const insertedIds = inserted.map((v) => v._id)
-
-  await agreementsModel.updateOne(
-    { _id: agreementId },
-    { $push: { versions: { $each: insertedIds } } }
-  )
 
   await grantModel.updateOne(
     { _id: grantId },
@@ -152,19 +144,10 @@ export async function createAgreementWithGrantAndVersions({
 
     await insertAndAssociateVersions({
       versions,
-      agreementId,
       grantId
     })
 
-    return agreementsModel
-      .findById(agreementId)
-      .populate({
-        path: 'versions',
-        select: 'agreementNumber sbi status createdAt',
-        options: { sort: { createdAt: -1, _id: -1 } }
-      })
-      .populate('grants')
-      .lean()
+    return agreementsModel.findById(agreementId).populate('grants').lean()
   } catch (err) {
     logger.error(err, 'Error in createAgreementWithGrantAndVersions')
     throw err
