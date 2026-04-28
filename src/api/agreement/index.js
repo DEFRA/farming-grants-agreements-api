@@ -72,7 +72,7 @@ const agreement = {
           tags: ['api', 'agreement'],
           description: 'Accept agreement offer',
           notes:
-            'Accepts the agreements offer for the authenticated user. This endpoint updates the payment hub, records the signature date, and publishes a status update event to SNS. Only agreement with status "offered" can be accepted.',
+            'Accepts the agreement offer for the authenticated user. This endpoint updates the payment hub, records the signature date, and publishes a status update event to SNS. Only agreements with status "offered" can be accepted.',
           response: {
             schema: acceptOfferResponse,
             failAction: 'log'
