@@ -16,7 +16,7 @@ import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-
  * @param {object} logger
  * @returns {Promise<object>}
  */
-async function updateAgreementToAccepted(
+async function transitionAgreementToAccepted(
   agreementNumber,
   agreementData,
   logger
@@ -49,7 +49,7 @@ async function updateAgreementToAccepted(
 
   // Update the agreement in the database
   const updateData = {
-    status: agreementData.status || 'accepted',
+    status: 'accepted',
     payment: paymentWithCorrelationIds
   }
 
@@ -102,7 +102,7 @@ async function acceptOffer(
   // Accept the agreement if not already accepted
   const agreementUrl = `${String(config.get('viewAgreementURI'))}/${agreementNumber}`
   if (agreementData.status !== 'accepted') {
-    const basicResult = await updateAgreementToAccepted(
+    const savedAgreement = await transitionAgreementToAccepted(
       agreementNumber,
       agreementData,
       logger
@@ -111,7 +111,7 @@ async function acceptOffer(
     // Preserve the original agreementNumber from input agreement data
     agreementData = {
       ...agreementData,
-      ...basicResult,
+      ...savedAgreement,
       agreementNumber: agreementData.agreementNumber
     }
   }
