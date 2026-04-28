@@ -275,7 +275,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     )
   })
 
-  it('should create new version when payment values have changed', async () => {
+  it('should create new version when payment values have changed & set the previous version status to cancelled', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
       if (key === 'featureFlags.sendUnsentGPSEvents') return true
       return null
@@ -374,6 +374,12 @@ describe('sendUnsetGPSEventsPlugin', () => {
       server.logger
     )
     expect(versionsModel.create).toHaveBeenCalled()
+
+    // Verify that the original version's status is set to cancelled
+    expect(versionsModel.updateOne).toHaveBeenCalledWith(
+      { _id: 'v1' },
+      { $set: { status: 'cancelled' } }
+    )
   })
 
   it('should use existing version when payment values have not changed', async () => {

@@ -100,6 +100,12 @@ async function createNewVersionWithUpdatedPayment(
       { $push: { versions: createdVersion._id } }
     )
 
+    // Set the original version's status to cancelled
+    await versionsModel.updateOne(
+      { _id: currentVersion._id },
+      { $set: { status: 'cancelled' } }
+    )
+
     // Populate and return the new version
     return await versionsModel
       .findById(createdVersion._id)
