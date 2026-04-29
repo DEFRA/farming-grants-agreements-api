@@ -55,6 +55,21 @@ const config = convict({
     default: 'development',
     env: 'NODE_ENV'
   },
+  cdpEnvironment: {
+    doc: 'The CDP environment the app is currently in, with the addition of "local". Used as the audit-event `environment` field so that audit events report the deployed environment rather than NODE_ENV (which is always "production" on CDP).',
+    format: [
+      'local',
+      'infra-dev',
+      'management',
+      'dev',
+      'test',
+      'perf-test',
+      'ext-test',
+      'prod'
+    ],
+    default: 'local',
+    env: 'ENVIRONMENT'
+  },
   port: {
     doc: 'The port to bind.',
     format: 'port',
