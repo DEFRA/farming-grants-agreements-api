@@ -5,75 +5,7 @@ import versionsModel from '#~/api/common/models/versions.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
 import { randomUUID } from 'node:crypto'
 
-/**
- * Compare key payment fields between two payment objects
- * @param {object} oldPayment - Existing payment object
- * @param {object} newPayment - Newly calculated payment object
- * @returns {boolean} True if any key field has changed
- */
-function haveKeyFieldsChanged(oldPayment, newPayment) {
-  const keyFields = [
-    'agreementTotalPence',
-    'annualTotalPence',
-    'agreementStartDate',
-    'agreementEndDate',
-    'frequency'
-  ]
-
-  for (const field of keyFields) {
-    if (oldPayment[field] !== newPayment[field]) {
-      return true
-    }
-  }
-
-  return false
-}
-
-/**
- * Compare payments arrays between two payment objects
- * @param {object} oldPayment - Existing payment object
- * @param {object} newPayment - Newly calculated payment object
- * @returns {boolean} True if any payment item has changed
- */
-function havePaymentsArrayChanged(oldPayment, newPayment) {
-  const oldPayments = oldPayment.payments || []
-  const newPayments = newPayment.payments || []
-
-  if (oldPayments.length !== newPayments.length) {
-    return true
-  }
-
-  for (let i = 0; i < oldPayments.length; i++) {
-    const oldPaymentItem = oldPayments[i]
-    const newPaymentItem = newPayments[i]
-
-    if (
-      oldPaymentItem.totalPaymentPence !== newPaymentItem.totalPaymentPence ||
-      oldPaymentItem.paymentDate !== newPaymentItem.paymentDate
-    ) {
-      return true
-    }
-  }
-
-  return false
-}
-
-/**
- * Compare two payment objects to check if values have changed
- * @param {object} oldPayment - Existing payment object
- * @param {object} newPayment - Newly calculated payment object
- * @returns {boolean} True if payment values have changed
- */
-function hasPaymentValuesChanged(oldPayment, newPayment) {
-  if (!oldPayment || !newPayment) {
-    return true
-  }
-
-  return (
-    haveKeyFieldsChanged(oldPayment, newPayment) ||
-    havePaymentsArrayChanged(oldPayment, newPayment)
-  )
-}
+const paymentDayOfMonth = config.get('paymentDayOfMonth')
 
 /**
  * Find agreements with missed GPS payment events
@@ -97,6 +29,36 @@ async function findMissedPayments() {
     })
     .populate('agreement')
     .lean()
+}
+
+/**
+ * Calculate adjusted payment date based on current date and payment day
+ * Will add a month if the current date is after the payment day
+ * @param {Date} currentPaymentDate - Original payment date
+ * @returns {string} ISO string of adjusted payment date
+ */
+function calculateAdjustedPaymentDate(currentPaymentDate) {
+  const date = new Date(currentPaymentDate)
+  date.setHours(0, 0, 0, 0)
+  date.setDate(paymentDayOfMonth)
+
+  let targetYear = date.getFullYear()
+  let targetMonth = date.getMonth()
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  if (date <= today) {
+    targetMonth += 1
+    const decIndex = 11
+    if (targetMonth > decIndex) {
+      targetMonth = 0
+      targetYear += 1
+    }
+  }
+
+  const adjustedDate = new Date(targetYear, targetMonth, paymentDayOfMonth)
+  return adjustedDate.toISOString()
 }
 
 /**
@@ -125,34 +87,21 @@ async function processMissedPayment(version, server) {
       server.logger
     )
 
-    // Check if payment values have changed
-    const paymentValuesChanged = hasPaymentValuesChanged(
-      version.payment,
-      newPaymentData
+    for (const payment of newPaymentData.payments) {
+      payment.paymentDate = calculateAdjustedPaymentDate(payment.paymentDate)
+    }
+
+    server.logger.info(`Creating new version of ${agreementNumber}`)
+
+    const versionToProcess = await createNewVersionWithUpdatedPayment(
+      version,
+      newPaymentData,
+      server.logger
     )
 
-    let versionToProcess = version
-
-    if (paymentValuesChanged) {
-      server.logger.info(
-        `Payment values have changed for agreement ${agreementNumber}, creating new version`
-      )
-
-      // Create new version with updated payment values
-      versionToProcess = await createNewVersionWithUpdatedPayment(
-        version,
-        newPaymentData,
-        server.logger
-      )
-
-      server.logger.info(
-        `Successfully created new version ${versionToProcess._id.toString()} for agreement ${agreementNumber}`
-      )
-    } else {
-      server.logger.info(
-        `Payment values unchanged for agreement ${agreementNumber}, using existing version`
-      )
-    }
+    server.logger.info(
+      `Successfully created new version ${versionToProcess._id.toString()} for agreement ${agreementNumber}`
+    )
 
     // Process the agreement acceptance with the full flow including payment event, SNS publishing, and audit logging
     await acceptOffer(agreementNumber, versionToProcess, server.logger, null)

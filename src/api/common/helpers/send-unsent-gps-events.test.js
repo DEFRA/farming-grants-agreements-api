@@ -24,6 +24,9 @@ vi.mock('#~/config/index.js', () => ({
       if (key === 'serviceVersion') {
         return '1.0.0'
       }
+      if (key === 'paymentDayOfMonth') {
+        return 15
+      }
       return null
     })
   }
@@ -127,6 +130,37 @@ describe('sendUnsetGPSEventsPlugin', () => {
       mockPayment
     )
 
+    const newVersion = {
+      _id: 'v2',
+      agreement: { agreementNumber: 'AG1' },
+      status: 'accepted',
+      application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] },
+      payment: mockPayment,
+      toObject: () => ({
+        _id: 'v2',
+        agreement: { agreementNumber: 'AG1' },
+        status: 'accepted',
+        application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] },
+        payment: mockPayment
+      })
+    }
+
+    vi.mocked(versionsModel.create).mockResolvedValue(newVersion)
+    vi.mocked(versionsModel.findById).mockImplementation((id) => {
+      if (id === 'v2') {
+        return {
+          populate: vi.fn().mockReturnValue({
+            lean: vi.fn().mockResolvedValue(newVersion.toObject())
+          })
+        }
+      }
+      return {
+        populate: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue(null)
+        })
+      }
+    })
+
     vi.mocked(acceptOffer).mockResolvedValue({
       claimId: 'C1',
       some: 'data'
@@ -154,7 +188,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(acceptOffer).toHaveBeenCalledWith(
       'AG1',
       expect.objectContaining({
-        _id: 'v1',
+        _id: 'v2',
         agreement: { agreementNumber: 'AG1' },
         status: 'accepted',
         application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] },
@@ -389,7 +423,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     await startHandler()
 
     expect(server.logger.info).toHaveBeenCalledWith(
-      'Payment values have changed for agreement AG1, creating new version'
+      'Creating new version of AG1'
     )
     expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
       mockMissedPayments[0].application.parcel,
@@ -404,7 +438,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     )
   })
 
-  it('should use existing version when payment values have not changed', async () => {
+  it('should create a new version of the agreement for unsent payments', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
       if (key === 'featureFlags.sendUnsentGPSEvents') {
         return true
@@ -449,6 +483,33 @@ describe('sendUnsetGPSEventsPlugin', () => {
       payment
     )
 
+    const newVersion = {
+      ...mockMissedPayments[0],
+      _id: 'v2',
+      payment,
+      toObject: () => ({
+        ...mockMissedPayments[0],
+        _id: 'v2',
+        payment
+      })
+    }
+
+    vi.mocked(versionsModel.create).mockResolvedValue(newVersion)
+    vi.mocked(versionsModel.findById).mockImplementation((id) => {
+      if (id === 'v2') {
+        return {
+          populate: vi.fn().mockReturnValue({
+            lean: vi.fn().mockResolvedValue(newVersion.toObject())
+          })
+        }
+      }
+      return {
+        populate: vi.fn().mockReturnValue({
+          lean: vi.fn().mockResolvedValue(null)
+        })
+      }
+    })
+
     vi.mocked(acceptOffer).mockResolvedValue({
       claimId: 'C1',
       some: 'data'
@@ -462,17 +523,17 @@ describe('sendUnsetGPSEventsPlugin', () => {
     await startHandler()
 
     expect(server.logger.info).toHaveBeenCalledWith(
-      'Payment values unchanged for agreement AG1, using existing version'
+      'Creating new version of AG1'
     )
     expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
       mockMissedPayments[0].application.parcel,
       server.logger
     )
-    expect(versionsModel.create).not.toHaveBeenCalled()
+    expect(versionsModel.create).toHaveBeenCalled()
     expect(acceptOffer).toHaveBeenCalledWith(
       'AG1',
       expect.objectContaining({
-        _id: 'v1',
+        _id: 'v2',
         agreement: { agreementNumber: 'AG1', _id: 'agreement1' },
         status: 'accepted',
         payment,
@@ -530,303 +591,6 @@ describe('sendUnsetGPSEventsPlugin', () => {
       'Failed to process missed payment for agreement AG1: Payment calculation failed'
     )
     expect(sendGrantPaymentEvent).not.toHaveBeenCalled()
-  })
-
-  it('should detect payment changes when agreementTotalPence differs', async () => {
-    vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
-      }
-      return null
-    })
-
-    const mockAgreements = [{ _id: { toString: () => 'agreement1' } }]
-
-    vi.mocked(agreementsModel.find).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockAgreements)
-      })
-    })
-
-    const oldPayment = {
-      agreementTotalPence: 1000,
-      annualTotalPence: 500,
-      agreementStartDate: '2025-01-01',
-      agreementEndDate: '2025-12-31',
-      frequency: 'quarterly',
-      payments: [{ totalPaymentPence: 250, paymentDate: '2025-03-31' }]
-    }
-
-    const newPayment = {
-      agreementTotalPence: 1500,
-      annualTotalPence: 500,
-      agreementStartDate: '2025-01-01',
-      agreementEndDate: '2025-12-31',
-      frequency: 'quarterly',
-      payments: [{ totalPaymentPence: 250, paymentDate: '2025-03-31' }]
-    }
-
-    const mockMissedPayments = [
-      {
-        _id: 'v1',
-        agreement: { agreementNumber: 'AG1', _id: 'agreement1' },
-        status: 'accepted',
-        payment: oldPayment,
-        application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] }
-      }
-    ]
-
-    vi.mocked(versionsModel.find).mockReturnValue({
-      populate: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockMissedPayments)
-      })
-    })
-
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockResolvedValue(
-      newPayment
-    )
-
-    const newVersion = {
-      _id: 'v2',
-      ...mockMissedPayments[0],
-      payment: newPayment,
-      toObject: () => ({
-        _id: 'v2',
-        ...mockMissedPayments[0],
-        payment: newPayment
-      })
-    }
-
-    vi.mocked(versionsModel.create).mockResolvedValue(newVersion)
-    vi.mocked(versionsModel.findById).mockImplementation((id) => {
-      if (id === 'v2') {
-        return {
-          populate: vi.fn().mockReturnValue({
-            lean: vi.fn().mockResolvedValue(newVersion.toObject())
-          })
-        }
-      }
-      return {
-        populate: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(null)
-        })
-      }
-    })
-
-    vi.mocked(acceptOffer).mockResolvedValue({
-      claimId: 'C1',
-      some: 'data'
-    })
-
-    sendUnsetGPSEventsPlugin.register(server)
-    const startHandler = server.events.on.mock.calls.find(
-      (call) => call[0] === 'start'
-    )[1]
-
-    await startHandler()
-
-    expect(server.logger.info).toHaveBeenCalledWith(
-      'Payment values have changed for agreement AG1, creating new version'
-    )
-    expect(versionsModel.create).toHaveBeenCalled()
-  })
-
-  it('should detect payment changes when payment dates differ', async () => {
-    vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
-      }
-      return null
-    })
-
-    const mockAgreements = [{ _id: { toString: () => 'agreement1' } }]
-
-    vi.mocked(agreementsModel.find).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockAgreements)
-      })
-    })
-
-    const oldPayment = {
-      agreementTotalPence: 1000,
-      annualTotalPence: 500,
-      agreementStartDate: '2025-01-01',
-      agreementEndDate: '2025-12-31',
-      frequency: 'quarterly',
-      payments: [{ totalPaymentPence: 250, paymentDate: '2025-03-31' }]
-    }
-
-    const newPayment = {
-      agreementTotalPence: 1000,
-      annualTotalPence: 500,
-      agreementStartDate: '2025-01-01',
-      agreementEndDate: '2025-12-31',
-      frequency: 'quarterly',
-      payments: [{ totalPaymentPence: 250, paymentDate: '2025-04-30' }]
-    }
-
-    const mockMissedPayments = [
-      {
-        _id: 'v1',
-        agreement: { agreementNumber: 'AG1', _id: 'agreement1' },
-        status: 'accepted',
-        payment: oldPayment,
-        application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] }
-      }
-    ]
-
-    vi.mocked(versionsModel.find).mockReturnValue({
-      populate: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockMissedPayments)
-      })
-    })
-
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockResolvedValue(
-      newPayment
-    )
-
-    const newVersion = {
-      _id: 'v2',
-      ...mockMissedPayments[0],
-      payment: newPayment,
-      toObject: () => ({
-        _id: 'v2',
-        ...mockMissedPayments[0],
-        payment: newPayment
-      })
-    }
-
-    vi.mocked(versionsModel.create).mockResolvedValue(newVersion)
-    vi.mocked(versionsModel.findById).mockImplementation((id) => {
-      if (id === 'v2') {
-        return {
-          populate: vi.fn().mockReturnValue({
-            lean: vi.fn().mockResolvedValue(newVersion.toObject())
-          })
-        }
-      }
-      return {
-        populate: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(null)
-        })
-      }
-    })
-
-    vi.mocked(acceptOffer).mockResolvedValue({
-      claimId: 'C1',
-      some: 'data'
-    })
-
-    sendUnsetGPSEventsPlugin.register(server)
-    const startHandler = server.events.on.mock.calls.find(
-      (call) => call[0] === 'start'
-    )[1]
-
-    await startHandler()
-
-    expect(server.logger.info).toHaveBeenCalledWith(
-      'Payment values have changed for agreement AG1, creating new version'
-    )
-    expect(versionsModel.create).toHaveBeenCalled()
-  })
-
-  it('should detect payment changes when payment amounts differ', async () => {
-    vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
-      }
-      return null
-    })
-
-    const mockAgreements = [{ _id: { toString: () => 'agreement1' } }]
-
-    vi.mocked(agreementsModel.find).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockAgreements)
-      })
-    })
-
-    const oldPayment = {
-      agreementTotalPence: 1000,
-      annualTotalPence: 500,
-      agreementStartDate: '2025-01-01',
-      agreementEndDate: '2025-12-31',
-      frequency: 'quarterly',
-      payments: [{ totalPaymentPence: 250, paymentDate: '2025-03-31' }]
-    }
-
-    const newPayment = {
-      agreementTotalPence: 1000,
-      annualTotalPence: 500,
-      agreementStartDate: '2025-01-01',
-      agreementEndDate: '2025-12-31',
-      frequency: 'quarterly',
-      payments: [{ totalPaymentPence: 300, paymentDate: '2025-03-31' }]
-    }
-
-    const mockMissedPayments = [
-      {
-        _id: 'v1',
-        agreement: { agreementNumber: 'AG1', _id: 'agreement1' },
-        status: 'accepted',
-        payment: oldPayment,
-        application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] }
-      }
-    ]
-
-    vi.mocked(versionsModel.find).mockReturnValue({
-      populate: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue(mockMissedPayments)
-      })
-    })
-
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockResolvedValue(
-      newPayment
-    )
-
-    const newVersion = {
-      _id: 'v2',
-      ...mockMissedPayments[0],
-      payment: newPayment,
-      toObject: () => ({
-        _id: 'v2',
-        ...mockMissedPayments[0],
-        payment: newPayment
-      })
-    }
-
-    vi.mocked(versionsModel.create).mockResolvedValue(newVersion)
-    vi.mocked(versionsModel.findById).mockImplementation((id) => {
-      if (id === 'v2') {
-        return {
-          populate: vi.fn().mockReturnValue({
-            lean: vi.fn().mockResolvedValue(newVersion.toObject())
-          })
-        }
-      }
-      return {
-        populate: vi.fn().mockReturnValue({
-          lean: vi.fn().mockResolvedValue(null)
-        })
-      }
-    })
-
-    vi.mocked(acceptOffer).mockResolvedValue({
-      claimId: 'C1',
-      some: 'data'
-    })
-
-    sendUnsetGPSEventsPlugin.register(server)
-    const startHandler = server.events.on.mock.calls.find(
-      (call) => call[0] === 'start'
-    )[1]
-
-    await startHandler()
-
-    expect(server.logger.info).toHaveBeenCalledWith(
-      'Payment values have changed for agreement AG1, creating new version'
-    )
-    expect(versionsModel.create).toHaveBeenCalled()
   })
 
   it('should handle errors when creating new version fails', async () => {

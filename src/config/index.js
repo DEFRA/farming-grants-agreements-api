@@ -392,6 +392,12 @@ const config = convict({
     default: 'http://localhost:3555',
     env: 'VIEW_AGREEMENT_URI'
   },
+  paymentDayOfMonth: {
+    doc: 'Day of the month when payments are scheduled (1-31)',
+    format: 'nat',
+    default: 15,
+    env: 'PAYMENT_DAY_OF_MONTH'
+  },
   featureFlags: {
     seedDb: {
       doc: 'Seed the database',
