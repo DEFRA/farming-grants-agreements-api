@@ -79,32 +79,3 @@ export const up = async (db) => {
     throw err
   }
 }
-
-export const down = async (db) => {
-  logger.warn('Rolling back grant migration...')
-
-  try {
-    // Find grants that were created by this migration and remove them
-    const grants = await db.collection('grants').find({}).toArray()
-
-    for (const grant of grants) {
-      // Remove grant references from versions
-      await db
-        .collection('versions')
-        .updateMany({ grant: grant._id }, { $unset: { grant: '', scheme: '' } })
-
-      // Remove grant reference from agreement
-      await db
-        .collection('agreements')
-        .updateMany({ grants: grant._id }, { $pull: { grants: grant._id } })
-    }
-
-    // Delete all grants
-    await db.collection('grants').deleteMany({})
-
-    logger.info('Grant migration rollback completed')
-  } catch (err) {
-    logger.error('Error during migration rollback:', err)
-    throw err
-  }
-}
