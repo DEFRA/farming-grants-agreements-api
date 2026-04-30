@@ -1,17 +1,17 @@
 import { vi } from 'vitest'
 import Boom from '@hapi/boom'
-import agreementModel from '#~/api/common/models/agreements.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 // Import the module after setting up the mocks
 import { withdrawOffer } from './withdraw-offer.js'
 
 vi.mock('@hapi/boom')
-vi.mock('#~/api/common/models/agreements.js', () => ({
-  __esModule: true,
-  default: {
-    updateOneAgreementVersion: vi.fn()
-  }
-}))
+vi.mock(
+  '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
+  () => ({
+    updateAgreementWithVersionViaGrant: vi.fn()
+  })
+)
 
 describe('withdrawOffer', () => {
   beforeEach(() => {
@@ -25,19 +25,19 @@ describe('withdrawOffer', () => {
     })
   })
 
-  test('should successfully withdraw an offer', async () => {
+  test('should successfully withdraw an offer using updateAgreementWithVersionViaGrant', async () => {
     // Arrange
     const clientRef = 'client-ref-001'
     const agreementNumber = 'FPTT123456789'
     const mockResult = { modifiedCount: 1 }
 
-    agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)
+    updateAgreementWithVersionViaGrant.mockResolvedValueOnce(mockResult)
 
     // Act
     const result = await withdrawOffer(clientRef, agreementNumber)
 
     // Assert
-    expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       {
         status: 'offered',
         clientRef,
@@ -52,13 +52,13 @@ describe('withdrawOffer', () => {
     expect(result).toEqual(mockResult)
   })
 
-  test('should throw Boom.internal when updateOneAgreementVersion fails', async () => {
+  test('should throw Boom.internal when updateAgreementWithVersionViaGrant fails', async () => {
     // Arrange
     const clientRef = 'client-ref-001'
     const agreementNumber = 'FPTT123456789'
     const error = new Error('Database error')
 
-    agreementModel.updateOneAgreementVersion.mockRejectedValueOnce(error)
+    updateAgreementWithVersionViaGrant.mockRejectedValueOnce(error)
     Boom.internal.mockReturnValue(
       new Error(
         'Offer is not in the correct state to be withdrawn or was not found'
@@ -82,13 +82,13 @@ describe('withdrawOffer', () => {
     const agreementNumber = 'FPTT987654321'
     const mockResult = { modifiedCount: 1 }
 
-    agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)
+    updateAgreementWithVersionViaGrant.mockResolvedValueOnce(mockResult)
 
     // Act
     const result = await withdrawOffer(clientRef, agreementNumber)
 
     // Assert
-    expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       {
         status: 'offered',
         clientRef,

@@ -181,7 +181,8 @@ describe('SQS Client', () => {
         visibilityTimeout: 30,
         handleMessageTimeout: 30000,
         attributeNames: ['All'],
-        messageAttributeNames: ['All']
+        messageAttributeNames: ['All'],
+        suppressFifoWarning: true
       })
 
       // Check error handlers were set up
