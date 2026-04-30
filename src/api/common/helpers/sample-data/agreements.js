@@ -25,6 +25,7 @@ export default [
     },
     answers: {
       agreementName: 'Example agreement 1',
+      scheme: 'FPTT',
       actionApplications: [
         {
           sheetId: 'SD4841',
