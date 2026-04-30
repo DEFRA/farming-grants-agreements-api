@@ -163,9 +163,9 @@ const schema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
-    agreement: {
+    grant: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'agreements',
+      ref: 'grants',
       default: null,
       index: true
     },
@@ -192,6 +192,6 @@ schema.index({ clientRef: 1 })
 schema.index({ 'payment.agreementStartDate': 1 })
 schema.index({ 'payment.agreementEndDate': 1 })
 schema.index({ status: 1, grantsPaymentServiceRequestMade: 1 })
-schema.index({ agreement: 1, createdAt: -1, _id: -1 })
+schema.index({ grant: 1, createdAt: -1, _id: -1 })
 
 export default mongoose.model(collection, schema)

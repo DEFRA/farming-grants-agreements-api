@@ -68,24 +68,17 @@ describe('#startServer', () => {
 
       expect(createServerSpy).toHaveBeenCalled()
       expect(hapiServerSpy).toHaveBeenCalled()
-      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
-        1,
+      expect(mockHapiLoggerInfo).toHaveBeenCalledWith(
         'Custom secure context is disabled'
       )
-      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
-        2,
-        'Setting up Mongoose'
-      )
-      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
-        3,
+      expect(mockHapiLoggerInfo).toHaveBeenCalledWith('Setting up Mongoose')
+      expect(mockHapiLoggerInfo).toHaveBeenCalledWith(
         'Mongoose connected to MongoDB'
       )
-      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
-        4,
+      expect(mockHapiLoggerInfo).toHaveBeenCalledWith(
         'Server started successfully'
       )
-      expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
-        5,
+      expect(mockHapiLoggerInfo).toHaveBeenCalledWith(
         'Access your backend on http://localhost:3098'
       )
     })

@@ -14,7 +14,7 @@ export const mongooseDb = {
      *
      * @param { import('@hapi/hapi').Server } server
      * @param {{mongoUrl?: string, databaseName?: string}} [options]
-     * @returns {void}
+     * @returns {Promise<void>}
      */
     register: async function (server, options = {}) {
       server.logger.info('Setting up Mongoose')
@@ -23,7 +23,9 @@ export const mongooseDb = {
       const databaseName = options.databaseName ?? config.get('mongoDatabase')
 
       await mongoose.connect(mongoUrl, {
-        dbName: databaseName
+        dbName: databaseName,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000
       })
 
       server.logger.info('Mongoose connected to MongoDB')

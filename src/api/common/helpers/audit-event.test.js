@@ -4,6 +4,7 @@ const mockConfigGet = vi.hoisted(() =>
   vi.fn((key) => {
     const configMap = {
       env: 'test',
+      cdpEnvironment: 'test',
       serviceName: 'farming-grants-agreements-api',
       'aws.sns.topic.audit.arn':
         'arn:aws:sns:eu-west-2:000000000000:fcp_audit_farming_grants_agreements_api'
@@ -282,7 +283,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
     )
   })
 
-  test('defaults ip to empty string when no request provided', () => {
+  test('falls back to the service IP when no request is provided', () => {
     auditEvent(
       AuditEvent.PDF_DOWNLOADED_FROM_S3,
       { agreementNumber: 'FPTT123456789' },
@@ -291,7 +292,42 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       mockSnsClient
     )
 
-    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ ip: '' }))
+    const call = audit.mock.calls[0][0]
+    expect(typeof call.ip).toBe('string')
+    expect(call.ip.length).toBeGreaterThan(0)
+    expect(call.ip.length).toBeLessThanOrEqual(20)
+  })
+
+  test('strips :port from an IPv4 x-forwarded-for entry', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      { headers: { 'x-forwarded-for': '10.0.0.1:54321' } },
+      mockSnsClient
+    )
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '10.0.0.1' })
+    )
+  })
+
+  test('falls back to service IP when first x-forwarded-for entry exceeds 20 chars', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      {
+        headers: {
+          'x-forwarded-for': '2001:0db8:85a3:0000:0000:8a2e:0370:7334'
+        }
+      },
+      mockSnsClient
+    )
+
+    const call = audit.mock.calls[0][0]
+    expect(call.ip.length).toBeLessThanOrEqual(20)
+    expect(call.ip).not.toContain(',')
   })
 
   test('does not throw when SNS publish fails', () => {

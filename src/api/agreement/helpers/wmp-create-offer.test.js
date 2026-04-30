@@ -1,19 +1,18 @@
 import { vi, describe, it, beforeEach, expect } from 'vitest'
 
 import wmpAgreementFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
-import agreementsModel from '#~/api/common/models/agreements.js'
+import { createAgreementWithGrantAndVersions } from '#~/api/agreement/helpers/create-agreement-with-grant-and-versions.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 import * as landGrantsAdapter from '#~/api/adapter/land-grants-adapter.js'
 import { wmpCreateOffer } from './wmp-create-offer.js'
 
-vi.mock('#~/api/common/models/agreements.js', () => ({
-  __esModule: true,
-  default: {
-    createAgreementWithVersions: vi.fn(),
-    exists: vi.fn().mockResolvedValue(false)
-  }
-}))
+vi.mock(
+  '#~/api/agreement/helpers/create-agreement-with-grant-and-versions.js',
+  () => ({
+    createAgreementWithGrantAndVersions: vi.fn()
+  })
+)
 vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(true)
 }))
@@ -23,14 +22,21 @@ vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
+vi.mock('./create-offer.js', () => ({
+  generateAgreementNumber: vi
+    .fn()
+    .mockImplementation(() =>
+      Promise.resolve(`FPTT${Math.floor(100000000 + Math.random() * 899999999)}`)
+    )
+}))
 
 const logger = { info: vi.fn(), error: vi.fn() }
 
 describe('wmpCreateOffer (integration)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    agreementsModel.createAgreementWithVersions.mockImplementation(
-      ({ agreement }) => ({
+    createAgreementWithGrantAndVersions.mockImplementation(({ agreement }) =>
+      Promise.resolve({
         ...agreement,
         updatedAt: new Date('2026-04-20T10:00:00.000Z'),
         versions: []
@@ -46,9 +52,9 @@ describe('wmpCreateOffer (integration)', () => {
     )
 
     // Persistence: ignorePayments must be false so the WMP payment subdoc survives
-    expect(agreementsModel.createAgreementWithVersions).toHaveBeenCalledTimes(1)
+    expect(createAgreementWithGrantAndVersions).toHaveBeenCalledTimes(1)
     const [{ agreement, versions, ignorePayments }] =
-      agreementsModel.createAgreementWithVersions.mock.calls[0]
+      createAgreementWithGrantAndVersions.mock.calls[0]
     expect(ignorePayments).toBe(false)
     expect(agreement.sbi).toBe(wmpAgreementFixture.metadata.sbi)
     expect(agreement.clientRef).toBe(wmpAgreementFixture.metadata.clientRef)
@@ -86,7 +92,7 @@ describe('wmpCreateOffer (integration)', () => {
     await expect(
       wmpCreateOffer('dup-msg', wmpAgreementFixture, logger)
     ).rejects.toThrow(/already been created/)
-    expect(agreementsModel.createAgreementWithVersions).not.toHaveBeenCalled()
+    expect(createAgreementWithGrantAndVersions).not.toHaveBeenCalled()
     expect(publishEvent).not.toHaveBeenCalled()
   })
 
@@ -101,7 +107,7 @@ describe('wmpCreateOffer (integration)', () => {
     await expect(wmpCreateOffer('msg-bad', broken, logger)).rejects.toThrow(
       /Invalid WMP create-agreement payload/
     )
-    expect(agreementsModel.createAgreementWithVersions).not.toHaveBeenCalled()
+    expect(createAgreementWithGrantAndVersions).not.toHaveBeenCalled()
     expect(
       landGrantsAdapter.calculatePaymentsBasedOnParcelsWithActions
     ).not.toHaveBeenCalled()

@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom'
 
-import agreementsModel from '#~/api/common/models/agreements.js'
+import { createAgreementWithGrantAndVersions } from '#~/api/agreement/helpers/create-agreement-with-grant-and-versions.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
@@ -14,7 +14,7 @@ import { mapWmpPayloadToVersion } from './wmp-payload-mapper.js'
  * Plan §12.1 / §12.2 (edit #4):
  *  1. Validate the payload via the WMP Joi schema.
  *  2. Map it to a `versions` document via `mapWmpPayloadToVersion`.
- *  3. Persist via `createAgreementWithVersions({ ignorePayments: false })`
+ *  3. Persist via `createAgreementWithGrantAndVersions({ ignorePayments: false })`
  *     so the payment subdoc derived from the payload survives insert.
  *  4. Publish the existing `agreementStatusUpdate` SNS event.
  *
@@ -52,7 +52,7 @@ export const wmpCreateOffer = async (
 
   // 3. Persist (ignorePayments: false → keep WMP payment subdoc)
   const agreementNumber = await generateAgreementNumber()
-  const agreement = await agreementsModel.createAgreementWithVersions({
+  const agreement = await createAgreementWithGrantAndVersions({
     agreement: {
       agreementNumber,
       clientRef: version.clientRef,

@@ -1,9 +1,9 @@
 import { vi } from 'vitest'
 import Boom from '@hapi/boom'
-import agreementModel from '#~/api/common/models/agreements.js'
 
 // Import the module after setting up the mocks
 import { cancelOffer } from './cancel-offer.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 vi.mock('@hapi/boom')
 vi.mock('#~/api/common/models/agreements.js', () => ({
@@ -12,6 +12,7 @@ vi.mock('#~/api/common/models/agreements.js', () => ({
     updateOneAgreementVersion: vi.fn()
   }
 }))
+vi.mock('#~/api/agreement/helpers/update-agreement-with-version-via-grant.js')
 
 describe('cancelOffer', () => {
   beforeEach(() => {
@@ -31,13 +32,13 @@ describe('cancelOffer', () => {
     const agreementNumber = 'FPTT123456789'
     const mockResult = { modifiedCount: 1 }
 
-    agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)
+    updateAgreementWithVersionViaGrant.mockResolvedValueOnce(mockResult)
 
     // Act
     const result = await cancelOffer(clientRef, agreementNumber)
 
     // Assert
-    expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       {
         status: 'offered',
         clientRef,
@@ -52,13 +53,13 @@ describe('cancelOffer', () => {
     expect(result).toEqual(mockResult)
   })
 
-  test('should throw Boom.internal when updateOneAgreementVersion fails', async () => {
+  test('should throw Boom.internal when updateAgreementWithVersionViaGrant fails', async () => {
     // Arrange
     const clientRef = 'client-ref-001'
     const agreementNumber = 'FPTT123456789'
     const error = new Error('Database error')
 
-    agreementModel.updateOneAgreementVersion.mockRejectedValueOnce(error)
+    updateAgreementWithVersionViaGrant.mockRejectedValueOnce(error)
     Boom.internal.mockReturnValue(
       new Error(
         'Offer is not in the correct state to be cancelled or was not found'
@@ -82,13 +83,13 @@ describe('cancelOffer', () => {
     const agreementNumber = 'FPTT987654321'
     const mockResult = { modifiedCount: 1 }
 
-    agreementModel.updateOneAgreementVersion.mockResolvedValueOnce(mockResult)
+    updateAgreementWithVersionViaGrant.mockResolvedValueOnce(mockResult)
 
     // Act
     const result = await cancelOffer(clientRef, agreementNumber)
 
     // Assert
-    expect(agreementModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       {
         status: 'offered',
         clientRef,

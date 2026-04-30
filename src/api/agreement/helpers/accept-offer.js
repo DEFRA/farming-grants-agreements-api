@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto'
-
 import Boom from '@hapi/boom'
-import agreementsModel from '#~/api/common/models/agreements.js'
 import { config } from '#~/config/index.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import { isWmpAgreement } from '#~/api/agreement/helpers/wmp-payload-mapper.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 /**
  * Accept an agreement offer
@@ -57,26 +56,18 @@ async function acceptOffer(agreementNumber, agreementData, logger) {
     }
   }
 
-  // Update the agreement in the database
-  const agreement = await agreementsModel
-    .updateOneAgreementVersion(
-      {
-        agreementNumber
-      },
-      {
-        $set: {
-          status: acceptedStatus,
-          signatureDate: acceptanceTime,
-          payment: paymentWithCorrelationIds
-        }
+  const agreement = await updateAgreementWithVersionViaGrant(
+    {
+      agreementNumber
+    },
+    {
+      $set: {
+        status: acceptedStatus,
+        signatureDate: acceptanceTime,
+        payment: paymentWithCorrelationIds
       }
-    )
-    .catch((error) => {
-      if (error?.isBoom) {
-        throw error
-      }
-      throw Boom.internal(error)
-    })
+    }
+  )
 
   if (!agreement) {
     throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
