@@ -12,13 +12,15 @@ const getMongoClient = () => {
   if (!mongoUri || mongoUri === 'mongodb://127.0.0.1:27017/') {
     // Return a dummy client if we don't have a real URI or if it's the default one during tests
     // This prevents the "collection name has invalid type null" error during some test imports
+    const dummyCollection = () => ({
+      find: () => ({ toArray: () => Promise.resolve([]) }),
+      insertOne: () => Promise.resolve({})
+    })
+    const dummyDb = () => ({
+      collection: dummyCollection
+    })
     return {
-      db: () => ({
-        collection: () => ({
-          find: () => ({ toArray: () => Promise.resolve([]) }),
-          insertOne: () => Promise.resolve({})
-        })
-      })
+      db: dummyDb
     }
   }
   return new MongoClient(mongoUri, {
