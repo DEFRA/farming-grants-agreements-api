@@ -14,6 +14,7 @@ EXPOSE ${PORT} ${PORT_DEBUG}
 COPY --chown=node:node package*.json ./
 RUN npm install
 COPY --chown=node:node ./src ./src
+COPY --chown=node:node ./scripts ./scripts
 COPY --chown=node:node ./migrations ./migrations
 COPY --chown=node:node ./migrate-mongo-config.js ./migrate-mongo-config.js
 
