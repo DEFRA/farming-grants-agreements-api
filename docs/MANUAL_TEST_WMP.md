@@ -13,10 +13,15 @@ docker-compose stack (Floci + LocalStack + MongoDB + Agreements Service).
 
 ## 2. Bring the stack up
 
+The Agreements Service container itself is gated behind the `full` compose
+profile, so include it explicitly:
+
 ```bash
 cd farming-grants-agreements-api
 docker compose --profile full up -d
 ```
+
+(First run will build the AS image — a few minutes. Subsequent runs are fast.)
 
 > ⚠️ The `farming-grants-agreements-api` service is gated behind the `full`
 > compose profile — a plain `docker compose up -d` will only start
@@ -69,11 +74,15 @@ with `ignorePayments: false`.
 
 ## 5. Verify the agreement is in Mongo
 
+> ℹ️ The Mongo database is named **`farming-grants-agreements-api`** (driven
+> by `mongo.databaseName` in `src/config/index.js`). Older docs referring to
+> `fg-agreements` are out of date.
+
 Replace `WMP-MANUAL-001` with the `clientRef` printed by the script:
 
 ```bash
 docker compose exec mongodb mongosh --quiet --eval \
-  'db.getSiblingDB("fg-agreements").versions.find({clientRef:"WMP-MANUAL-001"}).pretty()'
+  'db.getSiblingDB("farming-grants-agreements-api").versions.find({clientRef:"WMP-MANUAL-001"}).pretty()'
 ```
 
 Expected:
@@ -85,11 +94,15 @@ Expected:
 - `payment.payments[0].paymentDate: null` (paid on signature)
 - `payment.agreementTotalPence === 157500` (matches the fixture sum)
 
-Also check the parent agreement doc:
+Also check the parent agreement doc. **Note**: `findOrCreateAgreement`
+matches on `sbi` only, so if SBI `106284736` (the fixture's SBI) already
+exists in seed data, the new WMP version attaches to the existing
+agreement and you won't find an `agreements` row by the WMP `clientRef`.
+Look it up by `sbi` instead:
 
 ```bash
 docker compose exec mongodb mongosh --quiet --eval \
-  'db.getSiblingDB("fg-agreements").agreements.find({clientRef:"WMP-MANUAL-001"}).pretty()'
+  'db.getSiblingDB("farming-grants-agreements-api").agreements.find({sbi:"106284736"}).pretty()'
 ```
 
 ## 6. Confirm Land Grants was NOT called (AC4)

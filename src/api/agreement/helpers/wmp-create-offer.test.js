@@ -26,7 +26,9 @@ vi.mock('./create-offer.js', () => ({
   generateAgreementNumber: vi
     .fn()
     .mockImplementation(() =>
-      Promise.resolve(`FPTT${Math.floor(100000000 + Math.random() * 899999999)}`)
+      Promise.resolve(
+        `FPTT${Math.floor(100000000 + Math.random() * 899999999)}`
+      )
     )
 }))
 
