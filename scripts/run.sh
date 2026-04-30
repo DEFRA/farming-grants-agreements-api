@@ -10,7 +10,7 @@ export NODE_EXTRA_CA_CERTS="/tmp/certs.pem"
 
 # Use the command passed to the script, or default to starting the app
 if [ $# -eq 0 ]; then
-  node src
+  exec node src
 else
   exec "$@"
 fi
