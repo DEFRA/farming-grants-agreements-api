@@ -148,6 +148,7 @@ async function createNewVersionWithUpdatedPayment(
     delete newVersion._id // Let MongoDB generate new ID
     delete newVersion.__v
     delete newVersion.agreement // This will be set by the model
+    newVersion.notificationMessageId = randomUUID()
 
     // Insert the new version
     const createdVersion = await versionsModel.create(newVersion)
