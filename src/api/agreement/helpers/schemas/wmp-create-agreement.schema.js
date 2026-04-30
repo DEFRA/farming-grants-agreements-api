@@ -2,9 +2,13 @@ import Joi from 'joi'
 // UK postcode regex (allows optional space, both letter cases)
 const POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i
 const HECTARES_TOLERANCE = 0.01
+// Identifier digit lengths (DEFRA business reference standards)
+const SBI_DIGITS = 9
+const CRN_DIGITS = 10
+const FRN_DIGITS = 10
 const numericString = (digits) =>
   Joi.string()
-    .pattern(new RegExp(`^\\d{${digits}}$`))
+    .pattern(new RegExp(String.raw`^\d{${digits}}$`))
     .messages({
       'string.pattern.base': `must be a ${digits}-digit numeric string`
     })
@@ -76,15 +80,15 @@ const applicantSchema = Joi.object({
 }).unknown(true)
 const metadataSchema = Joi.object({
   clientRef: Joi.string().required(),
-  sbi: numericString(9).required(),
-  crn: numericString(10).required(),
-  frn: numericString(10).required(),
+  sbi: numericString(SBI_DIGITS).required(),
+  crn: numericString(CRN_DIGITS).required(),
+  frn: numericString(FRN_DIGITS).required(),
   submittedAt: Joi.date().iso().required()
 }).unknown(true)
 const identifiersSchema = Joi.object({
-  sbi: numericString(9).required(),
-  crn: numericString(10).required(),
-  frn: numericString(10).required(),
+  sbi: numericString(SBI_DIGITS).required(),
+  crn: numericString(CRN_DIGITS).required(),
+  frn: numericString(FRN_DIGITS).required(),
   defraId: Joi.string().allow('', null)
 }).unknown(true)
 const landParcelSchema = Joi.object({
@@ -102,43 +106,56 @@ const agreementPaymentItemSchema = Joi.object({
   agreementTotalPence: moneyPence.required(),
   unit: Joi.string().required()
 }).unknown(true)
-function crossFieldChecks(answers, helpers) {
-  const errors = []
-  // (a) totals match
+function checkPaymentTotal(answers) {
   const sumPayments = (answers.payments?.agreement || []).reduce(
     (acc, p) => acc + Number(p.agreementTotalPence || 0),
     0
   )
   if (sumPayments !== answers.totalAgreementPaymentPence) {
-    errors.push(
+    return (
       `totalAgreementPaymentPence (${answers.totalAgreementPaymentPence}) ` +
-        `must equal sum of payments.agreement[].agreementTotalPence (${sumPayments})`
+      `must equal sum of payments.agreement[].agreementTotalPence (${sumPayments})`
     )
   }
-  // (b) hectares match within tolerance
+  return null
+}
+
+function checkHectaresTotal(answers) {
   const sumHa = (answers.landParcels || []).reduce(
     (acc, p) => acc + Number(p.areaHa || 0),
     0
   )
   if (Math.abs(sumHa - answers.totalHectaresAppliedFor) > HECTARES_TOLERANCE) {
-    errors.push(
+    return (
       `totalHectaresAppliedFor (${answers.totalHectaresAppliedFor}) must equal ` +
-        `sum of landParcels[].areaHa (${sumHa.toFixed(4)}) within ±${HECTARES_TOLERANCE}`
+      `sum of landParcels[].areaHa (${sumHa.toFixed(4)}) within ±${HECTARES_TOLERANCE}`
     )
   }
-  // (c) existingWmps non-empty when appLandHasExistingWmp === true
-  if (answers.appLandHasExistingWmp === true) {
-    const ew = answers.existingWmps
-    const empty =
-      ew == null ||
-      (typeof ew === 'string' && ew.trim() === '') ||
-      (Array.isArray(ew) && ew.length === 0)
-    if (empty) {
-      errors.push(
-        'existingWmps is required and must be non-empty when appLandHasExistingWmp is true'
-      )
-    }
+  return null
+}
+
+function checkExistingWmps(answers) {
+  if (answers.appLandHasExistingWmp !== true) {
+    return null
   }
+  const ew = answers.existingWmps
+  const empty =
+    ew == null ||
+    (typeof ew === 'string' && ew.trim() === '') ||
+    (Array.isArray(ew) && ew.length === 0)
+  if (empty) {
+    return 'existingWmps is required and must be non-empty when appLandHasExistingWmp is true'
+  }
+  return null
+}
+
+function crossFieldChecks(answers, helpers) {
+  const errors = [
+    checkPaymentTotal(answers),
+    checkHectaresTotal(answers),
+    checkExistingWmps(answers)
+  ].filter(Boolean)
+
   if (errors.length) {
     return helpers.message({ custom: errors.join('; ') })
   }
