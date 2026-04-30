@@ -14,6 +14,9 @@ EXPOSE ${PORT} ${PORT_DEBUG}
 COPY --chown=node:node package*.json ./
 RUN npm install
 COPY --chown=node:node ./src ./src
+COPY --chown=node:node ./scripts ./scripts
+COPY --chown=node:node ./migrations ./migrations
+COPY --chown=node:node ./migrate-mongo-config.js ./migrate-mongo-config.js
 
 CMD [ "npm", "run", "docker:dev" ]
 
@@ -33,11 +36,15 @@ ENV JWT_ENABLED=${JWT_ENABLED}
 
 COPY --from=development /home/node/package*.json ./
 COPY --from=development /home/node/src ./src/
+COPY --from=development /home/node/migrations ./migrations/
+COPY --from=development /home/node/migrate-mongo-config.js ./
+COPY --from=development /home/node/scripts/run.sh ./scripts/run.sh
 
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev && \
+    chmod +x ./scripts/run.sh
 
 ARG PORT
 ENV PORT=${PORT}
 EXPOSE ${PORT}
 
-CMD [ "node", "src" ]
+CMD [ "./scripts/run.sh" ]

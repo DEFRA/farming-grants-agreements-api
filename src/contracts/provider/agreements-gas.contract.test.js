@@ -18,22 +18,21 @@ import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
-import agreementsModel from '#~/api/common/models/agreements.js'
 import * as landGrantsAdapter from '#~/api/adapter/land-grants-adapter.js'
-
-vi.mock('#~/api/common/models/agreements.js', () => {
-  return {
-    default: {
-      updateOneAgreementVersion: vi.fn()
-    }
-  }
-})
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => {
   return {
     calculatePaymentsBasedOnParcelsWithActions: vi.fn()
   }
 })
+
+vi.mock(
+  '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
+  () => ({
+    updateAgreementWithVersionViaGrant: vi.fn()
+  })
+)
 
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
@@ -84,7 +83,7 @@ const setupMocks = () => {
 
   unacceptOffer.mockResolvedValue()
 
-  agreementsModel.updateOneAgreementVersion.mockResolvedValue({
+  updateAgreementWithVersionViaGrant.mockResolvedValue({
     ...mockAgreementData,
     signatureDate: '2024-01-01T00:00:00.000Z',
     status: 'accepted'

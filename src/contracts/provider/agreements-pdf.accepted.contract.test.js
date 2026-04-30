@@ -11,22 +11,21 @@ import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-gr
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
-import agreementsModel from '#~/api/common/models/agreements.js'
 import * as landGrantsAdapter from '#~/api/adapter/land-grants-adapter.js'
-
-vi.mock('#~/api/common/models/agreements.js', () => {
-  return {
-    default: {
-      updateOneAgreementVersion: vi.fn()
-    }
-  }
-})
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => {
   return {
     calculatePaymentsBasedOnParcelsWithActions: vi.fn()
   }
 })
+
+vi.mock(
+  '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
+  () => ({
+    updateAgreementWithVersionViaGrant: vi.fn()
+  })
+)
 
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/common/helpers/create-grant-payment-from-agreement.js')
@@ -84,7 +83,7 @@ describe('sending updated (accepted) events via SNS', () => {
     getAgreementDataBySbi.mockReset()
     createGrantPaymentFromAgreement.mockReset()
 
-    agreementsModel.updateOneAgreementVersion.mockResolvedValue({
+    updateAgreementWithVersionViaGrant.mockResolvedValue({
       ...mockAgreementData,
       signatureDate: '2024-01-01T00:00:00.000Z',
       status: 'accepted'

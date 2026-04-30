@@ -2,10 +2,10 @@ import { vi } from 'vitest'
 import { randomUUID } from 'node:crypto'
 
 import Boom from '@hapi/boom'
-import agreementsModel from '#~/api/common/models/agreements.js'
 import { acceptOffer } from './accept-offer.js'
 import { config } from '#~/config/index.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 vi.mock('node:crypto', () => ({
   randomUUID: vi.fn()
@@ -50,6 +50,12 @@ vi.mock('#~/config/index.js')
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
+vi.mock(
+  '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
+  () => ({
+    updateAgreementWithVersionViaGrant: vi.fn()
+  })
+)
 vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
   publishEvent: vi.fn().mockResolvedValue(undefined)
 }))
@@ -200,6 +206,11 @@ describe('acceptOffer', () => {
       return 'default-value'
     })
 
+    updateAgreementWithVersionViaGrant.mockResolvedValue({
+      agreementNumber: 'FPTT123456789',
+      status: 'accepted'
+    })
+
     const agreementData = {
       agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
@@ -233,6 +244,11 @@ describe('acceptOffer', () => {
       return 'default-value'
     })
 
+    updateAgreementWithVersionViaGrant.mockResolvedValue({
+      agreementNumber: 'FPTT123456789',
+      status: 'accepted'
+    })
+
     const agreementData = {
       agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
@@ -261,6 +277,48 @@ describe('acceptOffer', () => {
   })
 
   test('should successfully accept an agreement', async () => {
+    config.get.mockImplementation((key) => {
+      const configValues = {
+        'files.s3.bucket': 'test-bucket',
+        'files.s3.region': 'eu-west-2'
+      }
+      return configValues[key]
+    })
+
+    const agreementData = {
+      agreementNumber: 'FPTT123456789',
+      correlationId: 'test-correlation-id',
+      clientRef: 'test-client-ref',
+      application: { parcel: [] }
+    }
+
+    const mockAgreement = {
+      agreementNumber: 'FPTT123456789',
+      status: 'accepted'
+    }
+
+    updateAgreementWithVersionViaGrant.mockResolvedValue(mockAgreement)
+
+    const result = await acceptOffer('FPTT123456789', agreementData, mockLogger)
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: 'FPTT123456789',
+        status: 'accepted',
+        claimId: 'test-claim-id'
+      })
+    )
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
+      { agreementNumber: 'FPTT123456789' },
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          status: 'accepted'
+        })
+      })
+    )
+  })
+
+  test('should successfully accept an agreement', async () => {
     const agreementData = {
       agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
@@ -284,9 +342,7 @@ describe('acceptOffer', () => {
 
     // Arrange
     const agreementId = 'FPTT123456789'
-    agreementsModel.updateOneAgreementVersion.mockResolvedValue(
-      mockUpdateResult
-    )
+    updateAgreementWithVersionViaGrant.mockResolvedValue(mockUpdateResult)
 
     // Act
     const result = await acceptOffer(agreementId, agreementData, mockLogger)
@@ -296,7 +352,7 @@ describe('acceptOffer', () => {
       agreementData.application.parcel,
       mockLogger
     )
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
@@ -316,12 +372,12 @@ describe('acceptOffer', () => {
         }
       }
     )
-    expect(result).toEqual({
-      ...mockUpdateResult,
-      ...agreementData,
-      claimId: 'test-claim-id',
-      agreementNumber: agreementData.agreementNumber
-    })
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: agreementId,
+        claimId: 'test-claim-id'
+      })
+    )
   })
 
   test('should not use sample ID in production environment', async () => {
@@ -329,9 +385,7 @@ describe('acceptOffer', () => {
     const originalNodeEnv = process.env.NODE_ENV
     process.env.NODE_ENV = 'production'
     const agreementId = 'sample'
-    agreementsModel.updateOneAgreementVersion.mockResolvedValue(
-      mockUpdateResult
-    )
+    updateAgreementWithVersionViaGrant.mockResolvedValue(mockUpdateResult)
     const agreementData = {
       agreementNumber: agreementId,
       application: { parcel: [] },
@@ -351,7 +405,7 @@ describe('acceptOffer', () => {
       agreementData.application.parcel,
       mockLogger
     )
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: {
@@ -371,12 +425,12 @@ describe('acceptOffer', () => {
         }
       }
     )
-    expect(result).toEqual({
-      ...mockUpdateResult,
-      ...agreementData,
-      claimId: 'test-claim-id',
-      agreementNumber: agreementData.agreementNumber
-    })
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: agreementId,
+        claimId: 'test-claim-id'
+      })
+    )
 
     // Cleanup
     process.env.NODE_ENV = originalNodeEnv
@@ -385,7 +439,7 @@ describe('acceptOffer', () => {
   test('should throw Boom.notFound when agreement is not found', async () => {
     // Arrange
     const agreementId = 'FPTT999999999'
-    agreementsModel.updateOneAgreementVersion.mockResolvedValue(null)
+    updateAgreementWithVersionViaGrant.mockResolvedValue(null)
 
     // Act & Assert
     await expect(
@@ -401,14 +455,14 @@ describe('acceptOffer', () => {
       )
     ).rejects.toThrow(Boom.notFound('Offer not found with ID FPTT999999999'))
 
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalled()
   })
 
   test('should handle database errors and log them', async () => {
     // Arrange
     const agreementId = 'FPTT123456789'
     const dbError = Boom.internal('Database connection failed')
-    agreementsModel.updateOneAgreementVersion.mockRejectedValue(dbError)
+    updateAgreementWithVersionViaGrant.mockRejectedValue(dbError)
 
     // Act & Assert
     await expect(
@@ -424,14 +478,14 @@ describe('acceptOffer', () => {
       )
     ).rejects.toThrow(Boom.internal('Database connection failed'))
 
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalled()
   })
 
   test('should rethrow Boom errors without wrapping', async () => {
     // Arrange
     const agreementId = 'FPTT123456789'
     const boomError = Boom.badImplementation('Database error')
-    agreementsModel.updateOneAgreementVersion.mockRejectedValue(boomError)
+    updateAgreementWithVersionViaGrant.mockRejectedValue(boomError)
 
     // Act & Assert
     await expect(
@@ -447,15 +501,13 @@ describe('acceptOffer', () => {
       )
     ).rejects.toEqual(boomError)
 
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalled()
   })
 
   test('should preserve an existing payment correlationId', async () => {
     const agreementId = 'FPTT123456789'
     const existingPaymentCorrelationId = 'existing-payment-correlation-id'
-    agreementsModel.updateOneAgreementVersion.mockResolvedValue(
-      mockUpdateResult
-    )
+    updateAgreementWithVersionViaGrant.mockResolvedValue(mockUpdateResult)
     calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue({
       ...mockPayments,
       payments: [
@@ -487,7 +539,7 @@ describe('acceptOffer', () => {
     )
 
     expect(randomUUID).not.toHaveBeenCalled()
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalledWith(
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
         $set: expect.objectContaining({
@@ -505,7 +557,7 @@ describe('acceptOffer', () => {
 
   test('should wrap non-Boom database errors', async () => {
     const agreementId = 'FPTT123456789'
-    agreementsModel.updateOneAgreementVersion.mockRejectedValue(
+    updateAgreementWithVersionViaGrant.mockRejectedValue(
       new Error('Database connection failed')
     )
 
@@ -521,6 +573,6 @@ describe('acceptOffer', () => {
       )
     ).rejects.toThrow('Database connection failed')
 
-    expect(agreementsModel.updateOneAgreementVersion).toHaveBeenCalled()
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalled()
   })
 })

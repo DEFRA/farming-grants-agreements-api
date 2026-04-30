@@ -2,7 +2,7 @@ import { config } from '#~/config/index.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import versionsModel from '#~/api/common/models/versions.js'
-import agreementsModel from '#~/api/common/models/agreements.js'
+import grantModel from '#~/api/common/models/grant.js'
 import { randomUUID } from 'node:crypto'
 
 const paymentDayOfMonth = config.get('paymentDayOfMonth')
@@ -12,22 +12,22 @@ const paymentDayOfMonth = config.get('paymentDayOfMonth')
  * @returns {Promise<Array>} Array of version documents with missed payments
  */
 async function findMissedPayments() {
-  // Find agreements with only one version
-  const singleVersionAgreements = await agreementsModel
+  // Find grants with only one version
+  const singleVersionGrants = await grantModel
     .find({ versions: { $size: 1 } })
     .select('_id')
     .lean()
 
-  const agreementIds = singleVersionAgreements.map((a) => a._id.toString())
+  const grantIds = singleVersionGrants.map((g) => g._id.toString())
 
-  // Find accepted versions with start date before 2026-05-01 belonging to single-version agreements
+  // Find accepted versions with start date before 2026-05-01 belonging to single-version grants
   return versionsModel
     .find({
       status: 'accepted',
-      agreement: { $in: agreementIds },
+      grant: { $in: grantIds },
       'payment.agreementStartDate': { $lt: '2026-05-01' }
     })
-    .populate('agreement')
+    .populate('grant')
     .lean()
 }
 
@@ -67,7 +67,7 @@ function calculateAdjustedPaymentDate(currentPaymentDate) {
  * @param {object} server - Server instance with logger
  */
 async function processMissedPayment(version, server) {
-  const agreementNumber = version.agreement?.agreementNumber
+  const agreementNumber = version.grant?.agreementNumber
 
   if (!agreementNumber) {
     server.logger.error(
@@ -152,21 +152,21 @@ async function createNewVersionWithUpdatedPayment(
     // Remove fields that should not be copied
     delete newVersion._id // Let MongoDB generate new ID
     delete newVersion.__v
-    delete newVersion.agreement // This will be set by the model
+    delete newVersion.grant // This will be set by the model
     newVersion.notificationMessageId = randomUUID()
 
     // Insert the new version
     const createdVersion = await versionsModel.create(newVersion)
 
-    // Link to parent agreement
+    // Link to parent grant
     await versionsModel.updateOne(
       { _id: createdVersion._id },
-      { $set: { agreement: currentVersion.agreement._id } }
+      { $set: { grant: currentVersion.grant._id } }
     )
 
-    // Add new version to parent agreement's versions array
-    await agreementsModel.updateOne(
-      { _id: currentVersion.agreement._id },
+    // Add new version to parent grant's versions array
+    await grantModel.updateOne(
+      { _id: currentVersion.grant._id },
       { $push: { versions: createdVersion._id } }
     )
 
@@ -179,7 +179,7 @@ async function createNewVersionWithUpdatedPayment(
     // Populate and return the new version
     return await versionsModel
       .findById(createdVersion._id)
-      .populate('agreement')
+      .populate('grant')
       .lean()
   } catch (error) {
     logger.error(`Failed to create new version: ${error.message}`)

@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
 
 import Boom from '@hapi/boom'
-import agreementsModel from '#~/api/common/models/agreements.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { auditEvent, AuditEvent } from '#~/api/common/helpers/audit-event.js'
@@ -58,21 +58,10 @@ async function transitionAgreementToAccepted(
     updateData.signatureDate = new Date().toISOString()
   }
 
-  const agreement = await agreementsModel
-    .updateOneAgreementVersion(
-      {
-        agreementNumber
-      },
-      {
-        $set: updateData
-      }
-    )
-    .catch((error) => {
-      if (error?.isBoom) {
-        throw error
-      }
-      throw Boom.internal(error)
-    })
+  const agreement = await updateAgreementWithVersionViaGrant(
+    { agreementNumber },
+    { $set: updateData }
+  )
 
   if (!agreement) {
     throw Boom.notFound(`Offer not found with ID ${agreementNumber}`)
