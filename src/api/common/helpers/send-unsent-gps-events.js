@@ -104,7 +104,12 @@ async function processMissedPayment(version, server) {
     )
 
     // Process the agreement acceptance with the full flow including payment event, SNS publishing, and audit logging
-    await acceptOffer(agreementNumber, versionToProcess, server.logger, null)
+    await acceptOffer(
+      agreementNumber,
+      { agreementNumber, ...versionToProcess },
+      server.logger,
+      null
+    )
 
     server.logger.info(
       `Successfully processed missed payment for agreement ${agreementNumber}`
