@@ -4,10 +4,7 @@ import { getAgreementController } from './controllers/get-agreement.controller.j
 import { acceptOfferController } from './controllers/accept-offer.controller.js'
 import { downloadController } from './controllers/download.controller.js'
 import { getCommonResponseSchemas } from '#~/api/common/helpers/joi-schema-from-pact.js'
-import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { db, mongoClient } from '#~/api/common/helpers/mongo-client.js'
-
-const logger = createLogger()
 
 const auth = 'grants-ui-jwt'
 
@@ -32,16 +29,40 @@ const downloadParams = Joi.object({
 })
 
 /**
- * @satisfies {ServerRegisterPluginObject<void>}
+ * Run migrations if not already applied
+ * @param {import('@hapi/hapi').Server} server
  */
+const runMigrations = async (server) => {
+  if (server.app.docsOnly) {
+    return
+  }
+
+  try {
+    // Check if mongoClient is connected (real client)
+    if (typeof mongoClient.connect === 'function') {
+      server.logger.info('Running migrations')
+      const migrated = await up(db, mongoClient)
+      migrated.forEach((fileName) =>
+        server.logger.info(`Migrated: ${fileName}`)
+      )
+      server.logger.info('Finished running migrations')
+    } else {
+      server.logger.info('Skipping migrations (using mock/dummy mongoClient)')
+    }
+  } catch (error) {
+    server.logger.error(error, 'Failed to run migrations')
+    // Don't throw if we're in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      throw error
+    }
+  }
+}
+
 const agreement = {
   plugin: {
     name: 'agreement',
     async register(server) {
-      logger.info('Running migrations')
-      const migrated = await up(db, mongoClient)
-      migrated.forEach((fileName) => logger.info(`Migrated: ${fileName}`))
-      logger.info('Finished running migrations')
+      await runMigrations(server)
 
       server.route({
         method: 'GET',

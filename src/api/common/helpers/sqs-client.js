@@ -80,7 +80,8 @@ export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
         visibilityTimeout: config.get('sqs.visibilityTimeout'),
         handleMessageTimeout: 30000, // 30 seconds timeout for message processing
         attributeNames: ['All'],
-        messageAttributeNames: ['All']
+        messageAttributeNames: ['All'],
+        suppressFifoWarning: true
       })
 
       sqsConsumer.on('error', (err) => {
