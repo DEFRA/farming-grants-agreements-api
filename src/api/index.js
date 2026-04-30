@@ -123,6 +123,7 @@ function getPlugins(serverOptions) {
 }
 
 async function createServer(serverOptions = {}) {
+  const { docsOnly = false } = serverOptions
   setupProxy()
   const server = hapi.server(getServerConfig())
   setupAuthentication(server)
@@ -139,6 +140,7 @@ async function createServer(serverOptions = {}) {
   // sqsClientPlugin    - AWS SQS client
   // errorHandlerPlugin - sets up default error handling
   // router             - routes used in the app
+  server.app.docsOnly = docsOnly
   await server.register(getPlugins(serverOptions))
 
   return server

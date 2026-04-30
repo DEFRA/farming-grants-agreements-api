@@ -4,6 +4,8 @@ import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
 import { mongooseDb } from './mongoose.js'
 
+/** @import { Server } from '@hapi/hapi' */
+
 // Mock dependencies
 vi.mock('mongoose', () => {
   class MockSchema {
@@ -111,12 +113,16 @@ describe('mongooseDb', () => {
   describe('register function', () => {
     test('should connect to MongoDB and set up server decorator', async () => {
       // Act
-      await Promise.resolve(mongooseDb.plugin.register(mockServer, mockOptions))
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server, mockOptions)
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith('Setting up Mongoose')
       expect(mockMongoose.connect).toHaveBeenCalledWith(mockOptions.mongoUrl, {
-        dbName: mockOptions.databaseName
+        dbName: mockOptions.databaseName,
+        serverSelectionTimeoutMS: expect.any(Number),
+        socketTimeoutMS: expect.any(Number)
       })
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Mongoose connected to MongoDB'
@@ -128,11 +134,15 @@ describe('mongooseDb', () => {
       )
     })
 
-    test('should fall back to config when options are not provided', () => {
-      mongooseDb.plugin.register(mockServer)
+    test('should fall back to config when options are not provided', async () => {
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server)
 
       expect(mockMongoose.connect).toHaveBeenCalledWith(configValues.mongoUri, {
-        dbName: configValues.mongoDatabase
+        dbName: configValues.mongoDatabase,
+        serverSelectionTimeoutMS: expect.any(Number),
+        socketTimeoutMS: expect.any(Number)
       })
     })
 
@@ -142,7 +152,9 @@ describe('mongooseDb', () => {
       mockSeedDatabase.mockResolvedValue(undefined)
 
       // Act
-      await Promise.resolve(mongooseDb.plugin.register(mockServer, mockOptions))
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server, mockOptions)
 
       // Assert
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -153,7 +165,9 @@ describe('mongooseDb', () => {
 
     test('should not seed database when feature flag is disabled', async () => {
       // Act
-      await Promise.resolve(mongooseDb.plugin.register(mockServer, mockOptions))
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server, mockOptions)
 
       // Assert
       expect(mockLogger.warn).not.toHaveBeenCalled()
@@ -167,7 +181,9 @@ describe('mongooseDb', () => {
       mockSeedDatabase.mockRejectedValue(seedError)
 
       // Act
-      await Promise.resolve(mongooseDb.plugin.register(mockServer, mockOptions))
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server, mockOptions)
 
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -178,7 +194,9 @@ describe('mongooseDb', () => {
 
     test('should set up server stop event handler', async () => {
       // Act
-      await Promise.resolve(mongooseDb.plugin.register(mockServer, mockOptions))
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server, mockOptions)
 
       // Assert
       expect(mockServer.events.on).toHaveBeenCalledWith(
@@ -200,8 +218,10 @@ describe('mongooseDb', () => {
       mockMongoose.connect.mockRejectedValue(connectionError)
 
       // Act & Assert
+      /** @type {Server} */
+      const server = mockServer
       await expect(
-        mongooseDb.plugin.register(mockServer, mockOptions)
+        mongooseDb.plugin.register(server, mockOptions)
       ).rejects.toThrow('Connection failed')
 
       expect(mockMongoose.connect).toHaveBeenCalled()
