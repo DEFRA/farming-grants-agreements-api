@@ -10,11 +10,15 @@ import crypto from 'node:crypto'
  * @returns {boolean}
  */
 export function isWmp(payload) {
-  if (!payload || typeof payload !== 'object') return false
+  if (!payload || typeof payload !== 'object') {
+    return false
+  }
   const clientRef = String(
     payload?.metadata?.clientRef ?? payload?.clientRef ?? ''
   )
-  if (!clientRef.toLowerCase().startsWith('wmp')) return false
+  if (!clientRef.toLowerCase().startsWith('wmp')) {
+    return false
+  }
   const answers = payload.answers || {}
   const wmpOnlyKeys = [
     'appLandHasExistingWmp',
@@ -35,7 +39,9 @@ export function isWmp(payload) {
  * @returns {boolean}
  */
 export function isWmpAgreement(agreement) {
-  if (!agreement) return false
+  if (!agreement) {
+    return false
+  }
   if (
     typeof agreement.scheme === 'string' &&
     agreement.scheme.toUpperCase() === 'WMP'
@@ -65,20 +71,107 @@ const flattenAddress = (a = {}) => ({
   city: a.city,
   postalCode: a.postalCode
 })
-/**
- * Map a validated WMP create-agreement payload to a `versions` document
- * that conforms to the existing Mongoose schema in
- * `src/api/common/models/versions.js`.
- *
- * The `payment` subdoc is derived ENTIRELY from the payload — no Land
- * Grants lookup, no recomputation. See plan.md §4.4 for the full table.
- * @param {object} payload - validated WMP create-agreement payload
- * @param {object} [opts]
- * @param {string} [opts.notificationMessageId] - SQS message id (required for insert)
- * @param {string} [opts.correlationId] - version-level tracing id (defaults to a fresh uuid)
- * @param {() => string} [opts.uuid] - injectable uuid generator (for tests)
- * @returns {object} versions document
- */
+
+function buildAgreementLevelItems(agreementItems) {
+  const agreementLevelItems = {}
+  agreementItems.forEach((item, i) => {
+    agreementLevelItems[String(i + 1)] = {
+      code: item.code,
+      description: item.description,
+      version: '1',
+      annualPaymentPence: item.agreementTotalPence,
+      quantity: item.quantity,
+      unit: item.unit,
+      activePaymentTier: item.activePaymentTier,
+      quantityInActiveTier: item.quantityInActiveTier,
+      activeTierRatePence: item.activeTierRatePence,
+      activeTierFlatRatePence: item.activeTierFlatRatePence
+    }
+  })
+  return agreementLevelItems
+}
+
+function buildPayment({
+  agreementItems,
+  totalPence,
+  agreementStartDate,
+  agreementEndDate,
+  uuid
+}) {
+  const lineItems = agreementItems.map((item, i) => ({
+    agreementLevelItemId: i + 1,
+    paymentPence: item.agreementTotalPence,
+    code: item.code,
+    description: item.description
+  }))
+  return {
+    agreementStartDate,
+    agreementEndDate,
+    frequency: 'OneOff',
+    agreementTotalPence: totalPence,
+    annualTotalPence: totalPence,
+    parcelItems: {},
+    agreementLevelItems: buildAgreementLevelItems(agreementItems),
+    payments: [
+      {
+        totalPaymentPence: totalPence,
+        paymentDate: null,
+        correlationId: uuid(),
+        lineItems
+      }
+    ]
+  }
+}
+
+function buildParcelDocs(landParcels, agreementItems) {
+  return landParcels.map((lp) => ({
+    parcelId: lp.parcelId,
+    area: { unit: 'ha', quantity: lp.areaHa },
+    actions: agreementItems.map((item) => ({
+      code: item.code,
+      version: '1',
+      durationYears: 1,
+      appliedFor: { unit: 'ha', quantity: lp.areaHa }
+    }))
+  }))
+}
+
+function buildActionApplications(landParcels, agreementItems) {
+  const actionApplications = []
+  for (const lp of landParcels) {
+    for (const item of agreementItems) {
+      actionApplications.push({
+        code: item.code,
+        sheetId: lp.sheetId ?? lp.parcelId,
+        parcelId: lp.parcelId,
+        appliedFor: { unit: 'ha', quantity: lp.areaHa }
+      })
+    }
+  }
+  return actionApplications
+}
+
+function buildApplicant(answersApplicant) {
+  const applicantBusiness = answersApplicant.business
+  return {
+    business: {
+      name: applicantBusiness.name,
+      // email/phone are not on the Mongoose Applicant.business sub-schema
+      // today; we drop them rather than introduce schema drift. The raw
+      // payload remains in the SQS message id for replay.
+      address: flattenAddress(applicantBusiness.address)
+    },
+    customer: {
+      name: {
+        title: answersApplicant.customer.name.title ?? undefined,
+        first: answersApplicant.customer.name.first,
+        middle: answersApplicant.customer.name.middle ?? undefined,
+        last: answersApplicant.customer.name.last
+      }
+    }
+  }
+}
+
 export function mapWmpPayloadToVersion(payload, opts = {}) {
   const {
     notificationMessageId,
@@ -97,87 +190,6 @@ export function mapWmpPayloadToVersion(payload, opts = {}) {
   const agreementItems = answers.payments.agreement
   const totalPence = answers.totalAgreementPaymentPence
 
-  const agreementLevelItems = {}
-  agreementItems.forEach((item, i) => {
-    agreementLevelItems[String(i + 1)] = {
-      code: item.code,
-      description: item.description,
-      version: '1',
-      annualPaymentPence: item.agreementTotalPence,
-      quantity: item.quantity,
-      unit: item.unit,
-      activePaymentTier: item.activePaymentTier,
-      quantityInActiveTier: item.quantityInActiveTier,
-      activeTierRatePence: item.activeTierRatePence,
-      activeTierFlatRatePence: item.activeTierFlatRatePence
-    }
-  })
-  // Single scheduled-payment row, derived (paid on signature → no date)
-  const lineItems = agreementItems.map((item, i) => ({
-    agreementLevelItemId: i + 1,
-    paymentPence: item.agreementTotalPence,
-    code: item.code,
-    description: item.description
-  }))
-  const payment = {
-    agreementStartDate,
-    agreementEndDate,
-    frequency: 'OneOff',
-    agreementTotalPence: totalPence,
-    annualTotalPence: totalPence,
-    parcelItems: {},
-    agreementLevelItems,
-    payments: [
-      {
-        totalPaymentPence: totalPence,
-        paymentDate: null,
-        correlationId: uuid(),
-        lineItems
-      }
-    ]
-  }
-  // application.parcel[] — one entry per land parcel; actions joined from
-  // the (single) WMP agreement-level action covering the parcel area.
-  const parcelDocs = answers.landParcels.map((lp) => ({
-    parcelId: lp.parcelId,
-    area: { unit: 'ha', quantity: lp.areaHa },
-    actions: agreementItems.map((item) => ({
-      code: item.code,
-      version: '1',
-      durationYears: 1,
-      appliedFor: { unit: 'ha', quantity: lp.areaHa }
-    }))
-  }))
-  // actionApplications[] — flattened (parcel × action)
-  const actionApplications = []
-  for (const lp of answers.landParcels) {
-    for (const item of agreementItems) {
-      actionApplications.push({
-        code: item.code,
-        sheetId: lp.sheetId ?? lp.parcelId,
-        parcelId: lp.parcelId,
-        appliedFor: { unit: 'ha', quantity: lp.areaHa }
-      })
-    }
-  }
-  const applicantBusiness = answers.applicant.business
-  const applicant = {
-    business: {
-      name: applicantBusiness.name,
-      // email/phone are not on the Mongoose Applicant.business sub-schema
-      // today; we drop them rather than introduce schema drift. The raw
-      // payload remains in the SQS message id for replay.
-      address: flattenAddress(applicantBusiness.address)
-    },
-    customer: {
-      name: {
-        title: answers.applicant.customer.name.title ?? undefined,
-        first: answers.applicant.customer.name.first,
-        middle: answers.applicant.customer.name.middle ?? undefined,
-        last: answers.applicant.customer.name.last
-      }
-    }
-  }
   return {
     notificationMessageId,
     agreementName: answers.agreementName ?? 'Woodland Management Plan',
@@ -192,9 +204,20 @@ export function mapWmpPayloadToVersion(payload, opts = {}) {
       defraId: ids.defraId
     },
     status: 'offered',
-    actionApplications,
-    payment,
-    applicant,
-    application: { parcel: parcelDocs }
+    actionApplications: buildActionApplications(
+      answers.landParcels,
+      agreementItems
+    ),
+    payment: buildPayment({
+      agreementItems,
+      totalPence,
+      agreementStartDate,
+      agreementEndDate,
+      uuid
+    }),
+    applicant: buildApplicant(answers.applicant),
+    application: {
+      parcel: buildParcelDocs(answers.landParcels, agreementItems)
+    }
   }
 }
