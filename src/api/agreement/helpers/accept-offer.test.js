@@ -25,8 +25,25 @@ vi.mock('#~/api/common/models/agreements.js', () => ({
     aggregate: vi.fn(),
     distinct: vi.fn(),
     findOneAndUpdate: vi.fn(),
-    updateOneAgreementVersion: vi.fn(),
+    updateOneAgreementVersion: vi.fn().mockResolvedValue({
+      acknowledged: true,
+      modifiedCount: 1,
+      upsertedId: null,
+      upsertedCount: 0,
+      matchedCount: 1,
+      agreementNumber: 'sample',
+      signatureDate: '2024-01-01T00:00:00.000Z',
+      status: 'accepted'
+    }),
     createAgreementWithVersions: vi.fn()
+  }
+}))
+vi.mock('#~/api/common/models/versions.js', () => ({
+  __esModule: true,
+  default: {
+    updateOne: vi
+      .fn()
+      .mockResolvedValue({ acknowledged: true, modifiedCount: 1 })
   }
 }))
 vi.mock('#~/config/index.js')
@@ -39,6 +56,37 @@ vi.mock(
     updateAgreementWithVersionViaGrant: vi.fn()
   })
 )
+vi.mock('#~/api/common/helpers/sns-publisher.js', () => ({
+  publishEvent: vi.fn().mockResolvedValue(undefined)
+}))
+vi.mock('#~/api/common/helpers/audit-event.js', () => ({
+  auditEvent: vi.fn(),
+  AuditEvent: {
+    AGREEMENT_CREATED: 'AGREEMENT_CREATED'
+  }
+}))
+vi.mock('#~/api/common/helpers/send-grant-payment-event.js', () => ({
+  sendGrantPaymentEvent: vi.fn().mockImplementation(() => {
+    const bucket = config.get('files.s3.bucket')
+    const region = config.get('files.s3.region')
+
+    if (!bucket) {
+      throw Boom.badRequest(
+        'PDF service configuration missing: FILES_S3_BUCKET not set'
+      )
+    }
+    if (!region) {
+      throw Boom.badRequest(
+        'PDF service configuration missing: FILES_S3_REGION not set'
+      )
+    }
+
+    return Promise.resolve({ claimId: 'test-claim-id' })
+  })
+}))
+vi.mock('#~/api/agreement/helpers/unaccept-offer.js', () => ({
+  unacceptOffer: vi.fn()
+}))
 
 describe('acceptOffer', () => {
   const mockUpdateResult = {
@@ -158,10 +206,21 @@ describe('acceptOffer', () => {
       return 'default-value'
     })
 
+    updateAgreementWithVersionViaGrant.mockResolvedValue({
+      agreementNumber: 'FPTT123456789',
+      status: 'accepted'
+    })
+
     const agreementData = {
       agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
-      clientRef: 'test-client-ref'
+      clientRef: 'test-client-ref',
+      application: { parcel: [] },
+      payment: {
+        payments: [],
+        parcelItems: {},
+        agreementLevelItems: {}
+      }
     }
 
     await expect(
@@ -185,10 +244,21 @@ describe('acceptOffer', () => {
       return 'default-value'
     })
 
+    updateAgreementWithVersionViaGrant.mockResolvedValue({
+      agreementNumber: 'FPTT123456789',
+      status: 'accepted'
+    })
+
     const agreementData = {
       agreementNumber: 'FPTT123456789',
       correlationId: 'test-correlation-id',
-      clientRef: 'test-client-ref'
+      clientRef: 'test-client-ref',
+      application: { parcel: [] },
+      payment: {
+        payments: [],
+        parcelItems: {},
+        agreementLevelItems: {}
+      }
     }
 
     await expect(
@@ -231,10 +301,13 @@ describe('acceptOffer', () => {
 
     const result = await acceptOffer('FPTT123456789', agreementData, mockLogger)
 
-    expect(result).toEqual({
-      agreementNumber: 'FPTT123456789',
-      ...mockAgreement
-    })
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: 'FPTT123456789',
+        status: 'accepted',
+        claimId: 'test-claim-id'
+      })
+    )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: 'FPTT123456789' },
       expect.objectContaining({
@@ -259,7 +332,12 @@ describe('acceptOffer', () => {
         }
       },
       application: { parcel: [{ sheetId: '1', parcelId: '2', actions: [] }] },
-      actionApplications: [{ code: 'CMOR1' }]
+      actionApplications: [{ code: 'CMOR1' }],
+      payment: {
+        payments: [],
+        parcelItems: {},
+        agreementLevelItems: {}
+      }
     }
 
     // Arrange
@@ -270,10 +348,10 @@ describe('acceptOffer', () => {
     const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
-      agreementData.application.parcel,
-      mockLogger
-    )
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
+      parcels: agreementData.application.parcel,
+      logger: mockLogger
+    })
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
@@ -294,10 +372,12 @@ describe('acceptOffer', () => {
         }
       }
     )
-    expect(result).toEqual({
-      agreementNumber: agreementId,
-      ...mockUpdateResult
-    })
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: agreementId,
+        claimId: 'test-claim-id'
+      })
+    )
   })
 
   test('should not use sample ID in production environment', async () => {
@@ -309,17 +389,22 @@ describe('acceptOffer', () => {
     const agreementData = {
       agreementNumber: agreementId,
       application: { parcel: [] },
-      actionApplications: []
+      actionApplications: [],
+      payment: {
+        payments: [],
+        parcelItems: {},
+        agreementLevelItems: {}
+      }
     }
 
     // Act
     const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
-      agreementData.application.parcel,
-      mockLogger
-    )
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
+      parcels: agreementData.application.parcel,
+      logger: mockLogger
+    })
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
@@ -340,10 +425,12 @@ describe('acceptOffer', () => {
         }
       }
     )
-    expect(result).toEqual({
-      agreementNumber: agreementId,
-      ...mockUpdateResult
-    })
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: agreementId,
+        claimId: 'test-claim-id'
+      })
+    )
 
     // Cleanup
     process.env.NODE_ENV = originalNodeEnv
@@ -436,7 +523,17 @@ describe('acceptOffer', () => {
       {
         agreementNumber: agreementId,
         application: { parcel: [] },
-        actionApplications: []
+        actionApplications: [],
+        payment: {
+          payments: [
+            {
+              ...mockPayments.payments[0],
+              correlationId: existingPaymentCorrelationId
+            }
+          ],
+          parcelItems: {},
+          agreementLevelItems: {}
+        }
       },
       mockLogger
     )
