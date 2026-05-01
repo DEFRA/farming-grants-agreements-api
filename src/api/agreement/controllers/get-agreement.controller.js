@@ -23,10 +23,10 @@ const getAgreementController =
         agreementData.status === 'cancelled') &&
         !agreementData.payment)
     ) {
-      agreementData.payment = await calculatePaymentsBasedOnParcelsWithActions(
-        agreementData.application.parcel,
-        request.logger
-      )
+      agreementData.payment = await calculatePaymentsBasedOnParcelsWithActions({
+        parcels: agreementData.application.parcel,
+        logger: request.logger
+      })
       request.logger.info(
         'Successfully called Land Grants service for payments calculation.'
       )

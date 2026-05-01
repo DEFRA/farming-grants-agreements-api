@@ -425,10 +425,11 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.info).toHaveBeenCalledWith(
       'Creating new version of AG1'
     )
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
-      mockMissedPayments[0].application.parcel,
-      server.logger
-    )
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
+      parcels: mockMissedPayments[0].application.parcel,
+      startDate: mockMissedPayments[0].payment.agreementStartDate,
+      logger: server.logger
+    })
     expect(versionsModel.create).toHaveBeenCalled()
 
     // Verify that the original version's status is set to cancelled
@@ -525,10 +526,11 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.info).toHaveBeenCalledWith(
       'Creating new version of AG1'
     )
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
-      mockMissedPayments[0].application.parcel,
-      server.logger
-    )
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
+      parcels: mockMissedPayments[0].application.parcel,
+      startDate: mockMissedPayments[0].payment.agreementStartDate,
+      logger: server.logger
+    })
     expect(versionsModel.create).toHaveBeenCalled()
     expect(acceptOffer).toHaveBeenCalledWith(
       'AG1',
@@ -565,7 +567,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
         _id: 'v1',
         grant: { agreementNumber: 'AG1', _id: 'grant1' },
         status: 'accepted',
-        payment: null,
+        payment: { agreementStartDate: '2025-01-01' },
         application: { parcel: [{ sheetId: '1', parcelId: '1', actions: [] }] }
       }
     ]

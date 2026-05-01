@@ -154,12 +154,12 @@ describe('getAgreementController', () => {
 
           expect(
             calculatePaymentsBasedOnParcelsWithActions
-          ).toHaveBeenCalledWith(
-            mockAgreementData.application.parcel,
-            expect.objectContaining({
+          ).toHaveBeenCalledWith({
+            parcels: mockAgreementData.application.parcel,
+            logger: expect.objectContaining({
               info: expect.any(Function)
             })
-          )
+          })
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
               agreementStartDate: '2024-01-01',
@@ -246,12 +246,12 @@ describe('getAgreementController', () => {
 
           expect(
             calculatePaymentsBasedOnParcelsWithActions
-          ).toHaveBeenCalledWith(
-            mockAgreementData.application.parcel,
-            expect.objectContaining({
+          ).toHaveBeenCalledWith({
+            parcels: mockAgreementData.application.parcel,
+            logger: expect.objectContaining({
               info: expect.any(Function)
             })
-          )
+          })
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
               agreementStartDate: '2024-01-01',
@@ -496,12 +496,12 @@ describe('getAgreementController', () => {
 
           expect(
             calculatePaymentsBasedOnParcelsWithActions
-          ).toHaveBeenCalledWith(
-            mockAgreementData.application.parcel,
-            expect.objectContaining({
+          ).toHaveBeenCalledWith({
+            parcels: mockAgreementData.application.parcel,
+            logger: expect.objectContaining({
               info: expect.any(Function)
             })
-          )
+          })
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
               agreementStartDate: '2024-01-01',
@@ -723,12 +723,12 @@ describe('getAgreementController', () => {
 
           expect(
             calculatePaymentsBasedOnParcelsWithActions
-          ).toHaveBeenCalledWith(
-            mockAgreementData.application.parcel,
-            expect.objectContaining({
+          ).toHaveBeenCalledWith({
+            parcels: mockAgreementData.application.parcel,
+            logger: expect.objectContaining({
               info: expect.any(Function)
             })
-          )
+          })
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
               agreementStartDate: '2024-01-01',
@@ -815,12 +815,12 @@ describe('getAgreementController', () => {
 
           expect(
             calculatePaymentsBasedOnParcelsWithActions
-          ).toHaveBeenCalledWith(
-            mockAgreementData.application.parcel,
-            expect.objectContaining({
+          ).toHaveBeenCalledWith({
+            parcels: mockAgreementData.application.parcel,
+            logger: expect.objectContaining({
               info: expect.any(Function)
             })
-          )
+          })
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
               agreementStartDate: '2024-01-01',
@@ -1035,12 +1035,12 @@ describe('getAgreementController', () => {
 
           expect(
             calculatePaymentsBasedOnParcelsWithActions
-          ).toHaveBeenCalledWith(
-            mockAgreementData.application.parcel,
-            expect.objectContaining({
+          ).toHaveBeenCalledWith({
+            parcels: mockAgreementData.application.parcel,
+            logger: expect.objectContaining({
               info: expect.any(Function)
             })
-          )
+          })
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
               agreementStartDate: '2024-01-01',

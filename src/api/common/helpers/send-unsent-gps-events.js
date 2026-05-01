@@ -82,10 +82,11 @@ async function processMissedPayment(version, server) {
 
   try {
     // Calculate payments based on parcels with actions
-    const newPaymentData = await calculatePaymentsBasedOnParcelsWithActions(
-      version.application.parcel,
-      server.logger
-    )
+    const newPaymentData = await calculatePaymentsBasedOnParcelsWithActions({
+      parcels: version.application.parcel,
+      startDate: version.payment.agreementStartDate,
+      logger: server.logger
+    })
 
     for (const payment of newPaymentData.payments) {
       payment.paymentDate = calculateAdjustedPaymentDate(payment.paymentDate)

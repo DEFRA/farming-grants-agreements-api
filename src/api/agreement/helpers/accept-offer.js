@@ -25,10 +25,10 @@ async function transitionAgreementToAccepted(
     throw Boom.badRequest('Agreement data is required')
   }
 
-  const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
-    agreementData.application.parcel,
+  const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions({
+    parcels: agreementData.application.parcel,
     logger
-  )
+  })
 
   if (!expectedPayments) {
     throw Boom.badImplementation('Failed to calculate expected payments')

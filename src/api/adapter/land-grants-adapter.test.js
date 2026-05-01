@@ -136,10 +136,10 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnParcelsWithActions(
-      parcelsWithActions,
-      mockLogger
-    )
+    const result = await calculatePaymentsBasedOnParcelsWithActions({
+      parcels: parcelsWithActions,
+      logger: mockLogger
+    })
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
     const [url, request] = global.fetch.mock.calls[0]
@@ -185,6 +185,59 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     expect(mockLogger.info).toHaveBeenCalledTimes(2)
   })
 
+  test('sends startDate in payload when provided', async () => {
+    const payment = {
+      agreementStartDate: '2024-06-01',
+      agreementEndDate: '2027-06-01',
+      frequency: 'Quarterly',
+      agreementTotalPence: 10000,
+      annualTotalPence: 3333,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
+    }
+
+    const responseBody = { payment }
+    const fetchResponse = buildFetchResponse({
+      json: vi.fn().mockResolvedValue(responseBody),
+      text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
+    })
+    global.fetch.mockResolvedValue(fetchResponse)
+
+    await calculatePaymentsBasedOnParcelsWithActions({
+      parcels: parcelsWithActions,
+      startDate: '2024-06-15',
+      logger: mockLogger
+    })
+
+    expect(global.fetch).toHaveBeenCalledTimes(1)
+    const [url, request] = global.fetch.mock.calls[0]
+    expect(url.toString()).toBe(
+      'https://land-grants.example/api/v2/payments/calculate'
+    )
+    expect(JSON.parse(request.body)).toEqual({
+      startDate: '2024-06-15',
+      parcel: [
+        {
+          sheetId: 'SK0971',
+          parcelId: '7555',
+          actions: [
+            { code: 'CMOR1', quantity: 4.7575 },
+            { code: 'UPL3', quantity: 4.7575 }
+          ]
+        },
+        {
+          sheetId: 'SK0971',
+          parcelId: '9194',
+          actions: [
+            { code: 'CMOR1', quantity: 2.1705 },
+            { code: 'UPL1', quantity: 2.1705 }
+          ]
+        }
+      ]
+    })
+  })
+
   test('handles calls without a logger provided', async () => {
     const payment = {
       agreementStartDate: '2026-01-01',
@@ -204,10 +257,9 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnParcelsWithActions(
-      parcelsWithActions,
-      null
-    )
+    const result = await calculatePaymentsBasedOnParcelsWithActions({
+      parcels: parcelsWithActions
+    })
 
     expect(result).toEqual({
       agreementStartDate: payment.agreementStartDate,
@@ -232,7 +284,10 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     global.fetch.mockResolvedValue(fetchResponse)
 
     await expect(
-      calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions, mockLogger)
+      calculatePaymentsBasedOnParcelsWithActions({
+        parcels: parcelsWithActions,
+        logger: mockLogger
+      })
     ).rejects.toThrow('Land Grants response missing "payment" field')
 
     expect(mockLogger.info).toHaveBeenCalledTimes(2)
@@ -248,7 +303,10 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     global.fetch.mockResolvedValue(fetchResponse)
 
     await expect(
-      calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions, mockLogger)
+      calculatePaymentsBasedOnParcelsWithActions({
+        parcels: parcelsWithActions,
+        logger: mockLogger
+      })
     ).rejects.toThrow(
       'Land Grants Payment calculate request failed: 502 Bad Gateway gateway down'
     )
