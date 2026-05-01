@@ -544,6 +544,12 @@ describe('sendUnsetGPSEventsPlugin', () => {
       server.logger,
       null
     )
+
+    const acceptOfferCall = vi.mocked(acceptOffer).mock.calls[0]
+    const versionData = acceptOfferCall[1]
+    expect(versionData.payment.payments[0].paymentDate).toMatch(
+      /^\d{4}-\d{2}-\d{2}$/
+    )
   })
 
   it('should handle payment calculation errors gracefully', async () => {

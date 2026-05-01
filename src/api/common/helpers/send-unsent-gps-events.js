@@ -35,7 +35,7 @@ async function findMissedPayments() {
  * Calculate adjusted payment date based on current date and payment day
  * Will add a month if the current date is after the payment day
  * @param {Date} currentPaymentDate - Original payment date
- * @returns {string} ISO string of adjusted payment date
+ * @returns {string} Date string in YYYY-MM-DD format
  */
 function calculateAdjustedPaymentDate(currentPaymentDate) {
   const date = new Date(currentPaymentDate)
@@ -58,7 +58,7 @@ function calculateAdjustedPaymentDate(currentPaymentDate) {
   }
 
   const adjustedDate = new Date(targetYear, targetMonth, paymentDayOfMonth)
-  return adjustedDate.toISOString()
+  return adjustedDate.toISOString().split('T')[0]
 }
 
 /**
