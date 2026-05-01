@@ -1,5 +1,6 @@
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { isWmpAgreement } from '#~/api/agreement/helpers/wmp-payload-mapper.js'
 import Boom from '@hapi/boom'
 
 /**
@@ -18,10 +19,11 @@ const getAgreementController =
     }
 
     if (
-      agreementData.status === 'offered' ||
-      ((agreementData.status === 'withdrawn' ||
-        agreementData.status === 'cancelled') &&
-        !agreementData.payment)
+      !isWmpAgreement(agreementData) &&
+      (agreementData.status === 'offered' ||
+        ((agreementData.status === 'withdrawn' ||
+          agreementData.status === 'cancelled') &&
+          !agreementData.payment))
     ) {
       agreementData.payment = await calculatePaymentsBasedOnParcelsWithActions(
         agreementData.application.parcel,

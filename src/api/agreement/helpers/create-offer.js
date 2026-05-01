@@ -8,6 +8,8 @@ import { config } from '#~/config/index.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
 import { generateClaimId } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import { isWmp } from './wmp-payload-mapper.js'
+import { wmpCreateOffer } from './wmp-create-offer.js'
 
 export const generateAgreementNumber = async () => {
   const minRandomNumber = 100000000
@@ -33,6 +35,10 @@ export const generateAgreementNumber = async () => {
  * @returns {Promise<Agreement>} The agreement data
  */
 const createOffer = async (notificationMessageId, agreementData, logger) => {
+  if (isWmp(agreementData)) {
+    return wmpCreateOffer(notificationMessageId, agreementData, logger)
+  }
+
   await ensureAgreementDataIsValid(notificationMessageId, agreementData)
 
   const {
