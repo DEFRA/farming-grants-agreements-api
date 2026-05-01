@@ -42,7 +42,6 @@ export const sendGrantPaymentEvent = async (agreementData, logger) => {
     { _id: agreementData._id },
     {
       $set: {
-        grantsPaymentServiceRequestMade: true,
         correlationId: agreementData.correlationId,
         'payment.payments': agreementData.payment.payments
       }

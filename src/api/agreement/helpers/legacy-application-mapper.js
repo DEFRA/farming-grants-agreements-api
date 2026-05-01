@@ -1,3 +1,5 @@
+import { config } from '../../../config/index.js'
+
 const DEFAULT_PAYMENT_FREQUENCY = 'Quarterly'
 
 export const buildLegacyPaymentFromApplication = (agreementData) => {
@@ -109,8 +111,11 @@ function buildPaymentsWithPlaceholders({
       0
     ) || Math.round(toNumber(annualTotalPence, 0) / NUMBER_OF_QUARTERS) // TODO: remove legacy fall-back once schedule is deprecated
 
-  const firstPaymentDate = addMonths(startDate, MONTHS_IN_QUARTER) // TODO: remove legacy fall-back once schedule is deprecated
-  const subsequentPaymentDate = addMonths(startDate, MONTHS_IN_QUARTER * 2) // TODO: remove legacy fall-back once schedule is deprecated
+  const firstPaymentDate = calculatePaymentDate(startDate, MONTHS_IN_QUARTER)
+  const subsequentPaymentDate = calculatePaymentDate(
+    startDate,
+    MONTHS_IN_QUARTER * 2
+  )
 
   return [
     {
@@ -144,15 +149,25 @@ function toNumber(value, fallback = 0) {
   return Number(value)
 }
 
-function addMonths(isoDate, monthsToAdd = 0) {
+function calculatePaymentDate(isoDate, monthsToAdd = 0) {
   const date = isoDate ? new Date(isoDate) : new Date()
   if (Number.isNaN(date.getTime())) {
     return new Date().toISOString()
   }
 
-  const cloned = new Date(date)
-  cloned.setUTCMonth(cloned.getUTCMonth() + monthsToAdd)
-  return cloned.toISOString()
+  const targetDate = new Date(date)
+  targetDate.setUTCMonth(targetDate.getUTCMonth() + monthsToAdd)
+  targetDate.setUTCDate(config.get('paymentDayOfMonth'))
+  targetDate.setUTCHours(0, 0, 0, 0)
+
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+  if (targetDate.getTime() <= today.getTime()) {
+    targetDate.setUTCMonth(targetDate.getUTCMonth() + 1)
+  }
+
+  return targetDate.toISOString()
 }
 
 function addYears(isoDate, yearsToAdd = 0) {
