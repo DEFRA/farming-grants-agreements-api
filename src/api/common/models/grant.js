@@ -18,6 +18,18 @@ const schema = new Schema(
   { collection, timestamps: true }
 )
 
+schema.index(
+  {
+    agreementNumber: 1,
+    code: 1,
+    name: 1,
+    clientRef: 1,
+    sbi: 1,
+    frn: 1,
+    claimId: 1
+  },
+  { unique: true }
+)
 schema.index({ name: 1 })
 schema.index({ clientRef: 1 })
 schema.index({ createdAt: 1 })
