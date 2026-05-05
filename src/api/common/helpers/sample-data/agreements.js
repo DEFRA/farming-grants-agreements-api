@@ -1143,5 +1143,87 @@ export default [
         _id: '69262bb2331fd3b45b76ee90'
       }
     }
+  },
+  {
+    notificationMessageId: 'sample-notification-3',
+    agreementNumber: 'FPTT123456799',
+    clientRef: 'wmp-926-wlw',
+    code: 'woodland',
+    identifiers: { sbi: '107593059', frn: '1076543210', crn: '1100957269' },
+    metadata: {},
+    answers: {
+      referenceNumber: 'WMP-926-WLW',
+      businessDetailsUpToDate: true,
+      landRegisteredWithRpa: true,
+      landManagementControl: true,
+      publicBodyTenant: false,
+      landHasGrazingRights: false,
+      appLandHasExistingWmp: false,
+      intendToApplyHigherTier: true,
+      totalHectaresAppliedFor: 20,
+      hectaresTenOrOverYearsOld: 18,
+      hectaresUnderTenYearsOld: 2,
+      centreGridReference: 'SP12345678',
+      fcTeamCode: 'NORTH_WEST_AND_WEST_MIDLANDS',
+      applicant: {
+        business: {
+          name: 'Taylor Equestrian Yards',
+          reference: '1076543210',
+          email: { address: 'oliver.taylor@taylorequestrian.test' },
+          phone: { mobile: '07700900123' },
+          address: {
+            line1: 'Taylor Equestrian Yards',
+            line2: 'Riding Lane',
+            line3: null,
+            line4: null,
+            line5: null,
+            street: 'Riding Lane',
+            city: 'Cambridge',
+            postalCode: 'CB1 2AB'
+          },
+          vat: 'GB987654321',
+          type: { code: '1', type: 'Sole Trader' }
+        },
+        countyParishHoldings: '23/456/7890',
+        customer: {
+          name: {
+            title: 'Mr',
+            first: 'Oliver',
+            middle: 'J',
+            last: 'Taylor'
+          }
+        }
+      },
+      detailsConfirmedAt: '2026-04-02T09:15:33.583Z',
+      guidanceRead: true,
+      includedAllEligibleWoodland: true,
+      applicationConfirmation: true,
+      landParcels: [
+        {
+          parcelId: 'SD7560-9193',
+          areaHa: 25.3874
+        },
+        {
+          parcelId: 'SD5848-9205',
+          areaHa: 169.8586
+        }
+      ],
+      totalAgreementPaymentPence: 166200,
+      payments: {
+        agreement: [
+          {
+            code: 'PA3',
+            description: 'Woodland management plan',
+            activePaymentTier: 2,
+            quantityInActiveTier: 5.4,
+            activeTierRatePence: 3000,
+            activeTierFlatRatePence: 150000,
+            quantity: 55.4,
+            agreementTotalPence: 166200,
+            unit: 'ha'
+          }
+        ]
+      }
+    }
   }
 ]

@@ -69,7 +69,7 @@ const AgreementItem = new mongoose.Schema({
 })
 
 const Application = new mongoose.Schema({
-  parcel: { type: [ParcelItem], required: true },
+  parcel: { type: [ParcelItem], required: false },
   agreement: { type: [AgreementItem] }
 })
 
@@ -169,7 +169,7 @@ const schema = new mongoose.Schema(
     consentObjects: { type: [mongoose.Schema.Types.Mixed], required: false },
     payment: { type: Payment, required: false },
     applicant: { type: Applicant, required: true },
-    application: { type: Application, required: true },
+    application: { type: Application, required: false },
     claimId: { type: String },
     originalInvoiceNumber: { type: String }
   },

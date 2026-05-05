@@ -29,7 +29,7 @@ function ignorePayments(versions) {
  */
 async function findOrCreateAgreement(agreement) {
   const existing = await agreementsModel
-    .findOne({ sbi: agreement.sbi })
+    .findOne({ agreementNumber: agreement.agreementNumber })
     .sort({ createdAt: -1, _id: -1 })
     .select('_id agreementNumber grants')
     .lean()
@@ -72,6 +72,10 @@ async function findOrCreateGrant({
     return existingGrant._id
   }
 
+  if (!latestVersion.scheme) {
+    latestVersion.scheme = 'WMP'
+  }
+
   const newGrant = await grantModel.create({
     code: latestVersion.code,
     name: latestVersion.scheme,
@@ -86,7 +90,7 @@ async function findOrCreateGrant({
   // Link grant to agreement
   await agreementsModel.updateOne(
     { _id: agreementId },
-    { $push: { grants: newGrant._id } }
+    { $addToSet: { grants: newGrant._id } }
   )
 
   return newGrant._id

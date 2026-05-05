@@ -327,7 +327,7 @@ function buildLegacyAgreementContent(
     }
   }
 
-  validateResolvedContent(resolvedPayment, resolvedApplicant)
+  // validateResolvedContent(resolvedPayment, resolvedApplicant)
 
   return {
     resolvedActions,

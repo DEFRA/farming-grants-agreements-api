@@ -18,7 +18,7 @@ const getAgreementController =
     }
 
     if (
-      agreementData.status === 'offered' ||
+      (agreementData.application && agreementData.status === 'offered') ||
       ((agreementData.status === 'withdrawn' ||
         agreementData.status === 'cancelled') &&
         !agreementData.payment)
