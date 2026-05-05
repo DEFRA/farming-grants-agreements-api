@@ -105,12 +105,9 @@ const convertParcelsToLandGrantsPayload = (parcels = []) => {
 
 const calculatePaymentsBasedOnParcelsWithActions = async ({
   parcels,
-  startDate,
   logger
 }) => {
-  const { parcel } = convertParcelsToLandGrantsPayload(parcels)
-
-  const payload = { ...(startDate ? { startDate } : {}), parcel }
+  const payload = convertParcelsToLandGrantsPayload(parcels)
 
   if (logger) {
     logger.info(

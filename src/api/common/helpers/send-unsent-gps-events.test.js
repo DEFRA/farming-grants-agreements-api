@@ -427,7 +427,6 @@ describe('sendUnsetGPSEventsPlugin', () => {
     )
     expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
       parcels: mockMissedPayments[0].application.parcel,
-      startDate: mockMissedPayments[0].payment.agreementStartDate,
       logger: server.logger
     })
     expect(versionsModel.create).toHaveBeenCalled()
@@ -528,7 +527,6 @@ describe('sendUnsetGPSEventsPlugin', () => {
     )
     expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
       parcels: mockMissedPayments[0].application.parcel,
-      startDate: mockMissedPayments[0].payment.agreementStartDate,
       logger: server.logger
     })
     expect(versionsModel.create).toHaveBeenCalled()
