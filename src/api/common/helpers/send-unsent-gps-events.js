@@ -82,15 +82,10 @@ async function processMissedPayment(version, server) {
 
   try {
     // Calculate payments based on parcels with actions
-    const newPaymentData = await calculatePaymentsBasedOnParcelsWithActions({
-      parcels: version.application.parcel,
-      startDate: version.payment.agreementStartDate,
-      logger: server.logger
-    })
-
-    for (const payment of newPaymentData.payments) {
-      payment.paymentDate = calculateAdjustedPaymentDate(payment.paymentDate)
-    }
+    const newPaymentData = await calculatePaymentsBasedOnParcelsWithActions(
+      version.application.parcel,
+      server.logger
+    )
 
     server.logger.info(`Creating new version of ${agreementNumber}`)
 
@@ -142,8 +137,13 @@ async function createNewVersionWithUpdatedPayment(
       updatedAt: new Date(),
       payment: {
         ...newPaymentData,
-        payments: newPaymentData.payments.map((payment) => ({
+        agreementStartDate: currentVersion.payment.agreementStartDate,
+        agreementEndDate: currentVersion.payment.agreementEndDate,
+        payments: newPaymentData.payments.map((payment, idx) => ({
           ...payment,
+          paymentDate: calculateAdjustedPaymentDate(
+            currentVersion.payment.payments[idx].paymentDate
+          ),
           correlationId: randomUUID()
         }))
       },

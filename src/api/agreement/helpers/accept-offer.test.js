@@ -348,10 +348,10 @@ describe('acceptOffer', () => {
     const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
-      parcels: agreementData.application.parcel,
-      logger: mockLogger
-    })
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+      agreementData.application.parcel,
+      mockLogger
+    )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
@@ -401,10 +401,10 @@ describe('acceptOffer', () => {
     const result = await acceptOffer(agreementId, agreementData, mockLogger)
 
     // Assert
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
-      parcels: agreementData.application.parcel,
-      logger: mockLogger
-    })
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+      agreementData.application.parcel,
+      mockLogger
+    )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
       {
