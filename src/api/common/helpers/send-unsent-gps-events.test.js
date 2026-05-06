@@ -7,6 +7,28 @@ import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-
 import versionsModel from '#~/api/common/models/versions.js'
 import grantModel from '#~/api/common/models/grant.js'
 
+const { mockAggregate, mockListCollections, mockModelFn } = vi.hoisted(() => ({
+  mockAggregate: vi.fn(),
+  mockListCollections: vi.fn(),
+  mockModelFn: vi.fn()
+}))
+
+vi.mock(import('mongoose'), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      connection: {
+        db: {
+          listCollections: () => ({ toArray: mockListCollections })
+        }
+      },
+      model: mockModelFn
+    }
+  }
+})
+
 vi.mock('#~/config/index.js', () => ({
   config: {
     get: vi.fn((key) => {
@@ -34,8 +56,20 @@ vi.mock('#~/config/index.js', () => ({
 vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
 vi.mock('#~/api/adapter/land-grants-adapter.js')
-vi.mock('#~/api/common/models/versions.js')
-vi.mock('#~/api/common/models/grant.js')
+vi.mock('#~/api/common/models/versions.js', () => ({
+  default: {
+    find: vi.fn(),
+    findById: vi.fn(),
+    create: vi.fn(),
+    updateOne: vi.fn()
+  }
+}))
+vi.mock('#~/api/common/models/grant.js', () => ({
+  default: {
+    find: vi.fn(),
+    updateOne: vi.fn()
+  }
+}))
 
 describe('sendUnsetGPSEventsPlugin', () => {
   let server
@@ -51,6 +85,11 @@ describe('sendUnsetGPSEventsPlugin', () => {
         on: vi.fn()
       }
     }
+    // Default: collections don't exist, aggregate succeeds
+    mockListCollections.mockResolvedValue([])
+    mockAggregate.mockResolvedValue([])
+    // Configure mock model function to return object with aggregate
+    mockModelFn.mockReturnValue({ aggregate: mockAggregate })
   })
 
   it('should not do anything if feature flag is disabled', () => {
@@ -667,5 +706,98 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.error).toHaveBeenCalledWith(
       'Failed to process missed payment for agreement AG1: Database error'
     )
+  })
+
+  it('should skip copying collections if destination already exists', async () => {
+    vi.mocked(config.get).mockImplementation((key) => {
+      if (key === 'featureFlags.sendUnsentGPSEvents') {
+        return true
+      }
+      return null
+    })
+
+    // Mock that backup collections already exist
+    mockListCollections.mockResolvedValue([
+      { name: 'backup_gps_grants' },
+      { name: 'backup_gps_versions' }
+    ])
+
+    const mockGrants = [{ _id: { toString: () => 'grant1' } }]
+
+    vi.mocked(grantModel.find).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue(mockGrants)
+      })
+    })
+
+    vi.mocked(versionsModel.find).mockReturnValue({
+      populate: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue([])
+      })
+    })
+
+    sendUnsetGPSEventsPlugin.register(server)
+    const startHandler = server.events.on.mock.calls.find(
+      (call) => call[0] === 'start'
+    )[1]
+
+    await startHandler()
+
+    // Verify aggregate was not called because collections already exist
+    expect(mockAggregate).not.toHaveBeenCalled()
+
+    // Verify skip messages were logged
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'MongoDB collection: backup_gps_grants already exists, skipping copy'
+    )
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'MongoDB collection: backup_gps_versions already exists, skipping copy'
+    )
+  })
+
+  it('should call mongoose.model correctly and only copy collections that do not exist', async () => {
+    vi.mocked(config.get).mockImplementation((key) => {
+      if (key === 'featureFlags.sendUnsentGPSEvents') {
+        return true
+      }
+      return null
+    })
+
+    // Mock that backup collections do not exist - both should be copied
+    mockListCollections.mockResolvedValue([])
+
+    const mockGrants = [{ _id: { toString: () => 'grant1' } }]
+
+    vi.mocked(grantModel.find).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue([mockGrants])
+      })
+    })
+
+    vi.mocked(versionsModel.find).mockReturnValue({
+      populate: vi.fn().mockReturnValue({
+        lean: vi.fn().mockResolvedValue([])
+      })
+    })
+
+    sendUnsetGPSEventsPlugin.register(server)
+    const startHandler = server.events.on.mock.calls.find(
+      (call) => call[0] === 'start'
+    )[1]
+
+    await startHandler()
+
+    // Verify both collections were copied
+    expect(mockAggregate).toHaveBeenCalledTimes(2)
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'MongoDB collection copied: grants to: backup_gps_grants'
+    )
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'MongoDB collection copied: versions to: backup_gps_versions'
+    )
+
+    // Verify mongoose.model was called with correct source collection names
+    expect(mockModelFn).toHaveBeenCalledWith('grants')
+    expect(mockModelFn).toHaveBeenCalledWith('versions')
   })
 })
