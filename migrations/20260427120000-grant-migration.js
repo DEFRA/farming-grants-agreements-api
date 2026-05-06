@@ -9,6 +9,34 @@ export const up = async (db) => {
   )
 
   try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const agreementsBackupName = `agreements_backup_${timestamp}`
+    const versionsBackupName = `versions_backup_${timestamp}`
+
+    const initialAgreementsCount = await db
+      .collection('agreements')
+      .countDocuments()
+    const initialVersionsCount = await db
+      .collection('versions')
+      .countDocuments()
+
+    logger.info(
+      `Initial counts - Agreements: ${initialAgreementsCount}, Versions: ${initialVersionsCount}`
+    )
+
+    logger.info(
+      `Creating backups: ${agreementsBackupName} and ${versionsBackupName}`
+    )
+    await db
+      .collection('agreements')
+      .aggregate([{ $out: agreementsBackupName }])
+      .toArray()
+    await db
+      .collection('versions')
+      .aggregate([{ $out: versionsBackupName }])
+      .toArray()
+    logger.info('Backups created successfully.')
+
     const agreements = await db
       .collection('agreements')
       .find({
@@ -90,6 +118,16 @@ export const up = async (db) => {
 
       logger.info(`Linked grant to agreement ${agreement.agreementNumber}`)
     }
+
+    const finalAgreementsCount = await db
+      .collection('agreements')
+      .countDocuments()
+    const finalGrantsCount = await db.collection('grants').countDocuments()
+    const finalVersionsCount = await db.collection('versions').countDocuments()
+
+    logger.info(
+      `Migration completed. Final counts - Agreements: ${finalAgreementsCount}, Grants: ${finalGrantsCount}, Versions: ${finalVersionsCount}`
+    )
   } catch (err) {
     logger.error('Error during migration of existing agreement to grants:', err)
     throw err
