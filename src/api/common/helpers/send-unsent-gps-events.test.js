@@ -708,7 +708,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     )
   })
 
-  it('should skip copying collections if destination already exists', async () => {
+  it('should log error when destination collection already exists', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
       if (key === 'featureFlags.sendUnsentGPSEvents') {
         return true
@@ -743,16 +743,13 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
     await startHandler()
 
-    // Verify aggregate was not called because collections already exist
-    expect(mockAggregate).not.toHaveBeenCalled()
+    // Verify error is logged when collection already exists
+    expect(server.logger.error).toHaveBeenCalledWith(
+      'Error while checking for missed GPS payments events: MongoDB collection: backup_gps_grants already exists, cannot copy'
+    )
 
-    // Verify skip messages were logged
-    expect(server.logger.info).toHaveBeenCalledWith(
-      'MongoDB collection: backup_gps_grants already exists, skipping copy'
-    )
-    expect(server.logger.info).toHaveBeenCalledWith(
-      'MongoDB collection: backup_gps_versions already exists, skipping copy'
-    )
+    // Verify aggregate was not called
+    expect(mockAggregate).not.toHaveBeenCalled()
   })
 
   it('should call mongoose.model correctly and only copy collections that do not exist', async () => {
@@ -770,7 +767,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
     vi.mocked(grantModel.find).mockReturnValue({
       select: vi.fn().mockReturnValue({
-        lean: vi.fn().mockResolvedValue([mockGrants])
+        lean: vi.fn().mockResolvedValue(mockGrants)
       })
     })
 

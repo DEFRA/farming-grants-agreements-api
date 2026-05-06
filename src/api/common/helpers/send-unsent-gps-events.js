@@ -14,10 +14,9 @@ async function copyCollectionDontOverwrite(source, destination, logger) {
   const collectionNames = collections.map((c) => c.name)
 
   if (collectionNames.includes(destination)) {
-    logger.info(
-      `MongoDB collection: ${destination} already exists, skipping copy`
+    throw new Error(
+      `MongoDB collection: ${destination} already exists, cannot copy`
     )
-    return
   }
 
   // Copy source collection to destination collection
