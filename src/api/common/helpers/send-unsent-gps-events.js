@@ -1,11 +1,32 @@
+import { randomUUID } from 'node:crypto'
+import mongoose from 'mongoose'
 import { config } from '#~/config/index.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import grantModel from '#~/api/common/models/grant.js'
-import { randomUUID } from 'node:crypto'
 
 const paymentDayOfMonth = config.get('paymentDayOfMonth')
+
+async function copyCollectionDontOverwrite(source, destination, logger) {
+  // Skip if destination already exists
+  const collections = await mongoose.connection.db.listCollections().toArray()
+  const collectionNames = collections.map((c) => c.name)
+
+  if (collectionNames.includes(destination)) {
+    throw new Error(
+      `MongoDB collection: ${destination} already exists, cannot copy`
+    )
+  }
+
+  // Copy source collection to destination collection
+  await mongoose.model(source).aggregate([
+    { $match: {} }, // Select all documents
+    { $out: destination }
+  ])
+
+  logger.info(`MongoDB collection copied: ${source} to: ${destination}`)
+}
 
 /**
  * Find agreements with missed GPS payment events
@@ -202,6 +223,17 @@ const sendUnsetGPSEventsPlugin = {
       server.logger.info('Checking for missed GPS payments events...')
 
       try {
+        await copyCollectionDontOverwrite(
+          'grants',
+          'backup_gps_grants',
+          server.logger
+        )
+        await copyCollectionDontOverwrite(
+          'versions',
+          'backup_gps_versions',
+          server.logger
+        )
+
         const missedPayments = await findMissedPayments()
 
         server.logger.info(
