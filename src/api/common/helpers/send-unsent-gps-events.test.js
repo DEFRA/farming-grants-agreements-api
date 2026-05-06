@@ -425,10 +425,10 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.info).toHaveBeenCalledWith(
       'Creating new version of AG1'
     )
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
-      parcels: mockMissedPayments[0].application.parcel,
-      logger: server.logger
-    })
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+      mockMissedPayments[0].application.parcel,
+      server.logger
+    )
     expect(versionsModel.create).toHaveBeenCalled()
 
     // Verify that the original version's status is set to cancelled
@@ -525,10 +525,10 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.info).toHaveBeenCalledWith(
       'Creating new version of AG1'
     )
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith({
-      parcels: mockMissedPayments[0].application.parcel,
-      logger: server.logger
-    })
+    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+      mockMissedPayments[0].application.parcel,
+      server.logger
+    )
     expect(versionsModel.create).toHaveBeenCalled()
     expect(acceptOffer).toHaveBeenCalledWith(
       'AG1',

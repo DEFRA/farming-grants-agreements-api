@@ -82,10 +82,10 @@ async function processMissedPayment(version, server) {
 
   try {
     // Calculate payments based on parcels with actions
-    const newPaymentData = await calculatePaymentsBasedOnParcelsWithActions({
-      parcels: version.application.parcel,
-      logger: server.logger
-    })
+    const newPaymentData = await calculatePaymentsBasedOnParcelsWithActions(
+      version.application.parcel,
+      server.logger
+    )
 
     server.logger.info(`Creating new version of ${agreementNumber}`)
 

@@ -136,10 +136,10 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnParcelsWithActions({
-      parcels: parcelsWithActions,
-      logger: mockLogger
-    })
+    const result = await calculatePaymentsBasedOnParcelsWithActions(
+      parcelsWithActions,
+      mockLogger
+    )
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
     const [url, request] = global.fetch.mock.calls[0]
@@ -204,9 +204,8 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnParcelsWithActions({
-      parcels: parcelsWithActions
-    })
+    const result =
+      await calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions)
 
     expect(result).toEqual({
       agreementStartDate: payment.agreementStartDate,
@@ -231,10 +230,7 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     global.fetch.mockResolvedValue(fetchResponse)
 
     await expect(
-      calculatePaymentsBasedOnParcelsWithActions({
-        parcels: parcelsWithActions,
-        logger: mockLogger
-      })
+      calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions, mockLogger)
     ).rejects.toThrow('Land Grants response missing "payment" field')
 
     expect(mockLogger.info).toHaveBeenCalledTimes(2)
@@ -250,10 +246,7 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     global.fetch.mockResolvedValue(fetchResponse)
 
     await expect(
-      calculatePaymentsBasedOnParcelsWithActions({
-        parcels: parcelsWithActions,
-        logger: mockLogger
-      })
+      calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions, mockLogger)
     ).rejects.toThrow(
       'Land Grants Payment calculate request failed: 502 Bad Gateway gateway down'
     )

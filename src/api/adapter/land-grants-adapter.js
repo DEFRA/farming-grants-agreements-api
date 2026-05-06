@@ -103,10 +103,7 @@ const convertParcelsToLandGrantsPayload = (parcels = []) => {
   return { parcel: Array.from(grouped.values()) }
 }
 
-const calculatePaymentsBasedOnParcelsWithActions = async ({
-  parcels,
-  logger
-}) => {
+const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
   const payload = convertParcelsToLandGrantsPayload(parcels)
 
   if (logger) {
