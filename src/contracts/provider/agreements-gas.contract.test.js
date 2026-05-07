@@ -98,7 +98,7 @@ const setupMocks = () => {
   })
 
   withdrawOffer.mockResolvedValue({
-    agreement: { agreementNumber: 'FPTT123456789' },
+    agreementNumber: 'FPTT123456789',
     clientRef: 'mockClientRef',
     code: 'mockCode',
     correlationId: 'mockCorrelationId',
@@ -107,7 +107,7 @@ const setupMocks = () => {
   })
 
   cancelOffer.mockResolvedValue({
-    agreement: { agreementNumber: 'FPTT123456789' },
+    agreementNumber: 'FPTT123456789',
     clientRef: 'mockClientRef',
     code: 'mockCode',
     correlationId: 'mockCorrelationId',
@@ -116,7 +116,7 @@ const setupMocks = () => {
   })
 
   terminateAgreement.mockResolvedValue({
-    agreement: { agreementNumber: 'FPTT123456789' },
+    agreementNumber: 'FPTT123456789',
     clientRef: 'mockClientRef',
     code: 'mockCode',
     correlationId: 'mockCorrelationId',

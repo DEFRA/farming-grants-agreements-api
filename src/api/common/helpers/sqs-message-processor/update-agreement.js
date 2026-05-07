@@ -23,15 +23,15 @@ async function applyStatusUpdate(status, clientRef, agreementNumber, logger) {
   )
   if (status === AGREEMENT_STATUS.WITHDRAWN) {
     const result = await withdrawOffer(clientRef, agreementNumber)
-    logger.info(`Offer withdrawn: ${result.agreement.agreementNumber}`)
+    logger.info(`Offer withdrawn: ${result.agreementNumber}`)
     return result
   } else if (status === AGREEMENT_STATUS.CANCELLED) {
     const result = await cancelOffer(clientRef, agreementNumber)
-    logger.info(`Offer cancelled: ${result.agreement.agreementNumber}`)
+    logger.info(`Offer cancelled: ${result.agreementNumber}`)
     return result
   } else if (status === AGREEMENT_STATUS.TERMINATED) {
     const result = await terminateAgreement(clientRef, agreementNumber)
-    logger.info(`Agreement terminated: ${result.agreement.agreementNumber}`)
+    logger.info(`Agreement terminated: ${result.agreementNumber}`)
     return result
   } else {
     return undefined
@@ -87,7 +87,7 @@ export const handleUpdateAgreementEvent = async (
   if (updatedVersion) {
     auditEvent(AuditEvent.AGREEMENT_UPDATED, {
       ...updatedVersion,
-      agreementNumber: updatedVersion.agreement.agreementNumber
+      agreementNumber: updatedVersion.agreementNumber
     })
 
     await publishEvent(
@@ -96,7 +96,7 @@ export const handleUpdateAgreementEvent = async (
         type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
         time: new Date().toISOString(),
         data: {
-          agreementNumber: updatedVersion.agreement.agreementNumber,
+          agreementNumber: updatedVersion.agreementNumber,
           correlationId: updatedVersion.correlationId,
           clientRef: updatedVersion.clientRef,
           status: updatedVersion.status,
