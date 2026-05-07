@@ -26,22 +26,6 @@ async function transitionAgreementToAccepted(
     throw Boom.badRequest('Agreement data is required')
   }
 
-  // Validate PDF service configuration before accepting
-  const bucket = config.get('files.s3.bucket')
-  const region = config.get('files.s3.region')
-
-  if (!bucket) {
-    throw Boom.badImplementation(
-      'PDF service configuration missing: FILES_S3_BUCKET not set'
-    )
-  }
-
-  if (!region) {
-    throw Boom.badImplementation(
-      'PDF service configuration missing: FILES_S3_REGION not set'
-    )
-  }
-
   // WMP: payment was persisted from the payload at create time and Land
   // Grants does not know WMP action codes — skip the lookup and reuse the
   // existing payment subdoc (plan.md §4.3 / §12.2 edit #8).
