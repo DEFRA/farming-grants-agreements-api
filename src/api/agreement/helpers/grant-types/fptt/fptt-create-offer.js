@@ -10,7 +10,7 @@ import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { buildLegacyPaymentFromApplication } from '../../legacy-application-mapper.js'
 import { generateAgreementNumber } from '../../create-offer.js'
 
-const logger = createLogger()
+const moduleLogger = createLogger()
 
 /**
  * Create a new FPTT offer.
@@ -267,7 +267,7 @@ function attemptConversion(agreementData) {
       return convertFromAnswersPaymentsFormat(agreementData)
     }
   } catch (conversionError) {
-    logger.warn(
+    moduleLogger.warn(
       { err: conversionError },
       'Legacy/answers payload conversion failed; falling back to null'
     )
