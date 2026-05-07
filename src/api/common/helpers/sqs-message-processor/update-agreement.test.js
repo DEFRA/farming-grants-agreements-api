@@ -55,7 +55,7 @@ describe('SQS message processor', () => {
       code: 'mockCode',
       status: 'withdrawn',
       updatedAt: mockUpdatedAt,
-      agreement: { agreementNumber: 'FPTT123456789' }
+      agreementNumber: 'FPTT123456789'
     })
     cancelOffer.mockResolvedValue({
       clientRef: 'mockClientRef',
@@ -63,7 +63,7 @@ describe('SQS message processor', () => {
       code: 'mockCode',
       status: 'cancelled',
       updatedAt: mockUpdatedAt,
-      agreement: { agreementNumber: 'FPTT123456789' }
+      agreementNumber: 'FPTT123456789'
     })
     terminateAgreement.mockResolvedValue({
       clientRef: 'mockClientRef',
@@ -71,7 +71,7 @@ describe('SQS message processor', () => {
       code: 'mockCode',
       status: 'terminated',
       updatedAt: mockUpdatedAt,
-      agreement: { agreementNumber: 'FPTT123456789' }
+      agreementNumber: 'FPTT123456789'
     })
   })
 
@@ -133,7 +133,6 @@ describe('SQS message processor', () => {
         code: 'mockCode',
         status: 'withdrawn',
         updatedAt: mockUpdatedAt,
-        agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
       })
     })
@@ -182,7 +181,6 @@ describe('SQS message processor', () => {
         code: 'mockCode',
         status: 'cancelled',
         updatedAt: mockUpdatedAt,
-        agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
       })
     })
@@ -231,7 +229,6 @@ describe('SQS message processor', () => {
         code: 'mockCode',
         status: 'terminated',
         updatedAt: mockUpdatedAt,
-        agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
       })
     })
@@ -320,7 +317,6 @@ describe('SQS message processor', () => {
         code: 'mockCode',
         status: 'withdrawn',
         updatedAt: mockUpdatedAt,
-        agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
       })
     })
@@ -372,7 +368,6 @@ describe('SQS message processor', () => {
         code: 'mockCode',
         status: 'cancelled',
         updatedAt: mockUpdatedAt,
-        agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
       })
     })
@@ -424,7 +419,6 @@ describe('SQS message processor', () => {
         code: 'mockCode',
         status: 'terminated',
         updatedAt: mockUpdatedAt,
-        agreement: { agreementNumber: 'FPTT123456789' },
         agreementNumber: 'FPTT123456789'
       })
     })

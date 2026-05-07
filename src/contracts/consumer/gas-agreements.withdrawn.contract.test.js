@@ -23,9 +23,7 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
 
   it('should withdraw an agreement offer when receiving an AWS SQS event from GAS', () => {
     mockWithdrawOffer.mockResolvedValue({
-      agreement: {
-        agreementNumber: 'mockAgreementNumber'
-      },
+      agreementNumber: 'mockAgreementNumber',
       updatedAt: '2025-01-01T00:00:00.000Z'
     })
 
