@@ -6,8 +6,11 @@ import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { generateClaimId } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { buildLegacyPaymentFromApplication } from '../../legacy-application-mapper.js'
 import { generateAgreementNumber } from '../../create-offer.js'
+
+const logger = createLogger()
 
 /**
  * Create a new FPTT offer.
@@ -264,6 +267,10 @@ function attemptConversion(agreementData) {
       return convertFromAnswersPaymentsFormat(agreementData)
     }
   } catch (conversionError) {
+    logger.warn(
+      { err: conversionError },
+      'Legacy/answers payload conversion failed; falling back to null'
+    )
     return null
   }
   return null
@@ -341,16 +348,14 @@ function normaliseApplicant(applicant, answers = {}) {
   const customer = applicant?.customer || answers?.customer
 
   return {
-    ...(applicant || {}),
-    ...(businessDetails
-      ? {
-          business: {
-            ...businessDetails,
-            ...(address ? { address } : {})
-          }
-        }
-      : {}),
-    ...(customer ? { customer } : {})
+    ...applicant,
+    ...(businessDetails && {
+      business: {
+        ...businessDetails,
+        ...(address && { address })
+      }
+    }),
+    ...(customer && { customer })
   }
 }
 
