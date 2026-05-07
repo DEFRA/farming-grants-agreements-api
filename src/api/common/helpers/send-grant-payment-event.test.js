@@ -73,7 +73,6 @@ describe('sendGrantPaymentEvent', () => {
       { _id: 'mock-id' },
       {
         $set: {
-          grantsPaymentServiceRequestMade: true,
           correlationId: mockAgreementData.correlationId,
           'payment.payments': mockAgreementData.payment.payments
         }
@@ -102,7 +101,6 @@ describe('sendGrantPaymentEvent', () => {
       { _id: 'mock-id' },
       {
         $set: {
-          grantsPaymentServiceRequestMade: true,
           correlationId: incompleteData.correlationId,
           'payment.payments': incompleteData.payment.payments
         }

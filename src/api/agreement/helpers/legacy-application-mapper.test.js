@@ -351,4 +351,70 @@ describe('legacy-application-mapper', () => {
     expect(payment.parcelItems).toEqual({})
     expect(payment.annualTotalPence).toBe(0)
   })
+
+  it('sets payment dates to the 15th of the month', () => {
+    vi.useFakeTimers().setSystemTime(new Date('2025-06-10T00:00:00.000Z'))
+
+    const payload = {
+      application: {
+        applicant: {},
+        agreementStartDate: '2025-06-01T00:00:00.000Z',
+        totalAnnualPaymentPence: 1200,
+        parcels: [
+          {
+            sheetId: 'SHEET-1',
+            parcelId: 'PARCEL-1',
+            actions: [
+              {
+                code: 'ACTION1',
+                description: 'Test action',
+                annualPaymentPence: 1200
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const { payments } = result.payment
+
+    expect(payments).toHaveLength(2)
+    expect(payments[0].paymentDate).toBe('2025-09-15T00:00:00.000Z')
+    expect(payments[1].paymentDate).toBe('2025-12-15T00:00:00.000Z')
+  })
+
+  it('rolls payment date to next month when 15th is today or in the past', () => {
+    vi.useFakeTimers().setSystemTime(new Date('2025-06-15T00:00:00.000Z'))
+
+    const payload = {
+      application: {
+        applicant: {},
+        agreementStartDate: '2025-03-01T00:00:00.000Z',
+        totalAnnualPaymentPence: 1200,
+        parcels: [
+          {
+            sheetId: 'SHEET-1',
+            parcelId: 'PARCEL-1',
+            actions: [
+              {
+                code: 'ACTION1',
+                description: 'Test action',
+                annualPaymentPence: 1200
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+    const result = buildLegacyPaymentFromApplication(payload)
+    const { payments } = result.payment
+
+    // First payment would be June 15th (3 months after March), but since
+    // today is June 15th, it rolls to July 15th
+    expect(payments[0].paymentDate).toBe('2025-07-15T00:00:00.000Z')
+    // Second payment is 6 months after March = September 15th, which is in the future
+    expect(payments[1].paymentDate).toBe('2025-09-15T00:00:00.000Z')
+  })
 })

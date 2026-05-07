@@ -10,6 +10,7 @@ import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
 import agreements from '#~/api/common/helpers/sample-data/agreements.js'
 import { fetchWithTimeout } from '#~/api/common/helpers/fetch.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
 
@@ -102,6 +103,14 @@ describe('UI sending a GET request to get an agreement', () => {
         // Disable Pact setup calls, as we setup the server in the before steps
         req.url = `/${req.url.replace('_pactSetup', '')}`
         next()
+      },
+      stateHandlers: {
+        'A customer has an accepted agreement offer': async () => {
+          await acceptOffer(
+            agreements[1].agreementNumber,
+            agreements[1].answers
+          )
+        }
       }
     }
 

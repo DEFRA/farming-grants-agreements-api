@@ -9,7 +9,6 @@ import { createOffer } from '#~/api/agreement/helpers/create-offer.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
 import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
-import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { getAgreementDataBySbi } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { handleUpdateAgreementEvent } from '#~/api/common/helpers/sqs-message-processor/update-agreement.js'
@@ -19,8 +18,22 @@ import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
 import { createGrantPaymentFromAgreement } from '#~/api/common/helpers/create-grant-payment-from-agreement.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
+import * as landGrantsAdapter from '#~/api/adapter/land-grants-adapter.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
-vi.mock('#~/api/agreement/helpers/accept-offer.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => {
+  return {
+    calculatePaymentsBasedOnParcelsWithActions: vi.fn()
+  }
+})
+
+vi.mock(
+  '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
+  () => ({
+    updateAgreementWithVersionViaGrant: vi.fn()
+  })
+)
+
 vi.mock('#~/api/agreement/helpers/unaccept-offer.js')
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
 vi.mock('#~/api/agreement/helpers/cancel-offer.js')
@@ -54,13 +67,13 @@ const mockLogger = {
 
 const mockAgreementData = {
   status: 'offered',
-  ...sampleData.agreements[1]
+  ...sampleData.agreements[1],
+  application: sampleData.agreements[1].answers.application,
+  payment: sampleData.agreements[1].answers.payment
 }
 
 const setupMocks = () => {
   vi.clearAllMocks()
-
-  acceptOffer.mockReset()
   unacceptOffer.mockReset()
   withdrawOffer.mockReset()
   cancelOffer.mockReset()
@@ -68,12 +81,17 @@ const setupMocks = () => {
   getAgreementDataBySbi.mockReset()
   sendGrantPaymentEvent.mockReset()
 
-  acceptOffer.mockResolvedValue({
+  unacceptOffer.mockResolvedValue()
+
+  updateAgreementWithVersionViaGrant.mockResolvedValue({
     ...mockAgreementData,
     signatureDate: '2024-01-01T00:00:00.000Z',
     status: 'accepted'
   })
-  unacceptOffer.mockResolvedValue()
+
+  landGrantsAdapter.calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(
+    mockAgreementData.payment
+  )
 
   sendGrantPaymentEvent.mockResolvedValue({
     claimId: 'R00000001'
@@ -186,13 +204,17 @@ const acceptedMessageProvider = async (server) => {
       'cloud.defra.test.farming-grants-agreements-api.payment.create'
     )
 
-    await server.inject({
+    const response = await server.inject({
       method: 'POST',
       url: '/',
       headers: {
         'x-encrypted-auth': 'valid-jwt-token'
       }
     })
+
+    if (response.statusCode !== 200) {
+      console.error('Inject failed:', response.statusCode, response.result)
+    }
 
     const acceptedType = config.get('aws.sns.topic.agreementStatusUpdate.type')
 

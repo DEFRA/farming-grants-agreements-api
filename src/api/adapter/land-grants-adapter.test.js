@@ -204,10 +204,8 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     })
     global.fetch.mockResolvedValue(fetchResponse)
 
-    const result = await calculatePaymentsBasedOnParcelsWithActions(
-      parcelsWithActions,
-      null
-    )
+    const result =
+      await calculatePaymentsBasedOnParcelsWithActions(parcelsWithActions)
 
     expect(result).toEqual({
       agreementStartDate: payment.agreementStartDate,
