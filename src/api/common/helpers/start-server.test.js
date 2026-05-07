@@ -30,6 +30,32 @@ vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
   })
 }))
 
+const mockFeatureFlags = {
+  seedDb: false,
+  testEndpoints: true,
+  isJwtEnabled: false,
+  sendUnsentGPSEvents: true,
+  restoreGPSBackup: false
+}
+
+vi.mock('#~/config/index.js', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    config: {
+      ...actual.config,
+      get: (key) => {
+        if (key === 'featureFlags') {
+          return mockFeatureFlags
+        }
+        if (key === 'port') {
+          return 3098
+        }
+        return actual.config.get(key)
+      }
+    }
+  }
+})
+
 describe('#startServer', () => {
   const PROCESS_ENV = process.env
   let createServerSpy
@@ -70,6 +96,9 @@ describe('#startServer', () => {
       expect(hapiServerSpy).toHaveBeenCalled()
       expect(mockHapiLoggerInfo).toHaveBeenCalledWith(
         'Custom secure context is disabled'
+      )
+      expect(mockHapiLoggerInfo).toHaveBeenCalledWith(
+        `Feature flags: ${JSON.stringify(mockFeatureFlags, null, 2)}`
       )
       expect(mockHapiLoggerInfo).toHaveBeenCalledWith('Setting up Mongoose')
       expect(mockHapiLoggerInfo).toHaveBeenCalledWith(
