@@ -110,6 +110,19 @@ function obfuscatePersonalData(version) {
   return cloned
 }
 
+/**
+ * Core function to copy collection using native MongoDB driver
+ * Works with any collection name (no schema registration required)
+ * @param {string} source - Source collection name
+ * @param {string} destination - Destination collection name
+ */
+async function copyCollection(source, destination) {
+  await mongoose.connection.db
+    .collection(source)
+    .aggregate([{ $match: {} }, { $out: destination }])
+    .toArray()
+}
+
 async function copyCollectionDontOverwrite(source, destination, logger) {
   // Skip if destination already exists
   if (await collectionExists(destination)) {
@@ -119,10 +132,7 @@ async function copyCollectionDontOverwrite(source, destination, logger) {
   }
 
   // Copy source collection to destination collection
-  await mongoose.model(source).aggregate([
-    { $match: {} }, // Select all documents
-    { $out: destination }
-  ])
+  await copyCollection(source, destination)
 
   logger.info(`MongoDB collection copied: ${source} to: ${destination}`)
 }
@@ -152,9 +162,7 @@ async function restoreFromBackup(backupSource, destination, logger) {
   // Take failsafe backup of current data if destination exists
   if (await collectionExists(destination)) {
     const failsafeName = `backup_failsafe_${destination}_${Date.now()}`
-    await mongoose
-      .model(destination)
-      .aggregate([{ $match: {} }, { $out: failsafeName }])
+    await copyCollection(destination, failsafeName)
     logger.info(`Failsafe backup created: ${destination} to: ${failsafeName}`)
 
     // Drop destination if it exists
@@ -167,9 +175,7 @@ async function restoreFromBackup(backupSource, destination, logger) {
   }
 
   // Copy from backup to destination
-  await mongoose
-    .model(backupSource)
-    .aggregate([{ $match: {} }, { $out: destination }])
+  await copyCollection(backupSource, destination)
 
   logger.info(`Restored ${destination} from ${backupSource}`)
 }

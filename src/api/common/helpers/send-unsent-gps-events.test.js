@@ -21,7 +21,8 @@ vi.mock(import('mongoose'), async (importOriginal) => {
       ...actual.default,
       connection: {
         db: {
-          listCollections: () => ({ toArray: mockListCollections })
+          listCollections: () => ({ toArray: mockListCollections }),
+          collection: () => ({ aggregate: () => ({ toArray: mockAggregate }) })
         }
       },
       model: mockModelFn
@@ -792,9 +793,5 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.info).toHaveBeenCalledWith(
       'MongoDB collection copied: versions to: backup_gps_versions'
     )
-
-    // Verify mongoose.model was called with correct source collection names
-    expect(mockModelFn).toHaveBeenCalledWith('grants')
-    expect(mockModelFn).toHaveBeenCalledWith('versions')
   })
 })
