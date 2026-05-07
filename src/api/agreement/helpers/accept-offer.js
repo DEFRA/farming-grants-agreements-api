@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import Boom from '@hapi/boom'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
-import { isWmpAgreement } from '#~/api/agreement/helpers/wmp-payload-mapper.js'
+import { isWmpAgreement } from '#~/api/agreement/helpers/grant-types/wmp/wmp-payload-mapper.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 import { config } from '#~/config/index.js'

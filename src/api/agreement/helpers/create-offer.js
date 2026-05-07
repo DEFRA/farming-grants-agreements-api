@@ -8,8 +8,8 @@ import { config } from '#~/config/index.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { buildLegacyPaymentFromApplication } from './legacy-application-mapper.js'
 import { generateClaimId } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
-import { isWmp } from './wmp-payload-mapper.js'
-import { wmpCreateOffer } from './wmp-create-offer.js'
+import { isWmp } from './grant-types/wmp/wmp-payload-mapper.js'
+import { wmpCreateOffer } from './grant-types/wmp/wmp-create-offer.js'
 
 export const generateAgreementNumber = async () => {
   const minRandomNumber = 100000000

@@ -4,19 +4,12 @@ import { createAgreementWithGrantAndVersions } from '#~/api/agreement/helpers/cr
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
-import { generateAgreementNumber } from './create-offer.js'
-import { validateWmpCreateAgreement } from './schemas/wmp-create-agreement.schema.js'
+import { generateAgreementNumber } from '../../create-offer.js'
+import { validateWmpCreateAgreement } from '../../schemas/wmp-create-agreement.schema.js'
 import { mapWmpPayloadToVersion } from './wmp-payload-mapper.js'
 
 /**
  * Create a WMP offer.
- *
- * Plan §12.1 / §12.2 (edit #4):
- *  1. Validate the payload via the WMP Joi schema.
- *  2. Map it to a `versions` document via `mapWmpPayloadToVersion`.
- *  3. Persist via `createAgreementWithGrantAndVersions({ ignorePayments: false })`
- *     so the payment subdoc derived from the payload survives insert.
- *  4. Publish the existing `agreementStatusUpdate` SNS event.
  *
  * **No Land Grants call** is made on this path.
  * @param {string} notificationMessageId - The AWS notification message ID

@@ -22,7 +22,7 @@ vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
-vi.mock('./create-offer.js', () => ({
+vi.mock('../../create-offer.js', () => ({
   generateAgreementNumber: vi
     .fn()
     .mockImplementation(() =>
