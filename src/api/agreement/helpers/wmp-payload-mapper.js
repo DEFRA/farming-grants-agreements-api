@@ -172,6 +172,39 @@ function buildActionApplications(landParcels, agreementItems) {
  * @param {() => string} [opts.uuid] - injectable uuid generator (for tests)
  * @returns {object} versions document
  */
+function buildIdentifiers(payload, meta) {
+  const src = payload.identifiers ?? {}
+  return {
+    sbi: src.sbi ?? meta.sbi,
+    crn: src.crn ?? meta.crn,
+    frn: src.frn ?? meta.frn,
+    defraId: src.defraId
+  }
+}
+
+// Date basis: prefer metadata.submittedAt, fall back to answers.detailsConfirmedAt, else now.
+function resolveSubmittedAt(meta, answers) {
+  return (
+    meta.submittedAt ?? answers.detailsConfirmedAt ?? new Date().toISOString()
+  )
+}
+
+function buildPaymentOrNull(ctx) {
+  const { agreementItems, totalPence } = ctx
+  if (agreementItems.length === 0 || !Number.isFinite(totalPence)) return null
+  return buildPayment(ctx)
+}
+
+function buildVersionHeader(payload, meta, answers, correlationId, uuid) {
+  return {
+    agreementName: answers.agreementName ?? 'Woodland Management Plan',
+    correlationId: correlationId ?? uuid(),
+    clientRef: payload.clientRef ?? meta.clientRef,
+    code: payload.code ?? 'wmp',
+    scheme: payload.scheme ?? 'WMP'
+  }
+}
+
 export function mapWmpPayloadToVersion(payload, opts = {}) {
   const {
     notificationMessageId,
@@ -180,44 +213,25 @@ export function mapWmpPayloadToVersion(payload, opts = {}) {
   } = opts
   const meta = payload.metadata ?? {}
   const answers = payload.answers
-  const ids = {
-    sbi: payload.identifiers?.sbi ?? meta.sbi,
-    crn: payload.identifiers?.crn ?? meta.crn,
-    frn: payload.identifiers?.frn ?? meta.frn,
-    defraId: payload.identifiers?.defraId
-  }
-
-  // Date basis: prefer metadata.submittedAt, fall back to answers.detailsConfirmedAt, else now.
-  const submittedAt =
-    meta.submittedAt ?? answers.detailsConfirmedAt ?? new Date().toISOString()
+  const submittedAt = resolveSubmittedAt(meta, answers)
   const agreementStartDate = truncToDateString(submittedAt)
   const agreementEndDate = addOneYear(submittedAt)
-
   const agreementItems = answers.payments?.agreement ?? []
-  const totalPence = answers.totalAgreementPaymentPence
   const landParcels = answers.landParcels ?? []
-  const hasPaymentInfo =
-    agreementItems.length > 0 && Number.isFinite(totalPence)
 
   return {
     notificationMessageId,
-    agreementName: answers.agreementName ?? 'Woodland Management Plan',
-    correlationId: correlationId ?? uuid(),
-    clientRef: payload.clientRef ?? meta.clientRef,
-    code: payload.code ?? 'wmp',
-    scheme: payload.scheme ?? 'WMP',
-    identifiers: ids,
+    ...buildVersionHeader(payload, meta, answers, correlationId, uuid),
+    identifiers: buildIdentifiers(payload, meta),
     status: 'offered',
     actionApplications: buildActionApplications(landParcels, agreementItems),
-    payment: hasPaymentInfo
-      ? buildPayment({
-          agreementItems,
-          totalPence,
-          agreementStartDate,
-          agreementEndDate,
-          uuid
-        })
-      : null,
+    payment: buildPaymentOrNull({
+      agreementItems,
+      totalPence: answers.totalAgreementPaymentPence,
+      agreementStartDate,
+      agreementEndDate,
+      uuid
+    }),
     applicant: buildApplicant(answers.applicant),
     application: { parcel: buildParcelDocs(landParcels, agreementItems) }
   }
