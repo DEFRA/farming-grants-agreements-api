@@ -1,0 +1,391 @@
+import crypto from 'node:crypto'
+import Boom from '@hapi/boom'
+
+import { createAgreementWithGrantAndVersions } from '#~/api/agreement/helpers/create-agreement-with-grant-and-versions.js'
+import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import { config } from '#~/config/index.js'
+import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { generateClaimId } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
+import { buildLegacyPaymentFromApplication } from '../../legacy-application-mapper.js'
+import { generateAgreementNumber } from '../../create-offer.js'
+
+/**
+ * Create a new FPTT offer.
+ * @param {string} notificationMessageId - The AWS notification message ID
+ * @param {Agreement} agreementData - The agreement data
+ * @param {Request['logger']} logger
+ * @returns {Promise<Agreement>} The agreement data
+ */
+export const fpttCreateOffer = async (
+  notificationMessageId,
+  agreementData,
+  logger
+) => {
+  await ensureAgreementDataIsValid(notificationMessageId, agreementData)
+
+  const {
+    clientRef,
+    code,
+    identifiers,
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant,
+    application,
+    consentObjects
+  } = resolveAgreementFields(agreementData)
+
+  const agreementNumber = await determineAgreementNumber(agreementData)
+
+  // Generate claimId and originalInvoiceNumber for version 1
+  const claimId = await generateClaimId()
+  const originalInvoiceNumber = ''
+
+  const data = {
+    notificationMessageId,
+    correlationId: crypto.randomUUID(),
+    clientRef,
+    code,
+    identifiers,
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant,
+    application,
+    claimId,
+    originalInvoiceNumber,
+    ...(consentObjects === undefined ? {} : { consentObjects })
+  }
+
+  const agreement = await createAgreementWithGrantAndVersions({
+    agreement: {
+      agreementNumber,
+      clientRef,
+      sbi: identifiers.sbi
+    },
+    versions: [data] // can pass multiple payloads
+  })
+
+  // Publish event to SNS
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+      time: new Date().toISOString(),
+      data: {
+        agreementNumber: agreement.agreementNumber,
+        correlationId: data?.correlationId,
+        clientRef,
+        status: 'offered',
+        date: agreement.updatedAt,
+        code
+      }
+    },
+    logger
+  )
+
+  logger.info(`Successfully created the agreement
+      ${JSON.stringify(agreement, null, 2)}`)
+
+  return agreement
+}
+
+/** @import { Agreement } from '#~/api/common/types/agreement.d.js' */
+/** @import { Request } from '@hapi/hapi' */
+
+async function ensureAgreementDataIsValid(
+  notificationMessageId,
+  agreementData
+) {
+  if (!agreementData) {
+    throw new Error('Offer data is required')
+  }
+
+  if (await doesAgreementExist({ notificationMessageId })) {
+    throw new Error('Agreement has already been created')
+  }
+}
+
+function resolveAgreementFields(agreementData) {
+  const { clientRef, code, identifiers, answers = {} } = agreementData
+  const {
+    scheme,
+    agreementName,
+    actionApplications,
+    payment,
+    applicant,
+    application,
+    consentObjects
+  } = answers
+
+  const { resolvedActions, resolvedPayment, resolvedApplicant } =
+    buildLegacyAgreementContent(
+      agreementData,
+      actionApplications,
+      payment,
+      applicant
+    )
+
+  return {
+    clientRef,
+    code,
+    identifiers,
+    scheme,
+    agreementName,
+    actionApplications: resolvedActions,
+    payment: resolvedPayment,
+    applicant: normaliseApplicant(resolvedApplicant, agreementData?.answers),
+    application,
+    consentObjects: resolveConsentObjects(answers, consentObjects)
+  }
+}
+
+function resolveConsentObjects(answers, consentObjects) {
+  if (consentObjects !== undefined) {
+    return consentObjects
+  }
+
+  return answers?.rulesCalculations?.caveats
+}
+
+function convertFromLegacyApplicationFormat(agreementData) {
+  // TODO: UI will need to be modified to omit payment schedule details once they are deprecated
+  return buildLegacyPaymentFromApplication(agreementData)
+}
+
+function convertFromAnswersParcelsFormat(agreementData) {
+  // Convert the answers structure to application-like structure for the mapper
+  const answers = agreementData?.answers || {}
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      applicant: answers.applicant,
+      totalAnnualPaymentPence: answers.totalAnnualPaymentPence,
+      parcels: answers.parcels || answers.parcel || [],
+      agreementStartDate: answers.agreementStartDate,
+      agreementEndDate: answers.agreementEndDate,
+      paymentFrequency: answers.paymentFrequency,
+      durationYears: answers.durationYears
+    }
+  }
+
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function convertFromAnswersApplicationFormat(agreementData) {
+  const answersApplication = agreementData.answers?.application
+  if (!answersApplication) {
+    return null
+  }
+
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      ...answersApplication
+    }
+  }
+
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function normalizeToArray(value) {
+  if (!value) {
+    return []
+  }
+
+  return Array.isArray(value) ? value : [value]
+}
+
+function convertFromAnswersPaymentsFormat(agreementData) {
+  const answers = agreementData?.answers || {}
+  // Support both data.payments and data.answers.payments
+  const payments = agreementData.payments || answers.payments || {}
+  const parcelPayments = payments.parcel || payments.parcels
+  const parcels = normalizeToArray(parcelPayments)
+
+  if (!parcels.length) {
+    return null
+  }
+
+  const totalAnnualPaymentPence =
+    answers.totalAnnualPaymentPence ??
+    payments.totalAnnualPaymentPence ??
+    parcels.reduce(
+      (sum, parcel) =>
+        sum +
+        (parcel.actions || []).reduce(
+          (acc, action) => acc + Number(action.annualPaymentPence || 0),
+          0
+        ),
+      0
+    )
+
+  const applicationLikeData = {
+    ...agreementData,
+    application: {
+      applicant: answers.applicant,
+      totalAnnualPaymentPence,
+      parcels,
+      agreementStartDate: answers.agreementStartDate,
+      agreementEndDate: answers.agreementEndDate,
+      paymentFrequency: answers.paymentFrequency,
+      durationYears: answers.durationYears
+    }
+  }
+
+  return buildLegacyPaymentFromApplication(applicationLikeData)
+}
+
+function mergeConvertedValues(existing, converted, fieldName) {
+  return existing || converted[fieldName]
+}
+
+function validateResolvedContent(resolvedPayment, resolvedApplicant) {
+  if (!resolvedPayment || !resolvedApplicant) {
+    throw Boom.badRequest('Offer data is missing payment and applicant')
+  }
+}
+
+function attemptConversion(agreementData) {
+  try {
+    const answersApplication = agreementData.answers?.application
+    if (agreementData.application) {
+      return convertFromLegacyApplicationFormat(agreementData)
+    }
+    if (answersApplication) {
+      return convertFromAnswersApplicationFormat(agreementData)
+    }
+    if (agreementData.answers?.parcels || agreementData.answers?.parcel) {
+      return convertFromAnswersParcelsFormat(agreementData)
+    }
+    if (agreementData.payments || agreementData.answers?.payments) {
+      return convertFromAnswersPaymentsFormat(agreementData)
+    }
+  } catch (conversionError) {
+    return null
+  }
+  return null
+}
+
+function applyConvertedValues(resolved, converted) {
+  return {
+    resolvedActions: mergeConvertedValues(
+      resolved.resolvedActions,
+      converted,
+      'actionApplications'
+    ),
+    resolvedPayment: mergeConvertedValues(
+      resolved.resolvedPayment,
+      converted,
+      'payment'
+    ),
+    resolvedApplicant: mergeConvertedValues(
+      resolved.resolvedApplicant,
+      converted,
+      'applicant'
+    )
+  }
+}
+
+function buildLegacyAgreementContent(
+  agreementData,
+  actionApplications,
+  payment,
+  applicant
+) {
+  let resolvedActions = actionApplications
+  let resolvedPayment = payment
+  let resolvedApplicant = applicant
+
+  // Check if we need to convert from application format (legacy) or answers.parcels/answers.parcel format (new)
+  if (!resolvedPayment || !resolvedActions || !resolvedApplicant) {
+    const converted = attemptConversion(agreementData)
+    if (converted) {
+      const updated = applyConvertedValues(
+        { resolvedActions, resolvedPayment, resolvedApplicant },
+        converted
+      )
+      resolvedActions = updated.resolvedActions
+      resolvedPayment = updated.resolvedPayment
+      resolvedApplicant = updated.resolvedApplicant
+    }
+  }
+
+  validateResolvedContent(resolvedPayment, resolvedApplicant)
+
+  return {
+    resolvedActions,
+    resolvedPayment,
+    resolvedApplicant
+  }
+}
+
+async function determineAgreementNumber(agreementData) {
+  if (config.get('featureFlags.seedDb') && agreementData.agreementNumber) {
+    return agreementData.agreementNumber
+  }
+
+  return generateAgreementNumber()
+}
+
+function normaliseApplicant(applicant, answers = {}) {
+  const businessDetails = applicant?.business
+    ? { ...applicant.business }
+    : undefined
+
+  const address =
+    (businessDetails && buildBusinessAddress(businessDetails)) || undefined
+
+  const customer = applicant?.customer || answers?.customer
+
+  return {
+    ...(applicant || {}),
+    ...(businessDetails
+      ? {
+          business: {
+            ...businessDetails,
+            ...(address ? { address } : {})
+          }
+        }
+      : {}),
+    ...(customer ? { customer } : {})
+  }
+}
+
+function buildBusinessAddress(business = {}) {
+  if (business.address) {
+    return business.address
+  }
+
+  return extractAddressFields(business)
+}
+
+const addressKeys = [
+  'line1',
+  'line2',
+  'line3',
+  'line4',
+  'line5',
+  'street',
+  'city',
+  'postalCode'
+]
+
+function extractAddressFields(source = {}) {
+  const hasAddressField = addressKeys.some(
+    (key) => source[key] !== undefined && source[key] !== null
+  )
+
+  if (!hasAddressField) {
+    return undefined
+  }
+
+  return addressKeys.reduce((acc, key) => {
+    if (source[key] !== undefined && source[key] !== null) {
+      acc[key] = source[key]
+    }
+    return acc
+  }, {})
+}
