@@ -1,39 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import {
-  isWmp,
-  isWmpAgreement,
-  mapWmpPayloadToVersion
-} from './wmp-payload-mapper.js'
+import { isWmpAgreement, mapWmpPayloadToVersion } from './wmp-payload-mapper.js'
 import wmpFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
 
 const fixedUuid = () => '00000000-0000-4000-8000-000000000000'
-
-describe('isWmp', () => {
-  it('detects via top-level code === "woodland"', () => {
-    expect(isWmp({ code: 'woodland', answers: {} })).toBe(true)
-  })
-
-  it('is case-insensitive on code', () => {
-    expect(isWmp({ code: 'Woodland' })).toBe(true)
-    expect(isWmp({ code: 'WOODLAND' })).toBe(true)
-  })
-
-  it('detects the canonical fixture', () => {
-    expect(isWmp(wmpFixture)).toBe(true)
-  })
-
-  it('rejects when code is missing or not woodland', () => {
-    expect(isWmp({ code: 'sfi' })).toBe(false)
-    expect(isWmp({ code: 'wmp' })).toBe(false)
-    expect(isWmp({})).toBe(false)
-  })
-
-  it('rejects null / undefined / non-objects', () => {
-    expect(isWmp(null)).toBe(false)
-    expect(isWmp(undefined)).toBe(false)
-    expect(isWmp('woodland')).toBe(false)
-  })
-})
 
 describe('isWmpAgreement', () => {
   it('detects via persisted scheme=WMP', () => {

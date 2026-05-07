@@ -1,19 +1,5 @@
 import crypto from 'node:crypto'
 /**
- * Detect a WMP payload via its application code.
- *
- * The upstream contract guarantees `code: 'woodland'` (case-insensitive)
- * on every WMP create-agreement payload — this is the canonical signal.
- * @param {object} payload
- * @returns {boolean}
- */
-export function isWmp(payload) {
-  if (!payload || typeof payload !== 'object') {
-    return false
-  }
-  return String(payload.code ?? '').toLowerCase() === 'woodland'
-}
-/**
  * Detect that a *persisted* agreement-version document is WMP.
  *
  * Matches on the persisted `scheme === 'WMP'` or `code === 'woodland'`.
@@ -155,23 +141,6 @@ function buildActionApplications(landParcels, agreementItems) {
   return out
 }
 
-/**
- * Map a validated WMP create-agreement payload to a `versions` document.
- *
- * When `answers.payments.agreement[]` and `answers.totalAgreementPaymentPence`
- * are present, a full payment subdoc is built (frequency `OneOff`, paid on
- * signature). Otherwise `payment` is `null`.
- *
- * `actionApplications` and `application.parcel[]` are populated from
- * `answers.landParcels × answers.payments.agreement[]`. They stay empty
- * if either is absent.
- * @param {object} payload - validated WMP create-agreement payload
- * @param {object} [opts]
- * @param {string} [opts.notificationMessageId] - SQS message id (required for insert)
- * @param {string} [opts.correlationId] - version-level tracing id (defaults to a fresh uuid)
- * @param {() => string} [opts.uuid] - injectable uuid generator (for tests)
- * @returns {object} versions document
- */
 function buildIdentifiers(payload, meta) {
   const src = payload.identifiers ?? {}
   return {
@@ -207,6 +176,23 @@ function buildVersionHeader(payload, meta, answers, correlationId, uuid) {
   }
 }
 
+/**
+ * Map a validated WMP create-agreement payload to a `versions` document.
+ *
+ * When `answers.payments.agreement[]` and `answers.totalAgreementPaymentPence`
+ * are present, a full payment subdoc is built (frequency `OneOff`, paid on
+ * signature). Otherwise `payment` is `null`.
+ *
+ * `actionApplications` and `application.parcel[]` are populated from
+ * `answers.landParcels × answers.payments.agreement[]`. They stay empty
+ * if either is absent.
+ * @param {object} payload - validated WMP create-agreement payload
+ * @param {object} [opts]
+ * @param {string} [opts.notificationMessageId] - SQS message id (required for insert)
+ * @param {string} [opts.correlationId] - version-level tracing id (defaults to a fresh uuid)
+ * @param {() => string} [opts.uuid] - injectable uuid generator (for tests)
+ * @returns {object} versions document
+ */
 export function mapWmpPayloadToVersion(payload, opts = {}) {
   const {
     notificationMessageId,

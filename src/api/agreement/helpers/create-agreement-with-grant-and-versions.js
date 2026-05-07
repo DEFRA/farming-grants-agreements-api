@@ -122,7 +122,7 @@ async function insertAndAssociateVersions({ versions, grantId }) {
  * @param {object} params - The parameters for creation
  * @param {object} params.agreement - The agreement base data
  * @param {Array<object>} params.versions - The version payloads
- * @param {boolean} [params.ignorePayments=true] - When true (default) the
+ * @param {boolean} [params.ignorePayments] - When true (default) the
  *   `payment` subdoc on each version is nulled out so it can be looked up
  *   later from Land Grants. WMP create-agreement passes `false` so the
  *   payment subdoc derived from the WMP payload is persisted as-is.
