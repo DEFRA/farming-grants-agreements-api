@@ -112,10 +112,7 @@ function obfuscatePersonalData(version) {
 
 async function copyCollectionDontOverwrite(source, destination, logger) {
   // Skip if destination already exists
-  const collections = await mongoose.connection.db.listCollections().toArray()
-  const collectionNames = collections.map((c) => c.name)
-
-  if (collectionNames.includes(destination)) {
+  if (await collectionExists(destination)) {
     throw new Error(
       `MongoDB collection: ${destination} already exists, cannot copy`
     )
@@ -128,6 +125,53 @@ async function copyCollectionDontOverwrite(source, destination, logger) {
   ])
 
   logger.info(`MongoDB collection copied: ${source} to: ${destination}`)
+}
+
+/**
+ * Check if a MongoDB collection exists
+ * @param {string} collectionName - Name of collection to check
+ * @returns {Promise<boolean>} True if collection exists
+ */
+async function collectionExists(collectionName) {
+  const collections = await mongoose.connection.db.listCollections().toArray()
+  return collections.map((c) => c.name).includes(collectionName)
+}
+
+/**
+ * Copy collection from backup, taking a failsafe backup first
+ * @param {string} backupSource - Backup collection name
+ * @param {string} destination - Destination collection name
+ * @param {object} logger - Logger instance
+ */
+async function restoreFromBackup(backupSource, destination, logger) {
+  // Check if backup source exists
+  if (!(await collectionExists(backupSource))) {
+    throw new Error(`Backup collection ${backupSource} does not exist`)
+  }
+
+  // Take failsafe backup of current data if destination exists
+  if (await collectionExists(destination)) {
+    const failsafeName = `backup_failsafe_${destination}_${Date.now()}`
+    await mongoose
+      .model(destination)
+      .aggregate([{ $match: {} }, { $out: failsafeName }])
+    logger.info(`Failsafe backup created: ${destination} to: ${failsafeName}`)
+
+    // Drop destination if it exists
+    await mongoose.connection.db.dropCollection(destination)
+    logger.info(`Dropped existing collection: ${destination}`)
+  } else {
+    logger.info(
+      `Existing: ${destination} does not exist, no failsafe backup taken`
+    )
+  }
+
+  // Copy from backup to destination
+  await mongoose
+    .model(backupSource)
+    .aggregate([{ $match: {} }, { $out: destination }])
+
+  logger.info(`Restored ${destination} from ${backupSource}`)
 }
 
 /**
@@ -308,13 +352,43 @@ const sendUnsetGPSEventsPlugin = {
   name: 'send-unsent-gps-events',
   version: '1.0.0',
   register: (server) => {
-    const isEnabled = config.get('featureFlags.sendUnsentGPSEvents')
+    const isSendUnsentGPSEventsEnabled = config.get(
+      'featureFlags.sendUnsentGPSEvents'
+    )
+    const isRestoreFromBackupEnabled = config.get(
+      'featureFlags.restoreGPSBackup'
+    )
 
-    if (!isEnabled) {
+    if (!isSendUnsentGPSEventsEnabled && !isRestoreFromBackupEnabled) {
       return
     }
 
     server.events.on('start', async () => {
+      if (isRestoreFromBackupEnabled) {
+        server.logger.info('Restoring GPS backup collections...')
+
+        try {
+          await restoreFromBackup('backup_gps_grants', 'grants', server.logger)
+          await restoreFromBackup(
+            'backup_gps_versions',
+            'versions',
+            server.logger
+          )
+
+          server.logger.info('Successfully restored GPS backup collections')
+        } catch (err) {
+          server.logger.error(
+            `Error while restoring GPS backup collections: ${err.message}`
+          )
+        }
+
+        return
+      }
+
+      if (!isSendUnsentGPSEventsEnabled) {
+        return
+      }
+
       server.logger.info('Checking for missed GPS payments events...')
 
       try {
