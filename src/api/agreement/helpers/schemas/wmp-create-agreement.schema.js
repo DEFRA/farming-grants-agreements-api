@@ -1,7 +1,6 @@
 import Joi from 'joi'
 // UK postcode regex (allows optional space, both letter cases)
 const POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i
-const HECTARES_TOLERANCE = 0.01
 // Identifier digit lengths (DEFRA business reference standards)
 const SBI_DIGITS = 9
 const CRN_DIGITS = 10
@@ -12,8 +11,24 @@ const numericString = (digits) =>
     .messages({
       'string.pattern.base': `must be a ${digits}-digit numeric string`
     })
-const moneyPence = Joi.number().integer().min(0)
 const positiveHectares = Joi.number().positive().precision(4)
+const moneyPence = Joi.number().integer().min(0)
+const HECTARES_TOLERANCE = 0.01
+const landParcelSchema = Joi.object({
+  parcelId: Joi.string().required(),
+  areaHa: positiveHectares.required()
+}).unknown(true)
+const agreementPaymentItemSchema = Joi.object({
+  code: Joi.string().required(),
+  description: Joi.string().required(),
+  activePaymentTier: Joi.number().integer().min(1).optional(),
+  quantityInActiveTier: Joi.number().min(0).optional(),
+  activeTierRatePence: moneyPence.optional(),
+  activeTierFlatRatePence: moneyPence.optional(),
+  quantity: Joi.number().positive().precision(4).optional(),
+  agreementTotalPence: moneyPence.optional(),
+  unit: Joi.string().optional()
+}).unknown(true)
 // `email` and `phone` arrive as objects on the real payload, but a string
 // form is also tolerated for forwards-compat with §3.1 of the plan.
 const emailField = Joi.alternatives().try(
@@ -79,11 +94,13 @@ const applicantSchema = Joi.object({
   customer: customerSchema.required()
 }).unknown(true)
 const metadataSchema = Joi.object({
-  clientRef: Joi.string().required(),
-  sbi: numericString(SBI_DIGITS).required(),
-  crn: numericString(CRN_DIGITS).required(),
-  frn: numericString(FRN_DIGITS).required(),
-  submittedAt: Joi.date().iso().required()
+  // The WMP payload sends an empty `metadata: {}` and puts identifiers at
+  // the top level — every field below is therefore optional.
+  clientRef: Joi.string().optional(),
+  sbi: numericString(SBI_DIGITS).optional(),
+  crn: numericString(CRN_DIGITS).optional(),
+  frn: numericString(FRN_DIGITS).optional(),
+  submittedAt: Joi.date().iso().optional()
 }).unknown(true)
 const identifiersSchema = Joi.object({
   sbi: numericString(SBI_DIGITS).required(),
@@ -91,49 +108,11 @@ const identifiersSchema = Joi.object({
   frn: numericString(FRN_DIGITS).required(),
   defraId: Joi.string().allow('', null)
 }).unknown(true)
-const landParcelSchema = Joi.object({
-  parcelId: Joi.string().required(),
-  areaHa: positiveHectares.required()
-}).unknown(true)
-const agreementPaymentItemSchema = Joi.object({
-  code: Joi.string().required(),
-  description: Joi.string().required(),
-  activePaymentTier: Joi.number().integer().min(1).required(),
-  quantityInActiveTier: Joi.number().min(0).required(),
-  activeTierRatePence: moneyPence.required(),
-  activeTierFlatRatePence: moneyPence.required(),
-  quantity: Joi.number().positive().precision(4).required(),
-  agreementTotalPence: moneyPence.required(),
-  unit: Joi.string().required()
-}).unknown(true)
-function checkPaymentTotal(answers) {
-  const sumPayments = (answers.payments?.agreement || []).reduce(
-    (acc, p) => acc + Number(p.agreementTotalPence || 0),
-    0
-  )
-  if (sumPayments !== answers.totalAgreementPaymentPence) {
-    return (
-      `totalAgreementPaymentPence (${answers.totalAgreementPaymentPence}) ` +
-      `must equal sum of payments.agreement[].agreementTotalPence (${sumPayments})`
-    )
-  }
-  return null
-}
 
-function checkHectaresTotal(answers) {
-  const sumHa = (answers.landParcels || []).reduce(
-    (acc, p) => acc + Number(p.areaHa || 0),
-    0
-  )
-  if (Math.abs(sumHa - answers.totalHectaresAppliedFor) > HECTARES_TOLERANCE) {
-    return (
-      `totalHectaresAppliedFor (${answers.totalHectaresAppliedFor}) must equal ` +
-      `sum of landParcels[].areaHa (${sumHa.toFixed(4)}) within ±${HECTARES_TOLERANCE}`
-    )
-  }
-  return null
-}
-
+// WMP cross-field rules:
+//  - existingWmps non-empty when appLandHasExistingWmp === true
+//  - totalAgreementPaymentPence (if present) equals sum of payments.agreement[].agreementTotalPence
+//  - totalHectaresAppliedFor (if landParcels present) equals sum of areaHa within tolerance
 function checkExistingWmps(answers) {
   if (answers.appLandHasExistingWmp !== true) {
     return null
@@ -149,11 +128,46 @@ function checkExistingWmps(answers) {
   return null
 }
 
+function checkPaymentTotal(answers) {
+  const items = answers.payments?.agreement
+  if (!items?.length || answers.totalAgreementPaymentPence === undefined) {
+    return null
+  }
+  const sum = items.reduce(
+    (acc, p) => acc + Number(p.agreementTotalPence || 0),
+    0
+  )
+  if (sum !== answers.totalAgreementPaymentPence) {
+    return (
+      `totalAgreementPaymentPence (${answers.totalAgreementPaymentPence}) ` +
+      `must equal sum of payments.agreement[].agreementTotalPence (${sum})`
+    )
+  }
+  return null
+}
+
+function checkHectaresTotal(answers) {
+  if (!answers.landParcels?.length) {
+    return null
+  }
+  const sumHa = answers.landParcels.reduce(
+    (acc, p) => acc + Number(p.areaHa || 0),
+    0
+  )
+  if (Math.abs(sumHa - answers.totalHectaresAppliedFor) > HECTARES_TOLERANCE) {
+    return (
+      `totalHectaresAppliedFor (${answers.totalHectaresAppliedFor}) must equal ` +
+      `sum of landParcels[].areaHa (${sumHa.toFixed(4)}) within ±${HECTARES_TOLERANCE}`
+    )
+  }
+  return null
+}
+
 function crossFieldChecks(answers, helpers) {
   const errors = [
+    checkExistingWmps(answers),
     checkPaymentTotal(answers),
-    checkHectaresTotal(answers),
-    checkExistingWmps(answers)
+    checkHectaresTotal(answers)
   ].filter(Boolean)
 
   if (errors.length) {
@@ -180,7 +194,7 @@ const answersSchema = Joi.object({
   fcTeamCode: Joi.string().required(),
   applicant: applicantSchema.required(),
   detailsConfirmedAt: Joi.date().iso().required(),
-  totalHectaresAppliedFor: Joi.number().positive().precision(4).required(),
+  totalHectaresAppliedFor: positiveHectares.required(),
   guidanceRead: Joi.boolean().strict().valid(true).required().messages({
     'any.only': 'guidanceRead must be true'
   }),
@@ -190,25 +204,25 @@ const answersSchema = Joi.object({
     .valid(true)
     .required()
     .messages({ 'any.only': 'applicationConfirmation must be true' }),
-  landParcels: Joi.array().items(landParcelSchema).min(1).required(),
-  totalAgreementPaymentPence: moneyPence.required(),
+  // Optional fields preserved if upstream sends them
+  agreementName: Joi.string().optional(),
+  landParcels: Joi.array().items(landParcelSchema).min(1).optional(),
+  totalAgreementPaymentPence: moneyPence.optional(),
   payments: Joi.object({
     agreement: Joi.array().items(agreementPaymentItemSchema).min(1).required()
   })
-    .required()
-    .unknown(true),
-  // Optional fields preserved if upstream sends them
-  agreementName: Joi.string().optional()
+    .optional()
+    .unknown(true)
 })
   .unknown(true)
   .custom(crossFieldChecks, 'WMP cross-field validation')
 const wmpCreateAgreementSchema = Joi.object({
-  // Top-level `code` / `scheme` are absent on the real Jira payload but
-  // tolerated if upstream adds them later.
+  // Top-level `clientRef` / `code` / `scheme` are sent on the real Jira
+  // payload (`code: 'woodland'` is the canonical WMP signal).
   clientRef: Joi.string().optional(),
   code: Joi.string().optional(),
   scheme: Joi.string().optional(),
-  metadata: metadataSchema.required(),
+  metadata: metadataSchema.optional(),
   identifiers: identifiersSchema.optional(),
   answers: answersSchema.required()
 }).unknown(true)

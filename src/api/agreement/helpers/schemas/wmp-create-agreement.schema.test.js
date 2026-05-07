@@ -1,40 +1,28 @@
 import { describe, it, expect } from 'vitest'
 import { validateWmpCreateAgreement } from './wmp-create-agreement.schema.js'
 import wmpFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
-// deep clone (avoid mutating shared fixture across tests)
+
 const clone = (o) => JSON.parse(JSON.stringify(o))
+
 describe('wmpCreateAgreementSchema', () => {
-  it('accepts the canonical Jira fixture', () => {
+  it('accepts the canonical WMP fixture', () => {
     const { error } = validateWmpCreateAgreement(wmpFixture)
     expect(error).toBeUndefined()
   })
-  describe('metadata', () => {
+
+  describe('identifiers', () => {
     it.each([
       ['sbi', '20000000', 'must be a 9-digit numeric string'],
       ['crn', 'abcdefghij', 'must be a 10-digit numeric string'],
       ['frn', '123', 'must be a 10-digit numeric string']
-    ])('rejects malformed metadata.%s', (field, badValue, msg) => {
+    ])('rejects malformed identifiers.%s', (field, badValue, msg) => {
       const p = clone(wmpFixture)
-      p.metadata[field] = badValue
+      p.identifiers[field] = badValue
       const { error } = validateWmpCreateAgreement(p)
       expect(error?.details.some((d) => d.message.includes(msg))).toBe(true)
     })
-    it('rejects non-ISO submittedAt', () => {
-      const p = clone(wmpFixture)
-      p.metadata.submittedAt = 'not-a-date'
-      const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
-    })
-    it.each(['sbi', 'crn', 'frn', 'submittedAt', 'clientRef'])(
-      'rejects missing metadata.%s',
-      (field) => {
-        const p = clone(wmpFixture)
-        delete p.metadata[field]
-        const { error } = validateWmpCreateAgreement(p)
-        expect(error).toBeDefined()
-      }
-    )
   })
+
   describe('applicant', () => {
     it('rejects missing business.name', () => {
       const p = clone(wmpFixture)
@@ -67,27 +55,8 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error).toBeDefined()
     })
   })
+
   describe('cross-field rules', () => {
-    it('rejects when totalAgreementPaymentPence != Σ payments.agreement[]', () => {
-      const p = clone(wmpFixture)
-      p.answers.totalAgreementPaymentPence = 999999
-      const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
-      expect(error.message).toMatch(/totalAgreementPaymentPence/)
-    })
-    it('rejects when totalHectaresAppliedFor differs from Σ landParcels.areaHa beyond tolerance', () => {
-      const p = clone(wmpFixture)
-      p.answers.totalHectaresAppliedFor = 999.99
-      const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
-      expect(error.message).toMatch(/totalHectaresAppliedFor/)
-    })
-    it('accepts hectares mismatch within ±0.01 tolerance', () => {
-      const p = clone(wmpFixture)
-      p.answers.totalHectaresAppliedFor = 195.25 // vs 195.246 actual
-      const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeUndefined()
-    })
     it('rejects guidanceRead=false', () => {
       const p = clone(wmpFixture)
       p.answers.guidanceRead = false
@@ -118,6 +87,7 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error).toBeUndefined()
     })
   })
+
   describe('booleans are strict', () => {
     it('rejects string "true" for businessDetailsUpToDate', () => {
       const p = clone(wmpFixture)
@@ -126,37 +96,71 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error).toBeDefined()
     })
   })
-  describe('payments.agreement[]', () => {
-    it('rejects empty payments.agreement', () => {
+
+  describe('payments', () => {
+    it('accepts the fixture payment block', () => {
+      const { error } = validateWmpCreateAgreement(wmpFixture)
+      expect(error).toBeUndefined()
+    })
+
+    it('accepts a lean agreement payment item (only code + description)', () => {
       const p = clone(wmpFixture)
-      p.answers.payments.agreement = []
+      p.answers.payments = {
+        agreement: [{ code: 'PA3', description: 'Woodland management plan' }]
+      }
+      delete p.answers.totalAgreementPaymentPence
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error).toBeUndefined()
+    })
+
+    it('rejects payment item missing required code', () => {
+      const p = clone(wmpFixture)
+      delete p.answers.payments.agreement[0].code
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeDefined()
     })
-    it('rejects negative agreementTotalPence', () => {
+
+    it('rejects when totalAgreementPaymentPence does not match sum', () => {
       const p = clone(wmpFixture)
-      p.answers.payments.agreement[0].agreementTotalPence = -1
+      p.answers.totalAgreementPaymentPence = 999
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeDefined()
+      expect(error.message).toMatch(/totalAgreementPaymentPence/)
     })
-    it('rejects non-integer pence', () => {
+
+    it('accepts payments omitted entirely', () => {
       const p = clone(wmpFixture)
-      p.answers.payments.agreement[0].agreementTotalPence = 100.5
-      p.answers.totalAgreementPaymentPence = 100.5
+      delete p.answers.payments
+      delete p.answers.totalAgreementPaymentPence
       const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
+      expect(error).toBeUndefined()
     })
   })
+
   describe('landParcels', () => {
-    it('rejects empty landParcels', () => {
+    it('accepts the fixture landParcels block', () => {
+      const { error } = validateWmpCreateAgreement(wmpFixture)
+      expect(error).toBeUndefined()
+    })
+
+    it('accepts landParcels omitted entirely', () => {
       const p = clone(wmpFixture)
-      p.answers.landParcels = []
+      delete p.answers.landParcels
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error).toBeUndefined()
+    })
+
+    it('rejects when totalHectaresAppliedFor mismatches landParcels sum', () => {
+      const p = clone(wmpFixture)
+      p.answers.totalHectaresAppliedFor = 1
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeDefined()
+      expect(error.message).toMatch(/totalHectaresAppliedFor/)
     })
-    it('rejects non-positive areaHa', () => {
+
+    it('rejects landParcel missing parcelId', () => {
       const p = clone(wmpFixture)
-      p.answers.landParcels[0].areaHa = 0
+      delete p.answers.landParcels[0].parcelId
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeDefined()
     })

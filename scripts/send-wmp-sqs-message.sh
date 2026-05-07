@@ -39,6 +39,7 @@ read -r -d '' MESSAGE <<EOM || true
   "datacontenttype": "application/json",
   "data": {
     "clientRef": "${CLIENT_REF}",
+    "code": "woodland",
     "metadata": {
       "clientRef": "${CLIENT_REF}",
       "sbi": "106284736",
@@ -151,6 +152,6 @@ echo "   Tail the AS logs and look for the WMP branch:"
 echo "     docker compose logs -f farming-grants-agreements-api | grep -i wmp"
 echo "   Then check Mongo:"
 echo "     docker compose exec mongodb mongosh --quiet --eval \\"
-echo "       'db.getSiblingDB(\"fg-agreements\").versions.find({clientRef:\"$CLIENT_REF\"}).pretty()'"
+echo "       'db.getSiblingDB(\"farming-grants-agreements-api\").versions.find({clientRef:\"$CLIENT_REF\"}).pretty()'"
 
 

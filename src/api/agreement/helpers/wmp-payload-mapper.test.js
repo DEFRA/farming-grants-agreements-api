@@ -9,55 +9,44 @@ import wmpFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
 const fixedUuid = () => '00000000-0000-4000-8000-000000000000'
 
 describe('isWmp', () => {
-  it('detects via metadata.clientRef + corroborating answers field', () => {
+  it('detects via top-level code === "woodland"', () => {
+    expect(isWmp({ code: 'woodland', answers: {} })).toBe(true)
+  })
+
+  it('is case-insensitive on code', () => {
+    expect(isWmp({ code: 'Woodland' })).toBe(true)
+    expect(isWmp({ code: 'WOODLAND' })).toBe(true)
+  })
+
+  it('detects the canonical fixture', () => {
     expect(isWmp(wmpFixture)).toBe(true)
   })
 
-  it('detects via top-level clientRef when metadata absent', () => {
-    expect(
-      isWmp({
-        clientRef: 'wmp-abc',
-        answers: { fcTeamCode: 'X' }
-      })
-    ).toBe(true)
-  })
-
-  it('rejects when clientRef does not start with wmp', () => {
-    expect(
-      isWmp({
-        metadata: { clientRef: 'sfi-123' },
-        answers: { appLandHasExistingWmp: false }
-      })
-    ).toBe(false)
-  })
-
-  it('rejects when no corroborating WMP-only answers field present', () => {
-    expect(
-      isWmp({
-        metadata: { clientRef: 'wmp-123' },
-        answers: { somethingElse: true }
-      })
-    ).toBe(false)
+  it('rejects when code is missing or not woodland', () => {
+    expect(isWmp({ code: 'sfi' })).toBe(false)
+    expect(isWmp({ code: 'wmp' })).toBe(false)
+    expect(isWmp({})).toBe(false)
   })
 
   it('rejects null / undefined / non-objects', () => {
     expect(isWmp(null)).toBe(false)
     expect(isWmp(undefined)).toBe(false)
-    expect(isWmp('wmp')).toBe(false)
+    expect(isWmp('woodland')).toBe(false)
   })
 })
 
 describe('isWmpAgreement', () => {
   it('detects via persisted scheme=WMP', () => {
-    expect(isWmpAgreement({ scheme: 'WMP', clientRef: 'anything' })).toBe(true)
+    expect(isWmpAgreement({ scheme: 'WMP', code: 'anything' })).toBe(true)
   })
 
-  it('detects via clientRef prefix when scheme absent', () => {
-    expect(isWmpAgreement({ clientRef: 'wmp-2026-1' })).toBe(true)
+  it('detects via persisted code=woodland when scheme absent', () => {
+    expect(isWmpAgreement({ code: 'woodland' })).toBe(true)
+    expect(isWmpAgreement({ code: 'Woodland' })).toBe(true)
   })
 
   it('rejects SFI-shaped agreement', () => {
-    expect(isWmpAgreement({ scheme: 'SFI', clientRef: 'sfi-1' })).toBe(false)
+    expect(isWmpAgreement({ scheme: 'SFI', code: 'sfi' })).toBe(false)
   })
 
   it('rejects null', () => {
@@ -76,37 +65,28 @@ describe('mapWmpPayloadToVersion', () => {
   it('maps top-level fields from the payload', () => {
     expect(result.notificationMessageId).toBe('sqs-msg-1')
     expect(result.correlationId).toBe('corr-1')
-    expect(result.clientRef).toBe(wmpFixture.metadata.clientRef)
-    expect(result.code).toBe('wmp')
+    expect(result.clientRef).toBe(wmpFixture.clientRef)
+    expect(result.code).toBe('woodland')
     expect(result.scheme).toBe('WMP')
     expect(result.agreementName).toBe('Woodland Management Plan')
     expect(result.status).toBe('offered')
   })
 
-  it('mirrors identifiers from metadata when top-level identifiers absent', () => {
+  it('takes identifiers from top-level identifiers', () => {
     expect(result.identifiers).toEqual({
-      sbi: '200000001',
-      crn: '1200000001',
-      frn: '0300000100',
+      sbi: '107593059',
+      crn: '1100957269',
+      frn: '1076543210',
       defraId: undefined
     })
   })
 
-  it('derives agreementStartDate from metadata.submittedAt and endDate +1y', () => {
-    expect(result.payment.agreementStartDate).toBe('2026-04-16')
-    expect(result.payment.agreementEndDate).toBe('2027-04-16')
-  })
-
-  it('sets frequency to OneOff (paid on signature)', () => {
+  it('builds a OneOff payment subdoc from answers.payments.agreement[]', () => {
+    expect(result.payment).not.toBeNull()
     expect(result.payment.frequency).toBe('OneOff')
-  })
-
-  it('copies totals verbatim from the payload', () => {
     expect(result.payment.agreementTotalPence).toBe(166200)
     expect(result.payment.annualTotalPence).toBe(166200)
-  })
-
-  it('builds 1-based agreementLevelItems map preserving tier/rate fields', () => {
+    expect(result.payment.parcelItems).toEqual({})
     expect(result.payment.agreementLevelItems).toEqual({
       1: {
         code: 'PA3',
@@ -121,26 +101,39 @@ describe('mapWmpPayloadToVersion', () => {
         activeTierFlatRatePence: 150000
       }
     })
-  })
-
-  it('keeps parcelItems empty (WMP payments are agreement-level)', () => {
-    expect(result.payment.parcelItems).toEqual({})
-  })
-
-  it('emits a single payments[] row with paymentDate=null', () => {
-    expect(result.payment.payments).toHaveLength(1)
-    const p = result.payment.payments[0]
-    expect(p.totalPaymentPence).toBe(166200)
-    expect(p.paymentDate).toBeNull()
-    expect(p.correlationId).toBe(fixedUuid())
-    expect(p.lineItems).toEqual([
+    expect(result.payment.payments).toEqual([
       {
-        agreementLevelItemId: 1,
-        paymentPence: 166200,
-        code: 'PA3',
-        description: 'Woodland management plan'
+        totalPaymentPence: 166200,
+        paymentDate: null,
+        correlationId: fixedUuid(),
+        lineItems: [
+          {
+            agreementLevelItemId: 1,
+            paymentPence: 166200,
+            code: 'PA3',
+            description: 'Woodland management plan'
+          }
+        ]
       }
     ])
+  })
+
+  it('derives agreementStartDate / endDate from detailsConfirmedAt', () => {
+    expect(result.payment.agreementStartDate).toBe('2026-04-02')
+    expect(result.payment.agreementEndDate).toBe('2027-04-02')
+  })
+
+  it('persists payment as null when payments are absent', () => {
+    const noPay = {
+      ...wmpFixture,
+      answers: {
+        ...wmpFixture.answers,
+        payments: undefined,
+        totalAgreementPaymentPence: undefined
+      }
+    }
+    const v = mapWmpPayloadToVersion(noPay, { notificationMessageId: 'm' })
+    expect(v.payment).toBeNull()
   })
 
   it('builds application.parcel[] one entry per landParcel', () => {
@@ -148,13 +141,14 @@ describe('mapWmpPayloadToVersion', () => {
     const [p1, p2] = result.application.parcel
     expect(p1.parcelId).toBe('SD7560-9193')
     expect(p1.area).toEqual({ unit: 'ha', quantity: 25.3874 })
-    expect(p1.actions).toHaveLength(1)
-    expect(p1.actions[0]).toEqual({
-      code: 'PA3',
-      version: '1',
-      durationYears: 1,
-      appliedFor: { unit: 'ha', quantity: 25.3874 }
-    })
+    expect(p1.actions).toEqual([
+      {
+        code: 'PA3',
+        version: '1',
+        durationYears: 1,
+        appliedFor: { unit: 'ha', quantity: 25.3874 }
+      }
+    ])
     expect(p2.parcelId).toBe('SD5848-9205')
     expect(p2.area.quantity).toBe(169.8586)
   })
@@ -169,13 +163,25 @@ describe('mapWmpPayloadToVersion', () => {
     })
   })
 
+  it('emits empty actionApplications and parcel arrays when landParcels absent', () => {
+    const noParcels = {
+      ...wmpFixture,
+      answers: { ...wmpFixture.answers, landParcels: undefined }
+    }
+    const v = mapWmpPayloadToVersion(noParcels, { notificationMessageId: 'm' })
+    expect(v.actionApplications).toEqual([])
+    expect(v.application.parcel).toEqual([])
+  })
+
   it('maps applicant.business + customer.name from answers.applicant', () => {
-    expect(result.applicant.business.name).toBe('High Fell Farm')
-    expect(result.applicant.business.address.line1).toBe('1 Moorfield')
-    expect(result.applicant.business.address.city).toBe('Chesham')
-    expect(result.applicant.business.address.postalCode).toBe('SK13 5CB')
-    expect(result.applicant.customer.name.first).toBe('Bob')
-    expect(result.applicant.customer.name.last).toBe('Sledd')
+    expect(result.applicant.business.name).toBe('Taylor Equestrian Yards')
+    expect(result.applicant.business.address.line1).toBe(
+      'Taylor Equestrian Yards'
+    )
+    expect(result.applicant.business.address.city).toBe('Cambridge')
+    expect(result.applicant.business.address.postalCode).toBe('CB1 2AB')
+    expect(result.applicant.customer.name.first).toBe('Oliver')
+    expect(result.applicant.customer.name.last).toBe('Taylor')
   })
 
   it('uses crypto.randomUUID by default when no uuid generator injected', () => {
@@ -185,5 +191,27 @@ describe('mapWmpPayloadToVersion', () => {
     expect(r2.correlationId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     )
+  })
+
+  it('falls back to metadata.* identifiers if top-level identifiers absent', () => {
+    const legacyShape = {
+      ...wmpFixture,
+      identifiers: undefined,
+      metadata: {
+        sbi: '107593059',
+        crn: '1100957269',
+        frn: '1076543210',
+        clientRef: 'wmp-legacy'
+      }
+    }
+    const v = mapWmpPayloadToVersion(legacyShape, {
+      notificationMessageId: 'm'
+    })
+    expect(v.identifiers).toEqual({
+      sbi: '107593059',
+      crn: '1100957269',
+      frn: '1076543210',
+      defraId: undefined
+    })
   })
 })

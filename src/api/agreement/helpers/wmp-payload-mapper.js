@@ -1,11 +1,9 @@
 import crypto from 'node:crypto'
 /**
- * Detect a WMP payload via the pragmatic interim heuristic
- * (plan.md §12.1).
+ * Detect a WMP payload via its application code.
  *
- * Primary signal: `metadata.clientRef` (or top-level `clientRef`) starts
- * with `wmp` (case-insensitive). Corroborated by the presence of a
- * WMP-only `answers.*` key. Both required to avoid false-positives.
+ * The upstream contract guarantees `code: 'woodland'` (case-insensitive)
+ * on every WMP create-agreement payload — this is the canonical signal.
  * @param {object} payload
  * @returns {boolean}
  */
@@ -13,28 +11,12 @@ export function isWmp(payload) {
   if (!payload || typeof payload !== 'object') {
     return false
   }
-  const clientRef = String(
-    payload?.metadata?.clientRef ?? payload?.clientRef ?? ''
-  )
-  if (!clientRef.toLowerCase().startsWith('wmp')) {
-    return false
-  }
-  const answers = payload.answers || {}
-  const wmpOnlyKeys = [
-    'appLandHasExistingWmp',
-    'fcTeamCode',
-    'includedAllEligibleWoodland',
-    'centreGridReference'
-  ]
-  return wmpOnlyKeys.some((key) => answers[key] !== undefined)
+  return String(payload.code ?? '').toLowerCase() === 'woodland'
 }
 /**
- * Detect that a *persisted* agreement-version document is WMP. Used by
- * the GET and accept paths to short-circuit the Land Grants lookup
- * (plan.md §4.3 / §12.3).
+ * Detect that a *persisted* agreement-version document is WMP.
  *
- * Falls back to the same `clientRef` prefix heuristic when `scheme` is
- * absent (the MVP doesn't add a strict `scheme` enum).
+ * Matches on the persisted `scheme === 'WMP'` or `code === 'woodland'`.
  * @param {object} agreement
  * @returns {boolean}
  */
@@ -48,19 +30,9 @@ export function isWmpAgreement(agreement) {
   ) {
     return true
   }
-  const clientRef = String(agreement.clientRef ?? '')
-  return clientRef.toLowerCase().startsWith('wmp')
+  return String(agreement.code ?? '').toLowerCase() === 'woodland'
 }
-const truncToDateString = (iso) => {
-  // ISO date-only (YYYY-MM-DD); the Mongoose schema stores agreement dates as String.
-  const d = new Date(iso)
-  return d.toISOString().slice(0, 10)
-}
-const addOneYear = (iso) => {
-  const d = new Date(iso)
-  d.setUTCFullYear(d.getUTCFullYear() + 1)
-  return d.toISOString().slice(0, 10)
-}
+
 const flattenAddress = (a = {}) => ({
   line1: a.line1,
   line2: a.line2 ?? undefined,
@@ -71,6 +43,38 @@ const flattenAddress = (a = {}) => ({
   city: a.city,
   postalCode: a.postalCode
 })
+
+function buildApplicant(answersApplicant) {
+  const applicantBusiness = answersApplicant.business
+  return {
+    business: {
+      name: applicantBusiness.name,
+      // email/phone are not on the Mongoose Applicant.business sub-schema
+      // today; we drop them rather than introduce schema drift. The raw
+      // payload remains in the SQS message id for replay.
+      address: flattenAddress(applicantBusiness.address)
+    },
+    customer: {
+      name: {
+        title: answersApplicant.customer.name.title ?? undefined,
+        first: answersApplicant.customer.name.first,
+        middle: answersApplicant.customer.name.middle ?? undefined,
+        last: answersApplicant.customer.name.last
+      }
+    }
+  }
+}
+
+const truncToDateString = (iso) => {
+  // ISO date-only (YYYY-MM-DD); the Mongoose schema stores agreement dates as String.
+  const d = new Date(iso)
+  return d.toISOString().slice(0, 10)
+}
+const addOneYear = (iso) => {
+  const d = new Date(iso)
+  d.setUTCFullYear(d.getUTCFullYear() + 1)
+  return d.toISOString().slice(0, 10)
+}
 
 function buildAgreementLevelItems(agreementItems) {
   const agreementLevelItems = {}
@@ -137,10 +141,10 @@ function buildParcelDocs(landParcels, agreementItems) {
 }
 
 function buildActionApplications(landParcels, agreementItems) {
-  const actionApplications = []
+  const out = []
   for (const lp of landParcels) {
     for (const item of agreementItems) {
-      actionApplications.push({
+      out.push({
         code: item.code,
         sheetId: lp.sheetId ?? lp.parcelId,
         parcelId: lp.parcelId,
@@ -148,47 +152,52 @@ function buildActionApplications(landParcels, agreementItems) {
       })
     }
   }
-  return actionApplications
+  return out
 }
 
-function buildApplicant(answersApplicant) {
-  const applicantBusiness = answersApplicant.business
-  return {
-    business: {
-      name: applicantBusiness.name,
-      // email/phone are not on the Mongoose Applicant.business sub-schema
-      // today; we drop them rather than introduce schema drift. The raw
-      // payload remains in the SQS message id for replay.
-      address: flattenAddress(applicantBusiness.address)
-    },
-    customer: {
-      name: {
-        title: answersApplicant.customer.name.title ?? undefined,
-        first: answersApplicant.customer.name.first,
-        middle: answersApplicant.customer.name.middle ?? undefined,
-        last: answersApplicant.customer.name.last
-      }
-    }
-  }
-}
-
+/**
+ * Map a validated WMP create-agreement payload to a `versions` document.
+ *
+ * When `answers.payments.agreement[]` and `answers.totalAgreementPaymentPence`
+ * are present, a full payment subdoc is built (frequency `OneOff`, paid on
+ * signature). Otherwise `payment` is `null`.
+ *
+ * `actionApplications` and `application.parcel[]` are populated from
+ * `answers.landParcels × answers.payments.agreement[]`. They stay empty
+ * if either is absent.
+ * @param {object} payload - validated WMP create-agreement payload
+ * @param {object} [opts]
+ * @param {string} [opts.notificationMessageId] - SQS message id (required for insert)
+ * @param {string} [opts.correlationId] - version-level tracing id (defaults to a fresh uuid)
+ * @param {() => string} [opts.uuid] - injectable uuid generator (for tests)
+ * @returns {object} versions document
+ */
 export function mapWmpPayloadToVersion(payload, opts = {}) {
   const {
     notificationMessageId,
     correlationId,
     uuid = crypto.randomUUID
   } = opts
-  const meta = payload.metadata
+  const meta = payload.metadata ?? {}
   const answers = payload.answers
-  const ids = payload.identifiers ?? {
-    sbi: meta.sbi,
-    crn: meta.crn,
-    frn: meta.frn
+  const ids = {
+    sbi: payload.identifiers?.sbi ?? meta.sbi,
+    crn: payload.identifiers?.crn ?? meta.crn,
+    frn: payload.identifiers?.frn ?? meta.frn,
+    defraId: payload.identifiers?.defraId
   }
-  const agreementStartDate = truncToDateString(meta.submittedAt)
-  const agreementEndDate = addOneYear(meta.submittedAt)
-  const agreementItems = answers.payments.agreement
+
+  // Date basis: prefer metadata.submittedAt, fall back to answers.detailsConfirmedAt, else now.
+  const submittedAt =
+    meta.submittedAt ?? answers.detailsConfirmedAt ?? new Date().toISOString()
+  const agreementStartDate = truncToDateString(submittedAt)
+  const agreementEndDate = addOneYear(submittedAt)
+
+  const agreementItems = answers.payments?.agreement ?? []
   const totalPence = answers.totalAgreementPaymentPence
+  const landParcels = answers.landParcels ?? []
+  const hasPaymentInfo =
+    agreementItems.length > 0 && Number.isFinite(totalPence)
 
   return {
     notificationMessageId,
@@ -197,27 +206,19 @@ export function mapWmpPayloadToVersion(payload, opts = {}) {
     clientRef: payload.clientRef ?? meta.clientRef,
     code: payload.code ?? 'wmp',
     scheme: payload.scheme ?? 'WMP',
-    identifiers: {
-      sbi: ids.sbi,
-      crn: ids.crn,
-      frn: ids.frn,
-      defraId: ids.defraId
-    },
+    identifiers: ids,
     status: 'offered',
-    actionApplications: buildActionApplications(
-      answers.landParcels,
-      agreementItems
-    ),
-    payment: buildPayment({
-      agreementItems,
-      totalPence,
-      agreementStartDate,
-      agreementEndDate,
-      uuid
-    }),
+    actionApplications: buildActionApplications(landParcels, agreementItems),
+    payment: hasPaymentInfo
+      ? buildPayment({
+          agreementItems,
+          totalPence,
+          agreementStartDate,
+          agreementEndDate,
+          uuid
+        })
+      : null,
     applicant: buildApplicant(answers.applicant),
-    application: {
-      parcel: buildParcelDocs(answers.landParcels, agreementItems)
-    }
+    application: { parcel: buildParcelDocs(landParcels, agreementItems) }
   }
 }

@@ -58,8 +58,8 @@ describe('wmpCreateOffer (integration)', () => {
     const [{ agreement, versions, ignorePayments }] =
       createAgreementWithGrantAndVersions.mock.calls[0]
     expect(ignorePayments).toBe(false)
-    expect(agreement.sbi).toBe(wmpAgreementFixture.metadata.sbi)
-    expect(agreement.clientRef).toBe(wmpAgreementFixture.metadata.clientRef)
+    expect(agreement.sbi).toBe(wmpAgreementFixture.identifiers.sbi)
+    expect(agreement.clientRef).toBe(wmpAgreementFixture.clientRef)
     expect(agreement.agreementNumber).toMatch(/^FPTT\d{9}$/)
 
     // Version: status offered, scheme WMP, payment derived from payload
@@ -79,7 +79,7 @@ describe('wmpCreateOffer (integration)', () => {
     const [event] = publishEvent.mock.calls[0]
     expect(event.data.status).toBe('offered')
     expect(event.data.scheme).toBe('WMP')
-    expect(event.data.clientRef).toBe(wmpAgreementFixture.metadata.clientRef)
+    expect(event.data.clientRef).toBe(wmpAgreementFixture.clientRef)
 
     // Land Grants must NOT be called for WMP (AC4)
     expect(

@@ -1,79 +1,66 @@
 /**
  * Canonical WMP "create agreement" payload as forwarded from GAS.
- * Mirrors the example payload in the Jira ticket (FG-XXXX) and is the
- * golden fixture for the WMP Joi schema, payload mapper, integration and
- * pact tests.
  *
  * Notes:
- * - There is no top-level `code` / `scheme` field on the wire today;
- *   detection uses `metadata.clientRef` prefix + WMP-only `answers.*` keys.
- * - `applicant.business.email` and `.phone` are objects (not strings).
- * - `address` carries the full PAF set (uprn, buildingName, flatName, ...).
- * - Action codes are real Forestry Commission plan codes (e.g. `PA3`).
- * - `existingWmps` is a string (not an array) on the real payload.
- * - `totalAgreementPaymentPence` ↔ Σ `payments.agreement[].agreementTotalPence`
- *   must match exactly (cross-field rule in the Joi schema).
- * - `totalHectaresAppliedFor` ↔ Σ `landParcels[].areaHa` must match (±0.01).
+ * - `code: 'woodland'` is the canonical WMP signal (case-insensitive).
+ * - Identifiers live at the top level; `metadata` is empty on the wire.
+ * - WMP carries optional payment info on `answers.payments.agreement[]`.
+ *   When present, the persisted version's `payment` is built from it
+ *   (frequency `OneOff`, paid on signature). landParcels are not part
+ *   of the WMP create payload — `application.parcel[]` stays empty.
+ * - `applicant.business.email` / `.phone` are objects, not strings.
  */
 const wmpAgreement = {
-  metadata: {
-    clientRef: 'wmp-92j-b49',
-    sbi: '200000001',
-    crn: '1200000001',
-    frn: '0300000100',
-    submittedAt: '2026-04-16T10:08:40.969Z'
-  },
+  clientRef: 'wmp-926-wlw',
+  code: 'woodland',
+  identifiers: { sbi: '107593059', frn: '1076543210', crn: '1100957269' },
+  metadata: {},
   answers: {
+    referenceNumber: 'WMP-926-WLW',
     businessDetailsUpToDate: true,
     landRegisteredWithRpa: true,
     landManagementControl: true,
     publicBodyTenant: false,
     landHasGrazingRights: false,
-    appLandHasExistingWmp: true,
-    existingWmps: 'www',
+    appLandHasExistingWmp: false,
     intendToApplyHigherTier: true,
-    hectaresTenOrOverYearsOld: 42,
-    hectaresUnderTenYearsOld: 25,
-    centreGridReference: 'SP 4178 2432',
-    fcTeamCode: 'SOUTH_WEST',
-    applicant: {
-      business: {
-        name: 'High Fell Farm',
-        reference: '0300000100',
-        email: { address: 'contact+300000100@example.test' },
-        phone: { landline: '02011223344' },
-        address: {
-          line1: '1 Moorfield',
-          line2: 'Glossop',
-          line3: 'High Peak',
-          line4: 'Derbyshire',
-          line5: '',
-          street: '1 Moorfield',
-          city: 'Chesham',
-          postalCode: 'SK13 5CB',
-          uprn: '681124619099',
-          buildingName: 'Holloway',
-          buildingNumberRange: null,
-          county: null,
-          dependentLocality: null,
-          doubleDependentLocality: null,
-          flatName: '04',
-          pafOrganisationName: null
-        }
-      },
-      customer: {
-        name: { title: 'Mr', first: 'Bob', middle: null, last: 'Sledd' }
-      }
-    },
-    detailsConfirmedAt: '2026-04-16T10:08:04.579Z',
     totalHectaresAppliedFor: 195.246,
-    guidanceRead: true,
-    includedAllEligibleWoodland: true,
-    applicationConfirmation: true,
+    hectaresTenOrOverYearsOld: 18,
+    hectaresUnderTenYearsOld: 2,
     landParcels: [
       { parcelId: 'SD7560-9193', areaHa: 25.3874 },
       { parcelId: 'SD5848-9205', areaHa: 169.8586 }
     ],
+    centreGridReference: 'SP12345678',
+    fcTeamCode: 'NORTH_WEST_AND_WEST_MIDLANDS',
+    applicant: {
+      business: {
+        name: 'Taylor Equestrian Yards',
+        reference: '1076543210',
+        email: { address: 'oliver.taylor@taylorequestrian.test' },
+        phone: { mobile: '07700900123' },
+        address: {
+          line1: 'Taylor Equestrian Yards',
+          line2: 'Riding Lane',
+          line3: null,
+          line4: null,
+          line5: null,
+          street: 'Riding Lane',
+          city: 'Cambridge',
+          postalCode: 'CB1 2AB'
+        },
+        vat: 'GB987654321',
+        type: { code: '1', type: 'Sole Trader' }
+      },
+      countyParishHoldings: '23/456/7890',
+      customer: {
+        name: { title: 'Mr', first: 'Oliver', middle: 'J', last: 'Taylor' }
+      }
+    },
+    detailsConfirmedAt: '2026-04-02T09:15:33.583Z',
+    guidanceRead: true,
+    includedAllEligibleWoodland: true,
+    applicationConfirmation: true,
     totalAgreementPaymentPence: 166200,
     payments: {
       agreement: [
