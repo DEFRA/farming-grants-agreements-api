@@ -191,7 +191,9 @@ function resolveSubmittedAt(meta, answers) {
 
 function buildPaymentOrNull(ctx) {
   const { agreementItems, totalPence } = ctx
-  if (agreementItems.length === 0 || !Number.isFinite(totalPence)) return null
+  if (agreementItems.length === 0 || !Number.isFinite(totalPence)) {
+    return null
+  }
   return buildPayment(ctx)
 }
 
