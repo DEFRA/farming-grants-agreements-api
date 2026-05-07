@@ -8,6 +8,108 @@ import grantModel from '#~/api/common/models/grant.js'
 
 const paymentDayOfMonth = config.get('paymentDayOfMonth')
 
+/**
+ * Check if value is a MongoDB BSON type (Decimal128, etc)
+ * @param {object} value - Value to check
+ * @returns {boolean} True if BSON type
+ */
+function isBsonType(value) {
+  return (
+    value._bsontype === 'Decimal128' ||
+    (value._bsontype && typeof value.toString === 'function')
+  )
+}
+
+/**
+ * Check if value is a MongoDB ObjectId
+ * @param {object} value - Value to check
+ * @returns {boolean} True if ObjectId
+ */
+function isObjectId(value) {
+  return (
+    value._bsontype === 'ObjectId' || typeof value.toHexString === 'function'
+  )
+}
+
+/**
+ * Check if value is a Buffer or Uint8Array
+ * @param {object} value - Value to check
+ * @returns {boolean} True if Buffer type
+ */
+function isBufferType(value) {
+  return Buffer.isBuffer(value) || value instanceof Uint8Array
+}
+
+/**
+ * Deep clone a MongoDB document, converting ObjectId, Decimal128, and Buffer to strings
+ * @param {object} value - Value to clone
+ * @returns {object} Cloned value with MongoDB types converted to strings
+ */
+function deepCloneMongo(value) {
+  if (value === null || value === undefined) {
+    return value
+  }
+
+  if (isObjectId(value) || isBsonType(value)) {
+    return value.toString()
+  }
+
+  if (isBufferType(value)) {
+    return value.toString('hex')
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => deepCloneMongo(item))
+  }
+
+  if (typeof value === 'object') {
+    const cloned = {}
+    for (const key of Object.keys(value)) {
+      cloned[key] = deepCloneMongo(value[key])
+    }
+    return cloned
+  }
+
+  return value
+}
+
+/**
+ * Obfuscates personal data in the applicant section of a version object
+ * @param {object} version - Version document
+ * @returns {object} Cloned version with obfuscated personal data
+ */
+function obfuscatePersonalData(version) {
+  const cloned = deepCloneMongo(version)
+  const REDACTED = '[REDACTED]'
+
+  function redactAllProps(obj) {
+    if (obj && typeof obj === 'object') {
+      for (const key of Object.keys(obj)) {
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          redactAllProps(obj[key])
+        } else {
+          obj[key] = REDACTED
+        }
+      }
+    }
+  }
+
+  if (cloned.applicant) {
+    if (cloned.applicant.business) {
+      redactAllProps(cloned.applicant.business)
+    }
+    if (cloned.applicant.customer?.name) {
+      redactAllProps(cloned.applicant.customer.name)
+    }
+  }
+
+  return cloned
+}
+
 async function copyCollectionDontOverwrite(source, destination, logger) {
   // Skip if destination already exists
   const collections = await mongoose.connection.db.listCollections().toArray()
@@ -63,22 +165,11 @@ function calculateAdjustedPaymentDate(currentPaymentDate) {
   date.setHours(0, 0, 0, 0)
   date.setDate(paymentDayOfMonth)
 
-  let targetYear = date.getFullYear()
-  let targetMonth = date.getMonth()
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  if (date <= today) {
-    targetMonth += 1
-    const decIndex = 11
-    if (targetMonth > decIndex) {
-      targetMonth = 0
-      targetYear += 1
-    }
-  }
-
-  const adjustedDate = new Date(targetYear, targetMonth, paymentDayOfMonth)
+  const adjustedDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    paymentDayOfMonth
+  )
   return adjustedDate.toISOString().split('T')[0]
 }
 
@@ -86,6 +177,7 @@ function calculateAdjustedPaymentDate(currentPaymentDate) {
  * Process a single missed payment for an agreement
  * @param {object} version - Version document to process
  * @param {object} server - Server instance with logger
+ * @returns {Promise<object|undefined>} The new version document if successful, undefined otherwise
  */
 async function processMissedPayment(version, server) {
   const agreementNumber = version.grant?.agreementNumber
@@ -94,7 +186,7 @@ async function processMissedPayment(version, server) {
     server.logger.error(
       `Agreement number not found for version ${version._id.toString()}`
     )
-    return
+    return undefined
   }
 
   server.logger.info(
@@ -131,10 +223,13 @@ async function processMissedPayment(version, server) {
     server.logger.info(
       `Successfully processed missed payment for agreement ${agreementNumber}`
     )
+
+    return versionToProcess
   } catch (err) {
     server.logger.error(
       `Failed to process missed payment for agreement ${agreementNumber}: ${err.message}`
     )
+    return undefined
   }
 }
 
@@ -241,7 +336,19 @@ const sendUnsetGPSEventsPlugin = {
         )
 
         for (const version of missedPayments) {
-          await processMissedPayment(version, server)
+          const versionBefore = obfuscatePersonalData(version)
+          server.logger.info(
+            `Processing missed payment for version ${version._id?.toString?.() || version._id} - before: ${JSON.stringify(versionBefore, null, 2)}`
+          )
+
+          const newVersion = await processMissedPayment(version, server)
+
+          const versionAfter = newVersion
+            ? obfuscatePersonalData(newVersion)
+            : { error: 'Failed to create new version' }
+          server.logger.info(
+            `Processed missed payment for version ${version._id?.toString?.() || version._id} - after: ${JSON.stringify(versionAfter, null, 2)}`
+          )
         }
       } catch (err) {
         server.logger.error(
