@@ -33,9 +33,7 @@ vi.mock('#~/api/common/helpers/logging/logger.js', () => ({
 const mockFeatureFlags = {
   seedDb: false,
   testEndpoints: true,
-  isJwtEnabled: false,
-  sendUnsentGPSEvents: true,
-  restoreGPSBackup: false
+  isJwtEnabled: false
 }
 
 vi.mock('#~/config/index.js', async (importOriginal) => {

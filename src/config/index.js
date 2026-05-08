@@ -431,18 +431,6 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
-    },
-    sendUnsentGPSEvents: {
-      doc: 'Send unsent GPS events to the payments service',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: false,
-      env: 'SEND_UNSENT_GPS_EVENTS'
-    },
-    restoreGPSBackup: {
-      doc: 'Restore GPS backup collections (failsafe backup taken first)',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: false,
-      env: 'RESTORE_GPS_BACKUP'
     }
   }
 })
