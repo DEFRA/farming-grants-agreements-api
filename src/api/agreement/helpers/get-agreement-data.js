@@ -130,13 +130,22 @@ const getAgreementDataById = async (agreementId) => {
 }
 
 /**
- * Check if the agreement already exists
- * @param {object} searchTerms - The search terms to use to find the agreement
- * @returns {Promise<boolean>} Whether the agreement exists
+ * Detect a duplicate agreement create-event by checking the `versions`
+ * collection for a matching `notificationMessageId`.
+ *
+ * `notificationMessageId` lives on `versions` (not `agreements`) since the
+ * DB restructure, so this is the only collection that can answer the
+ * "have we already processed this SQS message?" question.
+ * @param {object} searchTerms - typically `{ notificationMessageId }`
+ * @returns {Promise<boolean>} Whether a matching version already exists
  */
 const doesAgreementExist = async (searchTerms) => {
-  const agreements = await searchForAgreement(searchTerms)
-  return Boolean(agreements)
+  try {
+    const existing = await versionsModel.exists(searchTerms)
+    return Boolean(existing)
+  } catch (error) {
+    throw Boom.internal(error)
+  }
 }
 
 /**
