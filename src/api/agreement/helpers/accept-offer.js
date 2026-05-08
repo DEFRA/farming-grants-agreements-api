@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import Boom from '@hapi/boom'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { isWmpAgreement } from '#~/api/agreement/helpers/grant-types/wmp/wmp-payload-mapper.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 import { config } from '#~/config/index.js'
@@ -25,26 +26,33 @@ async function transitionAgreementToAccepted(
     throw Boom.badRequest('Agreement data is required')
   }
 
-  const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
-    agreementData.application.parcel,
-    logger
-  )
+  // WMP: payment was persisted from the payload at create time and Land
+  // Grants does not know WMP action codes — skip the lookup and reuse the
+  // existing payment subdoc (plan.md §4.3 / §12.2 edit #8).
+  let paymentWithCorrelationIds
+  if (isWmpAgreement(agreementData)) {
+    paymentWithCorrelationIds = agreementData.payment
+  } else {
+    const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
+      agreementData.application.parcel,
+      logger
+    )
 
-  if (!expectedPayments) {
-    throw Boom.badImplementation('Failed to calculate expected payments')
-  }
+    if (!expectedPayments) {
+      throw Boom.badImplementation('Failed to calculate expected payments')
+    }
 
-  // Add correlation IDs to payment data (preserve existing ones)
-  const paymentWithCorrelationIds = {
-    ...expectedPayments,
-    payments: expectedPayments.payments.map((payment, index) => {
-      // Check if there's an existing payment with correlation ID at this index
-      const existingPayment = agreementData.payment?.payments?.[index]
-      return {
-        ...payment,
-        correlationId: existingPayment?.correlationId || randomUUID()
-      }
-    })
+    // Add correlation IDs to payment data (preserve existing ones by index)
+    paymentWithCorrelationIds = {
+      ...expectedPayments,
+      payments: expectedPayments.payments.map((payment, index) => {
+        const existingPayment = agreementData.payment?.payments?.[index]
+        return {
+          ...payment,
+          correlationId: existingPayment?.correlationId || randomUUID()
+        }
+      })
+    }
   }
 
   // Update the agreement in the database
