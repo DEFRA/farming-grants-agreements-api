@@ -630,7 +630,10 @@ describe('createOffer', () => {
   describe('when notificationMessageId already exists', () => {
     it('should throw an error', async () => {
       const notificationMessageId = 'test-message-id'
-      const agreementData = { answers: { actionApplications: [] } }
+      const agreementData = {
+        code: 'frps-private-beta',
+        answers: { actionApplications: [] }
+      }
 
       // Mock doesAgreementExist to return true, indicating the notificationMessageId exists
       doesAgreementExist.mockResolvedValueOnce(true)

@@ -1,5 +1,6 @@
 /**
  * @typedef {object} Agreement
+ * @property {string} code - The Grant / Scheme code of the agreement
  * @property {string} agreementNumber - The unique identifier for the agreement
  * @property {string} agreementName - The name of the agreement
  * @property {('offered'|'accepted')} status - Current status of the agreement

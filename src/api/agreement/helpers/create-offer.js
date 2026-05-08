@@ -1,16 +1,21 @@
 import crypto from 'node:crypto'
+import Boom from '@hapi/boom'
 import agreementsModel from '#~/api/common/models/agreements.js'
 import { wmpCreateOffer } from './grant-types/wmp/wmp-create-offer.js'
 import { fpttCreateOffer } from './grant-types/fptt/fptt-create-offer.js'
 
 const createOfferByCode = {
   woodland: wmpCreateOffer,
-  fptt: fpttCreateOffer,
-  default: fpttCreateOffer
+  'frps-private-beta': fpttCreateOffer
 }
 
-const getCreateOffer = (code) =>
-  createOfferByCode[code?.toLowerCase()] ?? createOfferByCode.default
+const getCreateOffer = (code) => {
+  const create = createOfferByCode[code.toLowerCase()]
+  if (!create) {
+    throw Boom.badRequest(`Unknown agreement code: ${code}`)
+  }
+  return create
+}
 
 export const generateAgreementNumber = async () => {
   const minRandomNumber = 100000000
@@ -32,7 +37,13 @@ export const generateAgreementNumber = async () => {
  * @returns {Promise<Agreement>} The agreement data
  */
 const createOffer = (notificationMessageId, agreementData, logger) => {
-  const create = getCreateOffer(agreementData?.code)
+  if (!agreementData) {
+    throw Boom.badRequest('Offer data is required')
+  }
+  if (typeof agreementData.code !== 'string' || !agreementData.code.trim()) {
+    throw Boom.badRequest('Agreement code is required')
+  }
+  const create = getCreateOffer(agreementData.code)
   return create(notificationMessageId, agreementData, logger)
 }
 
