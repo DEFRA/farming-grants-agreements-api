@@ -405,23 +405,11 @@ describe('getAgreementDataBySbi', () => {
 })
 
 describe('doesAgreementExist', () => {
-  const mockLookup = {
-    $lookup: {
-      from: 'invoices',
-      localField: 'agreementNumber',
-      foreignField: 'agreementNumber',
-      as: 'invoice'
-    }
-  }
-
   beforeEach(() => {
     vi.clearAllMocks()
 
-    config.get.mockImplementation(() => {
-      return null
-    })
+    config.get.mockImplementation(() => null)
 
-    // Setup Boom mocks
     Boom.internal = vi.fn((error) => {
       const boomError = new Error(error?.message || 'Internal server error')
       boomError.isBoom = true
@@ -429,105 +417,62 @@ describe('doesAgreementExist', () => {
     })
   })
 
-  test('should return true when agreement exists', async () => {
-    // Arrange
+  test('queries the versions collection and returns true when a matching version exists', async () => {
     const searchTerms = { notificationMessageId: 'test-message-id' }
-    agreementsModel.aggregate.mockReturnValue({
-      catch: vi.fn().mockResolvedValue([{ id: 'existing-agreement' }])
-    })
+    versionsModel.exists.mockResolvedValue({ _id: 'v1' })
 
-    // Act
     const result = await doesAgreementExist(searchTerms)
 
-    // Assert
-    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
-      { $match: searchTerms },
-      mockLookup,
-      { $sort: { createdAt: -1, _id: -1 } },
-      { $limit: 1 }
-    ])
+    expect(versionsModel.exists).toHaveBeenCalledWith(searchTerms)
+    expect(agreementsModel.aggregate).not.toHaveBeenCalled()
     expect(result).toBe(true)
   })
 
-  test('should return false when agreement does not exist', async () => {
-    // Arrange
+  test('returns false when no matching version exists', async () => {
     const searchTerms = { notificationMessageId: 'non-existent-message-id' }
-    agreementsModel.aggregate.mockReturnValue({
-      catch: vi.fn().mockResolvedValue([])
-    })
+    versionsModel.exists.mockResolvedValue(null)
 
-    // Act
     const result = await doesAgreementExist(searchTerms)
 
-    // Assert
-    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
-      { $match: searchTerms },
-      mockLookup,
-      { $sort: { createdAt: -1, _id: -1 } },
-      { $limit: 1 }
-    ])
+    expect(versionsModel.exists).toHaveBeenCalledWith(searchTerms)
     expect(result).toBe(false)
   })
 
-  test('should handle database errors gracefully', async () => {
-    // Arrange
+  test('rejects when the versions lookup itself throws (db down)', async () => {
     const searchTerms = { notificationMessageId: 'test-message-id' }
-    const mockError = new Error('Database connection error')
+    const dbError = new Error('Database connection error')
     const boomError = new Error('Database connection error')
-    agreementsModel.aggregate.mockReturnValue({
-      catch: vi.fn((callback) => {
-        return Promise.reject(callback(mockError))
-      })
-    })
+    boomError.isBoom = true
 
-    // Act & Assert
+    versionsModel.exists.mockRejectedValue(dbError)
     Boom.internal.mockReturnValue(boomError)
 
     await expect(doesAgreementExist(searchTerms)).rejects.toThrow(
       'Database connection error'
     )
-
-    expect(Boom.internal).toHaveBeenCalledWith(mockError)
+    expect(Boom.internal).toHaveBeenCalledWith(dbError)
   })
 
-  test('should throw Boom.internal when aggregate throws', async () => {
-    // Arrange
-    const Boom = (await import('@hapi/boom')).default
+  test('wraps the underlying error in Boom.internal', async () => {
     const searchTerms = { notificationMessageId: 'boom-test-id' }
-    const mockError = new Error('Boom error')
-    agreementsModel.aggregate.mockReturnValue({
-      catch: vi.fn().mockImplementation((cb) => {
-        throw cb(mockError)
-      })
-    })
-
-    // Act & Assert
+    const dbError = new Error('Boom error')
     const boomError = new Error('Boom error')
     boomError.isBoom = true
+
+    versionsModel.exists.mockRejectedValue(dbError)
     Boom.internal.mockReturnValue(boomError)
 
     await expect(doesAgreementExist(searchTerms)).rejects.toThrow('Boom error')
-
-    expect(Boom.internal).toHaveBeenCalled()
+    expect(Boom.internal).toHaveBeenCalledWith(dbError)
   })
 
-  test('should work with different search terms', async () => {
-    // Arrange
+  test('works with non-notificationMessageId search terms (e.g. agreementNumber)', async () => {
     const searchTerms = { agreementNumber: 'FPTT123456789' }
-    agreementsModel.aggregate.mockReturnValue({
-      catch: vi.fn().mockResolvedValue([{ id: 'existing-agreement' }])
-    })
+    versionsModel.exists.mockResolvedValue({ _id: 'v2' })
 
-    // Act
     const result = await doesAgreementExist(searchTerms)
 
-    // Assert
-    expect(agreementsModel.aggregate).toHaveBeenCalledWith([
-      { $match: searchTerms },
-      mockLookup,
-      { $sort: { createdAt: -1, _id: -1 } },
-      { $limit: 1 }
-    ])
+    expect(versionsModel.exists).toHaveBeenCalledWith(searchTerms)
     expect(result).toBe(true)
   })
 })

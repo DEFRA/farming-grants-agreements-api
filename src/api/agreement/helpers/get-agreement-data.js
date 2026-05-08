@@ -130,13 +130,22 @@ const getAgreementDataById = async (agreementId) => {
 }
 
 /**
- * Check if the agreement already exists
- * @param {object} searchTerms - The search terms to use to find the agreement
- * @returns {Promise<boolean>} Whether the agreement exists
+ * Check whether an agreement *version* matching the search terms already
+ * exists.
+ *
+ * Since the DB restructure, `notificationMessageId` lives on the
+ * `versions` collection (not `agreements`), so duplicate create-event
+ * detection MUST query `versions` to be effective.
+ * @param {object} searchTerms - The search terms to use to find the version
+ * @returns {Promise<boolean>} Whether a matching version exists
  */
 const doesAgreementExist = async (searchTerms) => {
-  const agreements = await searchForAgreement(searchTerms)
-  return Boolean(agreements)
+  try {
+    const existing = await versionsModel.exists(searchTerms)
+    return Boolean(existing)
+  } catch (error) {
+    throw Boom.internal(error)
+  }
 }
 
 /**
