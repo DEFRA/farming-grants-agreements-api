@@ -82,7 +82,9 @@ const AgreementLevelItems = new mongoose.Schema({
 
 const Payments = new mongoose.Schema({
   totalPaymentPence: { type: Number, required: true },
-  paymentDate: { type: String, required: true },
+  // paymentDate optional WMP payloads carry a single agreement-level payment
+  // with no scheduled date (paid on signature).
+  paymentDate: { type: String, required: false, default: null },
   correlationId: { type: String, required: true },
   lineItems: {
     type: [
