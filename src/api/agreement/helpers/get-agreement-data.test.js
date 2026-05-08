@@ -466,8 +466,8 @@ describe('doesAgreementExist', () => {
     expect(Boom.internal).toHaveBeenCalledWith(dbError)
   })
 
-  test('works with non-notificationMessageId search terms (e.g. agreementNumber)', async () => {
-    const searchTerms = { agreementNumber: 'FPTT123456789' }
+  test('also supports other version-collection fields (e.g. clientRef)', async () => {
+    const searchTerms = { clientRef: 'WMP-MANUAL-001' }
     versionsModel.exists.mockResolvedValue({ _id: 'v2' })
 
     const result = await doesAgreementExist(searchTerms)

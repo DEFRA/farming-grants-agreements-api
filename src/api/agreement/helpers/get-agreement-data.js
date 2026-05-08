@@ -130,14 +130,14 @@ const getAgreementDataById = async (agreementId) => {
 }
 
 /**
- * Check whether an agreement *version* matching the search terms already
- * exists.
+ * Detect a duplicate agreement create-event by checking the `versions`
+ * collection for a matching `notificationMessageId`.
  *
- * Since the DB restructure, `notificationMessageId` lives on the
- * `versions` collection (not `agreements`), so duplicate create-event
- * detection MUST query `versions` to be effective.
- * @param {object} searchTerms - The search terms to use to find the version
- * @returns {Promise<boolean>} Whether a matching version exists
+ * `notificationMessageId` lives on `versions` (not `agreements`) since the
+ * DB restructure, so this is the only collection that can answer the
+ * "have we already processed this SQS message?" question.
+ * @param {object} searchTerms - typically `{ notificationMessageId }`
+ * @returns {Promise<boolean>} Whether a matching version already exists
  */
 const doesAgreementExist = async (searchTerms) => {
   try {
