@@ -1,6 +1,4 @@
-import crypto from 'node:crypto'
 import Boom from '@hapi/boom'
-import agreementsModel from '#~/api/common/models/agreements.js'
 import { wmpCreateOffer } from './grant-types/wmp/wmp-create-offer.js'
 import { fpttCreateOffer } from './grant-types/fptt/fptt-create-offer.js'
 
@@ -17,18 +15,6 @@ const getCreateOffer = (code) => {
   return create
 }
 
-export const generateAgreementNumber = async () => {
-  const minRandomNumber = 100000000
-  const maxRandomNumber = 999999999
-  let agreementNumber
-  let agreementNumberExists
-  do {
-    const randomNum = crypto.randomInt(minRandomNumber, maxRandomNumber)
-    agreementNumber = `FPTT${randomNum}`
-    agreementNumberExists = await agreementsModel.exists({ agreementNumber })
-  } while (agreementNumberExists)
-  return agreementNumber
-}
 /**
  * Create a new offer. Dispatches to the appropriate grant-type handler.
  * @param {string} notificationMessageId - The AWS notification message ID

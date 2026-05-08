@@ -4,7 +4,7 @@ import { config } from '#~/config/index.js'
 
 import mongoose from 'mongoose'
 import Boom from '@hapi/boom'
-import { createOffer, generateAgreementNumber } from '../../create-offer.js'
+import { createOffer } from '../../create-offer.js'
 import {
   createAgreementWithGrantAndVersions,
   __setPopulatedAgreement
@@ -1568,33 +1568,6 @@ describe('createOffer', () => {
     expect(Boom.badRequest).toHaveBeenCalledWith(
       'Offer data is missing payment and applicant'
     )
-  })
-
-  describe('generateAgreementNumber', () => {
-    it('should generate a valid agreement number', async () => {
-      const agreementNumber = await generateAgreementNumber()
-      expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
-    })
-
-    it('should generate unique agreement numbers', async () => {
-      const numbers = new Set()
-      for (let i = 0; i < 100; i++) {
-        numbers.add(await generateAgreementNumber())
-      }
-      expect(numbers.size).toBe(100)
-    })
-
-    it('should retry until a non-duplicate agreement number is found', async () => {
-      agreementsModel.exists
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false)
-
-      const agreementNumber = await generateAgreementNumber()
-
-      expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
-      expect(agreementsModel.exists).toHaveBeenCalledTimes(3)
-    })
   })
 
   it('should handle missing answers object (uses defaults)', async () => {
