@@ -63,11 +63,7 @@ describe('mapWmpPayloadToVersion', () => {
         version: '1',
         annualPaymentPence: 166200,
         quantity: 55.4,
-        unit: 'ha',
-        activePaymentTier: 2,
-        quantityInActiveTier: 5.4,
-        activeTierRatePence: 3000,
-        activeTierFlatRatePence: 150000
+        unit: 'ha'
       }
     })
     expect(result.payment.payments).toEqual([

@@ -71,11 +71,7 @@ function buildAgreementLevelItems(agreementItems) {
       version: '1',
       annualPaymentPence: item.agreementTotalPence,
       quantity: item.quantity,
-      unit: item.unit,
-      activePaymentTier: item.activePaymentTier,
-      quantityInActiveTier: item.quantityInActiveTier,
-      activeTierRatePence: item.activeTierRatePence,
-      activeTierFlatRatePence: item.activeTierFlatRatePence
+      unit: item.unit
     }
   })
   return agreementLevelItems
