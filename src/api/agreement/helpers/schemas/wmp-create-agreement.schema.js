@@ -220,7 +220,7 @@ const wmpCreateAgreementSchema = Joi.object({
   // Top-level `clientRef` / `code` / `scheme` are sent on the real Jira
   // payload (`code: 'woodland'` is the canonical WMP signal).
   clientRef: Joi.string().optional(),
-  code: Joi.string().optional(),
+  code: Joi.string().required(),
   scheme: Joi.string().optional(),
   metadata: metadataSchema.optional(),
   identifiers: identifiersSchema.optional(),

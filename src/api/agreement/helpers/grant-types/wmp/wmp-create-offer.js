@@ -4,7 +4,7 @@ import { createAgreementWithGrantAndVersions } from '#~/api/agreement/helpers/cr
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { config } from '#~/config/index.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
-import { generateAgreementNumber } from '../../create-offer.js'
+import { generateAgreementNumber } from '../../generate-agreement-number.js'
 import { validateWmpCreateAgreement } from '../../schemas/wmp-create-agreement.schema.js'
 import { mapWmpPayloadToVersion } from './wmp-payload-mapper.js'
 
@@ -44,7 +44,7 @@ export const wmpCreateOffer = async (
   const version = mapWmpPayloadToVersion(validated, { notificationMessageId })
 
   // 3. Persist (ignorePayments: false → keep WMP payment subdoc)
-  const agreementNumber = await generateAgreementNumber()
+  const agreementNumber = await generateAgreementNumber('WMP')
   const agreement = await createAgreementWithGrantAndVersions({
     agreement: {
       agreementNumber,

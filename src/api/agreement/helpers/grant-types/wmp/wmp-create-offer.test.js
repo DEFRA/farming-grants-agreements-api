@@ -5,6 +5,7 @@ import { createAgreementWithGrantAndVersions } from '#~/api/agreement/helpers/cr
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.js'
 import * as landGrantsAdapter from '#~/api/adapter/land-grants-adapter.js'
+import { generateAgreementNumber } from '../../generate-agreement-number.js'
 import { wmpCreateOffer } from './wmp-create-offer.js'
 
 vi.mock(
@@ -22,12 +23,12 @@ vi.mock('#~/api/agreement/helpers/get-agreement-data.js', () => ({
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
-vi.mock('../../create-offer.js', () => ({
+vi.mock('../../generate-agreement-number.js', () => ({
   generateAgreementNumber: vi
     .fn()
-    .mockImplementation(() =>
+    .mockImplementation((prefix) =>
       Promise.resolve(
-        `FPTT${Math.floor(100000000 + Math.random() * 899999999)}`
+        `${prefix}${Math.floor(100000000 + Math.random() * 899999999)}`
       )
     )
 }))
@@ -60,7 +61,7 @@ describe('wmpCreateOffer (integration)', () => {
     expect(ignorePayments).toBe(false)
     expect(agreement.sbi).toBe(wmpAgreementFixture.identifiers.sbi)
     expect(agreement.clientRef).toBe(wmpAgreementFixture.clientRef)
-    expect(agreement.agreementNumber).toMatch(/^FPTT\d{9}$/)
+    expect(agreement.agreementNumber).toMatch(/^WMP\d{9}$/)
 
     // Version: status offered, scheme WMP, payment derived from payload
     expect(versions).toHaveLength(1)
@@ -86,7 +87,8 @@ describe('wmpCreateOffer (integration)', () => {
       landGrantsAdapter.calculatePaymentsBasedOnParcelsWithActions
     ).not.toHaveBeenCalled()
 
-    expect(result.agreementNumber).toMatch(/^FPTT\d{9}$/)
+    expect(result.agreementNumber).toMatch(/^WMP\d{9}$/)
+    expect(generateAgreementNumber).toHaveBeenCalledWith('WMP')
   })
 
   it('rejects duplicate notification message id', async () => {
