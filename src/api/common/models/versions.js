@@ -77,7 +77,9 @@ const AgreementLevelItems = new mongoose.Schema({
   code: { type: String, required: true },
   description: { type: String, required: true },
   version: { type: String, required: true, set: String },
-  annualPaymentPence: { type: Number, required: true }
+  annualPaymentPence: { type: Number, required: true },
+  quantity: { type: Decimal128 },
+  unit: { type: String }
 })
 
 const Payments = new mongoose.Schema({
