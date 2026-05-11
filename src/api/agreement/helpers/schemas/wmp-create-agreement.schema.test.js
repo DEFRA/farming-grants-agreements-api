@@ -10,6 +10,14 @@ describe('wmpCreateAgreementSchema', () => {
     expect(error).toBeUndefined()
   })
 
+  it('rejects missing code', () => {
+    const p = clone(wmpFixture)
+    delete p.code
+    const { error } = validateWmpCreateAgreement(p)
+    expect(error).toBeDefined()
+    expect(error.message).toMatch(/"code" is required/)
+  })
+
   describe('identifiers', () => {
     it.each([
       ['sbi', '20000000', 'must be a 9-digit numeric string'],

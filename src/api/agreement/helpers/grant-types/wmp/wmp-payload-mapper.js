@@ -171,7 +171,7 @@ function buildVersionHeader(payload, meta, answers, correlationId, uuid) {
     agreementName: answers.agreementName ?? 'Woodland Management Plan',
     correlationId: correlationId ?? uuid(),
     clientRef: payload.clientRef ?? meta.clientRef,
-    code: payload.code ?? 'wmp',
+    code: payload.code,
     scheme: payload.scheme ?? 'WMP'
   }
 }

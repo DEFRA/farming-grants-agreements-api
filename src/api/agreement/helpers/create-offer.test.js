@@ -32,8 +32,8 @@ describe('createOffer dispatcher', () => {
     expect(result).toBe('wmp-result')
   })
 
-  it('routes code "fptt" to fpttCreateOffer', async () => {
-    const data = { code: 'fptt' }
+  it('routes code "frps-private-beta" to fpttCreateOffer', async () => {
+    const data = { code: 'frps-private-beta' }
     const result = await createOffer(notificationMessageId, data, logger)
 
     expect(fpttCreateOffer).toHaveBeenCalledWith(
@@ -50,28 +50,41 @@ describe('createOffer dispatcher', () => {
     expect(wmpCreateOffer).toHaveBeenCalledTimes(1)
   })
 
-  it('falls back to fpttCreateOffer for an unknown code', async () => {
+  it('rejects an unknown code', () => {
     const data = { code: 'something-else' }
-    const result = await createOffer(notificationMessageId, data, logger)
-
-    expect(fpttCreateOffer).toHaveBeenCalledWith(
-      notificationMessageId,
-      data,
-      logger
+    expect(() => createOffer(notificationMessageId, data, logger)).toThrow(
+      'Unknown agreement code: something-else'
     )
+
+    expect(fpttCreateOffer).not.toHaveBeenCalled()
     expect(wmpCreateOffer).not.toHaveBeenCalled()
-    expect(result).toBe('fptt-result')
   })
 
-  it('falls back to fpttCreateOffer when code is missing', async () => {
+  it('rejects when code is missing', () => {
     const data = {}
-    await createOffer(notificationMessageId, data, logger)
-
-    expect(fpttCreateOffer).toHaveBeenCalledWith(
-      notificationMessageId,
-      data,
-      logger
+    expect(() => createOffer(notificationMessageId, data, logger)).toThrow(
+      'Agreement code is required'
     )
+
+    expect(fpttCreateOffer).not.toHaveBeenCalled()
+    expect(wmpCreateOffer).not.toHaveBeenCalled()
+  })
+
+  it('rejects when offer data is missing', () => {
+    expect(() => createOffer(notificationMessageId, undefined, logger)).toThrow(
+      'Offer data is required'
+    )
+
+    expect(fpttCreateOffer).not.toHaveBeenCalled()
+    expect(wmpCreateOffer).not.toHaveBeenCalled()
+  })
+
+  it('rejects when code is not a string', () => {
+    expect(() =>
+      createOffer(notificationMessageId, { code: 123 }, logger)
+    ).toThrow('Agreement code is required')
+
+    expect(fpttCreateOffer).not.toHaveBeenCalled()
     expect(wmpCreateOffer).not.toHaveBeenCalled()
   })
 })

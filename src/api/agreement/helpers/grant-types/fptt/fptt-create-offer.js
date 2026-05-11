@@ -8,7 +8,7 @@ import { doesAgreementExist } from '#~/api/agreement/helpers/get-agreement-data.
 import { generateClaimId } from '#~/api/agreement/helpers/invoice/generate-original-invoice-number.js'
 import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { buildLegacyPaymentFromApplication } from '../../legacy-application-mapper.js'
-import { generateAgreementNumber } from '../../create-offer.js'
+import { generateAgreementNumber } from '../../generate-agreement-number.js'
 
 const moduleLogger = createLogger()
 
@@ -334,7 +334,7 @@ async function determineAgreementNumber(agreementData) {
     return agreementData.agreementNumber
   }
 
-  return generateAgreementNumber()
+  return generateAgreementNumber('FPTT')
 }
 
 function normaliseApplicant(applicant, answers = {}) {

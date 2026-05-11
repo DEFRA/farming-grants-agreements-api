@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 import agreements from '#~/api/common/models/agreements.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import sampleData from '#~/api/common/helpers/sample-data/index.js'
-import { generateAgreementNumber } from '#~/api/agreement/helpers/create-offer.js'
+import { generateAgreementNumber } from '#~/api/agreement/helpers/generate-agreement-number.js'
 
 const DEFAULT_TARGET_COUNT = 70000
 const DEFAULT_BATCH_SIZE = 1000
@@ -52,7 +52,7 @@ const createAgreementVariation = async (index, timestamp, dateRange) => {
   const agreementId = new mongoose.Types.ObjectId()
   const versionId = new mongoose.Types.ObjectId()
 
-  const agreementNumber = await generateAgreementNumber(index)
+  const agreementNumber = await generateAgreementNumber('FPTT')
   const notificationMessageId = `notification-${index}-${timestamp}`
   const correlationId = `correlation-${index}-${timestamp}`
   const clientRef = `client-ref-${String(index).padStart(
