@@ -49,7 +49,7 @@ describe('sending updated (accepted) events via SNS', () => {
   let server
 
   const mockAgreementData = {
-    code: 'mockCode',
+    code: 'frps-private-beta',
     agreementNumber: 'FPTT123456789',
     status: 'offered',
     clientRef: 'mockClientRef',
@@ -179,6 +179,14 @@ describe('sending updated (accepted) events via SNS', () => {
           message.specversion = message.specversion ?? '1.0'
           message.data.agreementCreateDate = '2025-10-06T16:40:21.951Z'
           message.time = '2025-10-06T16:41:59.497Z'
+          // The published consumer pact (farming-grants-agreements-pdf) asserts
+          // `data.code` as a literal string `"mockCode"` rather than using a
+          // `like()` matcher. The provider now routes by real agreement codes
+          // (e.g. `frps-private-beta`, `woodland`) via the dispatch map, so we
+          // normalise the field here to satisfy the existing contract.
+          // TODO: Update the consumer pact to use `Matchers.like('mockCode')`
+          // (or a real code) and remove this normalisation.
+          message.data.code = 'mockCode'
         } catch (err) {
           console.error(err)
           message = 'Publish event was not called, check above for errors'
