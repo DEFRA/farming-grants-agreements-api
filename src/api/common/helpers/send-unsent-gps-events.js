@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { randomUUID, createHash } from 'node:crypto'
 import mongoose from 'mongoose'
 import { config } from '#~/config/index.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
@@ -182,12 +182,13 @@ async function restoreFromBackup(backupSource, destination, logger) {
 
 /**
  * Find agreements with missed GPS payment events
+ * @param {Array<string>} agreementNumbersToSend - Array of agreement numbers to check
  * @returns {Promise<Array>} Array of version documents with missed payments
  */
-async function findMissedPayments() {
+async function findAgreementPaymentsToSend(agreementNumbersToSend) {
   // Find grants with only one version
   const singleVersionGrants = await grantModel
-    .find({ versions: { $size: 1 } })
+    .find({ agreementNumber: { $in: agreementNumbersToSend } })
     .select('_id')
     .lean()
 
@@ -197,8 +198,7 @@ async function findMissedPayments() {
   return versionsModel
     .find({
       status: 'accepted',
-      grant: { $in: grantIds },
-      'payment.agreementStartDate': { $lt: '2026-05-01' }
+      grant: { $in: grantIds }
     })
     .populate('grant')
     .lean()
@@ -358,25 +358,32 @@ const sendUnsetGPSEventsPlugin = {
   name: 'send-unsent-gps-events',
   version: '1.0.0',
   register: (server) => {
-    const isSendUnsentGPSEventsEnabled = config.get(
-      'featureFlags.sendUnsentGPSEvents'
-    )
+    const agreementNumbersToSend = config.get('agreementNumbersToSendToGps')
     const isRestoreFromBackupEnabled = config.get(
       'featureFlags.restoreGPSBackup'
     )
 
-    if (!isSendUnsentGPSEventsEnabled && !isRestoreFromBackupEnabled) {
+    if (!agreementNumbersToSend && !isRestoreFromBackupEnabled) {
       return
     }
 
     server.events.on('start', async () => {
+      const backupSuffix = createHash('sha256')
+        .update(agreementNumbersToSend)
+        .digest('hex')
+        .substring(0, 8)
+
       if (isRestoreFromBackupEnabled) {
         server.logger.info('Restoring GPS backup collections...')
 
         try {
-          await restoreFromBackup('backup_gps_grants', 'grants', server.logger)
           await restoreFromBackup(
-            'backup_gps_versions',
+            `backup_gps_grants_${backupSuffix}`,
+            'grants',
+            server.logger
+          )
+          await restoreFromBackup(
+            `backup_gps_versions_${backupSuffix}`,
             'versions',
             server.logger
           )
@@ -391,7 +398,7 @@ const sendUnsetGPSEventsPlugin = {
         return
       }
 
-      if (!isSendUnsentGPSEventsEnabled) {
+      if (!agreementNumbersToSend) {
         return
       }
 
@@ -400,16 +407,18 @@ const sendUnsetGPSEventsPlugin = {
       try {
         await copyCollectionDontOverwrite(
           'grants',
-          'backup_gps_grants',
+          `backup_gps_grants_${backupSuffix}`,
           server.logger
         )
         await copyCollectionDontOverwrite(
           'versions',
-          'backup_gps_versions',
+          `backup_gps_versions_${backupSuffix}`,
           server.logger
         )
 
-        const missedPayments = await findMissedPayments()
+        const missedPayments = await findAgreementPaymentsToSend(
+          agreementNumbersToSend.split(',')
+        )
 
         server.logger.info(
           `Found ${missedPayments.length} agreements with missed GPS payment events`
