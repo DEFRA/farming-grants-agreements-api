@@ -82,7 +82,7 @@ describe('createAgreementWithGrantAndVersions', () => {
     expect(grant.versions).toContainEqual(version._id)
   })
 
-  it('should preserve WMP agreement-level fields used by the frontend', async () => {
+  it('should preserve WMP parcel item area used by the frontend', async () => {
     await createAgreementWithGrantAndVersions({
       agreement: AGREEMENT_BASE,
       ignorePayments: false,
@@ -111,7 +111,23 @@ describe('createAgreementWithGrantAndVersions', () => {
             },
             customer: { name: { first: 'John', last: 'Doe' } }
           },
-          application: { parcel: [] },
+          application: {
+            parcel: [
+              {
+                sheetId: 'SD7560',
+                parcelId: '9193',
+                area: { unit: 'ha', quantity: 15.75 },
+                actions: [
+                  {
+                    code: 'WMP1',
+                    version: '1',
+                    durationYears: 1,
+                    appliedFor: { unit: 'ha', quantity: 15.75 }
+                  }
+                ]
+              }
+            ]
+          },
           payment: {
             agreementStartDate: '2026-05-11',
             agreementEndDate: '2027-05-11',
@@ -156,14 +172,21 @@ describe('createAgreementWithGrantAndVersions', () => {
       .findOne({ notificationMessageId: 'wmp-msg-1' })
       .lean()
 
-    const item = version.payment.agreementLevelItems['1']
-    expect(item.quantity.toString()).toBe('15.75')
-    expect(item.unit).toBe('ha')
-    expect(item.agreementTotalPence).toBeUndefined()
-    expect(item.activePaymentTier).toBeUndefined()
-    expect(item.quantityInActiveTier).toBeUndefined()
-    expect(item.activeTierRatePence).toBeUndefined()
-    expect(item.activeTierFlatRatePence).toBeUndefined()
+    const agreementLevelItem = version.payment.agreementLevelItems['1']
+    expect(agreementLevelItem.quantity).toBeUndefined()
+    expect(agreementLevelItem.unit).toBeUndefined()
+    expect(agreementLevelItem.agreementTotalPence).toBeUndefined()
+    expect(agreementLevelItem.activePaymentTier).toBeUndefined()
+    expect(agreementLevelItem.quantityInActiveTier).toBeUndefined()
+    expect(agreementLevelItem.activeTierRatePence).toBeUndefined()
+    expect(agreementLevelItem.activeTierFlatRatePence).toBeUndefined()
+
+    const parcelItem = version.application.parcel[0]
+    expect(parcelItem.area.unit).toBe('ha')
+    expect(parcelItem.area.quantity.toString()).toBe('15.75')
+    expect(parcelItem.actions[0].appliedFor.quantity.toString()).toBe('15.75')
+    expect(parcelItem.actions[0].quantity).toBeUndefined()
+    expect(parcelItem.actions[0].unit).toBeUndefined()
   })
 
   it('should reuse existing agreement and grant when they exist', async () => {

@@ -61,9 +61,7 @@ describe('mapWmpPayloadToVersion', () => {
         code: 'PA3',
         description: 'Woodland management plan',
         version: '1',
-        annualPaymentPence: 166200,
-        quantity: 55.4,
-        unit: 'ha'
+        annualPaymentPence: 166200
       }
     })
     expect(result.payment.payments).toEqual([
@@ -111,7 +109,7 @@ describe('mapWmpPayloadToVersion', () => {
         code: 'PA3',
         version: '1',
         durationYears: 1,
-        appliedFor: { unit: 'ha', quantity: 25.3874 }
+        appliedFor: { unit: 'ha', quantity: 55.4 }
       }
     ])
     expect(p2.parcelId).toBe('SD5848-9205')
