@@ -49,7 +49,7 @@ describe('sending updated (accepted) events via SNS', () => {
   let server
 
   const mockAgreementData = {
-    code: 'mockCode',
+    code: 'frps-private-beta',
     agreementNumber: 'FPTT123456789',
     status: 'offered',
     clientRef: 'mockClientRef',

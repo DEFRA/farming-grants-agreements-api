@@ -38,7 +38,6 @@ const getAgreementController =
     const resolveGetPayment = getResolveGetPayment(agreementData.code)
     await resolveGetPayment(agreementData, request.logger)
 
-    // Return JSON response with agreement data
     return h.response({ agreementData, auth: { source } }).code(statusCodes.ok)
   }
 
