@@ -93,10 +93,10 @@ describe('sendUnsetGPSEventsPlugin', () => {
     mockModelFn.mockReturnValue({ aggregate: mockAggregate })
   })
 
-  it('should not do anything if feature flag is disabled', () => {
+  it('should not do anything if agreement numbers config is empty', () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return false
+      if (key === 'agreementNumbersToSendToGps') {
+        return ''
       }
       return null
     })
@@ -106,9 +106,23 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.error).not.toHaveBeenCalled()
   })
 
-  it('should register start event listener if feature flag is enabled', () => {
+  it('should register start event handler if agreement numbers config is provided', () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1,AG2'
+      }
+      return null
+    })
+    sendUnsetGPSEventsPlugin.register(server)
+    expect(server.events.on).toHaveBeenCalledWith('start', expect.any(Function))
+  })
+
+  it('should register start event handler if restore backup flag is enabled', () => {
+    vi.mocked(config.get).mockImplementation((key) => {
+      if (key === 'agreementNumbersToSendToGps') {
+        return ''
+      }
+      if (key === 'featureFlags.restoreGPSBackup') {
         return true
       }
       return null
@@ -117,10 +131,52 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.events.on).toHaveBeenCalledWith('start', expect.any(Function))
   })
 
+  it('should not do anything if agreement numbers config is empty and restore is disabled', () => {
+    vi.mocked(config.get).mockImplementation((key) => {
+      if (key === 'agreementNumbersToSendToGps') {
+        return ''
+      }
+      if (key === 'featureFlags.restoreGPSBackup') {
+        return false
+      }
+      if (key === 'aws.sns.topic.createPayment.type') {
+        return 'test.type'
+      }
+      return null
+    })
+    sendUnsetGPSEventsPlugin.register(server)
+    expect(server.events.on).not.toHaveBeenCalled()
+    expect(server.logger.info).not.toHaveBeenCalled()
+    expect(server.logger.error).not.toHaveBeenCalled()
+  })
+
+  it('should restore backup collections if restore backup flag is enabled', async () => {
+    vi.mocked(config.get).mockImplementation((key) => {
+      if (key === 'agreementNumbersToSendToGps') {
+        return ''
+      }
+      if (key === 'featureFlags.restoreGPSBackup') {
+        return true
+      }
+      return null
+    })
+
+    sendUnsetGPSEventsPlugin.register(server)
+    const startHandler = server.events.on.mock.calls.find(
+      (call) => call[0] === 'start'
+    )[1]
+
+    await startHandler()
+
+    expect(server.logger.info).toHaveBeenCalledWith(
+      'Restoring GPS backup collections...'
+    )
+  })
+
   it('should process missed payments on start', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1,AG2'
       }
       if (key === 'aws.sns.topic.createPayment.arn') {
         return 'arn:test'
@@ -219,8 +275,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
     expect(versionsModel.find).toHaveBeenCalledWith({
       status: 'accepted',
-      grant: { $in: ['grant1'] },
-      'payment.agreementStartDate': { $lt: '2026-05-01' }
+      grant: { $in: ['grant1'] }
     })
 
     expect(populateMock).toHaveBeenCalledWith('grant')
@@ -241,8 +296,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should handle errors gracefully during processing', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1,AG2'
       }
       return null
     })
@@ -304,8 +359,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should skip processing when agreement number is missing', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1,AG2'
       }
       return null
     })
@@ -347,8 +402,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should handle errors gracefully while fetching missed payments', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1,AG2'
       }
       return null
     })
@@ -371,8 +426,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should create new version when payment values have changed & set the previous version status to cancelled', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1'
       }
       return null
     })
@@ -480,8 +535,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should create a new version of the agreement for unsent payments', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1'
       }
       return null
     })
@@ -592,8 +647,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should handle payment calculation errors gracefully', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1'
       }
       return null
     })
@@ -641,8 +696,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should handle errors when creating new version fails', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1'
       }
       return null
     })
@@ -711,16 +766,16 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should log error when destination collection already exists', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1'
       }
       return null
     })
 
     // Mock that backup collections already exist
     mockListCollections.mockResolvedValue([
-      { name: 'backup_gps_grants' },
-      { name: 'backup_gps_versions' }
+      { name: 'backup_gps_grants_189d4f81' },
+      { name: 'backup_gps_versions_189d4f81' }
     ])
 
     const mockGrants = [{ _id: { toString: () => 'grant1' } }]
@@ -746,7 +801,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
     // Verify error is logged when collection already exists
     expect(server.logger.error).toHaveBeenCalledWith(
-      'Error while checking for missed GPS payments events: MongoDB collection: backup_gps_grants already exists, cannot copy'
+      'Error while checking for missed GPS payments events: MongoDB collection: backup_gps_grants_189d4f81 already exists, cannot copy'
     )
 
     // Verify aggregate was not called
@@ -755,8 +810,8 @@ describe('sendUnsetGPSEventsPlugin', () => {
 
   it('should call mongoose.model correctly and only copy collections that do not exist', async () => {
     vi.mocked(config.get).mockImplementation((key) => {
-      if (key === 'featureFlags.sendUnsentGPSEvents') {
-        return true
+      if (key === 'agreementNumbersToSendToGps') {
+        return 'AG1'
       }
       return null
     })
@@ -788,10 +843,10 @@ describe('sendUnsetGPSEventsPlugin', () => {
     // Verify both collections were copied
     expect(mockAggregate).toHaveBeenCalledTimes(2)
     expect(server.logger.info).toHaveBeenCalledWith(
-      'MongoDB collection copied: grants to: backup_gps_grants'
+      'MongoDB collection copied: grants to: backup_gps_grants_189d4f81'
     )
     expect(server.logger.info).toHaveBeenCalledWith(
-      'MongoDB collection copied: versions to: backup_gps_versions'
+      'MongoDB collection copied: versions to: backup_gps_versions_189d4f81'
     )
   })
 })
