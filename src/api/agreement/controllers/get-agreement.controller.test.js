@@ -100,6 +100,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -177,6 +178,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -221,6 +223,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -288,6 +291,7 @@ describe('getAgreementController', () => {
             'getAgreementDataBySbi'
           ).mockResolvedValue({
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'cancelled',
             sbi: '106284736',
             application: { parcel: [] },
@@ -321,6 +325,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -371,6 +376,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -425,6 +431,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -471,6 +478,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -538,6 +546,7 @@ describe('getAgreementController', () => {
             'getAgreementDataById'
           ).mockResolvedValue({
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'cancelled',
             sbi: '106284736',
             application: { parcel: [] },
@@ -571,6 +580,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -669,6 +679,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -746,6 +757,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -790,6 +802,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -860,6 +873,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -910,6 +924,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -964,6 +979,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -1010,6 +1026,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -1080,6 +1097,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },

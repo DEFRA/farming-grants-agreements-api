@@ -1,28 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { isWmpAgreement, mapWmpPayloadToVersion } from './wmp-payload-mapper.js'
+import { mapWmpPayloadToVersion } from './wmp-payload-mapper.js'
 import wmpFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
 
 const fixedUuid = () => '00000000-0000-4000-8000-000000000000'
-
-describe('isWmpAgreement', () => {
-  it('detects via persisted scheme=WMP', () => {
-    expect(isWmpAgreement({ scheme: 'WMP', code: 'anything' })).toBe(true)
-  })
-
-  it('detects via persisted code=woodland when scheme absent', () => {
-    expect(isWmpAgreement({ code: 'woodland' })).toBe(true)
-    expect(isWmpAgreement({ code: 'Woodland' })).toBe(true)
-  })
-
-  it('rejects SFI-shaped agreement', () => {
-    expect(isWmpAgreement({ scheme: 'SFI', code: 'sfi' })).toBe(false)
-  })
-
-  it('rejects null', () => {
-    expect(isWmpAgreement(null)).toBe(false)
-    expect(isWmpAgreement(undefined)).toBe(false)
-  })
-})
 
 describe('mapWmpPayloadToVersion', () => {
   const result = mapWmpPayloadToVersion(wmpFixture, {
