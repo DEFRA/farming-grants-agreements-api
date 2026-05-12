@@ -327,6 +327,46 @@ describe('acceptOffer', () => {
     )
   })
 
+  test('should successfully accept a woodland agreement without recalculating payments', async () => {
+    const agreementData = {
+      agreementNumber: 'WMP123456789',
+      code: 'woodland',
+      correlationId: 'test-correlation-id',
+      clientRef: 'test-client-ref',
+      application: { parcel: [] },
+      payment: mockPayments
+    }
+
+    const mockAgreement = {
+      agreementNumber: 'WMP123456789',
+      code: 'woodland',
+      status: 'accepted'
+    }
+
+    updateAgreementWithVersionViaGrant.mockResolvedValue(mockAgreement)
+
+    const result = await acceptOffer('WMP123456789', agreementData, mockLogger)
+
+    expect(calculatePaymentsBasedOnParcelsWithActions).not.toHaveBeenCalled()
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
+      { agreementNumber: 'WMP123456789' },
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          status: 'accepted',
+          payment: mockPayments
+        })
+      })
+    )
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: 'WMP123456789',
+        code: 'woodland',
+        status: 'accepted',
+        claimId: 'test-claim-id'
+      })
+    )
+  })
+
   test('should successfully accept an agreement', async () => {
     const agreementData = {
       agreementNumber: 'FPTT123456789',
