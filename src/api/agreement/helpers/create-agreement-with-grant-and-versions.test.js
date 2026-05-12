@@ -183,8 +183,8 @@ describe('createAgreementWithGrantAndVersions', () => {
 
     const parcelItem = version.application.parcel[0]
     expect(parcelItem.area.unit).toBe('ha')
-    expect(parcelItem.area.quantity.toString()).toBe('15.75')
-    expect(parcelItem.actions[0].appliedFor.quantity.toString()).toBe('15.75')
+    expect(Number(parcelItem.area.quantity)).toBe(15.75)
+    expect(Number(parcelItem.actions[0].appliedFor.quantity)).toBe(15.75)
     expect(parcelItem.actions[0].quantity).toBeUndefined()
     expect(parcelItem.actions[0].unit).toBeUndefined()
   })
