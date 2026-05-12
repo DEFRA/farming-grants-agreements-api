@@ -11,6 +11,8 @@ let server
 
 try {
   // Generate OpenAPI spec (docsOnly skips MongoDB, SQS, and other runtime plugins)
+  // Ensure test endpoints are enabled in config for documentation
+  config.set('featureFlags.testEndpoints', true)
   server = await createServer({ docsOnly: true })
   await server.initialize()
 

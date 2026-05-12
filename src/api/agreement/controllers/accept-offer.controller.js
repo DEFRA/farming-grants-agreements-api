@@ -20,7 +20,6 @@ const acceptOfferController = async (request, h) => {
     )
   }
 
-  // Return JSON response with agreement data
   return h
     .response({ agreementData })
     .header('Cache-Control', 'no-cache, no-store, must-revalidate')

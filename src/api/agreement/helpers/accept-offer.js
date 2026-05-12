@@ -1,14 +1,25 @@
-import { randomUUID } from 'node:crypto'
-
 import Boom from '@hapi/boom'
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
-import { isWmpAgreement } from '#~/api/agreement/helpers/grant-types/wmp/wmp-payload-mapper.js'
+import { wmpResolveAcceptPayment } from '#~/api/agreement/helpers/grant-types/wmp/wmp-accept-offer.js'
+import { fpttResolveAcceptPayment } from '#~/api/agreement/helpers/grant-types/fptt/fptt-accept-offer.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { auditEvent, AuditEvent } from '#~/api/common/helpers/audit-event.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
+
+const resolveAcceptPaymentByCode = {
+  woodland: wmpResolveAcceptPayment,
+  'frps-private-beta': fpttResolveAcceptPayment
+}
+
+const getResolveAcceptPayment = (code) => {
+  const resolve = resolveAcceptPaymentByCode[String(code ?? '').toLowerCase()]
+  if (!resolve) {
+    throw Boom.badImplementation(`Unknown agreement code: ${code}`)
+  }
+  return resolve
+}
 
 /**
  * Update agreement status to accepted (without sending payment event)
@@ -26,34 +37,11 @@ async function transitionAgreementToAccepted(
     throw Boom.badRequest('Agreement data is required')
   }
 
-  // WMP: payment was persisted from the payload at create time and Land
-  // Grants does not know WMP action codes — skip the lookup and reuse the
-  // existing payment subdoc (plan.md §4.3 / §12.2 edit #8).
-  let paymentWithCorrelationIds
-  if (isWmpAgreement(agreementData)) {
-    paymentWithCorrelationIds = agreementData.payment
-  } else {
-    const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
-      agreementData.application.parcel,
-      logger
-    )
-
-    if (!expectedPayments) {
-      throw Boom.badImplementation('Failed to calculate expected payments')
-    }
-
-    // Add correlation IDs to payment data (preserve existing ones by index)
-    paymentWithCorrelationIds = {
-      ...expectedPayments,
-      payments: expectedPayments.payments.map((payment, index) => {
-        const existingPayment = agreementData.payment?.payments?.[index]
-        return {
-          ...payment,
-          correlationId: existingPayment?.correlationId || randomUUID()
-        }
-      })
-    }
-  }
+  const resolveAcceptPayment = getResolveAcceptPayment(agreementData.code)
+  const paymentWithCorrelationIds = await resolveAcceptPayment(
+    agreementData,
+    logger
+  )
 
   // Update the agreement in the database
   const updateData = {
