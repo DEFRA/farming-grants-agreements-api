@@ -1,7 +1,7 @@
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 
 /**
- * Resolve the payment subdoc for an FPTT (frps-private-beta) agreement on GET.
+ * Get the payment subdoc for an FPTT (frps-private-beta) agreement on GET.
  *
  * For FPTT the agreement document is persisted **without** the payment subdoc
  * (`createAgreementWithVersions` calls `ignorePayments(versions)` by default).
@@ -12,28 +12,26 @@ import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-
  *  - `offered` — always recalculate (preview pricing for the farmer).
  *  - `withdrawn` / `cancelled` — only recalculate if no payment was ever persisted.
  *  - `accepted` / `terminated` — leave the persisted payment untouched.
- *
- * Mutates `agreementData.payment` in place to preserve the existing controller
- * contract.
  * @param {object} agreementData - The persisted agreement.
  * @param {object} logger
- * @returns {Promise<void>}
+ * @returns {Promise<object|undefined>}
  */
-export const fpttResolveGetPayment = async (agreementData, logger) => {
+export const fpttGetPayment = async (agreementData, logger) => {
   const { status, payment } = agreementData
   const shouldRecalculate =
     status === 'offered' ||
     ((status === 'withdrawn' || status === 'cancelled') && !payment)
 
   if (!shouldRecalculate) {
-    return
+    return payment
   }
 
-  agreementData.payment = await calculatePaymentsBasedOnParcelsWithActions(
+  const calculatedPayment = await calculatePaymentsBasedOnParcelsWithActions(
     agreementData.application.parcel,
     logger
   )
   logger.info(
     'Successfully called Land Grants service for payments calculation.'
   )
+  return calculatedPayment
 }
