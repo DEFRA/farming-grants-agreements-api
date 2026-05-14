@@ -150,7 +150,7 @@ docker compose --profile full up -d
 
 - **Cross-field validation failure** — if you edit the payload inline,
   remember `totalAgreementPaymentPence` MUST equal the sum of
-  `payments.agreement[].agreementTotalPence`, and `totalHectaresAppliedFor`
+  `payments.agreement[].agreementTotalPence`, and `totalHectaresForSelectedParcels`
   MUST equal the sum of `landParcels[].areaHa` (±0.01).
 - **`clientRef` doesn't start with `wmp`** — the WMP branch won't trigger
   and the legacy `createOffer` path will reject the payload (no

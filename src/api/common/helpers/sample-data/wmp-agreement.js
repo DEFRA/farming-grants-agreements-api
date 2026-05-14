@@ -24,7 +24,7 @@ const wmpAgreement = {
     landHasGrazingRights: false,
     appLandHasExistingWmp: false,
     intendToApplyHigherTier: true,
-    totalHectaresAppliedFor: 195.246,
+    totalHectaresForSelectedParcels: 195.246,
     hectaresTenOrOverYearsOld: 18,
     hectaresUnderTenYearsOld: 2,
     landParcels: [

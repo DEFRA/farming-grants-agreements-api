@@ -29,7 +29,7 @@ SUBMITTED_AT="${SUBMITTED_AT:-$(date -u +%Y-%m-%dT%H:%M:%S.000Z)}"
 # ---- Payload (WMP) --------------------------------------------------------
 # Cross-field rules enforced by the WMP Joi schema:
 #   totalAgreementPaymentPence === Σ payments.agreement[].agreementTotalPence
-#   totalHectaresAppliedFor   ≈ Σ landParcels[].areaHa
+#   totalHectaresForSelectedParcels ≈ Σ landParcels[].areaHa
 read -r -d '' MESSAGE <<EOM || true
 {
   "id": "${MESSAGE_ID}",
@@ -84,7 +84,7 @@ read -r -d '' MESSAGE <<EOM || true
         }
       },
       "detailsConfirmedAt": "${SUBMITTED_AT}",
-      "totalHectaresAppliedFor": 15.75,
+      "totalHectaresForSelectedParcels": 15.75,
       "guidanceRead": true,
       "includedAllEligibleWoodland": true,
       "applicationConfirmation": true,
@@ -153,5 +153,4 @@ echo "     docker compose logs -f farming-grants-agreements-api | grep -i wmp"
 echo "   Then check Mongo:"
 echo "     docker compose exec mongodb mongosh --quiet --eval \\"
 echo "       'db.getSiblingDB(\"farming-grants-agreements-api\").versions.find({clientRef:\"$CLIENT_REF\"}).pretty()'"
-
 
