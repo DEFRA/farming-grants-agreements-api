@@ -47,7 +47,23 @@ vi.mock('#~/api/common/models/versions.js', () => ({
       .mockResolvedValue({ acknowledged: true, modifiedCount: 1 })
   }
 }))
-vi.mock('#~/config/index.js')
+vi.mock('#~/config/index.js', () => ({
+  config: {
+    get: vi.fn((key) => {
+      const configValues = {
+        log: {
+          enabled: false,
+          redact: [],
+          level: 'silent',
+          format: 'ecs'
+        },
+        serviceName: 'farming-grants-agreements-api',
+        serviceVersion: 'test'
+      }
+      return configValues[key]
+    })
+  }
+}))
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
   calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))

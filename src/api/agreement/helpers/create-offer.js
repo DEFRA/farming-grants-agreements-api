@@ -1,19 +1,5 @@
 import Boom from '@hapi/boom'
-import { wmpCreateOffer } from './grant-types/wmp/wmp-create-offer.js'
-import { fpttCreateOffer } from './grant-types/fptt/fptt-create-offer.js'
-
-const createOfferByCode = {
-  woodland: wmpCreateOffer,
-  'frps-private-beta': fpttCreateOffer
-}
-
-const getCreateOffer = (code) => {
-  const create = createOfferByCode[code.toLowerCase()]
-  if (!create) {
-    throw Boom.badRequest(`Unknown agreement code: ${code}`)
-  }
-  return create
-}
+import { getGrantTypeByCode } from './grant-types/index.js'
 
 /**
  * Create a new offer. Dispatches to the appropriate grant-type handler.
@@ -26,11 +12,8 @@ const createOffer = (notificationMessageId, agreementData, logger) => {
   if (!agreementData) {
     throw Boom.badRequest('Offer data is required')
   }
-  if (typeof agreementData.code !== 'string' || !agreementData.code.trim()) {
-    throw Boom.badRequest('Agreement code is required')
-  }
-  const create = getCreateOffer(agreementData.code)
-  return create(notificationMessageId, agreementData, logger)
+  const grantType = getGrantTypeByCode(agreementData.code)
+  return grantType.createOffer(notificationMessageId, agreementData, logger)
 }
 
 export { createOffer }

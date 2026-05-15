@@ -1,24 +1,6 @@
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
-import { fpttResolveGetPayment } from '#~/api/agreement/helpers/grant-types/fptt/fptt-get-agreement.js'
+import { getGrantTypeByCode } from '#~/api/agreement/helpers/grant-types/index.js'
 import Boom from '@hapi/boom'
-
-// WMP persists its payment subdoc at create time from the inbound payload
-// (plan.md §4.3) — Land Grants must NEVER be consulted on GET. A no-op is
-// the correct handler.
-const noop = () => Promise.resolve()
-
-const resolveGetPaymentByCode = {
-  woodland: noop,
-  'frps-private-beta': fpttResolveGetPayment
-}
-
-const getResolveGetPayment = (code) => {
-  const resolve = resolveGetPaymentByCode[String(code ?? '').toLowerCase()]
-  if (!resolve) {
-    throw Boom.badImplementation(`Unknown agreement code: ${code}`)
-  }
-  return resolve
-}
 
 /**
  * Controller to serve the get agreement
@@ -35,10 +17,15 @@ const getAgreementController =
       )
     }
 
-    const resolveGetPayment = getResolveGetPayment(agreementData.code)
-    await resolveGetPayment(agreementData, request.logger)
+    const grantType = getGrantTypeByCode(agreementData.code)
+    const agreementWithPayment = await grantType.buildAgreementWithPayment(
+      agreementData,
+      request.logger
+    )
 
-    return h.response({ agreementData, auth: { source } }).code(statusCodes.ok)
+    return h
+      .response({ agreementData: agreementWithPayment, auth: { source } })
+      .code(statusCodes.ok)
   }
 
 export { getAgreementController }

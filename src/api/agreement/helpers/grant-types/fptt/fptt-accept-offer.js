@@ -3,7 +3,7 @@ import Boom from '@hapi/boom'
 import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 
 /**
- * Resolve the payment subdoc to persist on accept for an FPTT
+ * Build the payment subdoc to persist on accept for an FPTT
  * (frps-private-beta) agreement.
  *
  * Calls Land Grants to recalculate the expected payments from the persisted
@@ -13,7 +13,7 @@ import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-
  * @param {object} logger
  * @returns {Promise<object>} The payment subdoc to write back on accept.
  */
-export const fpttResolveAcceptPayment = async (agreementData, logger) => {
+export const fpttBuildAcceptedPayment = async (agreementData, logger) => {
   const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
     agreementData.application.parcel,
     logger
