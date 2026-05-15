@@ -2,7 +2,7 @@ import { randomUUID, createHash } from 'node:crypto'
 import mongoose from 'mongoose'
 import { config } from '#~/config/index.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateFpttPayments } from '#~/api/agreement/helpers/grant-types/fptt/fptt-land-grants.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import grantModel from '#~/api/common/models/grant.js'
 
@@ -245,7 +245,7 @@ async function processMissedPayment(version, server) {
 
   try {
     // Calculate payments based on parcels with actions
-    const newPaymentData = await calculatePaymentsBasedOnParcelsWithActions(
+    const newPaymentData = await calculateFpttPayments(
       version.application.parcel,
       server.logger
     )

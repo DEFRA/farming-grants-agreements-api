@@ -24,7 +24,10 @@ const getAgreementController =
     )
 
     return h
-      .response({ agreementData: agreementWithPayment, auth: { source } })
+      .response({
+        agreementData: agreementWithPayment,
+        auth: { source }
+      })
       .code(statusCodes.ok)
   }
 

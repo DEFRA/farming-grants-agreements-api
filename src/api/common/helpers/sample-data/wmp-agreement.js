@@ -6,8 +6,8 @@
  * - Identifiers live at the top level; `metadata` is empty on the wire.
  * - WMP carries optional payment info on `answers.payments.agreement[]`.
  *   When present, the persisted version's `payment` is built from it
- *   (frequency `OneOff`, paid on signature). landParcels are not part
- *   of the WMP create payload — `application.parcel[]` stays empty.
+ *   (frequency `OneOff`, paid on signature). Agreement dates stay unset
+ *   until Land Grants calculates them on acceptance.
  * - `applicant.business.email` / `.phone` are objects, not strings.
  */
 const wmpAgreement = {

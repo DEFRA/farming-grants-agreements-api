@@ -1,4 +1,4 @@
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateFpttPayments } from './fptt-land-grants.js'
 
 /**
  * Get the payment subdoc for an FPTT (frps-private-beta) agreement on GET.
@@ -26,7 +26,7 @@ export const fpttGetPayment = async (agreementData, logger) => {
     return payment
   }
 
-  const calculatedPayment = await calculatePaymentsBasedOnParcelsWithActions(
+  const calculatedPayment = await calculateFpttPayments(
     agreementData.application.parcel,
     logger
   )
