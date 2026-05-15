@@ -1,25 +1,11 @@
 import Boom from '@hapi/boom'
-import { wmpResolveAcceptPayment } from '#~/api/agreement/helpers/grant-types/wmp/wmp-accept-offer.js'
-import { fpttResolveAcceptPayment } from '#~/api/agreement/helpers/grant-types/fptt/fptt-accept-offer.js'
+import { getGrantTypeByCode } from '#~/api/agreement/helpers/grant-types/index.js'
 import { unacceptOffer } from '#~/api/agreement/helpers/unaccept-offer.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 import { config } from '#~/config/index.js'
 import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { auditEvent, AuditEvent } from '#~/api/common/helpers/audit-event.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
-
-const resolveAcceptPaymentByCode = {
-  woodland: wmpResolveAcceptPayment,
-  'frps-private-beta': fpttResolveAcceptPayment
-}
-
-const getResolveAcceptPayment = (code) => {
-  const resolve = resolveAcceptPaymentByCode[String(code ?? '').toLowerCase()]
-  if (!resolve) {
-    throw Boom.badImplementation(`Unknown agreement code: ${code}`)
-  }
-  return resolve
-}
 
 /**
  * Update agreement status to accepted (without sending payment event)
@@ -37,17 +23,14 @@ async function transitionAgreementToAccepted(
     throw Boom.badRequest('Agreement data is required')
   }
 
-  const resolveAcceptPayment = getResolveAcceptPayment(agreementData.code)
-  const paymentWithCorrelationIds = await resolveAcceptPayment(
+  const grantType = getGrantTypeByCode(agreementData.code)
+  const payment = await grantType.buildPaymentForAcceptance(
     agreementData,
     logger
   )
 
   // Update the agreement in the database
-  const updateData = {
-    status: 'accepted',
-    payment: paymentWithCorrelationIds
-  }
+  const updateData = { status: 'accepted', payment }
 
   // Only set signatureDate if it's not already set
   if (!agreementData.signatureDate) {
