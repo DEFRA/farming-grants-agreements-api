@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateFpttPayments } from './fptt-land-grants.js'
 import { fptt } from './fptt-grant.js'
 
-vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
+vi.mock('./fptt-land-grants.js', () => ({
+  calculateFpttPayments: vi.fn()
 }))
 
 describe('fptt grant type', () => {
@@ -17,9 +17,7 @@ describe('fptt grant type', () => {
     }
     const logger = { info: vi.fn() }
 
-    calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(
-      calculatedPayment
-    )
+    calculateFpttPayments.mockResolvedValue(calculatedPayment)
 
     const result = await fptt.buildAgreementWithPayment(agreementData, logger)
 

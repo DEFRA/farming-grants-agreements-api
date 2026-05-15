@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import Boom from '@hapi/boom'
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateFpttPayments } from './fptt-land-grants.js'
 
 /**
  * Build the payment subdoc to persist on accept for an FPTT
@@ -14,7 +14,7 @@ import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-
  * @returns {Promise<object>} The payment subdoc to write back on accept.
  */
 export const fpttBuildAcceptedPayment = async (agreementData, logger) => {
-  const expectedPayments = await calculatePaymentsBasedOnParcelsWithActions(
+  const expectedPayments = await calculateFpttPayments(
     agreementData.application.parcel,
     logger
   )

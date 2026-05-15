@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { calculateWmpPaymentDates } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateWmpAgreementDates } from './wmp-land-grants.js'
 import { wmpBuildAcceptedPayment } from './wmp-accept-offer.js'
 
-vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculateWmpPaymentDates: vi.fn()
+vi.mock('./wmp-land-grants.js', () => ({
+  calculateWmpAgreementDates: vi.fn()
 }))
 
 describe('wmpBuildAcceptedPayment', () => {
@@ -31,7 +31,7 @@ describe('wmpBuildAcceptedPayment', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    calculateWmpPaymentDates.mockResolvedValue({
+    calculateWmpAgreementDates.mockResolvedValue({
       agreementStartDate: '2025-09-01',
       agreementEndDate: '2035-08-31'
     })
@@ -40,7 +40,7 @@ describe('wmpBuildAcceptedPayment', () => {
   it('returns the existing WMP payment with Land Grants agreement dates', async () => {
     const payment = await wmpBuildAcceptedPayment(agreementData, logger)
 
-    expect(calculateWmpPaymentDates).toHaveBeenCalledWith(
+    expect(calculateWmpAgreementDates).toHaveBeenCalledWith(
       {
         parcelIds: ['SD6346-3387'],
         oldWoodlandAreaHa: 0.4,
@@ -62,7 +62,7 @@ describe('wmpBuildAcceptedPayment', () => {
   })
 
   it('propagates Land Grants calculation failures', async () => {
-    calculateWmpPaymentDates.mockRejectedValue(
+    calculateWmpAgreementDates.mockRejectedValue(
       new Error('Land Grants unavailable')
     )
 

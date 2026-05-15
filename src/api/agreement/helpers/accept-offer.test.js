@@ -160,6 +160,9 @@ describe('acceptOffer', () => {
       const configValues = {
         'files.s3.bucket': 'test-bucket',
         'files.s3.region': 'eu-west-2',
+        'landGrants.calculationUri': '/api/v2/payments/calculate',
+        'landGrants.calculationUris.fptt': '/api/v2/payments/calculate',
+        'landGrants.calculationUris.wmp': '/api/v1/wmp/payments/calculate',
         'aws.sns.topic.agreementStatusUpdate.arn':
           'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo',
         'aws.sns.topic.agreementStatusUpdate.type':
@@ -386,7 +389,8 @@ describe('acceptOffer', () => {
         oldWoodlandAreaHa: 0.4,
         newWoodlandAreaHa: 0
       },
-      mockLogger
+      mockLogger,
+      { calculationUri: '/api/v1/wmp/payments/calculate' }
     )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: 'WMP123456789' },
@@ -474,7 +478,8 @@ describe('acceptOffer', () => {
     // Assert
     expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
       agreementData.application.parcel,
-      mockLogger
+      mockLogger,
+      { calculationUri: '/api/v2/payments/calculate' }
     )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },
@@ -529,7 +534,8 @@ describe('acceptOffer', () => {
     // Assert
     expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
       agreementData.application.parcel,
-      mockLogger
+      mockLogger,
+      { calculationUri: '/api/v2/payments/calculate' }
     )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },

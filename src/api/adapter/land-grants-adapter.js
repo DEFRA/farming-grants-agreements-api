@@ -31,32 +31,13 @@ const buildAuthHeader = () => {
   return { Authorization: `Bearer ${token}` }
 }
 
-const DEFAULT_FPTT_CALCULATION_URI = '/api/v2/payments/calculate'
-
-const getCalculationUri = (grantType) => {
-  if (grantType === 'fptt') {
-    const fpttCalculationUri = config.get('landGrants.calculationUris.fptt')
-    return fpttCalculationUri === DEFAULT_FPTT_CALCULATION_URI
-      ? config.get('landGrants.calculationUri')
-      : fpttCalculationUri
-  }
-
-  if (grantType) {
-    try {
-      return config.get(`landGrants.calculationUris.${grantType}`)
-    } catch {
-      // Fall through to the legacy config key for existing tests/deployments.
-    }
-  }
-
-  return config.get('landGrants.calculationUri')
-}
-
 const postPaymentCalculation = async (body, options = {}) => {
-  const { grantType, headers: extraHeaders = {} } = options
+  const {
+    calculationUri = config.get('landGrants.calculationUri'),
+    headers: extraHeaders = {}
+  } = options
 
   const landGrantsBaseUrl = config.get('landGrants.uri')
-  const calculationUri = getCalculationUri(grantType)
   const url = new URL(calculationUri, landGrantsBaseUrl)
 
   const res = await fetchWithTimeout(url, {
@@ -124,7 +105,11 @@ const convertParcelsToLandGrantsPayload = (parcels = []) => {
   return { parcel: Array.from(grouped.values()) }
 }
 
-const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
+const calculatePaymentsBasedOnParcelsWithActions = async (
+  parcels,
+  logger,
+  options = {}
+) => {
   const payload = convertParcelsToLandGrantsPayload(parcels)
 
   if (logger) {
@@ -134,7 +119,7 @@ const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
   }
 
   const response = await postPaymentCalculation(payload, {
-    grantType: 'fptt',
+    calculationUri: options.calculationUri,
     headers: buildAuthHeader()
   })
 
@@ -178,7 +163,7 @@ const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
   }
 }
 
-const calculateWmpPaymentDates = async (requestData, logger) => {
+const calculateWmpPaymentDates = async (requestData, logger, options = {}) => {
   const payload = {
     parcelIds: requestData?.parcelIds ?? [],
     oldWoodlandAreaHa: requestData?.oldWoodlandAreaHa,
@@ -192,7 +177,7 @@ const calculateWmpPaymentDates = async (requestData, logger) => {
   }
 
   const response = await postPaymentCalculation(payload, {
-    grantType: 'wmp',
+    calculationUri: options.calculationUri,
     headers: buildAuthHeader()
   })
 

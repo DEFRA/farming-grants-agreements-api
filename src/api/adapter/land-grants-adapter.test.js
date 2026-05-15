@@ -146,7 +146,8 @@ describe('calculateWmpPaymentDates', () => {
         oldWoodlandAreaHa: 0.4,
         newWoodlandAreaHa: 0
       },
-      mockLogger
+      mockLogger,
+      { calculationUri: '/api/v1/wmp/payments/calculate' }
     )
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
@@ -165,6 +166,55 @@ describe('calculateWmpPaymentDates', () => {
       agreementStartDate: '2025-09-01',
       agreementEndDate: '2035-08-31'
     })
+  })
+
+  test('throws when WMP Land Grants response does not include payment', async () => {
+    const responseBody = {}
+    global.fetch.mockResolvedValue(
+      buildFetchResponse({
+        json: vi.fn().mockResolvedValue(responseBody),
+        text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
+      })
+    )
+
+    await expect(
+      calculateWmpPaymentDates(
+        {
+          parcelIds: ['SD6346-3387'],
+          oldWoodlandAreaHa: 0.4,
+          newWoodlandAreaHa: 0
+        },
+        mockLogger
+      )
+    ).rejects.toThrow('Land Grants response missing "payment" field')
+  })
+
+  test('throws when WMP Land Grants response does not include agreement dates', async () => {
+    const responseBody = {
+      payment: {
+        agreementStartDate: null,
+        agreementEndDate: null
+      }
+    }
+    global.fetch.mockResolvedValue(
+      buildFetchResponse({
+        json: vi.fn().mockResolvedValue(responseBody),
+        text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
+      })
+    )
+
+    await expect(
+      calculateWmpPaymentDates(
+        {
+          parcelIds: ['SD6346-3387'],
+          oldWoodlandAreaHa: 0.4,
+          newWoodlandAreaHa: 0
+        },
+        mockLogger
+      )
+    ).rejects.toThrow(
+      'Land Grants response missing agreementStartDate or agreementEndDate'
+    )
   })
 })
 
@@ -274,7 +324,7 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     expect(mockLogger.info).not.toHaveBeenCalled()
   })
 
-  test('uses the legacy calculation URI override for FPTT when no FPTT-specific override is configured', async () => {
+  test('uses the legacy calculation URI by default', async () => {
     mockConfig.get.mockImplementation((key) => {
       if (key === 'landGrants.uri') {
         return 'https://land-grants.example'
@@ -284,9 +334,6 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
       }
       if (key === 'landGrants.calculationUri') {
         return '/legacy/fptt/calculate'
-      }
-      if (key === 'landGrants.calculationUris.fptt') {
-        return '/api/v2/payments/calculate'
       }
       if (key === 'fetchTimeout') {
         return 30000
@@ -315,6 +362,51 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     const [url] = global.fetch.mock.calls[0]
     expect(url.toString()).toBe(
       'https://land-grants.example/legacy/fptt/calculate'
+    )
+  })
+
+  test('uses an explicit calculation URI when provided', async () => {
+    mockConfig.get.mockImplementation((key) => {
+      if (key === 'landGrants.uri') {
+        return 'https://land-grants.example'
+      }
+      if (key === 'landGrants.token') {
+        return 'config-token'
+      }
+      if (key === 'landGrants.calculationUri') {
+        return '/legacy/fptt/calculate'
+      }
+      if (key === 'fetchTimeout') {
+        return 30000
+      }
+      throw new Error(`Unexpected config key ${key}`)
+    })
+    const payment = {
+      agreementStartDate: '2026-01-01',
+      agreementEndDate: '2027-01-01',
+      frequency: 'Annually',
+      agreementTotalPence: 999,
+      annualTotalPence: 999,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
+    }
+    global.fetch.mockResolvedValue(
+      buildFetchResponse({
+        json: vi.fn().mockResolvedValue({ payment }),
+        text: vi.fn().mockResolvedValue(JSON.stringify({ payment }))
+      })
+    )
+
+    await calculatePaymentsBasedOnParcelsWithActions(
+      parcelsWithActions,
+      undefined,
+      { calculationUri: '/specific/fptt/calculate' }
+    )
+
+    const [url] = global.fetch.mock.calls[0]
+    expect(url.toString()).toBe(
+      'https://land-grants.example/specific/fptt/calculate'
     )
   })
 

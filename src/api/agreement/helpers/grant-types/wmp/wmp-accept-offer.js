@@ -1,5 +1,5 @@
 import Boom from '@hapi/boom'
-import { calculateWmpPaymentDates } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateWmpAgreementDates } from './wmp-land-grants.js'
 
 /**
  * Build the payment subdoc to persist on accept for a WMP agreement.
@@ -8,7 +8,7 @@ import { calculateWmpPaymentDates } from '#~/api/adapter/land-grants-adapter.js'
  * @returns {Promise<object>} The payment subdoc to write back on accept.
  */
 export const wmpBuildAcceptedPayment = async (agreementData, logger) => {
-  const paymentDates = await calculateWmpPaymentDates(
+  const paymentDates = await calculateWmpAgreementDates(
     {
       parcelIds: (agreementData.application?.parcel ?? []).map(
         (parcel) => parcel.parcelId

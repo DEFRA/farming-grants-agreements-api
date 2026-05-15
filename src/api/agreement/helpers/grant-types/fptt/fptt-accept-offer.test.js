@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateFpttPayments } from './fptt-land-grants.js'
 import { fpttBuildAcceptedPayment } from './fptt-accept-offer.js'
 
 vi.mock('node:crypto', () => ({
   randomUUID: vi.fn(() => 'generated-correlation-id')
 }))
 
-vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
+vi.mock('./fptt-land-grants.js', () => ({
+  calculateFpttPayments: vi.fn()
 }))
 
 describe('fpttBuildAcceptedPayment', () => {
@@ -19,7 +19,7 @@ describe('fpttBuildAcceptedPayment', () => {
   })
 
   it('propagates Land Grants payment calculation failures', async () => {
-    calculatePaymentsBasedOnParcelsWithActions.mockRejectedValue(
+    calculateFpttPayments.mockRejectedValue(
       new Error(
         'FPTT payment calculation must include agreementStartDate and agreementEndDate'
       )

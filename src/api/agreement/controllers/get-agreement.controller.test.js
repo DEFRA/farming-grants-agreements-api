@@ -164,7 +164,8 @@ describe('getAgreementController', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -258,7 +259,8 @@ describe('getAgreementController', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -513,7 +515,8 @@ describe('getAgreementController', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -733,7 +736,8 @@ describe('getAgreementController - Woodland Tests', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -827,7 +831,8 @@ describe('getAgreementController - Woodland Tests', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -1051,7 +1056,8 @@ describe('getAgreementController - Woodland Tests', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({

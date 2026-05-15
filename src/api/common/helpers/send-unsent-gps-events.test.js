@@ -3,7 +3,7 @@ import { sendUnsetGPSEventsPlugin } from './send-unsent-gps-events.js'
 import { config } from '#~/config/index.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateFpttPayments } from '#~/api/agreement/helpers/grant-types/fptt/fptt-land-grants.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import grantModel from '#~/api/common/models/grant.js'
 
@@ -56,7 +56,7 @@ vi.mock('#~/config/index.js', () => ({
 }))
 vi.mock('#~/api/common/helpers/send-grant-payment-event.js')
 vi.mock('#~/api/agreement/helpers/accept-offer.js')
-vi.mock('#~/api/adapter/land-grants-adapter.js')
+vi.mock('#~/api/agreement/helpers/grant-types/fptt/fptt-land-grants.js')
 vi.mock('#~/api/common/models/versions.js', () => ({
   default: {
     find: vi.fn(),
@@ -222,9 +222,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       populate: populateMock
     })
 
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockResolvedValue(
-      mockPayment
-    )
+    vi.mocked(calculateFpttPayments).mockResolvedValue(mockPayment)
 
     const newVersion = {
       _id: 'v2',
@@ -336,9 +334,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     })
 
     // Mock payment calculation to throw an error
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockRejectedValue(
-      new Error('Test error')
-    )
+    vi.mocked(calculateFpttPayments).mockRejectedValue(new Error('Test error'))
 
     vi.mocked(sendGrantPaymentEvent).mockRejectedValue(new Error('Test error'))
 
@@ -474,9 +470,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       })
     })
 
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockResolvedValue(
-      newPayment
-    )
+    vi.mocked(calculateFpttPayments).mockResolvedValue(newPayment)
 
     const newVersion = {
       _id: 'v2',
@@ -520,7 +514,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.info).toHaveBeenCalledWith(
       'Creating new version of AG1'
     )
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+    expect(calculateFpttPayments).toHaveBeenCalledWith(
       mockMissedPayments[0].application.parcel,
       server.logger
     )
@@ -574,9 +568,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       })
     })
 
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockResolvedValue(
-      payment
-    )
+    vi.mocked(calculateFpttPayments).mockResolvedValue(payment)
 
     const newVersion = {
       ...mockMissedPayments[0],
@@ -620,7 +612,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
     expect(server.logger.info).toHaveBeenCalledWith(
       'Creating new version of AG1'
     )
-    expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
+    expect(calculateFpttPayments).toHaveBeenCalledWith(
       mockMissedPayments[0].application.parcel,
       server.logger
     )
@@ -677,7 +669,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       })
     })
 
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockRejectedValue(
+    vi.mocked(calculateFpttPayments).mockRejectedValue(
       new Error('Payment calculation failed')
     )
 
@@ -744,9 +736,7 @@ describe('sendUnsetGPSEventsPlugin', () => {
       })
     })
 
-    vi.mocked(calculatePaymentsBasedOnParcelsWithActions).mockResolvedValue(
-      newPayment
-    )
+    vi.mocked(calculateFpttPayments).mockResolvedValue(newPayment)
 
     vi.mocked(versionsModel.create).mockRejectedValue(
       new Error('Database error')
