@@ -18,13 +18,13 @@ const getAgreementController =
     }
 
     const grantType = getGrantTypeByCode(agreementData.code)
-    const agreementDataForGet = await grantType.buildAgreementWithPayment(
+    const agreementWithPayment = await grantType.buildAgreementWithPayment(
       agreementData,
       request.logger
     )
 
     return h
-      .response({ agreementData: agreementDataForGet, auth: { source } })
+      .response({ agreementData: agreementWithPayment, auth: { source } })
       .code(statusCodes.ok)
   }
 
