@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
 import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
@@ -62,6 +63,11 @@ export const handleUpdateAgreementEvent = async (
     return
   }
 
+  // Establish a correlationId for this system-initiated update so the audit
+  // trail (success or failure) and the downstream SNS publish all share one id.
+  // Honour an upstream-supplied id if present; otherwise mint one.
+  const correlationId = data.correlationId || randomUUID()
+
   logger.info(
     `Received application status update (${status}) from event: ${notificationMessageId} with payload [${JSON.stringify(payload)}]`
   )
@@ -78,7 +84,13 @@ export const handleUpdateAgreementEvent = async (
   } catch (error) {
     auditEvent(
       AuditEvent.AGREEMENT_UPDATED,
-      { agreementNumber, clientRef, status, message: error.message },
+      {
+        agreementNumber,
+        clientRef,
+        status,
+        correlationId,
+        message: error.message
+      },
       'failure'
     )
     throw error
@@ -87,7 +99,8 @@ export const handleUpdateAgreementEvent = async (
   if (updatedVersion) {
     auditEvent(AuditEvent.AGREEMENT_UPDATED, {
       ...updatedVersion,
-      agreementNumber: updatedVersion.agreementNumber
+      agreementNumber: updatedVersion.agreementNumber,
+      correlationId: updatedVersion.correlationId || correlationId
     })
 
     await publishEvent(
