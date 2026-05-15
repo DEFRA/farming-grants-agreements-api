@@ -100,6 +100,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -177,6 +178,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -221,6 +223,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -288,6 +291,7 @@ describe('getAgreementController', () => {
             'getAgreementDataBySbi'
           ).mockResolvedValue({
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'cancelled',
             sbi: '106284736',
             application: { parcel: [] },
@@ -321,6 +325,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -371,6 +376,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -425,6 +431,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -471,6 +478,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -538,6 +546,7 @@ describe('getAgreementController', () => {
             'getAgreementDataById'
           ).mockResolvedValue({
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'cancelled',
             sbi: '106284736',
             application: { parcel: [] },
@@ -571,6 +580,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -597,21 +607,7 @@ describe('getAgreementController', () => {
   })
 })
 
-// Mock the modules
-vi.mock('#~/api/common/helpers/sqs-client.js')
-vi.mock(
-  '#~/api/agreement/helpers/get-agreement-data.js',
-  async (importOriginal) => {
-    const actual = await importOriginal()
-    return { __esModule: true, ...actual, getAgreementDataById: vi.fn() }
-  }
-)
-vi.mock('#~/api/common/helpers/jwt-auth.js')
-vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
-}))
-
-describe('getAgreementController', () => {
+describe('getAgreementController - Woodland Tests', () => {
   /** @type {import('@hapi/hapi').Server} */
   let server
 
@@ -669,6 +665,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -746,6 +743,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -790,6 +788,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'FPTT123456789',
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -860,6 +859,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -910,6 +910,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
             application: {
@@ -964,6 +965,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           const mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'accepted',
             sbi: '106284736',
             consentObjects: mockConsentObjects,
@@ -1010,6 +1012,7 @@ describe('getAgreementController', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: agreementId,
+            code: 'frps-private-beta',
             status: 'withdrawn',
             sbi: '106284736',
             application: {
@@ -1080,6 +1083,7 @@ describe('getAgreementController', () => {
 
         const mockAgreementData = {
           agreementNumber: 'FPTT123456789',
+          code: 'frps-private-beta',
           status: 'offered',
           sbi: '106284736',
           application: { parcel: [] },
@@ -1099,6 +1103,358 @@ describe('getAgreementController', () => {
       test('should return agreement data', async () => {
         const { statusCode, result } = await doGet('FPTT123456789')
         expect(statusCode).toBe(statusCodes.ok)
+        expect(result.agreementData.status).toContain('offered')
+        expect(result.auth.source).toBe('entra')
+      })
+    })
+  })
+})
+
+// Mock the modules
+vi.mock('#~/api/common/helpers/sqs-client.js')
+vi.mock(
+  '#~/api/agreement/helpers/get-agreement-data.js',
+  async (importOriginal) => {
+    const actual = await importOriginal()
+    return { __esModule: true, ...actual, getAgreementDataById: vi.fn() }
+  }
+)
+vi.mock('#~/api/common/helpers/jwt-auth.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
+  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
+}))
+
+describe('getAgreementController - Woodland Tests', () => {
+  /** @type {import('@hapi/hapi').Server} */
+  let server
+
+  beforeAll(async () => {
+    server = await createServer({ disableSQS: true })
+    await server.initialize()
+  })
+
+  afterAll(async () => {
+    if (server) {
+      await server.stop({ timeout: 0 })
+    }
+  })
+
+  beforeEach(() => {
+    // Reset mocks before each test
+    vi.clearAllMocks()
+    calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue({
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2025-12-31',
+      frequency: 'Annual',
+      agreementTotalPence: 1000,
+      annualTotalPence: 1000,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
+    })
+
+    // Setup default mock implementations
+    vi.spyOn(agreementDataHelper, 'getAgreementDataById')
+    vi.spyOn(agreementDataHelper, 'getAgreementDataBySbi')
+  })
+
+  describe('GET / (by SBI)', () => {
+    const doGet = () =>
+      server.inject({
+        method: 'GET',
+        url: '/',
+        headers: { 'x-encrypted-auth': 'valid-jwt-token' }
+      })
+
+    describe('Farmer with Woodland Agreement', () => {
+      beforeEach(() => {
+        vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+          valid: true,
+          source: 'defra',
+          sbi: '106284736'
+        })
+      })
+
+      describe('offered', () => {
+        let mockAgreementData
+
+        beforeEach(() => {
+          mockAgreementData = {
+            agreementNumber: 'WMP123456789',
+            code: 'woodland',
+            status: 'offered',
+            sbi: '106284736',
+            application: {
+              parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
+            },
+            payment: {
+              agreementStartDate: '2025-12-05',
+              annualTotalPence: 1500,
+              parcelItems: {},
+              agreementLevelItems: {}
+            }
+          }
+
+          vi.spyOn(
+            agreementDataHelper,
+            'getAgreementDataBySbi'
+          ).mockResolvedValue(mockAgreementData)
+        })
+
+        test('should return woodland agreement data', async () => {
+          const { statusCode, result } = await doGet()
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.code).toBe('woodland')
+          expect(result.agreementData.status).toContain('offered')
+          expect(result.auth.source).toBe('defra')
+        })
+
+        test('should NOT recalculate payments for woodland agreements', async () => {
+          await doGet()
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+        })
+
+        test('should preserve existing payment data for woodland agreements', async () => {
+          const { result } = await doGet()
+          expect(result.agreementData.payment).toEqual({
+            agreementStartDate: '2025-12-05',
+            annualTotalPence: 1500,
+            parcelItems: {},
+            agreementLevelItems: {}
+          })
+        })
+      })
+
+      describe('accepted', () => {
+        let mockAgreementData
+
+        beforeEach(() => {
+          mockAgreementData = {
+            agreementNumber: 'WMP123456789',
+            code: 'woodland',
+            status: 'accepted',
+            sbi: '106284736',
+            consentObjects: mockConsentObjects,
+            application: {
+              parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
+            },
+            payment: {
+              agreementStartDate: '2025-12-05',
+              annualTotalPence: 1500,
+              parcelItems: {},
+              agreementLevelItems: {}
+            }
+          }
+
+          vi.spyOn(
+            agreementDataHelper,
+            'getAgreementDataBySbi'
+          ).mockResolvedValue(mockAgreementData)
+        })
+
+        test('should return accepted woodland agreement data', async () => {
+          const { statusCode, result } = await doGet()
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.code).toBe('woodland')
+          expect(result.agreementData.status).toContain('accepted')
+          expect(result.auth.source).toBe('defra')
+        })
+
+        test('should NOT recalculate payments for accepted woodland agreements', async () => {
+          await doGet()
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+        })
+      })
+    })
+  })
+
+  describe('GET /{agreementId}', () => {
+    const doGet = (agreementId = 'WMP123456789', headers = {}) =>
+      server.inject({
+        method: 'GET',
+        url: `/${agreementId}`,
+        headers: { 'x-encrypted-auth': 'valid-jwt-token', ...headers }
+      })
+
+    describe('Farmer with Woodland Agreement', () => {
+      const agreementId = 'WMP123456789'
+
+      beforeEach(() => {
+        vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+          valid: true,
+          source: 'defra',
+          sbi: '106284736'
+        })
+      })
+
+      describe('offered', () => {
+        beforeEach(() => {
+          const mockAgreementData = {
+            agreementNumber: agreementId,
+            code: 'woodland',
+            status: 'offered',
+            sbi: '106284736',
+            application: {
+              parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
+            },
+            payment: {
+              agreementStartDate: '2025-12-05',
+              annualTotalPence: 1500,
+              parcelItems: {},
+              agreementLevelItems: {}
+            }
+          }
+
+          vi.spyOn(
+            agreementDataHelper,
+            'getAgreementDataById'
+          ).mockResolvedValue(mockAgreementData)
+        })
+
+        test('should return woodland agreement data', async () => {
+          const { statusCode, result } = await doGet(agreementId)
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.code).toBe('woodland')
+          expect(result.agreementData.status).toContain('offered')
+          expect(result.auth.source).toBe('defra')
+        })
+
+        test('should NOT recalculate payments for woodland agreements', async () => {
+          await doGet(agreementId)
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+        })
+
+        test('should preserve existing payment data for woodland agreements', async () => {
+          const { result } = await doGet(agreementId)
+          expect(result.agreementData.payment).toEqual({
+            agreementStartDate: '2025-12-05',
+            annualTotalPence: 1500,
+            parcelItems: {},
+            agreementLevelItems: {}
+          })
+        })
+      })
+
+      describe('accepted', () => {
+        beforeEach(() => {
+          const mockAgreementData = {
+            agreementNumber: agreementId,
+            code: 'woodland',
+            status: 'accepted',
+            sbi: '106284736',
+            consentObjects: mockConsentObjects,
+            application: {
+              parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
+            },
+            payment: {
+              agreementStartDate: '2025-12-05',
+              annualTotalPence: 1500,
+              parcelItems: {},
+              agreementLevelItems: {}
+            }
+          }
+
+          vi.spyOn(
+            agreementDataHelper,
+            'getAgreementDataById'
+          ).mockResolvedValue(mockAgreementData)
+        })
+
+        test('should return accepted woodland agreement data', async () => {
+          const { statusCode, result } = await doGet(agreementId)
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.code).toBe('woodland')
+          expect(result.agreementData.status).toContain('accepted')
+          expect(result.auth.source).toBe('defra')
+        })
+
+        test('should NOT recalculate payments for accepted woodland agreements', async () => {
+          await doGet(agreementId)
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+        })
+      })
+
+      describe('withdrawn', () => {
+        let mockAgreementData
+
+        beforeEach(() => {
+          mockAgreementData = {
+            agreementNumber: agreementId,
+            code: 'woodland',
+            status: 'withdrawn',
+            sbi: '106284736',
+            application: {
+              parcel: [{ sheetId: 'sheet', parcelId: '1', actions: [] }]
+            },
+            payment: {
+              agreementStartDate: '2025-12-05',
+              annualTotalPence: 1500,
+              parcelItems: {},
+              agreementLevelItems: {}
+            }
+          }
+
+          vi.spyOn(
+            agreementDataHelper,
+            'getAgreementDataById'
+          ).mockResolvedValue(mockAgreementData)
+        })
+
+        test('should return withdrawn woodland agreement data', async () => {
+          const { statusCode, result } = await doGet(agreementId)
+          expect(statusCode).toBe(statusCodes.ok)
+          expect(result.agreementData.code).toBe('woodland')
+          expect(result.agreementData.status).toBe('withdrawn')
+          expect(result.auth.source).toBe('defra')
+        })
+
+        test('should NOT recalculate payments for withdrawn woodland agreements', async () => {
+          await doGet(agreementId)
+          expect(
+            calculatePaymentsBasedOnParcelsWithActions
+          ).not.toHaveBeenCalled()
+        })
+      })
+    })
+
+    describe('Case worker with Woodland Agreement', () => {
+      beforeEach(() => {
+        vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+          valid: true,
+          source: 'entra'
+        })
+
+        const mockAgreementData = {
+          agreementNumber: 'WMP123456789',
+          code: 'woodland',
+          status: 'offered',
+          sbi: '106284736',
+          application: { parcel: [] },
+          payment: {
+            agreementStartDate: '2025-12-05',
+            annualTotalPence: 1500,
+            parcelItems: {},
+            agreementLevelItems: {}
+          }
+        }
+
+        vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue(
+          mockAgreementData
+        )
+      })
+
+      test('should return woodland agreement data to case worker', async () => {
+        const { statusCode, result } = await doGet('WMP123456789')
+        expect(statusCode).toBe(statusCodes.ok)
+        expect(result.agreementData.code).toBe('woodland')
         expect(result.agreementData.status).toContain('offered')
         expect(result.auth.source).toBe('entra')
       })

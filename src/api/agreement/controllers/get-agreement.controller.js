@@ -1,7 +1,24 @@
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
-import { isWmpAgreement } from '#~/api/agreement/helpers/grant-types/wmp/wmp-payload-mapper.js'
+import { fpttResolveGetPayment } from '#~/api/agreement/helpers/grant-types/fptt/fptt-get-agreement.js'
 import Boom from '@hapi/boom'
+
+// WMP persists its payment subdoc at create time from the inbound payload
+// (plan.md §4.3) — Land Grants must NEVER be consulted on GET. A no-op is
+// the correct handler.
+const noop = () => Promise.resolve()
+
+const resolveGetPaymentByCode = {
+  woodland: noop,
+  'frps-private-beta': fpttResolveGetPayment
+}
+
+const getResolveGetPayment = (code) => {
+  const resolve = resolveGetPaymentByCode[String(code ?? '').toLowerCase()]
+  if (!resolve) {
+    throw Boom.badImplementation(`Unknown agreement code: ${code}`)
+  }
+  return resolve
+}
 
 /**
  * Controller to serve the get agreement
@@ -18,23 +35,9 @@ const getAgreementController =
       )
     }
 
-    if (
-      !isWmpAgreement(agreementData) &&
-      (agreementData.status === 'offered' ||
-        ((agreementData.status === 'withdrawn' ||
-          agreementData.status === 'cancelled') &&
-          !agreementData.payment))
-    ) {
-      agreementData.payment = await calculatePaymentsBasedOnParcelsWithActions(
-        agreementData.application.parcel,
-        request.logger
-      )
-      request.logger.info(
-        'Successfully called Land Grants service for payments calculation.'
-      )
-    }
+    const resolveGetPayment = getResolveGetPayment(agreementData.code)
+    await resolveGetPayment(agreementData, request.logger)
 
-    // Return JSON response with agreement data
     return h.response({ agreementData, auth: { source } }).code(statusCodes.ok)
   }
 

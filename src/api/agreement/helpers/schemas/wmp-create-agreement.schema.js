@@ -112,7 +112,7 @@ const identifiersSchema = Joi.object({
 // WMP cross-field rules:
 //  - existingWmps non-empty when appLandHasExistingWmp === true
 //  - totalAgreementPaymentPence (if present) equals sum of payments.agreement[].agreementTotalPence
-//  - totalHectaresAppliedFor (if landParcels present) equals sum of areaHa within tolerance
+//  - totalHectaresForSelectedParcels (if landParcels present) equals sum of areaHa within tolerance
 function checkExistingWmps(answers) {
   if (answers.appLandHasExistingWmp !== true) {
     return null
@@ -154,9 +154,12 @@ function checkHectaresTotal(answers) {
     (acc, p) => acc + Number(p.areaHa || 0),
     0
   )
-  if (Math.abs(sumHa - answers.totalHectaresAppliedFor) > HECTARES_TOLERANCE) {
+  if (
+    Math.abs(sumHa - answers.totalHectaresForSelectedParcels) >
+    HECTARES_TOLERANCE
+  ) {
     return (
-      `totalHectaresAppliedFor (${answers.totalHectaresAppliedFor}) must equal ` +
+      `totalHectaresForSelectedParcels (${answers.totalHectaresForSelectedParcels}) must equal ` +
       `sum of landParcels[].areaHa (${sumHa.toFixed(4)}) within ±${HECTARES_TOLERANCE}`
     )
   }
@@ -194,7 +197,7 @@ const answersSchema = Joi.object({
   fcTeamCode: Joi.string().required(),
   applicant: applicantSchema.required(),
   detailsConfirmedAt: Joi.date().iso().required(),
-  totalHectaresAppliedFor: positiveHectares.required(),
+  totalHectaresForSelectedParcels: positiveHectares.required(),
   guidanceRead: Joi.boolean().strict().valid(true).required().messages({
     'any.only': 'guidanceRead must be true'
   }),

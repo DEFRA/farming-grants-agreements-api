@@ -158,12 +158,12 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error).toBeUndefined()
     })
 
-    it('rejects when totalHectaresAppliedFor mismatches landParcels sum', () => {
+    it('rejects when totalHectaresForSelectedParcels mismatches landParcels sum', () => {
       const p = clone(wmpFixture)
-      p.answers.totalHectaresAppliedFor = 1
+      p.answers.totalHectaresForSelectedParcels = 1
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeDefined()
-      expect(error.message).toMatch(/totalHectaresAppliedFor/)
+      expect(error.message).toMatch(/totalHectaresForSelectedParcels/)
     })
 
     it('rejects landParcel missing parcelId', () => {

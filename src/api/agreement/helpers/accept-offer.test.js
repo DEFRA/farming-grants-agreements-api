@@ -32,6 +32,7 @@ vi.mock('#~/api/common/models/agreements.js', () => ({
       upsertedCount: 0,
       matchedCount: 1,
       agreementNumber: 'sample',
+      code: 'frps-private-beta',
       signatureDate: '2024-01-01T00:00:00.000Z',
       status: 'accepted'
     }),
@@ -96,6 +97,7 @@ describe('acceptOffer', () => {
     upsertedCount: 0,
     matchedCount: 1,
     agreementNumber: 'sample',
+    code: 'frps-private-beta',
     signatureDate: '2024-01-01T00:00:00.000Z',
     status: 'accepted'
   }
@@ -208,11 +210,13 @@ describe('acceptOffer', () => {
 
     updateAgreementWithVersionViaGrant.mockResolvedValue({
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       status: 'accepted'
     })
 
     const agreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
       application: { parcel: [] },
@@ -246,11 +250,13 @@ describe('acceptOffer', () => {
 
     updateAgreementWithVersionViaGrant.mockResolvedValue({
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       status: 'accepted'
     })
 
     const agreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
       application: { parcel: [] },
@@ -287,6 +293,7 @@ describe('acceptOffer', () => {
 
     const agreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
       application: { parcel: [] }
@@ -294,6 +301,7 @@ describe('acceptOffer', () => {
 
     const mockAgreement = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       status: 'accepted'
     }
 
@@ -304,6 +312,7 @@ describe('acceptOffer', () => {
     expect(result).toEqual(
       expect.objectContaining({
         agreementNumber: 'FPTT123456789',
+        code: 'frps-private-beta',
         status: 'accepted',
         claimId: 'test-claim-id'
       })
@@ -318,9 +327,50 @@ describe('acceptOffer', () => {
     )
   })
 
+  test('should successfully accept a woodland agreement without recalculating payments', async () => {
+    const agreementData = {
+      agreementNumber: 'WMP123456789',
+      code: 'woodland',
+      correlationId: 'test-correlation-id',
+      clientRef: 'test-client-ref',
+      application: { parcel: [] },
+      payment: mockPayments
+    }
+
+    const mockAgreement = {
+      agreementNumber: 'WMP123456789',
+      code: 'woodland',
+      status: 'accepted'
+    }
+
+    updateAgreementWithVersionViaGrant.mockResolvedValue(mockAgreement)
+
+    const result = await acceptOffer('WMP123456789', agreementData, mockLogger)
+
+    expect(calculatePaymentsBasedOnParcelsWithActions).not.toHaveBeenCalled()
+    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
+      { agreementNumber: 'WMP123456789' },
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          status: 'accepted',
+          payment: mockPayments
+        })
+      })
+    )
+    expect(result).toEqual(
+      expect.objectContaining({
+        agreementNumber: 'WMP123456789',
+        code: 'woodland',
+        status: 'accepted',
+        claimId: 'test-claim-id'
+      })
+    )
+  })
+
   test('should successfully accept an agreement', async () => {
     const agreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
       sbi: 'test-sbi',
@@ -375,6 +425,7 @@ describe('acceptOffer', () => {
     expect(result).toEqual(
       expect.objectContaining({
         agreementNumber: agreementId,
+        code: 'frps-private-beta',
         claimId: 'test-claim-id'
       })
     )
@@ -388,6 +439,7 @@ describe('acceptOffer', () => {
     updateAgreementWithVersionViaGrant.mockResolvedValue(mockUpdateResult)
     const agreementData = {
       agreementNumber: agreementId,
+      code: 'frps-private-beta',
       application: { parcel: [] },
       actionApplications: [],
       payment: {
@@ -428,6 +480,7 @@ describe('acceptOffer', () => {
     expect(result).toEqual(
       expect.objectContaining({
         agreementNumber: agreementId,
+        code: 'frps-private-beta',
         claimId: 'test-claim-id'
       })
     )
@@ -447,6 +500,7 @@ describe('acceptOffer', () => {
         agreementId,
         {
           agreementNumber: agreementId,
+          code: 'frps-private-beta',
           application: { parcel: [] },
           actionApplications: []
         },
@@ -470,6 +524,7 @@ describe('acceptOffer', () => {
         agreementId,
         {
           agreementNumber: agreementId,
+          code: 'frps-private-beta',
           application: { parcel: [] },
           actionApplications: []
         },
@@ -493,6 +548,7 @@ describe('acceptOffer', () => {
         agreementId,
         {
           agreementNumber: agreementId,
+          code: 'frps-private-beta',
           application: { parcel: [] },
           actionApplications: []
         },
@@ -522,6 +578,7 @@ describe('acceptOffer', () => {
       agreementId,
       {
         agreementNumber: agreementId,
+        code: 'frps-private-beta',
         application: { parcel: [] },
         actionApplications: [],
         payment: {
@@ -566,6 +623,7 @@ describe('acceptOffer', () => {
         agreementId,
         {
           agreementNumber: agreementId,
+          code: 'frps-private-beta',
           application: { parcel: [] },
           actionApplications: []
         },

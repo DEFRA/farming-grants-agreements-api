@@ -1,23 +1,4 @@
 import crypto from 'node:crypto'
-/**
- * Detect that a *persisted* agreement-version document is WMP.
- *
- * Matches on the persisted `scheme === 'WMP'` or `code === 'woodland'`.
- * @param {object} agreement
- * @returns {boolean}
- */
-export function isWmpAgreement(agreement) {
-  if (!agreement) {
-    return false
-  }
-  if (
-    typeof agreement.scheme === 'string' &&
-    agreement.scheme.toUpperCase() === 'WMP'
-  ) {
-    return true
-  }
-  return String(agreement.code ?? '').toLowerCase() === 'woodland'
-}
 
 const flattenAddress = (a = {}) => ({
   line1: a.line1,
