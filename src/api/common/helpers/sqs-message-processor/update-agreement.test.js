@@ -536,6 +536,37 @@ describe('SQS message processor', () => {
       )
     })
 
+    it('should fall back to a generated correlationId on success when the updated version has none', async () => {
+      cancelOffer.mockResolvedValue({
+        clientRef: 'mockClientRef',
+        code: 'mockCode',
+        status: 'cancelled',
+        updatedAt: mockUpdatedAt,
+        agreementNumber: 'FPTT123456789'
+        // no correlationId
+      })
+
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'cancelled',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789'
+        }
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(mockAuditEvent).toHaveBeenCalledWith(
+        'AGREEMENT_UPDATED',
+        expect.objectContaining({ correlationId: expect.any(String) })
+      )
+    })
+
     it('should prefer an upstream-supplied correlationId on failure', async () => {
       const error = new Error('DB connection failed')
       cancelOffer.mockRejectedValue(error)
