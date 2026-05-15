@@ -469,6 +469,7 @@ describe('SQS message processor', () => {
           agreementNumber: 'FPTT123456789',
           clientRef: 'client-ref-001',
           status: 'withdrawn',
+          correlationId: expect.any(String),
           message: 'DB connection failed'
         },
         'failure'
@@ -498,6 +499,7 @@ describe('SQS message processor', () => {
           agreementNumber: 'FPTT123456789',
           clientRef: 'client-ref-001',
           status: 'cancelled',
+          correlationId: expect.any(String),
           message: 'DB connection failed'
         },
         'failure'
@@ -527,8 +529,34 @@ describe('SQS message processor', () => {
           agreementNumber: 'FPTT123456789',
           clientRef: 'client-ref-001',
           status: 'terminated',
+          correlationId: expect.any(String),
           message: 'DB connection failed'
         },
+        'failure'
+      )
+    })
+
+    it('should prefer an upstream-supplied correlationId on failure', async () => {
+      const error = new Error('DB connection failed')
+      cancelOffer.mockRejectedValue(error)
+
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'cancelled',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'FPTT123456789',
+          correlationId: 'upstream-corr-id'
+        }
+      }
+
+      await expect(
+        handleUpdateAgreementEvent('aws-message-id', mockPayload, mockLogger)
+      ).rejects.toThrow(error)
+
+      expect(mockAuditEvent).toHaveBeenCalledWith(
+        'AGREEMENT_UPDATED',
+        expect.objectContaining({ correlationId: 'upstream-corr-id' }),
         'failure'
       )
     })
