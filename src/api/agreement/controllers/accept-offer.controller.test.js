@@ -70,6 +70,7 @@ describe('POST / - acceptOfferController', () => {
         agreementNumber: 'FPTT123456789',
         status: 'accepted',
         sbi: '106284736',
+        schemeData: { internal: true },
         claimId: 'test-claim-id',
         signatureDate: '2024-01-01T00:00:00.000Z'
       }
@@ -87,7 +88,14 @@ describe('POST / - acceptOfferController', () => {
         expect.any(Object),
         expect.any(Object)
       )
-      expect(result.agreementData).toEqual(mockAcceptedData)
+      expect(result.agreementData).toEqual({
+        agreementNumber: 'FPTT123456789',
+        status: 'accepted',
+        sbi: '106284736',
+        schemeData: { internal: true },
+        claimId: 'test-claim-id',
+        signatureDate: '2024-01-01T00:00:00.000Z'
+      })
     })
 
     test('should handle errors from acceptOffer', async () => {

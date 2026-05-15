@@ -111,14 +111,15 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error).toBeUndefined()
     })
 
-    it('accepts a lean agreement payment item (only code + description)', () => {
+    it('rejects a lean agreement payment item without payment totals', () => {
       const p = clone(wmpFixture)
       p.answers.payments = {
         agreement: [{ code: 'PA3', description: 'Woodland management plan' }]
       }
       delete p.answers.totalAgreementPaymentPence
       const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeUndefined()
+      expect(error).toBeDefined()
+      expect(error.message).toMatch(/agreementTotalPence/)
     })
 
     it('rejects payment item missing required code', () => {
@@ -136,12 +137,13 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error.message).toMatch(/totalAgreementPaymentPence/)
     })
 
-    it('accepts payments omitted entirely', () => {
+    it('rejects payments omitted entirely', () => {
       const p = clone(wmpFixture)
       delete p.answers.payments
       delete p.answers.totalAgreementPaymentPence
       const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeUndefined()
+      expect(error).toBeDefined()
+      expect(error.message).toMatch(/payments/)
     })
   })
 
@@ -151,11 +153,12 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error).toBeUndefined()
     })
 
-    it('accepts landParcels omitted entirely', () => {
+    it('rejects landParcels omitted entirely', () => {
       const p = clone(wmpFixture)
       delete p.answers.landParcels
       const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeUndefined()
+      expect(error).toBeDefined()
+      expect(error.message).toMatch(/landParcels/)
     })
 
     it('rejects when totalHectaresForSelectedParcels mismatches landParcels sum', () => {

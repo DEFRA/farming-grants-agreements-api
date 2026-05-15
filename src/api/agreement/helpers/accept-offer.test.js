@@ -4,7 +4,10 @@ import { randomUUID } from 'node:crypto'
 import Boom from '@hapi/boom'
 import { acceptOffer } from './accept-offer.js'
 import { config } from '#~/config/index.js'
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import {
+  calculatePaymentsBasedOnParcelsWithActions,
+  calculateWmpPaymentDates
+} from '#~/api/adapter/land-grants-adapter.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 vi.mock('node:crypto', () => ({
@@ -65,7 +68,8 @@ vi.mock('#~/config/index.js', () => ({
   }
 }))
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
+  calculatePaymentsBasedOnParcelsWithActions: vi.fn(),
+  calculateWmpPaymentDates: vi.fn()
 }))
 vi.mock(
   '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
@@ -146,6 +150,10 @@ describe('acceptOffer', () => {
       ]
     }
     calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(mockPayments)
+    calculateWmpPaymentDates.mockResolvedValue({
+      agreementStartDate: '2025-09-01',
+      agreementEndDate: '2035-08-31'
+    })
 
     // Mock config values
     config.get = vi.fn((key) => {
@@ -343,14 +351,22 @@ describe('acceptOffer', () => {
     )
   })
 
-  test('should successfully accept a woodland agreement without recalculating payments', async () => {
+  test('should successfully accept a woodland agreement with Land Grants agreement dates', async () => {
     const agreementData = {
       agreementNumber: 'WMP123456789',
       code: 'woodland',
       correlationId: 'test-correlation-id',
       clientRef: 'test-client-ref',
       application: { parcel: [] },
-      payment: mockPayments
+      schemeData: {
+        oldWoodlandAreaHa: 0.4,
+        newWoodlandAreaHa: 0
+      },
+      payment: {
+        ...mockPayments,
+        agreementStartDate: null,
+        agreementEndDate: null
+      }
     }
 
     const mockAgreement = {
@@ -364,12 +380,24 @@ describe('acceptOffer', () => {
     const result = await acceptOffer('WMP123456789', agreementData, mockLogger)
 
     expect(calculatePaymentsBasedOnParcelsWithActions).not.toHaveBeenCalled()
+    expect(calculateWmpPaymentDates).toHaveBeenCalledWith(
+      {
+        parcelIds: [],
+        oldWoodlandAreaHa: 0.4,
+        newWoodlandAreaHa: 0
+      },
+      mockLogger
+    )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: 'WMP123456789' },
       expect.objectContaining({
         $set: expect.objectContaining({
           status: 'accepted',
-          payment: mockPayments
+          payment: {
+            ...mockPayments,
+            agreementStartDate: '2025-09-01',
+            agreementEndDate: '2035-08-31'
+          }
         })
       })
     )
@@ -381,6 +409,36 @@ describe('acceptOffer', () => {
         claimId: 'test-claim-id'
       })
     )
+  })
+
+  test('should not accept a woodland agreement when Land Grants agreement date calculation fails', async () => {
+    calculateWmpPaymentDates.mockRejectedValue(
+      new Error('Land Grants unavailable')
+    )
+
+    await expect(
+      acceptOffer(
+        'WMP123456789',
+        {
+          agreementNumber: 'WMP123456789',
+          code: 'woodland',
+          correlationId: 'test-correlation-id',
+          clientRef: 'test-client-ref',
+          schemeData: {
+            oldWoodlandAreaHa: 0.4,
+            newWoodlandAreaHa: 0
+          },
+          payment: {
+            ...mockPayments,
+            agreementStartDate: null,
+            agreementEndDate: null
+          }
+        },
+        mockLogger
+      )
+    ).rejects.toThrow('Land Grants unavailable')
+
+    expect(updateAgreementWithVersionViaGrant).not.toHaveBeenCalled()
   })
 
   test('should successfully accept an agreement', async () => {

@@ -31,11 +31,32 @@ const buildAuthHeader = () => {
   return { Authorization: `Bearer ${token}` }
 }
 
+const DEFAULT_FPTT_CALCULATION_URI = '/api/v2/payments/calculate'
+
+const getCalculationUri = (grantType) => {
+  if (grantType === 'fptt') {
+    const fpttCalculationUri = config.get('landGrants.calculationUris.fptt')
+    return fpttCalculationUri === DEFAULT_FPTT_CALCULATION_URI
+      ? config.get('landGrants.calculationUri')
+      : fpttCalculationUri
+  }
+
+  if (grantType) {
+    try {
+      return config.get(`landGrants.calculationUris.${grantType}`)
+    } catch {
+      // Fall through to the legacy config key for existing tests/deployments.
+    }
+  }
+
+  return config.get('landGrants.calculationUri')
+}
+
 const postPaymentCalculation = async (body, options = {}) => {
-  const { headers: extraHeaders = {} } = options
+  const { grantType, headers: extraHeaders = {} } = options
 
   const landGrantsBaseUrl = config.get('landGrants.uri')
-  const calculationUri = config.get('landGrants.calculationUri')
+  const calculationUri = getCalculationUri(grantType)
   const url = new URL(calculationUri, landGrantsBaseUrl)
 
   const res = await fetchWithTimeout(url, {
@@ -113,6 +134,7 @@ const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
   }
 
   const response = await postPaymentCalculation(payload, {
+    grantType: 'fptt',
     headers: buildAuthHeader()
   })
 
@@ -126,6 +148,11 @@ const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
   const payment = response?.payment
   if (!payment) {
     throw new Error('Land Grants response missing "payment" field')
+  }
+  if (!payment.agreementStartDate || !payment.agreementEndDate) {
+    throw new Error(
+      'FPTT payment calculation must include agreementStartDate and agreementEndDate'
+    )
   }
 
   const {
@@ -151,4 +178,44 @@ const calculatePaymentsBasedOnParcelsWithActions = async (parcels, logger) => {
   }
 }
 
-export { calculatePaymentsBasedOnParcelsWithActions }
+const calculateWmpPaymentDates = async (requestData, logger) => {
+  const payload = {
+    parcelIds: requestData?.parcelIds ?? [],
+    oldWoodlandAreaHa: requestData?.oldWoodlandAreaHa,
+    newWoodlandAreaHa: requestData?.newWoodlandAreaHa
+  }
+
+  if (logger) {
+    logger.info(
+      `Sending Land Grants WMP payment calculation request ${JSON.stringify(payload, null, 2)}`
+    )
+  }
+
+  const response = await postPaymentCalculation(payload, {
+    grantType: 'wmp',
+    headers: buildAuthHeader()
+  })
+
+  if (logger) {
+    logger.info(
+      `Successfully called Land Grants WMP payment calculation, response received is
+      ${JSON.stringify(response, null, 2)}`
+    )
+  }
+
+  const payment = response?.payment
+  if (!payment) {
+    throw new Error('Land Grants response missing "payment" field')
+  }
+
+  const { agreementStartDate, agreementEndDate } = payment
+  if (!agreementStartDate || !agreementEndDate) {
+    throw new Error(
+      'Land Grants response missing agreementStartDate or agreementEndDate'
+    )
+  }
+
+  return { agreementStartDate, agreementEndDate }
+}
+
+export { calculatePaymentsBasedOnParcelsWithActions, calculateWmpPaymentDates }

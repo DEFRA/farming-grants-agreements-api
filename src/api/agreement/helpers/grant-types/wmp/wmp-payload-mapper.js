@@ -32,17 +32,6 @@ function buildApplicant(answersApplicant) {
   }
 }
 
-const truncToDateString = (iso) => {
-  // ISO date-only (YYYY-MM-DD); the Mongoose schema stores agreement dates as String.
-  const d = new Date(iso)
-  return d.toISOString().slice(0, 10)
-}
-const addOneYear = (iso) => {
-  const d = new Date(iso)
-  d.setUTCFullYear(d.getUTCFullYear() + 1)
-  return d.toISOString().slice(0, 10)
-}
-
 function buildAgreementLevelItems(agreementItems) {
   const agreementLevelItems = {}
   agreementItems.forEach((item, i) => {
@@ -126,13 +115,6 @@ function buildIdentifiers(payload, meta) {
   }
 }
 
-// Date basis: prefer metadata.submittedAt, fall back to answers.detailsConfirmedAt, else now.
-function resolveSubmittedAt(meta, answers) {
-  return (
-    meta.submittedAt ?? answers.detailsConfirmedAt ?? new Date().toISOString()
-  )
-}
-
 function buildPaymentOrNull(ctx) {
   const { agreementItems, totalPence } = ctx
   if (agreementItems.length === 0 || !Number.isFinite(totalPence)) {
@@ -151,16 +133,22 @@ function buildVersionHeader(payload, meta, answers, correlationId, uuid) {
   }
 }
 
+function buildSchemeData(answers) {
+  return {
+    oldWoodlandAreaHa: answers.hectaresTenOrOverYearsOld,
+    newWoodlandAreaHa: answers.hectaresUnderTenYearsOld
+  }
+}
+
 /**
  * Map a validated WMP create-agreement payload to a `versions` document.
  *
- * When `answers.payments.agreement[]` and `answers.totalAgreementPaymentPence`
- * are present, a full payment subdoc is built (frequency `OneOff`, paid on
- * signature). Otherwise `payment` is `null`.
+ * A full payment subdoc is built from `answers.payments.agreement[]` and
+ * `answers.totalAgreementPaymentPence` (frequency `OneOff`, paid on
+ * signature).
  *
  * `actionApplications` and `application.parcel[]` are populated from
- * `answers.landParcels × answers.payments.agreement[]`. They stay empty
- * if either is absent.
+ * `answers.landParcels × answers.payments.agreement[]`.
  * @param {object} payload - validated WMP create-agreement payload
  * @param {object} [opts]
  * @param {string} [opts.notificationMessageId] - SQS message id (required for insert)
@@ -176,9 +164,6 @@ export function mapWmpPayloadToVersion(payload, opts = {}) {
   } = opts
   const meta = payload.metadata ?? {}
   const answers = payload.answers
-  const submittedAt = resolveSubmittedAt(meta, answers)
-  const agreementStartDate = truncToDateString(submittedAt)
-  const agreementEndDate = addOneYear(submittedAt)
   const agreementItems = answers.payments?.agreement ?? []
   const landParcels = answers.landParcels ?? []
 
@@ -187,12 +172,13 @@ export function mapWmpPayloadToVersion(payload, opts = {}) {
     ...buildVersionHeader(payload, meta, answers, correlationId, uuid),
     identifiers: buildIdentifiers(payload, meta),
     status: 'offered',
+    schemeData: buildSchemeData(answers),
     actionApplications: buildActionApplications(landParcels, agreementItems),
     payment: buildPaymentOrNull({
       agreementItems,
       totalPence: answers.totalAgreementPaymentPence,
-      agreementStartDate,
-      agreementEndDate,
+      agreementStartDate: null,
+      agreementEndDate: null,
       uuid
     }),
     applicant: buildApplicant(answers.applicant),
