@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
+import { calculateFpttPayments } from './fptt-land-grants.js'
 import { fpttGetPayment } from './fptt-get-agreement.js'
 
-vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
+vi.mock('./fptt-land-grants.js', () => ({
+  calculateFpttPayments: vi.fn()
 }))
 
 describe('fpttGetPayment', () => {
@@ -21,9 +21,7 @@ describe('fpttGetPayment', () => {
       application: { parcel: [{ parcelId: '1', actions: [] }] }
     }
 
-    calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(
-      calculatedPayment
-    )
+    calculateFpttPayments.mockResolvedValue(calculatedPayment)
 
     const payment = await fpttGetPayment(agreementData, logger)
 
@@ -42,6 +40,6 @@ describe('fpttGetPayment', () => {
     const payment = await fpttGetPayment(agreementData, logger)
 
     expect(payment).toBe(persistedPayment)
-    expect(calculatePaymentsBasedOnParcelsWithActions).not.toHaveBeenCalled()
+    expect(calculateFpttPayments).not.toHaveBeenCalled()
   })
 })

@@ -103,6 +103,11 @@ describe('getAgreementController', () => {
             code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
+            schemeData: {
+              parcelIds: ['SD6346-3387'],
+              oldWoodlandAreaHa: 0.4,
+              newWoodlandAreaHa: 0
+            },
             application: {
               parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
             },
@@ -159,7 +164,8 @@ describe('getAgreementController', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -253,7 +259,8 @@ describe('getAgreementController', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -508,7 +515,8 @@ describe('getAgreementController', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -668,6 +676,10 @@ describe('getAgreementController - Woodland Tests', () => {
             code: 'frps-private-beta',
             status: 'offered',
             sbi: '106284736',
+            schemeData: {
+              oldWoodlandAreaHa: 0.4,
+              newWoodlandAreaHa: 0
+            },
             application: {
               parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
             },
@@ -724,7 +736,8 @@ describe('getAgreementController - Woodland Tests', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -818,7 +831,8 @@ describe('getAgreementController - Woodland Tests', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -1042,7 +1056,8 @@ describe('getAgreementController - Woodland Tests', () => {
             mockAgreementData.application.parcel,
             expect.objectContaining({
               info: expect.any(Function)
-            })
+            }),
+            { calculationUri: '/api/v2/payments/calculate' }
           )
           expect(result.agreementData.payment).toEqual(
             expect.objectContaining({
@@ -1184,6 +1199,10 @@ describe('getAgreementController - Woodland Tests', () => {
             code: 'woodland',
             status: 'offered',
             sbi: '106284736',
+            schemeData: {
+              oldWoodlandAreaHa: 0.4,
+              newWoodlandAreaHa: 0
+            },
             application: {
               parcel: [{ sheetId: '1', parcelId: '2', actions: [] }]
             },
@@ -1206,6 +1225,10 @@ describe('getAgreementController - Woodland Tests', () => {
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.code).toBe('woodland')
           expect(result.agreementData.status).toContain('offered')
+          expect(result.agreementData.schemeData).toEqual({
+            oldWoodlandAreaHa: 0.4,
+            newWoodlandAreaHa: 0
+          })
           expect(result.auth.source).toBe('defra')
         })
 

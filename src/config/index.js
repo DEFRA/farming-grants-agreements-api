@@ -334,6 +334,20 @@ const config = convict({
       format: String,
       default: '/api/v2/payments/calculate',
       env: 'LAND_GRANTS_CALCULATION_URI'
+    },
+    calculationUris: {
+      fptt: {
+        doc: 'URI path for the FPTT payment calculation endpoint',
+        format: String,
+        default: '/api/v2/payments/calculate',
+        env: 'LAND_GRANTS_CALCULATION_URI_FPTT'
+      },
+      wmp: {
+        doc: 'URI path for the WMP payment calculation endpoint',
+        format: String,
+        default: '/api/v1/wmp/payments/calculate',
+        env: 'LAND_GRANTS_CALCULATION_URI_WMP'
+      }
     }
   },
   files: {

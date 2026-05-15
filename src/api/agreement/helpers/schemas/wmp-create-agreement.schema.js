@@ -26,7 +26,7 @@ const agreementPaymentItemSchema = Joi.object({
   activeTierRatePence: moneyPence.optional(),
   activeTierFlatRatePence: moneyPence.optional(),
   quantity: Joi.number().positive().precision(4).optional(),
-  agreementTotalPence: moneyPence.optional(),
+  agreementTotalPence: moneyPence.required(),
   unit: Joi.string().optional()
 }).unknown(true)
 // `email` and `phone` arrive as objects on the real payload, but a string
@@ -209,12 +209,12 @@ const answersSchema = Joi.object({
     .messages({ 'any.only': 'applicationConfirmation must be true' }),
   // Optional fields preserved if upstream sends them
   agreementName: Joi.string().optional(),
-  landParcels: Joi.array().items(landParcelSchema).min(1).optional(),
-  totalAgreementPaymentPence: moneyPence.optional(),
+  landParcels: Joi.array().items(landParcelSchema).min(1).required(),
+  totalAgreementPaymentPence: moneyPence.required(),
   payments: Joi.object({
     agreement: Joi.array().items(agreementPaymentItemSchema).min(1).required()
   })
-    .optional()
+    .required()
     .unknown(true)
 })
   .unknown(true)

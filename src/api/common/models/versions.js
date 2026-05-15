@@ -135,8 +135,8 @@ const Applicant = new mongoose.Schema({
 })
 
 const Payment = new mongoose.Schema({
-  agreementStartDate: { type: String, required: true },
-  agreementEndDate: { type: String, required: true },
+  agreementStartDate: { type: String, required: false, default: null },
+  agreementEndDate: { type: String, required: false, default: null },
   frequency: { type: String, required: true },
   agreementTotalPence: { type: Number, required: true },
   annualTotalPence: { type: Number, required: true },
@@ -169,6 +169,7 @@ const schema = new mongoose.Schema(
     scheme: { type: String },
     actionApplications: { type: [ActionApplications], required: true },
     consentObjects: { type: [mongoose.Schema.Types.Mixed], required: false },
+    schemeData: { type: mongoose.Schema.Types.Mixed, required: false },
     payment: { type: Payment, required: false },
     applicant: { type: Applicant, required: true },
     application: { type: Application, required: true },

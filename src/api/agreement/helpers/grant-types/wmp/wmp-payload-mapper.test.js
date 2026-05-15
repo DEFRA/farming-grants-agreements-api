@@ -5,10 +5,6 @@ import wmpFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
 const fixedUuid = () => '00000000-0000-4000-8000-000000000000'
 
 describe('mapWmpPayloadToVersion', () => {
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   const result = mapWmpPayloadToVersion(wmpFixture, {
     notificationMessageId: 'sqs-msg-1',
     correlationId: 'corr-1',
@@ -65,22 +61,16 @@ describe('mapWmpPayloadToVersion', () => {
     ])
   })
 
-  it('derives agreementStartDate / endDate from detailsConfirmedAt', () => {
-    expect(result.payment.agreementStartDate).toBe('2026-04-02')
-    expect(result.payment.agreementEndDate).toBe('2027-04-02')
+  it('leaves offered agreement dates unset until acceptance', () => {
+    expect(result.payment.agreementStartDate).toBeNull()
+    expect(result.payment.agreementEndDate).toBeNull()
   })
 
-  it('persists payment as null when payments are absent', () => {
-    const noPay = {
-      ...wmpFixture,
-      answers: {
-        ...wmpFixture.answers,
-        payments: undefined,
-        totalAgreementPaymentPence: undefined
-      }
-    }
-    const v = mapWmpPayloadToVersion(noPay, { notificationMessageId: 'm' })
-    expect(v.payment).toBeNull()
+  it('captures internal scheme data needed for WMP agreement date calculation', () => {
+    expect(result.schemeData).toEqual({
+      oldWoodlandAreaHa: 18,
+      newWoodlandAreaHa: 2
+    })
   })
 
   it('builds application.parcel[] one entry per landParcel', () => {
@@ -108,16 +98,6 @@ describe('mapWmpPayloadToVersion', () => {
       parcelId: 'SD7560-9193',
       appliedFor: { unit: 'ha', quantity: 25.3874 }
     })
-  })
-
-  it('emits empty actionApplications and parcel arrays when landParcels absent', () => {
-    const noParcels = {
-      ...wmpFixture,
-      answers: { ...wmpFixture.answers, landParcels: undefined }
-    }
-    const v = mapWmpPayloadToVersion(noParcels, { notificationMessageId: 'm' })
-    expect(v.actionApplications).toEqual([])
-    expect(v.application.parcel).toEqual([])
   })
 
   it('maps applicant.business + customer.name from answers.applicant', () => {
@@ -234,30 +214,8 @@ describe('mapWmpPayloadToVersion', () => {
     expect(v.agreementName).toBe('Woodland Management Plan')
     expect(v.clientRef).toBe('wmp-from-metadata')
     expect(v.scheme).toBe('WMP')
-    expect(v.payment.agreementStartDate).toBe('2026-06-10')
-    expect(v.payment.agreementEndDate).toBe('2027-06-10')
-  })
-
-  it('uses runtime date fallback when submitted dates are absent', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-08-15T10:20:30.000Z'))
-
-    const payload = {
-      ...wmpFixture,
-      metadata: undefined,
-      answers: {
-        ...wmpFixture.answers,
-        detailsConfirmedAt: undefined
-      }
-    }
-
-    const v = mapWmpPayloadToVersion(payload, {
-      notificationMessageId: 'm',
-      uuid: fixedUuid
-    })
-
-    expect(v.payment.agreementStartDate).toBe('2026-08-15')
-    expect(v.payment.agreementEndDate).toBe('2027-08-15')
+    expect(v.payment.agreementStartDate).toBeNull()
+    expect(v.payment.agreementEndDate).toBeNull()
   })
 
   it('falls back to hectares for parcel action unit and uses supplied sheetId', () => {

@@ -93,6 +93,8 @@ Expected:
 - `payment.frequency: "OneOff"`
 - `payment.payments[0].paymentDate: null` (paid on signature)
 - `payment.agreementTotalPence === 157500` (matches the fixture sum)
+- `payment.agreementStartDate: null`
+- `payment.agreementEndDate: null`
 
 Also check the parent agreement doc. **Note**: `findOrCreateAgreement`
 matches on `sbi` only, so if SBI `106284736` (the fixture's SBI) already
@@ -105,7 +107,7 @@ docker compose exec mongodb mongosh --quiet --eval \
   'db.getSiblingDB("farming-grants-agreements-api").agreements.find({sbi:"106284736"}).pretty()'
 ```
 
-## 6. Confirm Land Grants was NOT called (AC4)
+## 6. Confirm Land Grants was NOT called during create
 
 There is no outbound HTTP to `land-grants-api` during create. If the
 `land-grants-api` service is in the compose stack you can confirm by
@@ -128,9 +130,13 @@ curl -sS http://localhost:3555/agreements/<agreementNumber> | jq '.payment.frequ
 
 ## 8. (Optional) Test accept
 
+WMP calls Land Grants during acceptance to calculate the agreement dates.
+The request is sent to `/api/v1/wmp/payments/calculate` with parcel ids and
+woodland age-band hectares; no `startDate` is sent.
+
 ```bash
-curl -sS -X POST http://localhost:3555/agreements/<agreementNumber>/accept | jq '.status, .payment.frequency'
-# expect: "accepted", "OneOff" — payment subdoc unchanged
+curl -sS -X POST http://localhost:3555/agreements/<agreementNumber>/accept | jq '.status, .payment.frequency, .payment.agreementStartDate, .payment.agreementEndDate'
+# expect: "accepted", "OneOff", and non-null agreement dates returned by Land Grants
 ```
 
 ## 9. Re-run / cleanup
