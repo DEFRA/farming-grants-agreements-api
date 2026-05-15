@@ -5,6 +5,10 @@ import wmpFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
 const fixedUuid = () => '00000000-0000-4000-8000-000000000000'
 
 describe('mapWmpPayloadToVersion', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   const result = mapWmpPayloadToVersion(wmpFixture, {
     notificationMessageId: 'sqs-msg-1',
     correlationId: 'corr-1',
@@ -41,13 +45,7 @@ describe('mapWmpPayloadToVersion', () => {
         code: 'PA3',
         description: 'Woodland management plan',
         version: '1',
-        annualPaymentPence: 166200,
-        quantity: 55.4,
-        unit: 'ha',
-        activePaymentTier: 2,
-        quantityInActiveTier: 5.4,
-        activeTierRatePence: 3000,
-        activeTierFlatRatePence: 150000
+        annualPaymentPence: 166200
       }
     })
     expect(result.payment.payments).toEqual([
@@ -95,7 +93,7 @@ describe('mapWmpPayloadToVersion', () => {
         code: 'PA3',
         version: '1',
         durationYears: 1,
-        appliedFor: { unit: 'ha', quantity: 25.3874 }
+        appliedFor: { unit: 'ha', quantity: 55.4 }
       }
     ])
     expect(p2.parcelId).toBe('SD5848-9205')
@@ -133,6 +131,55 @@ describe('mapWmpPayloadToVersion', () => {
     expect(result.applicant.customer.name.last).toBe('Taylor')
   })
 
+  it('normalises optional applicant address and customer name fields', () => {
+    const payload = {
+      ...wmpFixture,
+      answers: {
+        ...wmpFixture.answers,
+        applicant: {
+          ...wmpFixture.answers.applicant,
+          business: {
+            ...wmpFixture.answers.applicant.business,
+            address: {
+              ...wmpFixture.answers.applicant.business.address,
+              line2: undefined,
+              line3: 'Building 3',
+              line4: 'North Estate',
+              line5: 'Upper Valley',
+              street: undefined
+            }
+          },
+          customer: {
+            ...wmpFixture.answers.applicant.customer,
+            name: {
+              ...wmpFixture.answers.applicant.customer.name,
+              title: undefined,
+              middle: undefined
+            }
+          }
+        }
+      }
+    }
+
+    const v = mapWmpPayloadToVersion(payload, {
+      notificationMessageId: 'm',
+      uuid: fixedUuid
+    })
+
+    expect(v.applicant.business.address).toEqual({
+      line1: 'Taylor Equestrian Yards',
+      line2: undefined,
+      line3: 'Building 3',
+      line4: 'North Estate',
+      line5: 'Upper Valley',
+      street: undefined,
+      city: 'Cambridge',
+      postalCode: 'CB1 2AB'
+    })
+    expect(v.applicant.customer.name.title).toBeUndefined()
+    expect(v.applicant.customer.name.middle).toBeUndefined()
+  })
+
   it('uses crypto.randomUUID by default when no uuid generator injected', () => {
     const r2 = mapWmpPayloadToVersion(wmpFixture, {
       notificationMessageId: 'm'
@@ -162,5 +209,82 @@ describe('mapWmpPayloadToVersion', () => {
       frn: '1076543210',
       defraId: undefined
     })
+  })
+
+  it('uses metadata and defaults when top-level payload fields are absent', () => {
+    const payload = {
+      ...wmpFixture,
+      clientRef: undefined,
+      scheme: undefined,
+      metadata: {
+        submittedAt: '2026-06-10T12:30:00.000Z',
+        clientRef: 'wmp-from-metadata'
+      },
+      answers: {
+        ...wmpFixture.answers,
+        agreementName: undefined
+      }
+    }
+
+    const v = mapWmpPayloadToVersion(payload, {
+      notificationMessageId: 'm',
+      uuid: fixedUuid
+    })
+
+    expect(v.agreementName).toBe('Woodland Management Plan')
+    expect(v.clientRef).toBe('wmp-from-metadata')
+    expect(v.scheme).toBe('WMP')
+    expect(v.payment.agreementStartDate).toBe('2026-06-10')
+    expect(v.payment.agreementEndDate).toBe('2027-06-10')
+  })
+
+  it('uses runtime date fallback when submitted dates are absent', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-15T10:20:30.000Z'))
+
+    const payload = {
+      ...wmpFixture,
+      metadata: undefined,
+      answers: {
+        ...wmpFixture.answers,
+        detailsConfirmedAt: undefined
+      }
+    }
+
+    const v = mapWmpPayloadToVersion(payload, {
+      notificationMessageId: 'm',
+      uuid: fixedUuid
+    })
+
+    expect(v.payment.agreementStartDate).toBe('2026-08-15')
+    expect(v.payment.agreementEndDate).toBe('2027-08-15')
+  })
+
+  it('falls back to hectares for parcel action unit and uses supplied sheetId', () => {
+    const payload = {
+      ...wmpFixture,
+      answers: {
+        ...wmpFixture.answers,
+        landParcels: [
+          { parcelId: 'SD1234-5678', sheetId: 'sheet-1', areaHa: 1 }
+        ],
+        payments: {
+          agreement: [
+            {
+              ...wmpFixture.answers.payments.agreement[0],
+              unit: undefined
+            }
+          ]
+        }
+      }
+    }
+
+    const v = mapWmpPayloadToVersion(payload, {
+      notificationMessageId: 'm',
+      uuid: fixedUuid
+    })
+
+    expect(v.application.parcel[0].actions[0].appliedFor.unit).toBe('ha')
+    expect(v.actionApplications[0].sheetId).toBe('sheet-1')
   })
 })
