@@ -50,13 +50,7 @@ function buildAgreementLevelItems(agreementItems) {
       code: item.code,
       description: item.description,
       version: '1',
-      annualPaymentPence: item.agreementTotalPence,
-      quantity: item.quantity,
-      unit: item.unit,
-      activePaymentTier: item.activePaymentTier,
-      quantityInActiveTier: item.quantityInActiveTier,
-      activeTierRatePence: item.activeTierRatePence,
-      activeTierFlatRatePence: item.activeTierFlatRatePence
+      annualPaymentPence: item.agreementTotalPence
     }
   })
   return agreementLevelItems
@@ -102,7 +96,7 @@ function buildParcelDocs(landParcels, agreementItems) {
       code: item.code,
       version: '1',
       durationYears: 1,
-      appliedFor: { unit: 'ha', quantity: lp.areaHa }
+      appliedFor: { unit: item.unit ?? 'ha', quantity: item.quantity }
     }))
   }))
 }
