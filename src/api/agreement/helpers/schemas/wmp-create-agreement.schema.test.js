@@ -19,15 +19,41 @@ describe('wmpCreateAgreementSchema', () => {
   })
 
   describe('identifiers', () => {
-    it.each([
-      ['sbi', '20000000', 'must be a 9-digit numeric string'],
-      ['crn', 'abcdefghij', 'must be a 10-digit numeric string'],
-      ['frn', '123', 'must be a 10-digit numeric string']
-    ])('rejects malformed identifiers.%s', (field, badValue, msg) => {
+    it('allows non-numeric identifier values', () => {
       const p = clone(wmpFixture)
-      p.identifiers[field] = badValue
+      p.identifiers.sbi = 'sbi-from-source'
+      p.identifiers.frn = '106480734'
+      p.identifiers.crn = 'crn-from-source'
       const { error } = validateWmpCreateAgreement(p)
-      expect(error?.details.some((d) => d.message.includes(msg))).toBe(true)
+      expect(error).toBeUndefined()
+    })
+
+    it('rejects identifiers supplied only in metadata', () => {
+      const p = clone(wmpFixture)
+      p.identifiers = undefined
+      p.metadata = {
+        sbi: 'sbi-from-metadata',
+        frn: 'frn-from-metadata',
+        crn: 'crn-from-metadata'
+      }
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error?.message).toMatch(/"identifiers" is required/)
+    })
+
+    it('rejects missing identifiers', () => {
+      const p = clone(wmpFixture)
+      delete p.identifiers.frn
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error?.message).toMatch(/"identifiers.frn" is required/)
+    })
+
+    it('rejects blank identifiers', () => {
+      const p = clone(wmpFixture)
+      p.identifiers.sbi = '   '
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error?.message).toMatch(
+        /"identifiers.sbi" is not allowed to be empty/
+      )
     })
   })
 
@@ -46,13 +72,13 @@ describe('wmpCreateAgreementSchema', () => {
         error?.details.some((d) => d.message.includes('valid UK postcode'))
       ).toBe(true)
     })
-    it('accepts email as object {address}', () => {
-      const { error } = validateWmpCreateAgreement(wmpFixture)
-      expect(error).toBeUndefined()
-    })
-    it('accepts email as plain string', () => {
+    it('allows source-only applicant fields without validating their shape', () => {
       const p = clone(wmpFixture)
-      p.answers.applicant.business.email = 'plain@example.test'
+      p.answers.applicant.business.reference = { unexpected: true }
+      p.answers.applicant.business.email = 'not-an-email'
+      p.answers.applicant.business.phone = { unexpected: true }
+      p.answers.applicant.business.address.uprn = { unexpected: true }
+      p.answers.applicant.business.address.flatName = 123
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeUndefined()
     })
@@ -64,44 +90,47 @@ describe('wmpCreateAgreementSchema', () => {
     })
   })
 
-  describe('cross-field rules', () => {
-    it('rejects guidanceRead=false', () => {
+  describe('source-only answers', () => {
+    it('does not require answers that Agreements does not map or pass on', () => {
       const p = clone(wmpFixture)
-      p.answers.guidanceRead = false
-      const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
-      expect(error.message).toMatch(/guidanceRead/)
-    })
-    it('rejects applicationConfirmation=false', () => {
-      const p = clone(wmpFixture)
-      p.answers.applicationConfirmation = false
-      const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
-      expect(error.message).toMatch(/applicationConfirmation/)
-    })
-    it('rejects empty existingWmps when appLandHasExistingWmp=true', () => {
-      const p = clone(wmpFixture)
-      p.answers.appLandHasExistingWmp = true
-      p.answers.existingWmps = ''
-      const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
-      expect(error.message).toMatch(/existingWmps/)
-    })
-    it('allows empty existingWmps when appLandHasExistingWmp=false', () => {
-      const p = clone(wmpFixture)
-      p.answers.appLandHasExistingWmp = false
-      p.answers.existingWmps = ''
+
+      for (const field of [
+        'businessDetailsUpToDate',
+        'landRegisteredWithRpa',
+        'landManagementControl',
+        'publicBodyTenant',
+        'landHasGrazingRights',
+        'appLandHasExistingWmp',
+        'existingWmps',
+        'intendToApplyHigherTier',
+        'centreGridReference',
+        'fcTeamCode',
+        'detailsConfirmedAt',
+        'totalHectaresForSelectedParcels',
+        'guidanceRead',
+        'includedAllEligibleWoodland',
+        'applicationConfirmation'
+      ]) {
+        delete p.answers[field]
+      }
+
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeUndefined()
     })
-  })
 
-  describe('booleans are strict', () => {
-    it('rejects string "true" for businessDetailsUpToDate', () => {
+    it('does not validate the shape of source-only answers', () => {
       const p = clone(wmpFixture)
       p.answers.businessDetailsUpToDate = 'true'
+      p.answers.guidanceRead = false
+      p.answers.applicationConfirmation = false
+      p.answers.appLandHasExistingWmp = true
+      p.answers.existingWmps = ''
+      p.answers.detailsConfirmedAt = 'not-a-date'
+      p.answers.totalHectaresForSelectedParcels = { unexpected: true }
+      p.answers.centreGridReference = null
+
       const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
+      expect(error).toBeUndefined()
     })
   })
 
@@ -161,12 +190,11 @@ describe('wmpCreateAgreementSchema', () => {
       expect(error.message).toMatch(/landParcels/)
     })
 
-    it('rejects when totalHectaresForSelectedParcels mismatches landParcels sum', () => {
+    it('does not validate totalHectaresForSelectedParcels against landParcels', () => {
       const p = clone(wmpFixture)
       p.answers.totalHectaresForSelectedParcels = 1
       const { error } = validateWmpCreateAgreement(p)
-      expect(error).toBeDefined()
-      expect(error.message).toMatch(/totalHectaresForSelectedParcels/)
+      expect(error).toBeUndefined()
     })
 
     it('rejects landParcel missing parcelId', () => {
