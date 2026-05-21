@@ -1196,6 +1196,7 @@ describe('getAgreementController - Woodland Tests', () => {
         beforeEach(() => {
           mockAgreementData = {
             agreementNumber: 'WMP123456789',
+            agreementName: 'Oakridge Estate WMP',
             code: 'woodland',
             status: 'offered',
             sbi: '106284736',
@@ -1224,6 +1225,7 @@ describe('getAgreementController - Woodland Tests', () => {
           const { statusCode, result } = await doGet()
           expect(statusCode).toBe(statusCodes.ok)
           expect(result.agreementData.code).toBe('woodland')
+          expect(result.agreementData.agreementName).toBe('Oakridge Estate WMP')
           expect(result.agreementData.status).toContain('offered')
           expect(result.agreementData.schemeData).toEqual({
             oldWoodlandAreaHa: 0.4,

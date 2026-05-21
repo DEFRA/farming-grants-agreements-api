@@ -17,6 +17,7 @@ const wmpAgreement = {
   metadata: {},
   answers: {
     referenceNumber: 'WMP-926-WLW',
+    woodlandName: 'Oakridge Estate',
     businessDetailsUpToDate: true,
     landRegisteredWithRpa: true,
     landManagementControl: true,
