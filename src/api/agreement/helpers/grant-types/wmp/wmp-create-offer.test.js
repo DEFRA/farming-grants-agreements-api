@@ -68,6 +68,7 @@ describe('wmpCreateOffer (integration)', () => {
     const [version] = versions
     expect(version.status).toBe('offered')
     expect(version.scheme).toBe('WMP')
+    expect(version.agreementName).toBe('Oakridge Estate WMP')
     expect(version.notificationMessageId).toBe('sqs-msg-1')
     expect(version.payment.agreementTotalPence).toBe(
       wmpAgreementFixture.answers.totalAgreementPaymentPence

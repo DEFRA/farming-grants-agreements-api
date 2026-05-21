@@ -17,8 +17,44 @@ describe('mapWmpPayloadToVersion', () => {
     expect(result.clientRef).toBe(wmpFixture.clientRef)
     expect(result.code).toBe('woodland')
     expect(result.scheme).toBe('WMP')
-    expect(result.agreementName).toBe('Woodland Management Plan')
+    expect(result.agreementName).toBe('Oakridge Estate WMP')
     expect(result.status).toBe('offered')
+  })
+
+  it('builds the agreement name from the woodland name', () => {
+    const v = mapWmpPayloadToVersion(
+      {
+        ...wmpFixture,
+        answers: {
+          ...wmpFixture.answers,
+          woodlandName: 'Oakridge Estate'
+        }
+      },
+      {
+        notificationMessageId: 'm',
+        uuid: fixedUuid
+      }
+    )
+
+    expect(v.agreementName).toBe('Oakridge Estate WMP')
+  })
+
+  it('trims leading and trailing spaces from the woodland name', () => {
+    const v = mapWmpPayloadToVersion(
+      {
+        ...wmpFixture,
+        answers: {
+          ...wmpFixture.answers,
+          woodlandName: ' Oakridge Estate '
+        }
+      },
+      {
+        notificationMessageId: 'm',
+        uuid: fixedUuid
+      }
+    )
+
+    expect(v.agreementName).toBe('Oakridge Estate WMP')
   })
 
   it('takes identifiers from top-level identifiers', () => {
@@ -211,7 +247,7 @@ describe('mapWmpPayloadToVersion', () => {
       uuid: fixedUuid
     })
 
-    expect(v.agreementName).toBe('Woodland Management Plan')
+    expect(v.agreementName).toBe('Oakridge Estate WMP')
     expect(v.clientRef).toBe('wmp-from-metadata')
     expect(v.scheme).toBe('WMP')
     expect(v.payment.agreementStartDate).toBeNull()
