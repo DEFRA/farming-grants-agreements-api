@@ -107,6 +107,7 @@ function crossFieldChecks(answers, helpers) {
   return answers
 }
 const answersSchema = Joi.object({
+  woodlandName: Joi.string().trim().min(1).required(),
   businessDetailsUpToDate: unmappedSourceField,
   landRegisteredWithRpa: unmappedSourceField,
   landManagementControl: unmappedSourceField,

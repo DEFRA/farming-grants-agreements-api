@@ -125,7 +125,7 @@ function buildPaymentOrNull(ctx) {
 
 function buildVersionHeader(payload, meta, answers, correlationId, uuid) {
   return {
-    agreementName: answers.agreementName ?? 'Woodland Management Plan',
+    agreementName: `${answers.woodlandName.trim()} WMP`,
     correlationId: correlationId ?? uuid(),
     clientRef: payload.clientRef ?? meta.clientRef,
     code: payload.code,

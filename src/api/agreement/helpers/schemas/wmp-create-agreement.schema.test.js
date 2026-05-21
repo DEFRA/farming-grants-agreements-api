@@ -134,6 +134,24 @@ describe('wmpCreateAgreementSchema', () => {
     })
   })
 
+  describe('woodlandName', () => {
+    it('rejects missing woodlandName', () => {
+      const p = clone(wmpFixture)
+      delete p.answers.woodlandName
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error?.message).toMatch(/"answers.woodlandName" is required/)
+    })
+
+    it('rejects woodlandName with only whitespace', () => {
+      const p = clone(wmpFixture)
+      p.answers.woodlandName = '   '
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error?.message).toMatch(
+        /"answers.woodlandName" is not allowed to be empty/
+      )
+    })
+  })
+
   describe('payments', () => {
     it('accepts the fixture payment block', () => {
       const { error } = validateWmpCreateAgreement(wmpFixture)
