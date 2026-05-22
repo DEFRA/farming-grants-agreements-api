@@ -54,6 +54,7 @@ read -r -d '' MESSAGE <<EOM || true
       "defraId": "manual-test"
     },
     "answers": {
+      "woodlandName": "Test Woodland Name",
       "businessDetailsUpToDate": true,
       "landRegisteredWithRpa": true,
       "landManagementControl": true,
@@ -64,7 +65,7 @@ read -r -d '' MESSAGE <<EOM || true
       "intendToApplyHigherTier": false,
       "hectaresTenOrOverYearsOld": 12.5,
       "hectaresUnderTenYearsOld": 3.25,
-      "centreGridReference": "SD48414684",
+      "centreGridReference": "NY17258271",
       "fcTeamCode": "FC-NW-01",
       "applicant": {
         "business": {
@@ -89,8 +90,8 @@ read -r -d '' MESSAGE <<EOM || true
       "includedAllEligibleWoodland": true,
       "applicationConfirmation": true,
       "landParcels": [
-        { "parcelId": "SD4841-4684", "areaHa": 12.5 },
-        { "parcelId": "SD4842-3020", "areaHa": 3.25 }
+        { "parcelId": "NY1725-8271", "areaHa": 12.5 },
+        { "parcelId": "SP3875-0438", "areaHa": 3.25 }
       ],
       "totalAgreementPaymentPence": 157500,
       "payments": {
@@ -153,4 +154,3 @@ echo "     docker compose logs -f farming-grants-agreements-api | grep -i wmp"
 echo "   Then check Mongo:"
 echo "     docker compose exec mongodb mongosh --quiet --eval \\"
 echo "       'db.getSiblingDB(\"farming-grants-agreements-api\").versions.find({clientRef:\"$CLIENT_REF\"}).pretty()'"
-
