@@ -51,6 +51,17 @@ async function transitionAgreementToAccepted(
   return { agreementNumber, ...agreement }
 }
 
+// Do not send payment event for woodland grants
+// 1. the send payment event is hard coded with frps codes
+// 2. the payment event will be sent from elsewhere
+// ...refactor to make configurable https://eaflood.atlassian.net/browse/FGP-1122
+const sendGrantPaymentEventHandler = async (agreementData, logger) => {
+  if (agreementData.code !== WOODLAND_CODE) {
+    const grantPaymentsData = await sendGrantPaymentEvent(agreementData, logger)
+    return grantPaymentsData.claimId
+  }
+}
+
 /**
  * Accept an agreement offer with complete flow including payment event, SNS publishing, and audit logging
  * @param {string} agreementNumber - The agreement number
@@ -88,17 +99,7 @@ async function acceptOffer(
 
   let claimId
   try {
-    // Do not send payment event for woodland grants
-    // 1. the send payment event is hard coded with frps codes
-    // 2. the payment event will be sent from elsewhere
-    // TODO: refactor to make configurable https://eaflood.atlassian.net/browse/FGP-1122
-    if (agreementData.code !== WOODLAND_CODE) {
-      const grantPaymentsData = await sendGrantPaymentEvent(
-        agreementData,
-        logger
-      )
-      claimId = grantPaymentsData.claimId
-    }
+    claimId = await sendGrantPaymentEventHandler(agreementData, logger)
   } catch (err) {
     // If payments hub has an error rollback the previous accept offer (only if we accepted it)
     if (agreementData.status !== 'accepted') {
