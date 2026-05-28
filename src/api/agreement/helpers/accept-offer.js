@@ -7,6 +7,8 @@ import { publishEvent } from '#~/api/common/helpers/sns-publisher.js'
 import { auditEvent, AuditEvent } from '#~/api/common/helpers/audit-event.js'
 import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 
+const WOODLAND_CODE = 'woodland'
+
 /**
  * Update agreement status to accepted (without sending payment event)
  * @param {string} agreementNumber
@@ -86,8 +88,17 @@ async function acceptOffer(
 
   let claimId
   try {
-    const grantPaymentsData = await sendGrantPaymentEvent(agreementData, logger)
-    claimId = grantPaymentsData.claimId
+    // Do not send payment event for woodland grants
+    // 1. the send payment event is hard coded with frps codes
+    // 2. the payment event will be sent from elsewhere
+    // TODO: refactor to make configurable https://eaflood.atlassian.net/browse/FGP-1122
+    if (agreementData.code !== WOODLAND_CODE) {
+      const grantPaymentsData = await sendGrantPaymentEvent(
+        agreementData,
+        logger
+      )
+      claimId = grantPaymentsData.claimId
+    }
   } catch (err) {
     // If payments hub has an error rollback the previous accept offer (only if we accepted it)
     if (agreementData.status !== 'accepted') {
