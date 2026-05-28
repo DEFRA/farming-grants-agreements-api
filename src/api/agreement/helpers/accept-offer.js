@@ -60,6 +60,7 @@ const sendGrantPaymentEventHandler = async (agreementData, logger) => {
     const grantPaymentsData = await sendGrantPaymentEvent(agreementData, logger)
     return grantPaymentsData.claimId
   }
+  return undefined
 }
 
 /**
