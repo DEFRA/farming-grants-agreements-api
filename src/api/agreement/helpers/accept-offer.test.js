@@ -9,6 +9,7 @@ import {
   calculateWmpPaymentDates
 } from '#~/api/adapter/land-grants-adapter.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
+import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 
 vi.mock('node:crypto', () => ({
   randomUUID: vi.fn()
@@ -255,12 +256,7 @@ describe('acceptOffer', () => {
     }
 
     await expect(
-      acceptOffer(
-        'FPTT123456789',
-        agreementData,
-        'http://localhost:3555/FPTT123456789',
-        mockLogger
-      )
+      acceptOffer('FPTT123456789', agreementData, mockLogger)
     ).rejects.toThrow(
       'PDF service configuration missing: FILES_S3_BUCKET not set'
     )
@@ -295,12 +291,7 @@ describe('acceptOffer', () => {
     }
 
     await expect(
-      acceptOffer(
-        'FPTT123456789',
-        agreementData,
-        'http://localhost:3555/FPTT123456789',
-        mockLogger
-      )
+      acceptOffer('FPTT123456789', agreementData, mockLogger)
     ).rejects.toThrow(
       'PDF service configuration missing: FILES_S3_REGION not set'
     )
@@ -405,14 +396,37 @@ describe('acceptOffer', () => {
         })
       })
     )
+    expect(sendGrantPaymentEvent).not.toHaveBeenCalled()
     expect(result).toEqual(
       expect.objectContaining({
         agreementNumber: 'WMP123456789',
         code: 'woodland',
         status: 'accepted',
-        claimId: 'test-claim-id'
+        claimId: undefined
       })
     )
+  })
+
+  test('should not send grant payment event for woodland (WMP) agreements', async () => {
+    const agreementData = {
+      agreementNumber: 'WMP123456789',
+      code: 'woodland',
+      correlationId: 'test-correlation-id',
+      application: { parcel: [] },
+      schemeData: { oldWoodlandAreaHa: 0.4, newWoodlandAreaHa: 0 },
+      payment: { ...mockPayments }
+    }
+
+    updateAgreementWithVersionViaGrant.mockResolvedValue({
+      agreementNumber: 'WMP123456789',
+      code: 'woodland',
+      status: 'accepted'
+    })
+
+    const result = await acceptOffer('WMP123456789', agreementData, mockLogger)
+
+    expect(sendGrantPaymentEvent).not.toHaveBeenCalled()
+    expect(result.claimId).toBeUndefined()
   })
 
   test('should not accept a woodland agreement when Land Grants agreement date calculation fails', async () => {
