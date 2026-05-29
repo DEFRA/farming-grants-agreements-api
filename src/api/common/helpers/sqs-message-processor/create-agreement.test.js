@@ -107,10 +107,9 @@ describe('SQS message processor', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Creating agreement from event')
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Full incoming message payload (as received):')
+        expect.stringContaining(
+          'Received request to create new agreement for reference'
+        )
       )
       expect(createOffer).toHaveBeenCalledWith(
         'aws-message-id',
@@ -146,12 +145,6 @@ describe('SQS message processor', () => {
       const circularPayload = { ...mockPayload }
       circularPayload.circular = circularPayload
 
-      // Mock JSON.stringify to throw
-      const originalStringify = JSON.stringify
-      JSON.stringify = vi.fn(() => {
-        throw new Error('Circular reference')
-      })
-
       await handleCreateAgreementEvent(
         'aws-message-id',
         circularPayload,
@@ -159,15 +152,11 @@ describe('SQS message processor', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Creating agreement from event')
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[Unable to stringify payload]')
+        expect.stringContaining(
+          'Received request to create new agreement for reference'
+        )
       )
       expect(createOffer).toHaveBeenCalled()
-
-      // Restore
-      JSON.stringify = originalStringify
     })
 
     it('should log an info for non-application-approved events', async () => {

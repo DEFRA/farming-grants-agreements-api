@@ -114,7 +114,7 @@ const calculatePaymentsBasedOnParcelsWithActions = async (
 
   if (logger) {
     logger.info(
-      `Sending Land Grants payment calculation request ${JSON.stringify(payload, null, 2)}`
+      `Sending Land Grants payment calculation request for ${payload?.parcel?.length || 0} parcels`
     )
   }
 
@@ -124,10 +124,7 @@ const calculatePaymentsBasedOnParcelsWithActions = async (
   })
 
   if (logger) {
-    logger.info(
-      `Successfully called Land Grants payment calculation, response received is
-      ${JSON.stringify(response, null, 2)}`
-    )
+    logger.info('Successfully called Land Grants payment calculation')
   }
 
   const payment = response?.payment
@@ -171,9 +168,7 @@ const calculateWmpPaymentDates = async (requestData, logger, options = {}) => {
   }
 
   if (logger) {
-    logger.info(
-      `Sending Land Grants WMP payment calculation request ${JSON.stringify(payload, null, 2)}`
-    )
+    logger.info('Sending Land Grants WMP payment calculation request')
   }
 
   const response = await postPaymentCalculation(payload, {
@@ -182,10 +177,7 @@ const calculateWmpPaymentDates = async (requestData, logger, options = {}) => {
   })
 
   if (logger) {
-    logger.info(
-      `Successfully called Land Grants WMP payment calculation, response received is
-      ${JSON.stringify(response, null, 2)}`
-    )
+    logger.info('Successfully called Land Grants WMP payment calculation')
   }
 
   const payment = response?.payment
