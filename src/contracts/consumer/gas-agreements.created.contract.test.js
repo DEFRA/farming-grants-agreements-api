@@ -51,16 +51,10 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
 
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           1,
-          'Creating agreement from event: 12345678-1234-1234-1234-123456789012'
+          `Received request to create new agreement for reference: '${mockAgreement.clientRef}' (event: 12345678-1234-1234-1234-123456789012)`
         )
         expect(mockLogger.info).toHaveBeenNthCalledWith(
           2,
-          expect.stringContaining(
-            'Full incoming message payload (as received):'
-          )
-        )
-        expect(mockLogger.info).toHaveBeenNthCalledWith(
-          3,
           'Agreement created: mockAgreementNumber'
         )
         expect(mockCreateOffer).toHaveBeenCalledWith(
