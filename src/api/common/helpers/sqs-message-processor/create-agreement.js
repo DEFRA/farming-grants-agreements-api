@@ -14,16 +14,9 @@ export const handleCreateAgreementEvent = async (
 ) => {
   if (payload?.type?.includes('gas-backend.agreement.create')) {
     if (logger?.info) {
-      logger.info(`Creating agreement from event: ${notificationMessageId}`)
-      try {
-        logger.info(
-          `Full incoming message payload (as received): ${JSON.stringify(payload, null, 2)}`
-        )
-      } catch (stringifyError) {
-        logger.info(
-          `Full incoming message payload (as received): [Unable to stringify payload]`
-        )
-      }
+      logger.info(
+        `Received request to create new agreement for reference: '${payload?.data?.clientRef}' (event: ${notificationMessageId})`
+      )
     }
     const agreement = await createOffer(
       notificationMessageId,

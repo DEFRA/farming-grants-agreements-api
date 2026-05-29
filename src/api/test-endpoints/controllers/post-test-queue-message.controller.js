@@ -58,7 +58,7 @@ const postTestQueueMessageController = {
       const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
 
       request.logger.info(
-        `Posting test queue message in: "${queueUrl}" with data: ${JSON.stringify(queueMessage)}`
+        `Posting test queue message in: "${queueUrl}" for reference: '${queueMessage?.data?.clientRef}'`
       )
 
       const sqsClient = new SQSClient({

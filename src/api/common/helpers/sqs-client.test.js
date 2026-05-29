@@ -122,7 +122,9 @@ describe('SQS Client', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Creating agreement from event')
+        expect.stringContaining(
+          'Received request to create new agreement for reference'
+        )
       )
       expect(createOffer).toHaveBeenCalledWith(
         'aws-message-id',

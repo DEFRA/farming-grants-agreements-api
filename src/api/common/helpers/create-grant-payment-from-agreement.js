@@ -121,7 +121,7 @@ export const createGrantPaymentFromAgreement = async (
   }
 
   logger?.info?.(
-    `Passing the data to Grant Payment service ${JSON.stringify(grantPaymentsData, null, 2)}`
+    `Passing data to Grant Payment service for agreement: ${agreementNumber}, sbi: ${sbi} claimId: ${claimId}`
   )
 
   return grantPaymentsData

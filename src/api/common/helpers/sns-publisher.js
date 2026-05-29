@@ -59,7 +59,7 @@ export async function publishEvent(
         })
       )
       logger?.info?.(
-        `Published event to SNS topic: ${topicArn} type: ${type} time: ${time} id: ${message.id} data: ${JSON.stringify(data, null, 2)}`
+        `Published event to SNS topic: ${topicArn} type: ${type} time: ${time} id: ${message.id}`
       )
       return
     } catch (error) {
