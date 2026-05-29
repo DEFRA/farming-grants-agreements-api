@@ -427,7 +427,8 @@ const sendUnsetGPSEventsPlugin = {
         for (const version of missedPayments) {
           const versionBefore = obfuscatePersonalData(version)
           server.logger.info(
-            `Processing missed payment for version ${version._id?.toString?.() || version._id} - before: ${JSON.stringify(versionBefore, null, 2)}`
+            { versionBefore },
+            `Processing missed payment for version ${version._id?.toString?.() || version._id} - before`
           )
 
           const newVersion = await processMissedPayment(version, server)
@@ -436,7 +437,8 @@ const sendUnsetGPSEventsPlugin = {
             ? obfuscatePersonalData(newVersion)
             : { error: 'Failed to create new version' }
           server.logger.info(
-            `Processed missed payment for version ${version._id?.toString?.() || version._id} - after: ${JSON.stringify(versionAfter, null, 2)}`
+            { versionAfter },
+            `Processed missed payment for version ${version._id?.toString?.() || version._id} - after`
           )
         }
       } catch (err) {

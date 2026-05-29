@@ -28,9 +28,7 @@ export const handleCreateAgreementEvent = async (
     }
   } else {
     if (logger?.info) {
-      logger.info(
-        `No action required for GAS create offer event: ${payload?.type || JSON.stringify(payload)}`
-      )
+      logger.info({ payload }, 'No action required for GAS create offer event')
     }
   }
 }

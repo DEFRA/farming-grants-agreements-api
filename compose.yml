@@ -60,7 +60,7 @@ services:
     networks:
       - cdp-tenant
     restart: 'no'
-  
+
   farming-grants-agreements-api:
     extends:
       file: ./compose/farming-grants-agreements-api.yml
