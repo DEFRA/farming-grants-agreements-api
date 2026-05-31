@@ -1,7 +1,6 @@
 include:
   - path: ./farming-grants-agreements-api.yml
-    project_directory: ../ 
-
+    project_directory: ../
 
 services:
   farming-grants-agreements-api:
@@ -26,4 +25,3 @@ networks:
   cdp-tenant:
     name: cdp-tenant
     external: true
-   
