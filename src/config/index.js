@@ -445,19 +445,7 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
-    },
-    restoreGPSBackup: {
-      doc: 'Restore GPS backup collections (failsafe backup taken first)',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: false,
-      env: 'RESTORE_GPS_BACKUP'
     }
-  },
-  agreementNumbersToSendToGps: {
-    doc: 'Comma-separated list of agreement numbers to send GPS events for',
-    format: String,
-    default: '',
-    env: 'AGREEMENT_NUMBERS_TO_SEND_TO_GPS'
   }
 })
 
