@@ -354,6 +354,77 @@ async function createNewVersionWithUpdatedPayment(
   }
 }
 
+async function handleRestoreBackup(server, backupSuffix) {
+  server.logger.info('Restoring GPS backup collections...')
+  try {
+    await restoreFromBackup(
+      `backup_gps_grants_${backupSuffix}`,
+      'grants',
+      server.logger
+    )
+    await restoreFromBackup(
+      `backup_gps_versions_${backupSuffix}`,
+      'versions',
+      server.logger
+    )
+    server.logger.info('Successfully restored GPS backup collections')
+  } catch (err) {
+    server.logger.error(
+      `Error while restoring GPS backup collections: ${err.message}`
+    )
+  }
+}
+
+async function handleSendGPSPayments(
+  server,
+  agreementNumbersToSend,
+  backupSuffix
+) {
+  server.logger.info('Checking for missed GPS payments events...')
+  try {
+    await copyCollectionDontOverwrite(
+      'grants',
+      `backup_gps_grants_${backupSuffix}`,
+      server.logger
+    )
+    await copyCollectionDontOverwrite(
+      'versions',
+      `backup_gps_versions_${backupSuffix}`,
+      server.logger
+    )
+
+    const missedPayments = await findAgreementPaymentsToSend(
+      agreementNumbersToSend.split(',')
+    )
+
+    server.logger.info(
+      `Found ${missedPayments.length} agreements with missed GPS payment events`
+    )
+
+    for (const version of missedPayments) {
+      const versionBefore = obfuscatePersonalData(version)
+      server.logger.info(
+        { versionBefore },
+        `Processing missed payment for version ${version._id?.toString?.() || version._id} - before`
+      )
+
+      const newVersion = await processMissedPayment(version, server)
+
+      const versionAfter = newVersion
+        ? obfuscatePersonalData(newVersion)
+        : { error: 'Failed to create new version' }
+      server.logger.info(
+        { versionAfter },
+        `Processed missed payment for version ${version._id?.toString?.() || version._id} - after`
+      )
+    }
+  } catch (err) {
+    server.logger.error(
+      `Error while checking for missed GPS payments events: ${err.message}`
+    )
+  }
+}
+
 const sendUnsetGPSEventsPlugin = {
   name: 'send-unsent-gps-events',
   version: '1.0.0',
@@ -374,27 +445,7 @@ const sendUnsetGPSEventsPlugin = {
         .substring(0, 8)
 
       if (isRestoreFromBackupEnabled) {
-        server.logger.info('Restoring GPS backup collections...')
-
-        try {
-          await restoreFromBackup(
-            `backup_gps_grants_${backupSuffix}`,
-            'grants',
-            server.logger
-          )
-          await restoreFromBackup(
-            `backup_gps_versions_${backupSuffix}`,
-            'versions',
-            server.logger
-          )
-
-          server.logger.info('Successfully restored GPS backup collections')
-        } catch (err) {
-          server.logger.error(
-            `Error while restoring GPS backup collections: ${err.message}`
-          )
-        }
-
+        await handleRestoreBackup(server, backupSuffix)
         return
       }
 
@@ -402,50 +453,7 @@ const sendUnsetGPSEventsPlugin = {
         return
       }
 
-      server.logger.info('Checking for missed GPS payments events...')
-
-      try {
-        await copyCollectionDontOverwrite(
-          'grants',
-          `backup_gps_grants_${backupSuffix}`,
-          server.logger
-        )
-        await copyCollectionDontOverwrite(
-          'versions',
-          `backup_gps_versions_${backupSuffix}`,
-          server.logger
-        )
-
-        const missedPayments = await findAgreementPaymentsToSend(
-          agreementNumbersToSend.split(',')
-        )
-
-        server.logger.info(
-          `Found ${missedPayments.length} agreements with missed GPS payment events`
-        )
-
-        for (const version of missedPayments) {
-          const versionBefore = obfuscatePersonalData(version)
-          server.logger.info(
-            { versionBefore },
-            `Processing missed payment for version ${version._id?.toString?.() || version._id} - before`
-          )
-
-          const newVersion = await processMissedPayment(version, server)
-
-          const versionAfter = newVersion
-            ? obfuscatePersonalData(newVersion)
-            : { error: 'Failed to create new version' }
-          server.logger.info(
-            { versionAfter },
-            `Processed missed payment for version ${version._id?.toString?.() || version._id} - after`
-          )
-        }
-      } catch (err) {
-        server.logger.error(
-          `Error while checking for missed GPS payments events: ${err.message}`
-        )
-      }
+      await handleSendGPSPayments(server, agreementNumbersToSend, backupSuffix)
     })
   }
 }
