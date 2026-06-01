@@ -263,7 +263,10 @@ describe('SQS message processor', () => {
       await handleMessage(message)
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS application status update event: invalid.type (invalid.status)'
+        {
+          payload: { type: 'invalid.type', data: { status: 'invalid.status' } }
+        },
+        'No action required for GAS application status update event (invalid.status)'
       )
       expect(mockPublishEvent).not.toHaveBeenCalled()
     })
@@ -287,6 +290,7 @@ describe('SQS message processor', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.any(Object),
         expect.stringContaining(
           'Received application status update (withdrawn) from event'
         )
@@ -338,6 +342,7 @@ describe('SQS message processor', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.any(Object),
         expect.stringContaining(
           'Received application status update (cancelled) from event'
         )
@@ -389,6 +394,7 @@ describe('SQS message processor', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.any(Object),
         expect.stringContaining(
           'Received application status update (terminated) from event'
         )
@@ -621,7 +627,8 @@ describe('SQS message processor', () => {
 
       expect(withdrawOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS application status update event: some-other-event'
+        { payload: mockPayload },
+        'No action required for GAS application status update event'
       )
       expect(mockPublishEvent).not.toHaveBeenCalled()
     })
@@ -640,7 +647,8 @@ describe('SQS message processor', () => {
 
       expect(withdrawOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS application status update event: {"noType":"missing.type","data":{"id":"123"}}'
+        { payload: mockPayload },
+        'No action required for GAS application status update event'
       )
     })
 
@@ -649,7 +657,8 @@ describe('SQS message processor', () => {
 
       expect(withdrawOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS application status update event: undefined'
+        { payload: undefined },
+        'No action required for GAS application status update event'
       )
     })
 
@@ -666,7 +675,8 @@ describe('SQS message processor', () => {
 
       expect(withdrawOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS application status update event: empty data'
+        { payload: mockPayload },
+        'No action required for GAS application status update event'
       )
     })
   })

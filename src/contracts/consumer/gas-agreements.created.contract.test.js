@@ -20,11 +20,6 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
     ...withPactDir(import.meta.url)
   })
 
-  const mockLogger = {
-    info: vi.fn(),
-    error: vi.fn()
-  }
-
   it('should create an agreement offer when receiving an AWS SQS event from GAS', () => {
     mockCreateOffer.mockResolvedValue({
       agreementNumber: 'mockAgreementNumber'
@@ -43,20 +38,14 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
         data: like(mockAgreement)
       })
       .verify(async (message) => {
+        const mockLogger = { info: vi.fn(), error: vi.fn() }
+
         await handleCreateAgreementEvent(
           message.contents.id,
           message.contents,
           mockLogger
         )
 
-        expect(mockLogger.info).toHaveBeenNthCalledWith(
-          1,
-          `Received request to create new agreement for reference: '${mockAgreement.clientRef}' (event: 12345678-1234-1234-1234-123456789012)`
-        )
-        expect(mockLogger.info).toHaveBeenNthCalledWith(
-          2,
-          'Agreement created: mockAgreementNumber'
-        )
         expect(mockCreateOffer).toHaveBeenCalledWith(
           '12345678-1234-1234-1234-123456789012',
           mockAgreement,

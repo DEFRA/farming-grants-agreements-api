@@ -147,7 +147,8 @@ describe('SQS Client', () => {
 
       expect(createOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS create offer event: some-other-event'
+        { payload: mockPayload },
+        'No action required for GAS create offer event'
       )
     })
   })

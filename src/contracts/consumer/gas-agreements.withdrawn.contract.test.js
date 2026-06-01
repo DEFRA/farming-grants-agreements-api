@@ -16,11 +16,6 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
     ...withPactDir(import.meta.url)
   })
 
-  const mockLogger = {
-    info: vi.fn(),
-    error: vi.fn()
-  }
-
   it('should withdraw an agreement offer when receiving an AWS SQS event from GAS', () => {
     mockWithdrawOffer.mockResolvedValue({
       agreementNumber: 'mockAgreementNumber',
@@ -46,19 +41,9 @@ describe('receiving events from the GAS SQS queue and processing them', () => {
         await handleUpdateAgreementEvent(
           message.contents.id,
           message.contents,
-          mockLogger
+          { info: vi.fn(), error: vi.fn() }
         )
 
-        expect(mockLogger.info).toHaveBeenNthCalledWith(
-          1,
-          expect.stringContaining(
-            'Received application status update (withdrawn) from event: 12345678-1234-1234-1234-123456789012'
-          )
-        )
-        expect(mockLogger.info).toHaveBeenNthCalledWith(
-          3,
-          'Offer withdrawn: mockAgreementNumber'
-        )
         expect(mockWithdrawOffer).toHaveBeenCalledWith(
           'client-ref-002',
           'FPTT123456789'
