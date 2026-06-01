@@ -88,7 +88,8 @@ describe('SQS message processor', () => {
       await handleMessage(message)
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS create offer event: invalid.type'
+        { payload: { type: 'invalid.type' } },
+        'No action required for GAS create offer event'
       )
     })
   })
@@ -173,7 +174,8 @@ describe('SQS message processor', () => {
 
       expect(createOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS create offer event: some-other-event'
+        { payload: mockPayload },
+        'No action required for GAS create offer event'
       )
     })
 
@@ -191,7 +193,8 @@ describe('SQS message processor', () => {
 
       expect(createOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS create offer event: {"noType":"missing.type","data":{"id":"123"}}'
+        { payload: mockPayload },
+        'No action required for GAS create offer event'
       )
     })
 
@@ -200,7 +203,8 @@ describe('SQS message processor', () => {
 
       expect(createOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS create offer event: undefined'
+        { payload: undefined },
+        'No action required for GAS create offer event'
       )
     })
 
@@ -217,7 +221,8 @@ describe('SQS message processor', () => {
 
       expect(createOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'No action required for GAS create offer event: empty data'
+        { payload: mockPayload },
+        'No action required for GAS create offer event'
       )
     })
 
