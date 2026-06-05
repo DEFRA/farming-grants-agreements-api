@@ -1,6 +1,4 @@
 import Joi from 'joi'
-// UK postcode regex (allows optional space, both letter cases)
-const POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i
 const externalIdentifier = Joi.alternatives().try(
   Joi.string().trim().min(1),
   Joi.number()
@@ -19,21 +17,19 @@ const agreementPaymentItemSchema = Joi.object({
   quantityInActiveTier: unmappedSourceField,
   activeTierRatePence: unmappedSourceField,
   activeTierFlatRatePence: unmappedSourceField,
-  quantity: Joi.number().positive().precision(4).optional(),
+  quantity: Joi.number().min(0).precision(4).optional(),
   agreementTotalPence: moneyPence.required(),
   unit: Joi.string().optional()
 }).unknown(true)
 const addressSchema = Joi.object({
-  line1: Joi.string().required(),
+  line1: Joi.string().allow('', null),
   line2: Joi.string().allow('', null),
   line3: Joi.string().allow('', null),
   line4: Joi.string().allow('', null),
   line5: Joi.string().allow('', null),
   street: Joi.string().allow('', null),
   city: Joi.string().required(),
-  postalCode: Joi.string().pattern(POSTCODE_RE).required().messages({
-    'string.pattern.base': 'must be a valid UK postcode'
-  }),
+  postalCode: Joi.string().required(),
   uprn: unmappedSourceField,
   buildingName: unmappedSourceField,
   buildingNumberRange: unmappedSourceField,

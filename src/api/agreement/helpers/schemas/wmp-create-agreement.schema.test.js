@@ -64,13 +64,11 @@ describe('wmpCreateAgreementSchema', () => {
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeDefined()
     })
-    it('rejects invalid postcode', () => {
+    it('allows non-UK-format postcode to match GAS validation', () => {
       const p = clone(wmpFixture)
       p.answers.applicant.business.address.postalCode = 'NOT-A-POSTCODE'
       const { error } = validateWmpCreateAgreement(p)
-      expect(
-        error?.details.some((d) => d.message.includes('valid UK postcode'))
-      ).toBe(true)
+      expect(error).toBeUndefined()
     })
     it('allows source-only applicant fields without validating their shape', () => {
       const p = clone(wmpFixture)
@@ -81,6 +79,20 @@ describe('wmpCreateAgreementSchema', () => {
       p.answers.applicant.business.address.flatName = 123
       const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeUndefined()
+    })
+    it('allows missing business.address.line1', () => {
+      const p = clone(wmpFixture)
+      delete p.answers.applicant.business.address.line1
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error).toBeUndefined()
+    })
+    it('allows blank or null business.address.line1', () => {
+      for (const line1 of ['', null]) {
+        const p = clone(wmpFixture)
+        p.answers.applicant.business.address.line1 = line1
+        const { error } = validateWmpCreateAgreement(p)
+        expect(error).toBeUndefined()
+      }
     })
     it('rejects missing customer.name.first', () => {
       const p = clone(wmpFixture)
@@ -155,6 +167,13 @@ describe('wmpCreateAgreementSchema', () => {
   describe('payments', () => {
     it('accepts the fixture payment block', () => {
       const { error } = validateWmpCreateAgreement(wmpFixture)
+      expect(error).toBeUndefined()
+    })
+
+    it('accepts zero payment quantity to match GAS validation', () => {
+      const p = clone(wmpFixture)
+      p.answers.payments.agreement[0].quantity = 0
+      const { error } = validateWmpCreateAgreement(p)
       expect(error).toBeUndefined()
     })
 
