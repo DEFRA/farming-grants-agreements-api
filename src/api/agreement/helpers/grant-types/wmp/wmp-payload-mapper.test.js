@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mapWmpPayloadToVersion } from './wmp-payload-mapper.js'
 import wmpFixture from '#~/api/common/helpers/sample-data/wmp-agreement.js'
+import Version from '#~/api/common/models/versions.js'
 
 const fixedUuid = () => '00000000-0000-4000-8000-000000000000'
 
@@ -194,6 +195,19 @@ describe('mapWmpPayloadToVersion', () => {
     })
     expect(v.applicant.customer.name.title).toBeUndefined()
     expect(v.applicant.customer.name.middle).toBeUndefined()
+  })
+
+  it('allows missing applicant business address line1 through model validation', async () => {
+    const payload = JSON.parse(JSON.stringify(wmpFixture))
+    delete payload.answers.applicant.business.address.line1
+
+    const v = mapWmpPayloadToVersion(payload, {
+      notificationMessageId: 'm',
+      uuid: fixedUuid
+    })
+
+    expect(v.applicant.business.address.line1).toBeUndefined()
+    await expect(new Version(v).validate()).resolves.toBeUndefined()
   })
 
   it('uses crypto.randomUUID by default when no uuid generator injected', () => {

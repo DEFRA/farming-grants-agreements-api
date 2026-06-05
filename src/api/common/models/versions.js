@@ -104,7 +104,7 @@ const Applicant = new mongoose.Schema({
       name: { type: String, required: true },
       address: {
         type: new mongoose.Schema({
-          line1: { type: String, required: true },
+          line1: { type: String },
           line2: { type: String },
           line3: { type: String },
           line4: { type: String },
