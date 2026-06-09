@@ -1,14 +1,14 @@
 import crypto from 'node:crypto'
 
 const flattenAddress = (a = {}) => ({
-  line1: a.line1,
-  line2: a.line2 ?? undefined,
-  line3: a.line3 ?? undefined,
-  line4: a.line4 ?? undefined,
-  line5: a.line5 ?? undefined,
-  street: a.street ?? undefined,
-  city: a.city,
-  postalCode: a.postalCode
+  line1: a?.line1,
+  line2: a?.line2,
+  line3: a?.line3,
+  line4: a?.line4,
+  line5: a?.line5,
+  street: a?.street,
+  city: a?.city,
+  postalCode: a?.postalCode
 })
 
 function buildApplicant(answersApplicant) {
