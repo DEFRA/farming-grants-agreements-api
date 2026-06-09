@@ -21,30 +21,12 @@ const agreementPaymentItemSchema = Joi.object({
   agreementTotalPence: moneyPence.required(),
   unit: Joi.string().optional()
 }).unknown(true)
-const addressSchema = Joi.object({
-  line1: Joi.string().allow('', null),
-  line2: Joi.string().allow('', null),
-  line3: Joi.string().allow('', null),
-  line4: Joi.string().allow('', null),
-  line5: Joi.string().allow('', null),
-  street: Joi.string().allow('', null),
-  city: Joi.string().required(),
-  postalCode: Joi.string().required(),
-  uprn: unmappedSourceField,
-  buildingName: unmappedSourceField,
-  buildingNumberRange: unmappedSourceField,
-  county: unmappedSourceField,
-  dependentLocality: unmappedSourceField,
-  doubleDependentLocality: unmappedSourceField,
-  flatName: unmappedSourceField,
-  pafOrganisationName: unmappedSourceField
-}).unknown(true)
 const businessSchema = Joi.object({
   name: Joi.string().required(),
   reference: unmappedSourceField,
   email: unmappedSourceField,
   phone: unmappedSourceField,
-  address: addressSchema.required()
+  address: unmappedSourceField
 }).unknown(true)
 const customerSchema = Joi.object({
   name: Joi.object({
