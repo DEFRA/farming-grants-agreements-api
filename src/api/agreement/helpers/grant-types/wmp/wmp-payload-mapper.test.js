@@ -210,6 +210,43 @@ describe('mapWmpPayloadToVersion', () => {
     await expect(new Version(v).validate()).resolves.toBeUndefined()
   })
 
+  it('allows missing applicant business address fields through model validation', async () => {
+    const payload = JSON.parse(JSON.stringify(wmpFixture))
+    delete payload.answers.applicant.business.address.city
+    delete payload.answers.applicant.business.address.postalCode
+
+    const v = mapWmpPayloadToVersion(payload, {
+      notificationMessageId: 'm',
+      uuid: fixedUuid
+    })
+
+    expect(v.applicant.business.address.city).toBeUndefined()
+    expect(v.applicant.business.address.postalCode).toBeUndefined()
+    await expect(new Version(v).validate()).resolves.toBeUndefined()
+  })
+
+  it('maps non-object applicant business address as an empty address', async () => {
+    const payload = JSON.parse(JSON.stringify(wmpFixture))
+    payload.answers.applicant.business.address = 'not-an-address'
+
+    const v = mapWmpPayloadToVersion(payload, {
+      notificationMessageId: 'm',
+      uuid: fixedUuid
+    })
+
+    expect(v.applicant.business.address).toEqual({
+      line1: undefined,
+      line2: undefined,
+      line3: undefined,
+      line4: undefined,
+      line5: undefined,
+      street: undefined,
+      city: undefined,
+      postalCode: undefined
+    })
+    await expect(new Version(v).validate()).resolves.toBeUndefined()
+  })
+
   it('uses crypto.randomUUID by default when no uuid generator injected', () => {
     const r2 = mapWmpPayloadToVersion(wmpFixture, {
       notificationMessageId: 'm'

@@ -94,6 +94,25 @@ describe('wmpCreateAgreementSchema', () => {
         expect(error).toBeUndefined()
       }
     })
+    it('does not require or validate business.address shape', () => {
+      for (const address of [undefined, null, 'not-an-address']) {
+        const p = clone(wmpFixture)
+        if (address === undefined) {
+          delete p.answers.applicant.business.address
+        } else {
+          p.answers.applicant.business.address = address
+        }
+        const { error } = validateWmpCreateAgreement(p)
+        expect(error).toBeUndefined()
+      }
+    })
+    it('allows missing business.address.city and postalCode', () => {
+      const p = clone(wmpFixture)
+      delete p.answers.applicant.business.address.city
+      delete p.answers.applicant.business.address.postalCode
+      const { error } = validateWmpCreateAgreement(p)
+      expect(error).toBeUndefined()
+    })
     it('rejects missing customer.name.first', () => {
       const p = clone(wmpFixture)
       delete p.answers.applicant.customer.name.first
