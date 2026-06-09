@@ -1,18 +1,15 @@
 import crypto from 'node:crypto'
 
-const flattenAddress = (a) => {
-  const address = a && typeof a === 'object' && !Array.isArray(a) ? a : {}
-  return {
-    line1: address.line1 ?? undefined,
-    line2: address.line2 ?? undefined,
-    line3: address.line3 ?? undefined,
-    line4: address.line4 ?? undefined,
-    line5: address.line5 ?? undefined,
-    street: address.street ?? undefined,
-    city: address.city ?? undefined,
-    postalCode: address.postalCode ?? undefined
-  }
-}
+const flattenAddress = (a = {}) => ({
+  line1: a?.line1,
+  line2: a?.line2,
+  line3: a?.line3,
+  line4: a?.line4,
+  line5: a?.line5,
+  street: a?.street,
+  city: a?.city,
+  postalCode: a?.postalCode
+})
 
 function buildApplicant(answersApplicant) {
   const applicantBusiness = answersApplicant.business
