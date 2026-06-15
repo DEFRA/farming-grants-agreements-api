@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-const mockConfigGet = vi.hoisted(() =>
-  vi.fn((key) => {
+const { mockConfigGet, defaultConfigImpl } = vi.hoisted(() => {
+  const defaultConfigImpl = (key) => {
     const configMap = {
       env: 'test',
       cdpEnvironment: 'test',
@@ -10,8 +10,9 @@ const mockConfigGet = vi.hoisted(() =>
         'arn:aws:sns:eu-west-2:000000000000:fcp_audit_farming_grants_agreements_api'
     }
     return configMap[key]
-  })
-)
+  }
+  return { mockConfigGet: vi.fn(defaultConfigImpl), defaultConfigImpl }
+})
 
 vi.mock('#~/config/index.js', () => ({ config: { get: mockConfigGet } }))
 
@@ -100,11 +101,33 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       expect.objectContaining({
         correlationid: 'corr-xyz',
         datetime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-        environment: 'test',
+        environment: 'cdp-test',
         application: 'Grants',
         component: 'farming-grants-agreements-api'
       })
     )
+  })
+
+  test('does not prefix the environment when running locally', () => {
+    mockConfigGet.mockImplementation((key) =>
+      key === 'cdpEnvironment' ? 'local' : defaultConfigImpl(key)
+    )
+
+    try {
+      auditEvent(
+        AuditEvent.PDF_DOWNLOADED_FROM_S3,
+        { agreementNumber: 'FPTT123456789' },
+        'success',
+        undefined,
+        mockSnsClient
+      )
+
+      expect(audit).toHaveBeenCalledWith(
+        expect.objectContaining({ environment: 'local' })
+      )
+    } finally {
+      mockConfigGet.mockImplementation(defaultConfigImpl)
+    }
   })
 
   test('calls audit with correct security fields', () => {
@@ -152,7 +175,7 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
         audit: expect.objectContaining({
           eventtype: 'GrantsDownloadAgreement',
           entities: [
-            { entity: 'agreement', action: 'read', id: 'FPTT123456789' }
+            { entity: 'agreement', action: 'read', entityid: 'FPTT123456789' }
           ],
           accounts: { sbi: undefined, frn: undefined, crn: undefined },
           status: 'success',
@@ -218,7 +241,9 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
       expect.objectContaining({
         correlationid: undefined,
         audit: expect.objectContaining({
-          entities: [{ entity: 'agreement', action: 'read', id: undefined }]
+          entities: [
+            { entity: 'agreement', action: 'read', entityid: undefined }
+          ]
         })
       })
     )
@@ -409,7 +434,11 @@ describe('auditEvent - AGREEMENT_CREATED', () => {
         audit: expect.objectContaining({
           eventtype: 'GrantsCreateAgreement',
           entities: [
-            { entity: 'agreement', action: 'created', id: 'FPTT123456789' }
+            {
+              entity: 'agreement',
+              action: 'created',
+              entityid: 'FPTT123456789'
+            }
           ],
           accounts: { sbi: undefined, frn: undefined, crn: undefined },
           status: 'success',
@@ -484,13 +513,82 @@ describe('auditEvent - AGREEMENT_UPDATED', () => {
         audit: expect.objectContaining({
           eventtype: 'GrantsUpdateAgreement',
           entities: [
-            { entity: 'agreement', action: 'updated', id: 'FPTT123456789' }
+            {
+              entity: 'agreement',
+              action: 'updated',
+              entityid: 'FPTT123456789'
+            }
           ],
           accounts: { sbi: undefined, frn: undefined, crn: undefined },
           status: 'success',
           details: context
         })
       })
+    )
+  })
+})
+
+describe('auditEvent - service IP fallback', () => {
+  let audit
+  let auditEvent
+  let AuditEvent
+  let mockSnsClient
+
+  beforeEach(async () => {
+    vi.resetModules()
+    mockSnsClient = { send: vi.fn().mockResolvedValue({}) }
+    mockSnsClientConstructor.mockImplementation(function () {
+      return mockSnsClient
+    })
+    vi.doMock('@defra/cdp-auditing', () => ({ audit: vi.fn() }))
+    // Only loopback / internal interfaces available, forcing the 127.0.0.1 fallback
+    vi.doMock('node:os', () => ({
+      networkInterfaces: () => ({
+        lo: [{ family: 'IPv4', internal: true, address: '127.0.0.1' }]
+      })
+    }))
+    ;({ auditEvent, AuditEvent } = await import('./audit-event.js'))
+    ;({ audit } = await import('@defra/cdp-auditing'))
+  })
+
+  afterEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  test('falls back to 127.0.0.1 when no external IPv4 interface exists', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      undefined,
+      mockSnsClient
+    )
+
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '127.0.0.1' })
+    )
+  })
+
+  test('reuses the cached service IP on subsequent events', () => {
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT123456789' },
+      'success',
+      undefined,
+      mockSnsClient
+    )
+    auditEvent(
+      AuditEvent.PDF_DOWNLOADED_FROM_S3,
+      { agreementNumber: 'FPTT987654321' },
+      'success',
+      undefined,
+      mockSnsClient
+    )
+
+    expect(audit).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ ip: '127.0.0.1' })
     )
   })
 })
