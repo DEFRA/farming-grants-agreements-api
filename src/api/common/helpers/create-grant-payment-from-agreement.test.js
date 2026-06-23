@@ -94,9 +94,11 @@ describe('createGrantPaymentFromAgreement', () => {
         {
           sourceSystem: 'FPTT',
           deliveryBody: 'RP00',
+          fesCode: 'FALS_FPTT',
           paymentRequestNumber: 1,
           correlationId: '123e4567-e89b-12d3-a456-426614174000',
           invoiceNumber: 'R00000001-V001Q2',
+          ledger: 'AP',
           originalInvoiceNumber: 'ORIG-INV-123',
           agreementNumber: 'FPTT123456',
           totalAmountPence: '10000',
@@ -110,15 +112,23 @@ describe('createGrantPaymentFromAgreement', () => {
               status: 'pending',
               invoiceLines: [
                 {
+                  accountCode: 'SOS710',
                   amountPence: '6000',
+                  deliveryBody: 'RP00',
                   description:
                     '2024-05-01: Parcel: P1: Parcel Item Description',
+                  fundCode: 'DRD10',
+                  marketingYear: new Date().getFullYear().toString(),
                   schemeCode: 'CODE-P1'
                 },
                 {
+                  accountCode: 'SOS710',
                   amountPence: '4000',
+                  deliveryBody: 'RP00',
                   description:
                     '2024-05-01: One-off payment per agreement per year for Agreement Level Description',
+                  fundCode: 'DRD10',
+                  marketingYear: new Date().getFullYear().toString(),
                   schemeCode: 'CODE-A1'
                 }
               ]
@@ -183,8 +193,12 @@ describe('createGrantPaymentFromAgreement', () => {
         correlationId: 'generated-payment-correlation-id',
         invoiceLines: [
           {
+            accountCode: 'SOS710',
             amountPence: '6000',
+            deliveryBody: 'RP00',
             description: '2024-05-01: Parcel: P1: Parcel Item Description',
+            fundCode: 'DRD10',
+            marketingYear: new Date().getFullYear().toString(),
             schemeCode: 'CODE-P1'
           }
         ]
@@ -221,14 +235,22 @@ describe('createGrantPaymentFromAgreement', () => {
 
     expect(result.grants[0].payments[0].invoiceLines).toEqual([
       {
+        accountCode: 'SOS710',
         amountPence: '6000',
+        deliveryBody: 'RP00',
         description: '2024-05-01: Parcel: undefined: undefined',
+        fundCode: 'DRD10',
+        marketingYear: new Date().getFullYear().toString(),
         schemeCode: undefined
       },
       {
+        accountCode: 'SOS710',
         amountPence: '4000',
+        deliveryBody: 'RP00',
         description:
           '2024-05-01: One-off payment per agreement per year for undefined',
+        fundCode: 'DRD10',
+        marketingYear: new Date().getFullYear().toString(),
         schemeCode: undefined
       }
     ])

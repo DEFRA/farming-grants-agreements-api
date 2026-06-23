@@ -10,6 +10,16 @@ import { config } from '#~/config/index.js'
 const MAX_IP_LENGTH = 20
 
 /**
+ * Maps the app's `cdpEnvironment` value to the FCP Audit schema's environment
+ * vocabulary (e.g. `dev` -> `cdp-dev`). `local` is unchanged; all other values
+ * gain a `cdp-` prefix.
+ * @param {string} cdpEnvironment
+ * @returns {string}
+ */
+const mapEnvironment = (cdpEnvironment) =>
+  cdpEnvironment === 'local' ? 'local' : `cdp-${cdpEnvironment}`
+
+/**
  * Audit event types.
  * @enum {string}
  */
@@ -161,7 +171,7 @@ const buildAuditPayload = (
 ) => ({
   correlationid: context.correlationId,
   datetime: new Date().toISOString(),
-  environment: config.get('cdpEnvironment'),
+  environment: mapEnvironment(config.get('cdpEnvironment')),
   version: '0.1.0',
   application: 'Grants',
   component: config.get('serviceName'),
@@ -182,7 +192,7 @@ const buildAuditPayload = (
       {
         entity: 'agreement',
         action: eventActions[event],
-        id: context.agreementNumber
+        entityid: context.agreementNumber
       }
     ],
     accounts: {
