@@ -130,6 +130,28 @@ describe('auditEvent - PDF_DOWNLOADED_FROM_S3', () => {
     }
   })
 
+  test('prefixes non-local environments with cdp-', () => {
+    mockConfigGet.mockImplementation((key) =>
+      key === 'cdpEnvironment' ? 'dev' : defaultConfigImpl(key)
+    )
+
+    try {
+      auditEvent(
+        AuditEvent.PDF_DOWNLOADED_FROM_S3,
+        { agreementNumber: 'FPTT123456789' },
+        'success',
+        undefined,
+        mockSnsClient
+      )
+
+      expect(audit).toHaveBeenCalledWith(
+        expect.objectContaining({ environment: 'cdp-dev' })
+      )
+    } finally {
+      mockConfigGet.mockImplementation(defaultConfigImpl)
+    }
+  })
+
   test('calls audit with correct security fields', () => {
     auditEvent(
       AuditEvent.PDF_DOWNLOADED_FROM_S3,

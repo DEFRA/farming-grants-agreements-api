@@ -2,13 +2,22 @@ import { generateInvoiceNumber } from '#~/api/agreement/helpers/invoice/generate
 import { getClaimId } from '#~/api/agreement/helpers/invoice/claim-id.js'
 import { randomUUID } from 'node:crypto'
 
+const PAYMENT_HUB_CONFIG = {
+  accountCode: 'SOS710',
+  deliveryBody: 'RP00',
+  fesCode: 'FALS_FPTT',
+  fundCode: 'DRD10',
+  ledger: 'AP'
+}
+
 function createPaymentInvoice(
   lineItem,
   parcelItems,
   description,
   agreementPayment,
   schemeCode,
-  agreementLevelItems
+  agreementLevelItems,
+  marketingYear
 ) {
   if (lineItem.parcelItemId) {
     const {
@@ -30,8 +39,12 @@ function createPaymentInvoice(
   }
 
   return {
+    accountCode: PAYMENT_HUB_CONFIG.accountCode,
     amountPence: lineItem.paymentPence.toString(),
+    deliveryBody: PAYMENT_HUB_CONFIG.deliveryBody,
     description,
+    fundCode: PAYMENT_HUB_CONFIG.fundCode,
+    marketingYear,
     schemeCode
   }
 }
@@ -42,6 +55,7 @@ function createPaymentInvoice(
  * @returns {Array<object>} The mapped payments array.
  */
 const createPayments = (agreementData) => {
+  const marketingYear = new Date().getFullYear().toString()
   const {
     payment: {
       payments: agreementPayments = [],
@@ -60,7 +74,8 @@ const createPayments = (agreementData) => {
         description,
         agreementPayment,
         schemeCode,
-        agreementLevelItems
+        agreementLevelItems,
+        marketingYear
       )
     })
 
@@ -97,6 +112,7 @@ export const createGrantPaymentFromAgreement = async (
   const claimId = await getClaimId(agreementNumber, agreementData)
   const paymentRequestNumber = 1
   const invoiceNumber = generateInvoiceNumber(claimId, paymentRequestNumber)
+  const marketingYear = new Date().getFullYear().toString()
 
   const grantPaymentsData = {
     sbi,
@@ -106,15 +122,17 @@ export const createGrantPaymentFromAgreement = async (
     grants: [
       {
         sourceSystem: 'FPTT',
-        deliveryBody: 'RP00',
+        deliveryBody: PAYMENT_HUB_CONFIG.deliveryBody,
+        fesCode: PAYMENT_HUB_CONFIG.fesCode,
         paymentRequestNumber,
         correlationId,
         invoiceNumber,
+        ledger: PAYMENT_HUB_CONFIG.ledger,
         originalInvoiceNumber,
         agreementNumber,
         totalAmountPence: agreementTotalPence.toString(),
         currency,
-        marketingYear: new Date().getFullYear().toString(),
+        marketingYear,
         payments
       }
     ]
