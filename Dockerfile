@@ -12,7 +12,8 @@ ENV PORT=${PORT}
 EXPOSE ${PORT} ${PORT_DEBUG}
 
 COPY --chown=node:node package*.json ./
-RUN npm install
+COPY --chown=node:node .npmrc ./
+RUN npm ci
 COPY --chown=node:node ./src ./src
 COPY --chown=node:node ./scripts ./scripts
 COPY --chown=node:node ./migrations ./migrations
@@ -35,6 +36,7 @@ ARG JWT_ENABLED=true
 ENV JWT_ENABLED=${JWT_ENABLED}
 
 COPY --from=development /home/node/package*.json ./
+COPY --from=development /home/node/.npmrc ./
 COPY --from=development /home/node/src ./src/
 COPY --from=development /home/node/migrations ./migrations/
 COPY --from=development /home/node/migrate-mongo-config.js ./
