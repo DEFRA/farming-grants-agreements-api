@@ -120,6 +120,9 @@ beforeEach(() => {
     if (key === 'fetchTimeout') {
       return 30000
     }
+    if (key === 'tracing.header') {
+      return 'x-cdp-request-id'
+    }
     throw new Error(`Unexpected config key ${key}`)
   })
 })
@@ -166,6 +169,34 @@ describe('calculateWmpPaymentDates', () => {
       agreementStartDate: '2025-09-01',
       agreementEndDate: '2035-08-31'
     })
+  })
+
+  test('includes the correlation id header when a correlationId is provided', async () => {
+    const responseBody = {
+      payment: {
+        agreementStartDate: '2025-09-01',
+        agreementEndDate: '2035-08-31'
+      }
+    }
+    global.fetch.mockResolvedValue(
+      buildFetchResponse({
+        json: vi.fn().mockResolvedValue(responseBody),
+        text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
+      })
+    )
+
+    await calculateWmpPaymentDates(
+      {
+        parcelIds: ['SD6346-3387'],
+        oldWoodlandAreaHa: 0.4,
+        newWoodlandAreaHa: 0
+      },
+      mockLogger,
+      { correlationId: 'wmp-correlation-id' }
+    )
+
+    const [, request] = global.fetch.mock.calls[0]
+    expect(request.headers['x-cdp-request-id']).toBe('wmp-correlation-id')
   })
 
   test('throws when WMP Land Grants response does not include payment', async () => {
@@ -408,6 +439,34 @@ describe('calculatePaymentsBasedOnParcelsWithActions', () => {
     expect(url.toString()).toBe(
       'https://land-grants.example/specific/fptt/calculate'
     )
+  })
+
+  test('includes the correlation id header when a correlationId is provided', async () => {
+    const payment = {
+      agreementStartDate: '2024-01-01',
+      agreementEndDate: '2025-01-01',
+      frequency: 'Quarterly',
+      agreementTotalPence: 12300,
+      annualTotalPence: 4100,
+      parcelItems: [],
+      agreementLevelItems: [],
+      payments: []
+    }
+    global.fetch.mockResolvedValue(
+      buildFetchResponse({
+        json: vi.fn().mockResolvedValue({ payment }),
+        text: vi.fn().mockResolvedValue(JSON.stringify({ payment }))
+      })
+    )
+
+    await calculatePaymentsBasedOnParcelsWithActions(
+      parcelsWithActions,
+      mockLogger,
+      { correlationId: 'fptt-correlation-id' }
+    )
+
+    const [, request] = global.fetch.mock.calls[0]
+    expect(request.headers['x-cdp-request-id']).toBe('fptt-correlation-id')
   })
 
   test('throws when Land Grants request does not include payment', async () => {

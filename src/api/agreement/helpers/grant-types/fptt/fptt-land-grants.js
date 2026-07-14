@@ -14,9 +14,10 @@ const getFpttCalculationUri = () => {
     : fpttCalculationUri
 }
 
-const calculateFpttPayments = (parcels, logger) =>
+const calculateFpttPayments = (parcels, logger, correlationId) =>
   calculatePaymentsBasedOnParcelsWithActions(parcels, logger, {
-    calculationUri: getFpttCalculationUri()
+    calculationUri: getFpttCalculationUri(),
+    correlationId
   })
 
 export { calculateFpttPayments }
