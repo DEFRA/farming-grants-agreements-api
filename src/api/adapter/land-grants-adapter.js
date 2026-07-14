@@ -31,9 +31,13 @@ const buildAuthHeader = () => {
   return { Authorization: `Bearer ${token}` }
 }
 
+const buildCorrelationHeader = (correlationId) =>
+  correlationId ? { [config.get('tracing.header')]: correlationId } : {}
+
 const postPaymentCalculation = async (body, options = {}) => {
   const {
     calculationUri = config.get('landGrants.calculationUri'),
+    correlationId,
     headers: extraHeaders = {}
   } = options
 
@@ -44,6 +48,7 @@ const postPaymentCalculation = async (body, options = {}) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...buildCorrelationHeader(correlationId),
       ...extraHeaders
     },
     body: JSON.stringify(body)
@@ -120,6 +125,7 @@ const calculatePaymentsBasedOnParcelsWithActions = async (
 
   const response = await postPaymentCalculation(payload, {
     calculationUri: options.calculationUri,
+    correlationId: options.correlationId,
     headers: buildAuthHeader()
   })
 
@@ -173,6 +179,7 @@ const calculateWmpPaymentDates = async (requestData, logger, options = {}) => {
 
   const response = await postPaymentCalculation(payload, {
     calculationUri: options.calculationUri,
+    correlationId: options.correlationId,
     headers: buildAuthHeader()
   })
 
