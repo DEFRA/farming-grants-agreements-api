@@ -381,7 +381,10 @@ describe('acceptOffer', () => {
         newWoodlandAreaHa: 0
       },
       mockLogger,
-      { calculationUri: '/api/v1/wmp/payments/calculate' }
+      {
+        calculationUri: '/api/v1/wmp/payments/calculate',
+        correlationId: 'test-correlation-id'
+      }
     )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: 'WMP123456789' },
@@ -493,7 +496,10 @@ describe('acceptOffer', () => {
     expect(calculatePaymentsBasedOnParcelsWithActions).toHaveBeenCalledWith(
       agreementData.application.parcel,
       mockLogger,
-      { calculationUri: '/api/v2/payments/calculate' }
+      {
+        calculationUri: '/api/v2/payments/calculate',
+        correlationId: 'test-correlation-id'
+      }
     )
     expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
       { agreementNumber: agreementId },

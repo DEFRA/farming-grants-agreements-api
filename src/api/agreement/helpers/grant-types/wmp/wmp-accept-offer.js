@@ -15,7 +15,8 @@ export const wmpBuildAcceptedPayment = async (agreementData, logger) => {
       ),
       ...agreementData.schemeData
     },
-    logger
+    logger,
+    agreementData.correlationId
   )
 
   if (!agreementData.payment || !paymentDates) {

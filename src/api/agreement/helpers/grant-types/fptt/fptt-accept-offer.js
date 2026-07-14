@@ -16,7 +16,8 @@ import { calculateFpttPayments } from './fptt-land-grants.js'
 export const fpttBuildAcceptedPayment = async (agreementData, logger) => {
   const expectedPayments = await calculateFpttPayments(
     agreementData.application.parcel,
-    logger
+    logger,
+    agreementData.correlationId
   )
 
   if (!expectedPayments) {

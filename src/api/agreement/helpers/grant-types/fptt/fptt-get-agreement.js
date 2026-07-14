@@ -28,7 +28,8 @@ export const fpttGetPayment = async (agreementData, logger) => {
 
   const calculatedPayment = await calculateFpttPayments(
     agreementData.application.parcel,
-    logger
+    logger,
+    agreementData.correlationId
   )
   logger.info(
     'Successfully called Land Grants service for payments calculation.'

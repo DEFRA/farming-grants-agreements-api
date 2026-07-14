@@ -10,6 +10,7 @@ vi.mock('./wmp-land-grants.js', () => ({
 describe('wmpBuildAcceptedPayment', () => {
   const logger = { info: vi.fn() }
   const agreementData = {
+    correlationId: 'correlation-1234',
     schemeData: {
       oldWoodlandAreaHa: 0.4,
       newWoodlandAreaHa: 0
@@ -46,7 +47,8 @@ describe('wmpBuildAcceptedPayment', () => {
         oldWoodlandAreaHa: 0.4,
         newWoodlandAreaHa: 0
       },
-      logger
+      logger,
+      'correlation-1234'
     )
     expect(payment).toEqual({
       ...agreementData.payment,
