@@ -185,6 +185,34 @@ async function verifyS3Object(docValue) {
   }
 }
 
+async function processDocument(docKey, docValue) {
+  if (!docValue.path) {
+    return null
+  }
+
+  if (docValue.path.includes('non-existent')) {
+    return {
+      path: `documents.${docKey}`,
+      reason: 'PDF_MISSING',
+      message: `Could not find PDF at ${docValue.path}`
+    }
+  }
+
+  if (docValue.path.startsWith('s3://')) {
+    const s3Issue = await verifyS3Object(docValue)
+    if (s3Issue) {
+      return {
+        path: `documents.${docKey}`,
+        ...s3Issue
+      }
+    }
+  } else {
+    logger.debug(`Skipping non-S3 path: ${docValue.path}`)
+  }
+
+  return null
+}
+
 async function checkPDFs(legacyVersion) {
   const issues = []
 
@@ -193,22 +221,9 @@ async function checkPDFs(legacyVersion) {
   }
 
   for (const [docKey, docValue] of Object.entries(legacyVersion.documents)) {
-    if (docValue.path) {
-      if (docValue.path.includes('non-existent')) {
-        issues.push({
-          path: `documents.${docKey}`,
-          reason: 'PDF_MISSING',
-          message: `Could not find PDF at ${docValue.path}`
-        })
-      } else if (docValue.path.startsWith('s3://')) {
-        const s3Issue = await verifyS3Object(docValue)
-        if (s3Issue) {
-          issues.push({
-            path: `documents.${docKey}`,
-            ...s3Issue
-          })
-        }
-      }
+    const issue = await processDocument(docKey, docValue)
+    if (issue) {
+      issues.push(issue)
     }
   }
   return issues
