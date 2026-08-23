@@ -55,6 +55,10 @@ vi.mock('./seed-database.js', () => ({
   seedDatabase: vi.fn().mockResolvedValue(undefined)
 }))
 
+vi.mock('./wmp-migrate-diagnosis.js', () => ({
+  runAgreementDataDiagnosis: vi.fn().mockResolvedValue(undefined)
+}))
+
 // Get the mocked functions with proper typing
 const mockMongoose = vi.mocked(mongoose)
 const mockConfig = vi.mocked(config)
