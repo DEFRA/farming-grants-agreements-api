@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
-import { runAgreementDataDiagnosis } from '~/src/api/common/helpers/wmp-migrate-diagnosis.js'
+import { runAgreementDataDiagnosis } from './wmp-migrate-diagnosis.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
