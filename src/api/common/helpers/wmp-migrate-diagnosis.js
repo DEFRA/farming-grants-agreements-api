@@ -193,24 +193,21 @@ async function checkPDFs(legacyVersion) {
   }
 
   for (const [docKey, docValue] of Object.entries(legacyVersion.documents)) {
-    if (!docValue.path) continue
-
-    if (docValue.path.includes('non-existent')) {
-      issues.push({
-        path: `documents.${docKey}`,
-        reason: 'PDF_MISSING',
-        message: `Could not find PDF at ${docValue.path}`
-      })
-      continue
-    }
-
-    if (docValue.path.startsWith('s3://')) {
-      const s3Issue = await verifyS3Object(docValue)
-      if (s3Issue) {
+    if (docValue.path) {
+      if (docValue.path.includes('non-existent')) {
         issues.push({
           path: `documents.${docKey}`,
-          ...s3Issue
+          reason: 'PDF_MISSING',
+          message: `Could not find PDF at ${docValue.path}`
         })
+      } else if (docValue.path.startsWith('s3://')) {
+        const s3Issue = await verifyS3Object(docValue)
+        if (s3Issue) {
+          issues.push({
+            path: `documents.${docKey}`,
+            ...s3Issue
+          })
+        }
       }
     }
   }
@@ -329,6 +326,13 @@ async function setupUnhappyGrant(agreements, grants, versionsCol) {
 
 function getUnhappyVersions(grantId) {
   return [
+    ...getBasicUnhappyVersions(grantId),
+    ...getComplexUnhappyVersions(grantId)
+  ]
+}
+
+function getBasicUnhappyVersions(grantId) {
+  return [
     {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-001',
@@ -339,6 +343,44 @@ function getUnhappyVersions(grantId) {
       identifiers: { sbi: null },
       createdAt: new Date('2026-01-01')
     },
+    {
+      _id: new ObjectId(),
+      notificationMessageId: 'unhappy-msg-003',
+      clientRef: 'wmp-sequence-error',
+      code: SCHEME_WOODLAND,
+      status: 'accepted',
+      grant: grantId,
+      identifiers: { sbi: '106841262' },
+      createdAt: new Date('2026-01-05')
+    },
+    {
+      _id: new ObjectId(),
+      notificationMessageId: 'unhappy-msg-004',
+      clientRef: 'wmp-sequence-error',
+      code: SCHEME_WOODLAND,
+      status: 'accepted',
+      grant: grantId,
+      identifiers: { sbi: '106841262' },
+      createdAt: new Date('2026-01-04')
+    },
+    {
+      _id: new ObjectId(),
+      notificationMessageId: 'unhappy-msg-006',
+      clientRef: 'wmp-pdf-missing',
+      code: SCHEME_WOODLAND,
+      status: 'accepted',
+      grant: grantId,
+      identifiers: { sbi: '106841262' },
+      documents: {
+        agreement_final: { path: 's3://non-existent/final.pdf' }
+      },
+      createdAt: new Date('2026-01-07')
+    }
+  ]
+}
+
+function getComplexUnhappyVersions(grantId) {
+  return [
     {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-002',
@@ -365,26 +407,6 @@ function getUnhappyVersions(grantId) {
     },
     {
       _id: new ObjectId(),
-      notificationMessageId: 'unhappy-msg-003',
-      clientRef: 'wmp-sequence-error',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
-      createdAt: new Date('2026-01-05')
-    },
-    {
-      _id: new ObjectId(),
-      notificationMessageId: 'unhappy-msg-004',
-      clientRef: 'wmp-sequence-error',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
-      createdAt: new Date('2026-01-04')
-    },
-    {
-      _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-005',
       clientRef: 'wmp-bad-parcel',
       code: SCHEME_WOODLAND,
@@ -400,19 +422,6 @@ function getUnhappyVersions(grantId) {
         ]
       },
       createdAt: new Date('2026-01-06')
-    },
-    {
-      _id: new ObjectId(),
-      notificationMessageId: 'unhappy-msg-006',
-      clientRef: 'wmp-pdf-missing',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
-      documents: {
-        agreement_final: { path: 's3://non-existent/final.pdf' }
-      },
-      createdAt: new Date('2026-01-07')
     }
   ]
 }
