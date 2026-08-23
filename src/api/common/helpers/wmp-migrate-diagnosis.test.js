@@ -13,7 +13,8 @@ const { mockLogger } = vi.hoisted(() => ({
   mockLogger: {
     info: vi.fn(),
     error: vi.fn(),
-    warn: vi.fn()
+    warn: vi.fn(),
+    debug: vi.fn()
   }
 }))
 
@@ -627,6 +628,52 @@ describe('wmp-migrate-diagnosis.js', () => {
       })
 
       await runAgreementDataDiagnosis()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('[PASS]')
+      )
+    })
+  })
+
+  describe('S3 and PDF checks extra', () => {
+    it('should skip non-S3 path', async () => {
+      const record = {
+        grantInfo: { agreementNumber: 'WMP_NOS3' },
+        clientRef: 'ref_nos3',
+        createdAt: new Date(),
+        identifiers: { sbi: '123' },
+        application: { parcel: [] },
+        documents: {
+          doc1: { path: 'file://local/path/to/pdf.pdf' }
+        }
+      }
+
+      vi.spyOn(config, 'get').mockImplementation((key) => {
+        if (key === 'featureFlags.wmpMigrationDiagnosis') return true
+        if (key === 'featureFlags.injectUnHappyWMPData') return false
+        return 'test'
+      })
+
+      const mockAggregate = {
+        [Symbol.asyncIterator]: async function* () {
+          await Promise.resolve()
+          yield record
+        }
+      }
+      vi.spyOn(mongoose.connection, 'collection').mockImplementation((name) => {
+        if (name === 'versions') return { aggregate: () => mockAggregate }
+        return {}
+      })
+      Object.defineProperty(mongoose.connection, 'readyState', {
+        value: 1,
+        configurable: true
+      })
+
+      await runAgreementDataDiagnosis()
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Skipping non-S3 path: file://local/path/to/pdf.pdf'
+        )
+      )
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('[PASS]')
       )
