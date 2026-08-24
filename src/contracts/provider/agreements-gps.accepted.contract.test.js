@@ -8,6 +8,8 @@ import { config } from '#~/config/index.js'
 import { createServer } from '#~/api/index.js'
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
+import * as landGrantsAdapter from '#~/api/adapter/land-grants-adapter.js'
+import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
 import agreements from '#~/api/common/helpers/sample-data/agreements.js'
@@ -18,6 +20,15 @@ vi.unmock('mongoose')
 
 vi.mock('#~/api/common/helpers/jwt-auth.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
+vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
+  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
+}))
+vi.mock(
+  '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
+  () => ({
+    updateAgreementWithVersionViaGrant: vi.fn()
+  })
+)
 
 const localPactDir = path.resolve(
   process.cwd(),
@@ -118,6 +129,14 @@ describe('sending a create grant payment event via SNS', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(mockPublishEvent).mockResolvedValue(undefined)
+    vi.mocked(
+      landGrantsAdapter.calculatePaymentsBasedOnParcelsWithActions
+    ).mockResolvedValue(agreement.answers.payment)
+    vi.mocked(updateAgreementWithVersionViaGrant).mockResolvedValue({
+      ...agreement,
+      signatureDate: '2024-01-01T00:00:00.000Z',
+      status: 'accepted'
+    })
 
     vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
