@@ -8,6 +8,18 @@ import { config } from '#~/config/index.js'
 // Import the module after mocking the logger
 import { runAgreementDataDiagnosis } from './wmp-migrate-diagnosis.js'
 
+import { injectUnhappyData } from './wmp-sample-data-injector.js'
+
+vi.mock('./wmp-sample-data-injector.js', () => ({
+  injectSampleWMPData: vi.fn(() => {
+    // eslint-disable-next-line no-console
+    console.log('Successfully injected happy path Woodland data.')
+  }),
+  injectUnhappyData: vi.fn(() => {
+    mockLogger.info('Successfully injected unhappy path data.')
+  })
+}))
+
 // Hoist the mock instance so it's available in vi.mock
 const { mockLogger } = vi.hoisted(() => ({
   mockLogger: {
@@ -134,14 +146,7 @@ describe('wmp-migrate-diagnosis.js', () => {
         configurable: true
       })
 
-      const mockGrantId = new ObjectId()
       const mockCollection = {
-        findOne: vi.fn().mockResolvedValue({ _id: mockGrantId }),
-        deleteMany: vi.fn().mockResolvedValue({}),
-        deleteOne: vi.fn().mockResolvedValue({}),
-        insertOne: vi.fn().mockResolvedValue({}),
-        insertMany: vi.fn().mockResolvedValue({}),
-        updateOne: vi.fn().mockResolvedValue({}),
         aggregate: vi.fn().mockReturnValue({
           [Symbol.asyncIterator]: async function* () {
             await Promise.resolve()
@@ -153,10 +158,7 @@ describe('wmp-migrate-diagnosis.js', () => {
       )
 
       await runAgreementDataDiagnosis()
-      expect(mockCollection.deleteMany).toHaveBeenCalled()
-      expect(mockCollection.deleteOne).toHaveBeenCalledWith({
-        _id: mockGrantId
-      })
+      expect(injectUnhappyData).toHaveBeenCalled()
     })
 
     it('should handle database connection if not connected', async () => {
