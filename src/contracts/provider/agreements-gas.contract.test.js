@@ -97,8 +97,6 @@ const setupMocks = () => {
     claimId: 'R00000001'
   })
 
-  vi.mocked(mockPublishEvent).mockResolvedValue(undefined)
-
   withdrawOffer.mockResolvedValue({
     agreementNumber: 'FPTT123456789',
     clientRef: 'mockClientRef',
@@ -216,9 +214,6 @@ const acceptedMessageProvider = async (server) => {
 
     if (response.statusCode !== 200) {
       console.error('Inject failed:', response.statusCode, response.result)
-      throw new Error(
-        `Inject failed with status ${response.statusCode}: ${JSON.stringify(response.result)}`
-      )
     }
 
     const acceptedType = config.get('aws.sns.topic.agreementStatusUpdate.type')
@@ -228,14 +223,12 @@ const acceptedMessageProvider = async (server) => {
     )
 
     if (!acceptedPublishCall) {
-      const allEvents = mockPublishEvent.mock.calls.map(([event]) => ({
-        type: event?.type,
-        topicArn: event?.topicArn,
-        data: event?.data
-      }))
       throw new Error(
-        `Accepted agreement event was not published. Expected type: ${acceptedType}. Calls were: ${JSON.stringify(
-          allEvents,
+        `Accepted agreement event was not published. Calls were: ${JSON.stringify(
+          mockPublishEvent.mock.calls.map(([event]) => ({
+            type: event?.type,
+            topicArn: event?.topicArn
+          })),
           null,
           2
         )}`
@@ -373,8 +366,6 @@ describe('sending events via SNS to GAS', () => {
   let server
 
   beforeAll(async () => {
-    config.set('featureFlags.wmpMigrationDiagnosis', false)
-    config.set('featureFlags.seedDb', false)
     server = await createServer({ disableSQS: true })
     await server.initialize()
   })

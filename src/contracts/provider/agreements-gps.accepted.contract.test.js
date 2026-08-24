@@ -8,27 +8,15 @@ import { config } from '#~/config/index.js'
 import { createServer } from '#~/api/index.js'
 import * as jwtAuth from '#~/api/common/helpers/jwt-auth.js'
 import { publishEvent as mockPublishEvent } from '#~/api/common/helpers/sns-publisher.js'
-import * as landGrantsAdapter from '#~/api/adapter/land-grants-adapter.js'
-import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
 import agreements from '#~/api/common/helpers/sample-data/agreements.js'
 import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
-import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 
 vi.unmock('mongoose')
 
 vi.mock('#~/api/common/helpers/jwt-auth.js')
 vi.mock('#~/api/common/helpers/sns-publisher.js')
-vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
-}))
-vi.mock(
-  '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
-  () => ({
-    updateAgreementWithVersionViaGrant: vi.fn()
-  })
-)
 
 const localPactDir = path.resolve(
   process.cwd(),
@@ -81,7 +69,7 @@ describe('sending a create grant payment event via SNS', () => {
   let server
   let originalFetch
 
-  const agreement = agreements[0]
+  const agreement = agreements[1]
   const mockSbi = agreement.identifiers.sbi
 
   beforeAll(async () => {
@@ -108,7 +96,6 @@ describe('sending a create grant payment event via SNS', () => {
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.seedDb', false)
-    config.set('featureFlags.wmpMigrationDiagnosis', false)
 
     server = await createServer({
       disableSQS: true,
@@ -128,15 +115,6 @@ describe('sending a create grant payment event via SNS', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(mockPublishEvent).mockResolvedValue(undefined)
-    vi.mocked(
-      landGrantsAdapter.calculatePaymentsBasedOnParcelsWithActions
-    ).mockResolvedValue(agreement.answers.payment)
-    vi.mocked(updateAgreementWithVersionViaGrant).mockResolvedValue({
-      ...agreement,
-      signatureDate: '2024-01-01T00:00:00.000Z',
-      status: 'accepted'
-    })
 
     vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
@@ -173,14 +151,13 @@ describe('sending a create grant payment event via SNS', () => {
         )
 
         if (!acceptedPublishCall) {
-          const allEvents = mockPublishEvent.mock.calls.map(([event]) => ({
-            type: event?.type,
-            topicArn: event?.topicArn,
-            data: event?.data
-          }))
           throw new Error(
-            `Accepted event was not published. Expected type: cloud.defra.dev.farming-grants-agreements-api.payment.create. Calls were: ${JSON.stringify(
-              allEvents,
+            `Accepted event was not published. Calls were: ${JSON.stringify(
+              mockPublishEvent.mock.calls.map(([event]) => ({
+                type: event?.type,
+                topicArn: event?.topicArn,
+                status: event?.data?.status
+              })),
               null,
               2
             )}`
@@ -220,13 +197,7 @@ describe('sending a create grant payment event via SNS', () => {
         }),
     stateHandlers: {
       'an agreement offer has been accepted': async () => {
-        vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
-          valid: true,
-          source: 'defra',
-          sbi: mockSbi
-        })
-        await acceptOffer(agreement.agreementNumber, agreement.answers, console)
-        mockPublishEvent.mockResolvedValue(undefined)
+        mockPublishEvent.mockResolvedValue()
         return Promise.resolve()
       }
     },
