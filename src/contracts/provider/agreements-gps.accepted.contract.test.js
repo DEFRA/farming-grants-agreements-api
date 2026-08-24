@@ -12,6 +12,7 @@ import { getJsonPacts } from '#~/contracts/test-helpers/pact.js'
 import { seedDatabase } from '#~/api/common/helpers/seed-database.js'
 import agreements from '#~/api/common/helpers/sample-data/agreements.js'
 import { buildIsolatedMongoOptions } from '#~/contracts/test-helpers/mongo.js'
+import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 
 vi.unmock('mongoose')
 
@@ -96,6 +97,7 @@ describe('sending a create grant payment event via SNS', () => {
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
     config.set('featureFlags.seedDb', false)
+    config.set('featureFlags.wmpMigrationDiagnosis', false)
 
     server = await createServer({
       disableSQS: true,
@@ -199,7 +201,13 @@ describe('sending a create grant payment event via SNS', () => {
         }),
     stateHandlers: {
       'an agreement offer has been accepted': async () => {
-        mockPublishEvent.mockResolvedValue()
+        vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
+          valid: true,
+          source: 'defra',
+          sbi: mockSbi
+        })
+        await acceptOffer(agreement.agreementNumber, agreement.answers, console)
+        mockPublishEvent.mockResolvedValue(undefined)
         return Promise.resolve()
       }
     },

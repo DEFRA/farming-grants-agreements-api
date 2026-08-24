@@ -40,7 +40,8 @@ describe('UI sending a GET request to get an agreement', () => {
     config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
-    config.set('featureFlags.seedDb', true)
+    config.set('featureFlags.seedDb', false)
+    config.set('featureFlags.wmpMigrationDiagnosis', false)
 
     const sbi = 'mock-sbi'
 
@@ -106,9 +107,15 @@ describe('UI sending a GET request to get an agreement', () => {
       },
       stateHandlers: {
         'A customer has an accepted agreement offer': async () => {
+          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
+            valid: true,
+            source: 'defra',
+            sbi: 'mock-sbi'
+          })
           await acceptOffer(
             agreements[1].agreementNumber,
-            agreements[1].answers
+            agreements[1].answers,
+            console
           )
         }
       }

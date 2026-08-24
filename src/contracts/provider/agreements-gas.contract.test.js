@@ -373,6 +373,8 @@ describe('sending events via SNS to GAS', () => {
   let server
 
   beforeAll(async () => {
+    config.set('featureFlags.wmpMigrationDiagnosis', false)
+    config.set('featureFlags.seedDb', false)
     server = await createServer({ disableSQS: true })
     await server.initialize()
   })
