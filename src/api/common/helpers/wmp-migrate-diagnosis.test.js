@@ -9,6 +9,13 @@ import { config } from '#~/config/index.js'
 import { runAgreementDataDiagnosis } from './wmp-migrate-diagnosis.js'
 
 import { injectUnhappyData } from './wmp-sample-data-injector.js'
+import countersModel from '#~/api/common/models/counters.js'
+
+vi.mock('#~/api/common/models/counters.js', () => ({
+  default: {
+    findOne: vi.fn()
+  }
+}))
 
 vi.mock('./wmp-sample-data-injector.js', () => ({
   injectSampleWMPData: vi.fn(() => {
@@ -42,6 +49,11 @@ describe('wmp-migrate-diagnosis.js', () => {
     s3Mock.reset()
     // Reset config implementation for each test
     vi.spyOn(config, 'get').mockRestore()
+
+    // Default mock for countersModel.findOne
+    countersModel.findOne.mockReturnValue({
+      lean: vi.fn().mockResolvedValue({ _id: 'claimIds', seq: 123 })
+    })
   })
 
   describe('runAgreementDataDiagnosis', () => {
@@ -93,6 +105,9 @@ describe('wmp-migrate-diagnosis.js', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('WMP Migration Diagnostic Report')
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Current claimIds counter sequence: 123')
       )
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Total Versions Inspected: 1')

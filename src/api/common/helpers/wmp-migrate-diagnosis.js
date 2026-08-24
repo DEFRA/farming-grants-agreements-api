@@ -3,6 +3,7 @@ import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3'
 
 import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { config } from '#~/config/index.js'
+import countersModel from '#~/api/common/models/counters.js'
 
 import {
   injectSampleWMPData,
@@ -268,6 +269,15 @@ async function runWMPAgreementDataDiagnosis() {
       mongoose.connection.readyState !== mongoose.ConnectionStates.connected
     ) {
       await mongoose.connect(MONGO_URI, { dbName: DB_NAME })
+    }
+
+    const claimIdCounter = await countersModel
+      .findOne({ _id: 'claimIds' })
+      .lean()
+    if (claimIdCounter) {
+      logger.info(`Current claimIds counter sequence: ${claimIdCounter.seq}`)
+    } else {
+      logger.info('Counter "claimIds" not found.')
     }
 
     const cursor = mongoose.connection.collection('versions').aggregate([
