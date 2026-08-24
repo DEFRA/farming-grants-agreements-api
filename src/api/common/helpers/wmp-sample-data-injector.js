@@ -45,64 +45,56 @@ async function setupUnhappyGrant(agreements, grants, versionsCol) {
   return { agreementNumber, grantId }
 }
 
+function createBaseVersion(grantId, overrides = {}) {
+  return {
+    code: SCHEME_WOODLAND,
+    identifiers: { sbi: '106841262', frn: '106841262', crn: '1101092483' },
+    status: 'accepted',
+    grant: grantId,
+    scheme: 'WMP',
+    ...overrides
+  }
+}
+
 function getBasicUnhappyVersions(grantId) {
   return [
-    {
+    createBaseVersion(grantId, {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-001',
       clientRef: 'wmp-missing-sbi',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
       identifiers: { sbi: null },
       createdAt: new Date('2026-01-01')
-    },
-    {
+    }),
+    createBaseVersion(grantId, {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-003',
       clientRef: 'wmp-sequence-error',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
       createdAt: new Date('2026-01-05')
-    },
-    {
+    }),
+    createBaseVersion(grantId, {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-004',
       clientRef: 'wmp-sequence-error',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
       createdAt: new Date('2026-01-04')
-    },
-    {
+    }),
+    createBaseVersion(grantId, {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-006',
       clientRef: 'wmp-pdf-missing',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
       documents: {
         agreement_final: { path: 's3://non-existent/final.pdf' }
       },
       createdAt: new Date('2026-01-07')
-    }
+    })
   ]
 }
 
 function getComplexUnhappyVersions(grantId) {
   return [
-    {
+    createBaseVersion(grantId, {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-002',
       clientRef: 'wmp-total-mismatch',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
       payment: { agreementTotalPence: 200000 },
       application: {
         parcel: [
@@ -118,15 +110,11 @@ function getComplexUnhappyVersions(grantId) {
         ]
       },
       createdAt: new Date('2026-01-02')
-    },
-    {
+    }),
+    createBaseVersion(grantId, {
       _id: new ObjectId(),
       notificationMessageId: 'unhappy-msg-005',
       clientRef: 'wmp-bad-parcel',
-      code: SCHEME_WOODLAND,
-      status: 'accepted',
-      grant: grantId,
-      identifiers: { sbi: '106841262' },
       application: {
         parcel: [
           {
@@ -136,7 +124,7 @@ function getComplexUnhappyVersions(grantId) {
         ]
       },
       createdAt: new Date('2026-01-06')
-    }
+    })
   ]
 }
 
@@ -271,57 +259,55 @@ function getVersion1Application() {
 }
 
 function getVersion1(grantId) {
-  return {
+  return createBaseVersion(grantId, {
     _id: new ObjectId('6a588c08ca29f920440b672e'),
     notificationMessageId: '7ecc123b-e4a3-4308-b608-b2ebdb042759',
     agreementName: "Bil's woods WMP",
     correlationId: '71cf3bf0-0adf-4e9a-bc3d-84ab3e0e342d',
     clientRef: SAMPLE_CLIENT_REF,
-    code: SCHEME_WOODLAND,
-    identifiers: { sbi: '106841262', frn: '106841262', crn: '1101092483' },
-    status: 'accepted',
-    grant: grantId,
-    scheme: 'WMP',
     payment: getVersion1Payment(),
     applicant: getVersion1Applicant(),
     application: getVersion1Application(),
     createdAt: new Date('2026-07-16T07:45:12.618Z'),
     updatedAt: new Date('2026-07-16T07:45:45.964Z')
+  })
+}
+
+function getCommonPayment() {
+  return {
+    agreementTotalPence: 150000,
+    annualTotalPence: 150000,
+    frequency: 'OneOff'
+  }
+}
+
+function getCommonParcel(quantity) {
+  return {
+    parcelId: SAMPLE_PARCEL_ID,
+    actions: [
+      {
+        code: 'PA3',
+        appliedFor: { quantity: Decimal128.fromString(quantity) }
+      }
+    ]
   }
 }
 
 function getVersion2(grantId) {
-  return {
+  return createBaseVersion(grantId, {
     _id: new ObjectId('6a58aeb0ca29f920440b6774'),
     notificationMessageId: 'unique-msg-id-002',
     agreementName: "Bil's woods WMP",
     correlationId: '71cf3bf0-0adf-4e9a-bc3d-84ab3e0e342d',
     clientRef: 'wmp-pun-yp3',
-    code: SCHEME_WOODLAND,
-    identifiers: { sbi: '106841262', frn: '106841262', crn: '1101092483' },
-    status: 'accepted',
-    grant: grantId,
-    scheme: 'WMP',
-    payment: {
-      agreementTotalPence: 150000,
-      annualTotalPence: 150000,
-      frequency: 'OneOff'
-    },
+    payment: getCommonPayment(),
     applicant: {
       business: { name: 'MORTIMER AND Co.' },
       customer: { name: { first: 'Bernardine', last: "O'toole" } }
     },
     application: {
       parcel: [
-        {
-          parcelId: SAMPLE_PARCEL_ID,
-          actions: [
-            {
-              code: 'PA3',
-              appliedFor: { quantity: Decimal128.fromString('17') }
-            }
-          ]
-        },
+        getCommonParcel('17'),
         {
           parcelId: 'ST1335-0972',
           actions: [
@@ -335,76 +321,44 @@ function getVersion2(grantId) {
     },
     createdAt: new Date('2026-07-16T10:13:04.337Z'),
     updatedAt: new Date('2026-07-16T10:14:03.005Z')
-  }
+  })
 }
 
 function getVersion3(grantId) {
-  return {
+  return createBaseVersion(grantId, {
     _id: new ObjectId('6a5f7d5567f11d6ed48db40e'),
     notificationMessageId: 'unique-msg-id-003',
     clientRef: 'wmp-fjx-4lf',
-    code: SCHEME_WOODLAND,
-    identifiers: { sbi: '106841262', frn: '106841262', crn: '1101092483' },
     status: 'offered',
-    grant: grantId,
-    scheme: 'WMP',
     payment: { agreementTotalPence: 150000, frequency: 'OneOff' },
     application: {
-      parcel: [
-        {
-          parcelId: SAMPLE_PARCEL_ID,
-          actions: [
-            {
-              code: 'PA3',
-              appliedFor: { quantity: Decimal128.fromString('11') }
-            }
-          ]
-        }
-      ]
+      parcel: [getCommonParcel('11')]
     },
     createdAt: new Date('2026-07-21T14:08:21.747Z'),
     updatedAt: new Date('2026-07-21T14:08:21.747Z')
-  }
+  })
 }
 
 function getVersion4(grantId) {
-  return {
+  return createBaseVersion(grantId, {
     _id: new ObjectId('6a637952de6d93b63dbefd46'),
     notificationMessageId: 'unique-msg-id-004',
     clientRef: 'wmp-ytl-e5u',
-    code: SCHEME_WOODLAND,
-    identifiers: { sbi: '106841262', frn: '106841262', crn: '1101092483' },
-    status: 'accepted',
-    grant: grantId,
-    scheme: 'WMP',
     payment: { agreementTotalPence: 150000, frequency: 'OneOff' },
     application: {
-      parcel: [
-        {
-          parcelId: SAMPLE_PARCEL_ID,
-          actions: [
-            {
-              code: 'PA3',
-              appliedFor: { quantity: Decimal128.fromString('19') }
-            }
-          ]
-        }
-      ]
+      parcel: [getCommonParcel('19')]
     },
     createdAt: new Date('2026-07-24T14:40:18.802Z'),
     updatedAt: new Date('2026-07-24T14:41:30.153Z')
-  }
+  })
 }
 
 function getVersion5(grantId) {
-  return {
+  return createBaseVersion(grantId, {
     _id: new ObjectId('6a71cbeb700e6d5f9fbad436'),
     notificationMessageId: 'unique-msg-id-005',
     clientRef: 'a4l-vjl-4j8',
     code: 'frps-private-beta',
-    identifiers: { sbi: '106841262', frn: '106841262', crn: '1101092483' },
-    status: 'accepted',
-    grant: grantId,
     scheme: 'SFI',
     payment: { agreementTotalPence: 460725, frequency: 'Quarterly' },
     application: {
@@ -422,7 +376,7 @@ function getVersion5(grantId) {
     },
     createdAt: new Date('2026-08-04T11:24:27.582Z'),
     updatedAt: new Date('2026-08-04T11:25:43.942Z')
-  }
+  })
 }
 
 function getHappyPathVersions(grantId) {
