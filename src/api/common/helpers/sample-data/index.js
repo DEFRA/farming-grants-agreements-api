@@ -2,6 +2,6 @@ import agreements from './agreements.js'
 import wmpAgreement from './wmp-agreement.js'
 
 export default {
-  agreements: [...agreements, wmpAgreement],
+  agreements,
   wmpAgreement
 }

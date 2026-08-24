@@ -295,6 +295,57 @@
     }
   },
   "definitions": {
+    "1": {
+      "type": "object",
+      "description": "1 field",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "description": {
+          "type": "string",
+          "description": "description field",
+          "example": "CMOR1: Assess moorland and produce a written record"
+        },
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "unit": {
+          "type": "string",
+          "description": "unit field",
+          "example": "ha"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "quantity field",
+          "example": 4.53411078
+        },
+        "rateInPence": {
+          "type": "integer",
+          "description": "rateInPence field",
+          "example": 1060
+        },
+        "annualPaymentPence": {
+          "type": "integer",
+          "description": "annualPaymentPence field",
+          "example": 4806
+        },
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        }
+      }
+    },
     "message": {
       "type": "string",
       "description": "Health check status message",
@@ -342,68 +393,166 @@
       "type": "object",
       "description": "identifiers field",
       "properties": {
-        "sbi": {
-          "type": "string",
-          "description": "sbi field",
-          "example": "107593059"
-        },
         "frn": {
           "type": "string",
           "description": "frn field",
-          "example": "1076543210"
+          "example": "1234567890"
+        },
+        "sbi": {
+          "type": "string",
+          "description": "sbi field",
+          "example": "106284736"
         },
         "crn": {
           "type": "string",
           "description": "crn field",
-          "example": "1100957269"
+          "example": "crn"
+        },
+        "defraId": {
+          "type": "string",
+          "description": "defraId field",
+          "example": "defraId"
         }
       }
-    },
-    "metadata": {
-      "type": "object",
-      "description": "metadata field"
     },
     "Model1": {
-      "type": "object",
-      "properties": {
-        "parcelId": {
-          "type": "string",
-          "description": "parcelId field",
-          "example": "SD7560-9193"
-        },
-        "areaHa": {
-          "type": "number",
-          "description": "areaHa field",
-          "example": 25.3874
-        }
-      }
+      "type": "object"
     },
-    "landParcels": {
+    "actionApplications": {
       "type": "array",
-      "description": "landParcels field",
+      "description": "actionApplications field",
       "items": {
         "$ref": "#/definitions/Model1"
       }
     },
-    "email": {
+    "parcelItems": {
       "type": "object",
-      "description": "email field",
+      "description": "parcelItems field",
       "properties": {
-        "address": {
-          "type": "string",
-          "description": "address field",
-          "example": "oliver.taylor@taylorequestrian.test"
+        "1": {
+          "$ref": "#/definitions/1"
         }
       }
     },
-    "phone": {
+    "Model2": {
       "type": "object",
-      "description": "phone field",
+      "description": "1 field",
       "properties": {
-        "mobile": {
+        "code": {
           "type": "string",
-          "description": "mobile field",
-          "example": "07700900123"
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "description": {
+          "type": "string",
+          "description": "description field",
+          "example": "CMOR1: Assess moorland and produce a written record"
+        },
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "annualPaymentPence": {
+          "type": "integer",
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "agreementLevelItems": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model2"
+        }
+      }
+    },
+    "Model3": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
+          "type": "integer",
+          "description": "parcelItemId field",
+          "example": 1
+        },
+        "paymentPence": {
+          "type": "integer",
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "lineItems": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model3"
+      }
+    },
+    "Model4": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/lineItems"
+        }
+      }
+    },
+    "payments": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model4"
+      }
+    },
+    "payment": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
+        },
+        "agreementTotalPence": {
+          "type": "integer",
+          "description": "agreementTotalPence field",
+          "example": 96018
+        },
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/agreementLevelItems"
+        },
+        "payments": {
+          "$ref": "#/definitions/payments"
         }
       }
     },
@@ -414,43 +563,27 @@
         "line1": {
           "type": "string",
           "description": "line1 field",
-          "example": "Taylor Equestrian Yards"
+          "example": "Mason House Farm Clitheroe Rd"
         },
         "line2": {
           "type": "string",
           "description": "line2 field",
-          "example": "Riding Lane"
+          "example": "Bashall Eaves"
         },
         "street": {
           "type": "string",
           "description": "street field",
-          "example": "Riding Lane"
+          "example": "Bartindale Road"
         },
         "city": {
           "type": "string",
           "description": "city field",
-          "example": "Cambridge"
+          "example": "Clitheroe"
         },
         "postalCode": {
           "type": "string",
           "description": "postalCode field",
-          "example": "CB1 2AB"
-        }
-      }
-    },
-    "type": {
-      "type": "object",
-      "description": "type field",
-      "properties": {
-        "code": {
-          "type": "string",
-          "description": "code field",
-          "example": "1"
-        },
-        "type": {
-          "type": "string",
-          "description": "type field",
-          "example": "Sole Trader"
+          "example": "BB7 3DD"
         }
       }
     },
@@ -461,29 +594,10 @@
         "name": {
           "type": "string",
           "description": "name field",
-          "example": "Taylor Equestrian Yards"
-        },
-        "reference": {
-          "type": "string",
-          "description": "reference field",
-          "example": "1076543210"
-        },
-        "email": {
-          "$ref": "#/definitions/email"
-        },
-        "phone": {
-          "$ref": "#/definitions/phone"
+          "example": "J&S Hartley"
         },
         "address": {
           "$ref": "#/definitions/address"
-        },
-        "vat": {
-          "type": "string",
-          "description": "vat field",
-          "example": "GB987654321"
-        },
-        "type": {
-          "$ref": "#/definitions/type"
         }
       }
     },
@@ -494,22 +608,22 @@
         "title": {
           "type": "string",
           "description": "title field",
-          "example": "Mr"
+          "example": "Mr."
         },
         "first": {
           "type": "string",
           "description": "first field",
-          "example": "Oliver"
+          "example": "Edward"
         },
         "middle": {
           "type": "string",
           "description": "middle field",
-          "example": "J"
+          "example": "Paul"
         },
         "last": {
           "type": "string",
           "description": "last field",
-          "example": "Taylor"
+          "example": "Jones"
         }
       }
     },
@@ -529,79 +643,145 @@
         "business": {
           "$ref": "#/definitions/business"
         },
-        "countyParishHoldings": {
-          "type": "string",
-          "description": "countyParishHoldings field",
-          "example": "23/456/7890"
-        },
         "customer": {
           "$ref": "#/definitions/customer"
         }
       }
     },
-    "Model2": {
+    "area": {
+      "type": "object",
+      "description": "area field",
+      "properties": {
+        "unit": {
+          "type": "string",
+          "description": "unit field",
+          "example": "ha"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "quantity field",
+          "example": 5.2182
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee92"
+        }
+      }
+    },
+    "appliedFor": {
+      "type": "object",
+      "description": "appliedFor field",
+      "properties": {
+        "unit": {
+          "type": "string",
+          "description": "unit field",
+          "example": "ha"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "quantity field",
+          "example": 4.7575
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee94"
+        }
+      }
+    },
+    "Model5": {
       "type": "object",
       "properties": {
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "PA3"
+          "example": "CMOR1"
         },
-        "description": {
+        "version": {
           "type": "string",
-          "description": "description field",
-          "example": "Woodland management plan"
+          "description": "version field",
+          "example": "1"
         },
-        "activePaymentTier": {
+        "durationYears": {
           "type": "integer",
-          "description": "activePaymentTier field",
-          "example": 2
+          "description": "durationYears field",
+          "example": 3
         },
-        "quantityInActiveTier": {
-          "type": "number",
-          "description": "quantityInActiveTier field",
-          "example": 5.4
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
         },
-        "activeTierRatePence": {
-          "type": "integer",
-          "description": "activeTierRatePence field",
-          "example": 3000
-        },
-        "activeTierFlatRatePence": {
-          "type": "integer",
-          "description": "activeTierFlatRatePence field",
-          "example": 150000
-        },
-        "quantity": {
-          "type": "number",
-          "description": "quantity field",
-          "example": 55.4
-        },
-        "agreementTotalPence": {
-          "type": "integer",
-          "description": "agreementTotalPence field",
-          "example": 166200
-        },
-        "unit": {
+        "_id": {
           "type": "string",
-          "description": "unit field",
-          "example": "ha"
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
         }
       }
+    },
+    "actions": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model5"
+      }
+    },
+    "Model6": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/actions"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "parcel": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model6"
+      }
+    },
+    "Model7": {
+      "type": "object"
     },
     "agreement": {
       "type": "array",
       "description": "agreement field",
       "items": {
-        "$ref": "#/definitions/Model2"
+        "$ref": "#/definitions/Model7"
       }
     },
-    "payments": {
+    "application": {
       "type": "object",
-      "description": "payments field",
+      "description": "application field",
       "properties": {
+        "parcel": {
+          "$ref": "#/definitions/parcel"
+        },
         "agreement": {
           "$ref": "#/definitions/agreement"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
         }
       }
     },
@@ -609,109 +789,37 @@
       "type": "object",
       "description": "answers field",
       "properties": {
-        "referenceNumber": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
           "type": "string",
-          "description": "referenceNumber field",
-          "example": "WMP-926-WLW"
+          "description": "agreementName field",
+          "example": "Example agreement 2"
         },
-        "woodlandName": {
+        "scheme": {
           "type": "string",
-          "description": "woodlandName field",
-          "example": "Oakridge Estate"
+          "description": "scheme field",
+          "example": "FPTT"
         },
-        "businessDetailsUpToDate": {
-          "type": "boolean",
-          "description": "businessDetailsUpToDate field",
-          "example": true
-        },
-        "landRegisteredWithRpa": {
-          "type": "boolean",
-          "description": "landRegisteredWithRpa field",
-          "example": true
-        },
-        "landManagementControl": {
-          "type": "boolean",
-          "description": "landManagementControl field",
-          "example": true
-        },
-        "publicBodyTenant": {
-          "type": "boolean",
-          "description": "publicBodyTenant field",
-          "example": false
-        },
-        "landHasGrazingRights": {
-          "type": "boolean",
-          "description": "landHasGrazingRights field",
-          "example": false
-        },
-        "appLandHasExistingWmp": {
-          "type": "boolean",
-          "description": "appLandHasExistingWmp field",
-          "example": false
-        },
-        "intendToApplyHigherTier": {
-          "type": "boolean",
-          "description": "intendToApplyHigherTier field",
-          "example": true
-        },
-        "totalHectaresForSelectedParcels": {
-          "type": "number",
-          "description": "totalHectaresForSelectedParcels field",
-          "example": 195.246
-        },
-        "hectaresTenOrOverYearsOld": {
+        "year": {
           "type": "integer",
-          "description": "hectaresTenOrOverYearsOld field",
-          "example": 18
+          "description": "year field",
+          "example": 2025
         },
-        "hectaresUnderTenYearsOld": {
-          "type": "integer",
-          "description": "hectaresUnderTenYearsOld field",
-          "example": 2
+        "actionApplications": {
+          "$ref": "#/definitions/actionApplications"
         },
-        "landParcels": {
-          "$ref": "#/definitions/landParcels"
-        },
-        "centreGridReference": {
-          "type": "string",
-          "description": "centreGridReference field",
-          "example": "SP12345678"
-        },
-        "fcTeamCode": {
-          "type": "string",
-          "description": "fcTeamCode field",
-          "example": "NORTH_WEST_AND_WEST_MIDLANDS"
+        "payment": {
+          "$ref": "#/definitions/payment"
         },
         "applicant": {
           "$ref": "#/definitions/applicant"
         },
-        "detailsConfirmedAt": {
-          "type": "string",
-          "description": "detailsConfirmedAt field",
-          "example": "2026-04-02T09:15:33.583Z"
-        },
-        "guidanceRead": {
-          "type": "boolean",
-          "description": "guidanceRead field",
-          "example": true
-        },
-        "includedAllEligibleWoodland": {
-          "type": "boolean",
-          "description": "includedAllEligibleWoodland field",
-          "example": true
-        },
-        "applicationConfirmation": {
-          "type": "boolean",
-          "description": "applicationConfirmation field",
-          "example": true
-        },
-        "totalAgreementPaymentPence": {
-          "type": "integer",
-          "description": "totalAgreementPaymentPence field",
-          "example": 166200
-        },
-        "payments": {
-          "$ref": "#/definitions/payments"
+        "application": {
+          "$ref": "#/definitions/application"
         }
       }
     },
@@ -719,29 +827,31 @@
       "type": "object",
       "description": "Complete agreement data structure from Pact test data",
       "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "FPTT123456789"
+        },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "wmp-926-wlw"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "woodland"
+          "example": "frps-private-beta"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"
         },
-        "metadata": {
-          "$ref": "#/definitions/metadata"
-        },
         "answers": {
           "$ref": "#/definitions/answers"
-        },
-        "notificationMessageId": {
-          "type": "string",
-          "description": "notificationMessageId field",
-          "example": "sample-notification-wmp-1"
         }
       }
     },
@@ -773,231 +883,300 @@
         }
       }
     },
-    "Model3": {
-      "type": "object",
-      "properties": {
-        "parcelId": {
-          "type": "string",
-          "description": "parcelId field",
-          "example": "SD7560-9193"
-        },
-        "areaHa": {
-          "type": "number",
-          "description": "areaHa field",
-          "example": 25.3874
-        }
-      }
+    "Model8": {
+      "type": "object"
     },
-    "Model4": {
+    "Model9": {
       "type": "array",
-      "description": "landParcels field",
+      "description": "actionApplications field",
       "items": {
-        "$ref": "#/definitions/Model3"
+        "$ref": "#/definitions/Model8"
       }
     },
-    "Model5": {
+    "Model10": {
       "type": "object",
+      "description": "1 field",
       "properties": {
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "PA3"
+          "example": "CMOR1"
         },
         "description": {
           "type": "string",
           "description": "description field",
-          "example": "Woodland management plan"
+          "example": "CMOR1: Assess moorland and produce a written record"
         },
-        "activePaymentTier": {
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "annualPaymentPence": {
           "type": "integer",
-          "description": "activePaymentTier field",
-          "example": 2
-        },
-        "quantityInActiveTier": {
-          "type": "number",
-          "description": "quantityInActiveTier field",
-          "example": 5.4
-        },
-        "activeTierRatePence": {
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "Model11": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model10"
+        }
+      }
+    },
+    "Model12": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
           "type": "integer",
-          "description": "activeTierRatePence field",
-          "example": 3000
+          "description": "parcelItemId field",
+          "example": 1
         },
-        "activeTierFlatRatePence": {
+        "paymentPence": {
           "type": "integer",
-          "description": "activeTierFlatRatePence field",
-          "example": 150000
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "Model13": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model12"
+      }
+    },
+    "Model14": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
         },
-        "quantity": {
-          "type": "number",
-          "description": "quantity field",
-          "example": 55.4
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/Model13"
+        }
+      }
+    },
+    "Model15": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model14"
+      }
+    },
+    "Model16": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
         },
         "agreementTotalPence": {
           "type": "integer",
           "description": "agreementTotalPence field",
-          "example": 166200
+          "example": 96018
         },
-        "unit": {
-          "type": "string",
-          "description": "unit field",
-          "example": "ha"
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/Model11"
+        },
+        "payments": {
+          "$ref": "#/definitions/Model15"
         }
       }
     },
-    "Model6": {
+    "Model17": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "durationYears": {
+          "type": "integer",
+          "description": "durationYears field",
+          "example": 3
+        },
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
+        }
+      }
+    },
+    "Model18": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model17"
+      }
+    },
+    "Model19": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/Model18"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "Model20": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model19"
+      }
+    },
+    "Model21": {
+      "type": "object"
+    },
+    "Model22": {
       "type": "array",
       "description": "agreement field",
       "items": {
-        "$ref": "#/definitions/Model5"
+        "$ref": "#/definitions/Model21"
       }
     },
-    "Model7": {
+    "Model23": {
       "type": "object",
-      "description": "payments field",
+      "description": "application field",
       "properties": {
+        "parcel": {
+          "$ref": "#/definitions/Model20"
+        },
         "agreement": {
-          "$ref": "#/definitions/Model6"
+          "$ref": "#/definitions/Model22"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
         }
       }
     },
-    "Model8": {
+    "Model24": {
       "type": "object",
       "description": "answers field",
       "properties": {
-        "referenceNumber": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
           "type": "string",
-          "description": "referenceNumber field",
-          "example": "WMP-926-WLW"
+          "description": "agreementName field",
+          "example": "Example agreement 2"
         },
-        "woodlandName": {
+        "scheme": {
           "type": "string",
-          "description": "woodlandName field",
-          "example": "Oakridge Estate"
+          "description": "scheme field",
+          "example": "FPTT"
         },
-        "businessDetailsUpToDate": {
-          "type": "boolean",
-          "description": "businessDetailsUpToDate field",
-          "example": true
-        },
-        "landRegisteredWithRpa": {
-          "type": "boolean",
-          "description": "landRegisteredWithRpa field",
-          "example": true
-        },
-        "landManagementControl": {
-          "type": "boolean",
-          "description": "landManagementControl field",
-          "example": true
-        },
-        "publicBodyTenant": {
-          "type": "boolean",
-          "description": "publicBodyTenant field",
-          "example": false
-        },
-        "landHasGrazingRights": {
-          "type": "boolean",
-          "description": "landHasGrazingRights field",
-          "example": false
-        },
-        "appLandHasExistingWmp": {
-          "type": "boolean",
-          "description": "appLandHasExistingWmp field",
-          "example": false
-        },
-        "intendToApplyHigherTier": {
-          "type": "boolean",
-          "description": "intendToApplyHigherTier field",
-          "example": true
-        },
-        "totalHectaresForSelectedParcels": {
-          "type": "number",
-          "description": "totalHectaresForSelectedParcels field",
-          "example": 195.246
-        },
-        "hectaresTenOrOverYearsOld": {
+        "year": {
           "type": "integer",
-          "description": "hectaresTenOrOverYearsOld field",
-          "example": 18
+          "description": "year field",
+          "example": 2025
         },
-        "hectaresUnderTenYearsOld": {
-          "type": "integer",
-          "description": "hectaresUnderTenYearsOld field",
-          "example": 2
+        "actionApplications": {
+          "$ref": "#/definitions/Model9"
         },
-        "landParcels": {
-          "$ref": "#/definitions/Model4"
-        },
-        "centreGridReference": {
-          "type": "string",
-          "description": "centreGridReference field",
-          "example": "SP12345678"
-        },
-        "fcTeamCode": {
-          "type": "string",
-          "description": "fcTeamCode field",
-          "example": "NORTH_WEST_AND_WEST_MIDLANDS"
+        "payment": {
+          "$ref": "#/definitions/Model16"
         },
         "applicant": {
           "$ref": "#/definitions/applicant"
         },
-        "detailsConfirmedAt": {
-          "type": "string",
-          "description": "detailsConfirmedAt field",
-          "example": "2026-04-02T09:15:33.583Z"
-        },
-        "guidanceRead": {
-          "type": "boolean",
-          "description": "guidanceRead field",
-          "example": true
-        },
-        "includedAllEligibleWoodland": {
-          "type": "boolean",
-          "description": "includedAllEligibleWoodland field",
-          "example": true
-        },
-        "applicationConfirmation": {
-          "type": "boolean",
-          "description": "applicationConfirmation field",
-          "example": true
-        },
-        "totalAgreementPaymentPence": {
-          "type": "integer",
-          "description": "totalAgreementPaymentPence field",
-          "example": 166200
-        },
-        "payments": {
-          "$ref": "#/definitions/Model7"
+        "application": {
+          "$ref": "#/definitions/Model23"
         }
       }
     },
-    "Model9": {
+    "Model25": {
       "type": "object",
       "description": "Complete agreement data structure from Pact test data",
       "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "FPTT123456789"
+        },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "wmp-926-wlw"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "woodland"
+          "example": "frps-private-beta"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"
         },
-        "metadata": {
-          "$ref": "#/definitions/metadata"
-        },
         "answers": {
-          "$ref": "#/definitions/Model8"
-        },
-        "notificationMessageId": {
-          "type": "string",
-          "description": "notificationMessageId field",
-          "example": "sample-notification-wmp-1"
+          "$ref": "#/definitions/Model24"
         }
       }
     },
@@ -1005,7 +1184,7 @@
       "type": "array",
       "description": "Array of agreement data objects",
       "items": {
-        "$ref": "#/definitions/Model9"
+        "$ref": "#/definitions/Model25"
       }
     },
     "InvoiceResponse": {
@@ -1055,231 +1234,300 @@
         }
       }
     },
-    "Model10": {
-      "type": "object",
-      "properties": {
-        "parcelId": {
-          "type": "string",
-          "description": "parcelId field",
-          "example": "SD7560-9193"
-        },
-        "areaHa": {
-          "type": "number",
-          "description": "areaHa field",
-          "example": 25.3874
-        }
-      }
+    "Model26": {
+      "type": "object"
     },
-    "Model11": {
+    "Model27": {
       "type": "array",
-      "description": "landParcels field",
+      "description": "actionApplications field",
       "items": {
-        "$ref": "#/definitions/Model10"
+        "$ref": "#/definitions/Model26"
       }
     },
-    "Model12": {
+    "Model28": {
       "type": "object",
+      "description": "1 field",
       "properties": {
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "PA3"
+          "example": "CMOR1"
         },
         "description": {
           "type": "string",
           "description": "description field",
-          "example": "Woodland management plan"
+          "example": "CMOR1: Assess moorland and produce a written record"
         },
-        "activePaymentTier": {
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "annualPaymentPence": {
           "type": "integer",
-          "description": "activePaymentTier field",
-          "example": 2
-        },
-        "quantityInActiveTier": {
-          "type": "number",
-          "description": "quantityInActiveTier field",
-          "example": 5.4
-        },
-        "activeTierRatePence": {
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "Model29": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model28"
+        }
+      }
+    },
+    "Model30": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
           "type": "integer",
-          "description": "activeTierRatePence field",
-          "example": 3000
+          "description": "parcelItemId field",
+          "example": 1
         },
-        "activeTierFlatRatePence": {
+        "paymentPence": {
           "type": "integer",
-          "description": "activeTierFlatRatePence field",
-          "example": 150000
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "Model31": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model30"
+      }
+    },
+    "Model32": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
         },
-        "quantity": {
-          "type": "number",
-          "description": "quantity field",
-          "example": 55.4
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/Model31"
+        }
+      }
+    },
+    "Model33": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model32"
+      }
+    },
+    "Model34": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
         },
         "agreementTotalPence": {
           "type": "integer",
           "description": "agreementTotalPence field",
-          "example": 166200
+          "example": 96018
         },
-        "unit": {
-          "type": "string",
-          "description": "unit field",
-          "example": "ha"
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/Model29"
+        },
+        "payments": {
+          "$ref": "#/definitions/Model33"
         }
       }
     },
-    "Model13": {
+    "Model35": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "durationYears": {
+          "type": "integer",
+          "description": "durationYears field",
+          "example": 3
+        },
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
+        }
+      }
+    },
+    "Model36": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model35"
+      }
+    },
+    "Model37": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/Model36"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "Model38": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model37"
+      }
+    },
+    "Model39": {
+      "type": "object"
+    },
+    "Model40": {
       "type": "array",
       "description": "agreement field",
       "items": {
-        "$ref": "#/definitions/Model12"
+        "$ref": "#/definitions/Model39"
       }
     },
-    "Model14": {
+    "Model41": {
       "type": "object",
-      "description": "payments field",
+      "description": "application field",
       "properties": {
+        "parcel": {
+          "$ref": "#/definitions/Model38"
+        },
         "agreement": {
-          "$ref": "#/definitions/Model13"
+          "$ref": "#/definitions/Model40"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
         }
       }
     },
-    "Model15": {
+    "Model42": {
       "type": "object",
       "description": "answers field",
       "properties": {
-        "referenceNumber": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
           "type": "string",
-          "description": "referenceNumber field",
-          "example": "WMP-926-WLW"
+          "description": "agreementName field",
+          "example": "Example agreement 2"
         },
-        "woodlandName": {
+        "scheme": {
           "type": "string",
-          "description": "woodlandName field",
-          "example": "Oakridge Estate"
+          "description": "scheme field",
+          "example": "FPTT"
         },
-        "businessDetailsUpToDate": {
-          "type": "boolean",
-          "description": "businessDetailsUpToDate field",
-          "example": true
-        },
-        "landRegisteredWithRpa": {
-          "type": "boolean",
-          "description": "landRegisteredWithRpa field",
-          "example": true
-        },
-        "landManagementControl": {
-          "type": "boolean",
-          "description": "landManagementControl field",
-          "example": true
-        },
-        "publicBodyTenant": {
-          "type": "boolean",
-          "description": "publicBodyTenant field",
-          "example": false
-        },
-        "landHasGrazingRights": {
-          "type": "boolean",
-          "description": "landHasGrazingRights field",
-          "example": false
-        },
-        "appLandHasExistingWmp": {
-          "type": "boolean",
-          "description": "appLandHasExistingWmp field",
-          "example": false
-        },
-        "intendToApplyHigherTier": {
-          "type": "boolean",
-          "description": "intendToApplyHigherTier field",
-          "example": true
-        },
-        "totalHectaresForSelectedParcels": {
-          "type": "number",
-          "description": "totalHectaresForSelectedParcels field",
-          "example": 195.246
-        },
-        "hectaresTenOrOverYearsOld": {
+        "year": {
           "type": "integer",
-          "description": "hectaresTenOrOverYearsOld field",
-          "example": 18
+          "description": "year field",
+          "example": 2025
         },
-        "hectaresUnderTenYearsOld": {
-          "type": "integer",
-          "description": "hectaresUnderTenYearsOld field",
-          "example": 2
+        "actionApplications": {
+          "$ref": "#/definitions/Model27"
         },
-        "landParcels": {
-          "$ref": "#/definitions/Model11"
-        },
-        "centreGridReference": {
-          "type": "string",
-          "description": "centreGridReference field",
-          "example": "SP12345678"
-        },
-        "fcTeamCode": {
-          "type": "string",
-          "description": "fcTeamCode field",
-          "example": "NORTH_WEST_AND_WEST_MIDLANDS"
+        "payment": {
+          "$ref": "#/definitions/Model34"
         },
         "applicant": {
           "$ref": "#/definitions/applicant"
         },
-        "detailsConfirmedAt": {
-          "type": "string",
-          "description": "detailsConfirmedAt field",
-          "example": "2026-04-02T09:15:33.583Z"
-        },
-        "guidanceRead": {
-          "type": "boolean",
-          "description": "guidanceRead field",
-          "example": true
-        },
-        "includedAllEligibleWoodland": {
-          "type": "boolean",
-          "description": "includedAllEligibleWoodland field",
-          "example": true
-        },
-        "applicationConfirmation": {
-          "type": "boolean",
-          "description": "applicationConfirmation field",
-          "example": true
-        },
-        "totalAgreementPaymentPence": {
-          "type": "integer",
-          "description": "totalAgreementPaymentPence field",
-          "example": 166200
-        },
-        "payments": {
-          "$ref": "#/definitions/Model14"
+        "application": {
+          "$ref": "#/definitions/Model41"
         }
       }
     },
-    "Model16": {
+    "Model43": {
       "type": "object",
       "description": "The updated agreement data after acceptance",
       "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "FPTT123456789"
+        },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "wmp-926-wlw"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "woodland"
+          "example": "frps-private-beta"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"
         },
-        "metadata": {
-          "$ref": "#/definitions/metadata"
-        },
         "answers": {
-          "$ref": "#/definitions/Model15"
-        },
-        "notificationMessageId": {
-          "type": "string",
-          "description": "notificationMessageId field",
-          "example": "sample-notification-wmp-1"
+          "$ref": "#/definitions/Model42"
         }
       }
     },
@@ -1287,7 +1535,7 @@
       "type": "object",
       "properties": {
         "agreementData": {
-          "$ref": "#/definitions/Model16"
+          "$ref": "#/definitions/Model43"
         }
       }
     },
@@ -1295,24 +1543,29 @@
       "type": "object",
       "description": "Business and customer identifiers",
       "properties": {
-        "sbi": {
-          "type": "string",
-          "description": "sbi field",
-          "example": "107593059"
-        },
         "frn": {
           "type": "string",
           "description": "frn field",
-          "example": "1076543210"
+          "example": "1234567890"
+        },
+        "sbi": {
+          "type": "string",
+          "description": "sbi field",
+          "example": "106284736"
         },
         "crn": {
           "type": "string",
           "description": "crn field",
-          "example": "1100957269"
+          "example": "crn"
+        },
+        "defraId": {
+          "type": "string",
+          "description": "defraId field",
+          "example": "defraId"
         }
       }
     },
-    "Model17": {
+    "email": {
       "type": "object",
       "description": "email field",
       "properties": {
@@ -1323,7 +1576,7 @@
         }
       }
     },
-    "Model18": {
+    "phone": {
       "type": "object",
       "description": "phone field",
       "properties": {
@@ -1334,38 +1587,7 @@
         }
       }
     },
-    "Model19": {
-      "type": "object",
-      "description": "address field",
-      "properties": {
-        "line1": {
-          "type": "string",
-          "description": "line1 field",
-          "example": "Mason House Farm Clitheroe Rd"
-        },
-        "line2": {
-          "type": "string",
-          "description": "line2 field",
-          "example": "Bashall Eaves"
-        },
-        "street": {
-          "type": "string",
-          "description": "street field",
-          "example": "Bartindale Road"
-        },
-        "city": {
-          "type": "string",
-          "description": "city field",
-          "example": "Clitheroe"
-        },
-        "postalCode": {
-          "type": "string",
-          "description": "postalCode field",
-          "example": "BB7 3DD"
-        }
-      }
-    },
-    "Model20": {
+    "Model44": {
       "type": "object",
       "description": "business field",
       "properties": {
@@ -1375,48 +1597,13 @@
           "example": "J&S Hartley"
         },
         "email": {
-          "$ref": "#/definitions/Model17"
+          "$ref": "#/definitions/email"
         },
         "phone": {
-          "$ref": "#/definitions/Model18"
+          "$ref": "#/definitions/phone"
         },
         "address": {
-          "$ref": "#/definitions/Model19"
-        }
-      }
-    },
-    "Model21": {
-      "type": "object",
-      "description": "name field",
-      "properties": {
-        "title": {
-          "type": "string",
-          "description": "title field",
-          "example": "Mr."
-        },
-        "first": {
-          "type": "string",
-          "description": "first field",
-          "example": "Edward"
-        },
-        "middle": {
-          "type": "string",
-          "description": "middle field",
-          "example": "Paul"
-        },
-        "last": {
-          "type": "string",
-          "description": "last field",
-          "example": "Jones"
-        }
-      }
-    },
-    "Model22": {
-      "type": "object",
-      "description": "customer field",
-      "properties": {
-        "name": {
-          "$ref": "#/definitions/Model21"
+          "$ref": "#/definitions/address"
         }
       }
     },
@@ -1425,14 +1612,14 @@
       "description": "Applicant business and customer details",
       "properties": {
         "business": {
-          "$ref": "#/definitions/Model20"
+          "$ref": "#/definitions/Model44"
         },
         "customer": {
-          "$ref": "#/definitions/Model22"
+          "$ref": "#/definitions/customer"
         }
       }
     },
-    "Model23": {
+    "Model45": {
       "type": "object"
     },
     "data": {
@@ -1446,7 +1633,7 @@
           "$ref": "#/definitions/Applicant"
         },
         "answers": {
-          "$ref": "#/definitions/Model23"
+          "$ref": "#/definitions/Model45"
         }
       }
     },
@@ -1459,231 +1646,300 @@
         }
       }
     },
-    "Model24": {
-      "type": "object",
-      "properties": {
-        "parcelId": {
-          "type": "string",
-          "description": "parcelId field",
-          "example": "SD7560-9193"
-        },
-        "areaHa": {
-          "type": "number",
-          "description": "areaHa field",
-          "example": 25.3874
-        }
-      }
+    "Model46": {
+      "type": "object"
     },
-    "Model25": {
+    "Model47": {
       "type": "array",
-      "description": "landParcels field",
+      "description": "actionApplications field",
       "items": {
-        "$ref": "#/definitions/Model24"
+        "$ref": "#/definitions/Model46"
       }
     },
-    "Model26": {
+    "Model48": {
       "type": "object",
+      "description": "1 field",
       "properties": {
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "PA3"
+          "example": "CMOR1"
         },
         "description": {
           "type": "string",
           "description": "description field",
-          "example": "Woodland management plan"
+          "example": "CMOR1: Assess moorland and produce a written record"
         },
-        "activePaymentTier": {
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "annualPaymentPence": {
           "type": "integer",
-          "description": "activePaymentTier field",
-          "example": 2
-        },
-        "quantityInActiveTier": {
-          "type": "number",
-          "description": "quantityInActiveTier field",
-          "example": 5.4
-        },
-        "activeTierRatePence": {
+          "description": "annualPaymentPence field",
+          "example": 27200
+        }
+      }
+    },
+    "Model49": {
+      "type": "object",
+      "description": "agreementLevelItems field",
+      "properties": {
+        "1": {
+          "$ref": "#/definitions/Model48"
+        }
+      }
+    },
+    "Model50": {
+      "type": "object",
+      "properties": {
+        "parcelItemId": {
           "type": "integer",
-          "description": "activeTierRatePence field",
-          "example": 3000
+          "description": "parcelItemId field",
+          "example": 1
         },
-        "activeTierFlatRatePence": {
+        "paymentPence": {
           "type": "integer",
-          "description": "activeTierFlatRatePence field",
-          "example": 150000
+          "description": "paymentPence field",
+          "example": 1204
+        }
+      }
+    },
+    "Model51": {
+      "type": "array",
+      "description": "lineItems field",
+      "items": {
+        "$ref": "#/definitions/Model50"
+      }
+    },
+    "Model52": {
+      "type": "object",
+      "properties": {
+        "totalPaymentPence": {
+          "type": "integer",
+          "description": "totalPaymentPence field",
+          "example": 8007
         },
-        "quantity": {
-          "type": "number",
-          "description": "quantity field",
-          "example": 55.4
+        "paymentDate": {
+          "type": "string",
+          "description": "paymentDate field",
+          "example": "2025-12-05"
+        },
+        "lineItems": {
+          "$ref": "#/definitions/Model51"
+        }
+      }
+    },
+    "Model53": {
+      "type": "array",
+      "description": "payments field",
+      "items": {
+        "$ref": "#/definitions/Model52"
+      }
+    },
+    "Model54": {
+      "type": "object",
+      "description": "payment field",
+      "properties": {
+        "agreementStartDate": {
+          "type": "string",
+          "description": "agreementStartDate field",
+          "example": "2025-09-01"
+        },
+        "agreementEndDate": {
+          "type": "string",
+          "description": "agreementEndDate field",
+          "example": "2028-09-01"
+        },
+        "frequency": {
+          "type": "string",
+          "description": "frequency field",
+          "example": "Quarterly"
         },
         "agreementTotalPence": {
           "type": "integer",
           "description": "agreementTotalPence field",
-          "example": 166200
+          "example": 96018
         },
-        "unit": {
-          "type": "string",
-          "description": "unit field",
-          "example": "ha"
+        "annualTotalPence": {
+          "type": "integer",
+          "description": "annualTotalPence field",
+          "example": 32006
+        },
+        "parcelItems": {
+          "$ref": "#/definitions/parcelItems"
+        },
+        "agreementLevelItems": {
+          "$ref": "#/definitions/Model49"
+        },
+        "payments": {
+          "$ref": "#/definitions/Model53"
         }
       }
     },
-    "Model27": {
+    "Model55": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "code field",
+          "example": "CMOR1"
+        },
+        "version": {
+          "type": "string",
+          "description": "version field",
+          "example": "1"
+        },
+        "durationYears": {
+          "type": "integer",
+          "description": "durationYears field",
+          "example": 3
+        },
+        "appliedFor": {
+          "$ref": "#/definitions/appliedFor"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee93"
+        }
+      }
+    },
+    "Model56": {
+      "type": "array",
+      "description": "actions field",
+      "items": {
+        "$ref": "#/definitions/Model55"
+      }
+    },
+    "Model57": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "string",
+          "description": "sheetId field",
+          "example": "SD6743"
+        },
+        "parcelId": {
+          "type": "string",
+          "description": "parcelId field",
+          "example": "8083"
+        },
+        "area": {
+          "$ref": "#/definitions/area"
+        },
+        "actions": {
+          "$ref": "#/definitions/Model56"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee91"
+        }
+      }
+    },
+    "Model58": {
+      "type": "array",
+      "description": "parcel field",
+      "items": {
+        "$ref": "#/definitions/Model57"
+      }
+    },
+    "Model59": {
+      "type": "object"
+    },
+    "Model60": {
       "type": "array",
       "description": "agreement field",
       "items": {
-        "$ref": "#/definitions/Model26"
+        "$ref": "#/definitions/Model59"
       }
     },
-    "Model28": {
+    "Model61": {
       "type": "object",
-      "description": "payments field",
+      "description": "application field",
       "properties": {
+        "parcel": {
+          "$ref": "#/definitions/Model58"
+        },
         "agreement": {
-          "$ref": "#/definitions/Model27"
+          "$ref": "#/definitions/Model60"
+        },
+        "_id": {
+          "type": "string",
+          "description": "_id field",
+          "example": "69262bb2331fd3b45b76ee90"
         }
       }
     },
-    "Model29": {
+    "Model62": {
       "type": "object",
       "description": "answers field",
       "properties": {
-        "referenceNumber": {
+        "hasCheckedLandIsUpToDate": {
+          "type": "boolean",
+          "description": "hasCheckedLandIsUpToDate field",
+          "example": true
+        },
+        "agreementName": {
           "type": "string",
-          "description": "referenceNumber field",
-          "example": "WMP-926-WLW"
+          "description": "agreementName field",
+          "example": "Example agreement 2"
         },
-        "woodlandName": {
+        "scheme": {
           "type": "string",
-          "description": "woodlandName field",
-          "example": "Oakridge Estate"
+          "description": "scheme field",
+          "example": "FPTT"
         },
-        "businessDetailsUpToDate": {
-          "type": "boolean",
-          "description": "businessDetailsUpToDate field",
-          "example": true
-        },
-        "landRegisteredWithRpa": {
-          "type": "boolean",
-          "description": "landRegisteredWithRpa field",
-          "example": true
-        },
-        "landManagementControl": {
-          "type": "boolean",
-          "description": "landManagementControl field",
-          "example": true
-        },
-        "publicBodyTenant": {
-          "type": "boolean",
-          "description": "publicBodyTenant field",
-          "example": false
-        },
-        "landHasGrazingRights": {
-          "type": "boolean",
-          "description": "landHasGrazingRights field",
-          "example": false
-        },
-        "appLandHasExistingWmp": {
-          "type": "boolean",
-          "description": "appLandHasExistingWmp field",
-          "example": false
-        },
-        "intendToApplyHigherTier": {
-          "type": "boolean",
-          "description": "intendToApplyHigherTier field",
-          "example": true
-        },
-        "totalHectaresForSelectedParcels": {
-          "type": "number",
-          "description": "totalHectaresForSelectedParcels field",
-          "example": 195.246
-        },
-        "hectaresTenOrOverYearsOld": {
+        "year": {
           "type": "integer",
-          "description": "hectaresTenOrOverYearsOld field",
-          "example": 18
+          "description": "year field",
+          "example": 2025
         },
-        "hectaresUnderTenYearsOld": {
-          "type": "integer",
-          "description": "hectaresUnderTenYearsOld field",
-          "example": 2
+        "actionApplications": {
+          "$ref": "#/definitions/Model47"
         },
-        "landParcels": {
-          "$ref": "#/definitions/Model25"
-        },
-        "centreGridReference": {
-          "type": "string",
-          "description": "centreGridReference field",
-          "example": "SP12345678"
-        },
-        "fcTeamCode": {
-          "type": "string",
-          "description": "fcTeamCode field",
-          "example": "NORTH_WEST_AND_WEST_MIDLANDS"
+        "payment": {
+          "$ref": "#/definitions/Model54"
         },
         "applicant": {
           "$ref": "#/definitions/applicant"
         },
-        "detailsConfirmedAt": {
-          "type": "string",
-          "description": "detailsConfirmedAt field",
-          "example": "2026-04-02T09:15:33.583Z"
-        },
-        "guidanceRead": {
-          "type": "boolean",
-          "description": "guidanceRead field",
-          "example": true
-        },
-        "includedAllEligibleWoodland": {
-          "type": "boolean",
-          "description": "includedAllEligibleWoodland field",
-          "example": true
-        },
-        "applicationConfirmation": {
-          "type": "boolean",
-          "description": "applicationConfirmation field",
-          "example": true
-        },
-        "totalAgreementPaymentPence": {
-          "type": "integer",
-          "description": "totalAgreementPaymentPence field",
-          "example": 166200
-        },
-        "payments": {
-          "$ref": "#/definitions/Model28"
+        "application": {
+          "$ref": "#/definitions/Model61"
         }
       }
     },
-    "Model30": {
+    "Model63": {
       "type": "object",
       "description": "Created agreement data (only for create_agreement queue)",
       "properties": {
+        "notificationMessageId": {
+          "type": "string",
+          "description": "notificationMessageId field",
+          "example": "sample-notification-2"
+        },
+        "agreementNumber": {
+          "type": "string",
+          "description": "agreementNumber field",
+          "example": "FPTT123456789"
+        },
         "clientRef": {
           "type": "string",
           "description": "clientRef field",
-          "example": "wmp-926-wlw"
+          "example": "client-ref-001"
         },
         "code": {
           "type": "string",
           "description": "code field",
-          "example": "woodland"
+          "example": "frps-private-beta"
         },
         "identifiers": {
           "$ref": "#/definitions/identifiers"
         },
-        "metadata": {
-          "$ref": "#/definitions/metadata"
-        },
         "answers": {
-          "$ref": "#/definitions/Model29"
-        },
-        "notificationMessageId": {
-          "type": "string",
-          "description": "notificationMessageId field",
-          "example": "sample-notification-wmp-1"
+          "$ref": "#/definitions/Model62"
         }
       }
     },
@@ -1695,11 +1951,11 @@
           "description": "Success message"
         },
         "agreementData": {
-          "$ref": "#/definitions/Model30"
+          "$ref": "#/definitions/Model63"
         }
       }
     },
-    "Model31": {
+    "Model64": {
       "type": "string",
       "description": "Success confirmation message",
       "enum": [
@@ -1710,7 +1966,7 @@
       "type": "object",
       "properties": {
         "message": {
-          "$ref": "#/definitions/Model31"
+          "$ref": "#/definitions/Model64"
         }
       }
     }
