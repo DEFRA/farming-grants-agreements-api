@@ -40,10 +40,9 @@ describe('UI sending a GET request to get an agreement', () => {
     config.set('mongoUri', mongoOverrides.mongoUrl)
     config.set('files.s3.bucket', 'mockBucket')
     config.set('files.s3.region', 'mockRegion')
-    config.set('featureFlags.seedDb', false)
-    config.set('featureFlags.wmpMigrationDiagnosis', false)
+    config.set('featureFlags.seedDb', true)
 
-    const sbi = '107593059'
+    const sbi = 'mock-sbi'
 
     // Mock JWT auth functions to return valid authorization by default
     vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
@@ -53,42 +52,12 @@ describe('UI sending a GET request to get an agreement', () => {
     })
 
     const { payment } = agreements[1].answers
-    const calculateResponse = {
-      message: 'success',
-      payment: {
-        ...payment,
-        agreementStartDate: '2025-12-01',
-        agreementEndDate: '2028-12-01',
-        agreementTotalPence: 242298,
-        annualTotalPence: 80766,
-        payments: [
-          {
-            paymentDate: '2026-03-05',
-            totalPaymentPence: 20197,
-            lineItems: [{ agreementLevelItemId: 1, paymentPence: 20197 }]
-          }
-        ]
-      }
-    }
-
-    fetchWithTimeout.mockImplementation((url) => {
-      const urlStr = String(url)
-      if (urlStr.includes('/api/v2/payments/calculate')) {
-        return Promise.resolve({
-          ok: true,
-          headers: {
-            get: () => 'application/json'
-          },
-          json: vi.fn().mockResolvedValue(calculateResponse)
-        })
-      }
-      return Promise.resolve({
-        ok: true,
-        headers: {
-          get: () => 'application/json'
-        },
-        json: vi.fn().mockResolvedValue({ payment })
-      })
+    fetchWithTimeout.mockResolvedValue({
+      ok: true,
+      headers: {
+        get: () => 'application/json'
+      },
+      json: vi.fn().mockResolvedValue({ payment })
     })
 
     // Create and start the server
@@ -97,7 +66,9 @@ describe('UI sending a GET request to get an agreement', () => {
       ...mongoOverrides
     })
     await server.start()
-    await seedDatabase(console, [agreements[1]])
+    await seedDatabase(console, [
+      { ...agreements[1], identifiers: { ...agreements[1].identifiers, sbi } }
+    ])
   })
 
   afterAll(async () => {
@@ -135,48 +106,10 @@ describe('UI sending a GET request to get an agreement', () => {
       },
       stateHandlers: {
         'A customer has an accepted agreement offer': async () => {
-          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
-            valid: true,
-            source: 'defra',
-            sbi: '107593059'
-          })
           await acceptOffer(
             agreements[1].agreementNumber,
-            agreements[1].answers,
-            console
+            agreements[1].answers
           )
-        },
-        'A customer has a WMP agreement offer': () => {
-          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
-            valid: true,
-            source: 'defra',
-            sbi: '107593059'
-          })
-          return Promise.resolve()
-        },
-        'A customer has an agreement offer': () => {
-          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
-            valid: true,
-            source: 'defra',
-            sbi: '107593059'
-          })
-          return Promise.resolve()
-        },
-        'A customer has confirmed checkbox and is ready to accept': () => {
-          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
-            valid: true,
-            source: 'defra',
-            sbi: '107593059'
-          })
-          return Promise.resolve()
-        },
-        'A customer has an offer that has been withdrawn': () => {
-          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
-            valid: true,
-            source: 'defra',
-            sbi: '107593059'
-          })
-          return Promise.resolve()
         }
       }
     }
@@ -185,5 +118,5 @@ describe('UI sending a GET request to get an agreement', () => {
     expect(verify).toBeTruthy()
 
     return verify
-  }, 30000)
+  }, 15000)
 })
