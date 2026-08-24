@@ -61,7 +61,7 @@ describe('UI sending a POST request to accept an agreement', () => {
       ...mongoOverrides
     })
     await server.initialize()
-    await seedDatabase(console, [sampleData.agreements[1]])
+    await seedDatabase(console, [sampleData.agreements[0]])
   })
 
   afterAll(async () => {
@@ -143,12 +143,18 @@ describe('UI sending a POST request to accept an agreement', () => {
             {
               sheetId: 'AA0006',
               parcelId: '0006',
-              actions: [{ code: 'CMOR1', quantity: 4.7575 }]
+              actions: [
+                { code: 'CMOR1', quantity: 4.7575 },
+                { code: 'UPL3', quantity: 4.7575 }
+              ]
             },
             {
-              sheetId: 'AA0006',
-              parcelId: '0007',
-              actions: [{ code: 'CMOR1', quantity: 2.1705 }]
+              sheetId: 'AA0101',
+              parcelId: '0108',
+              actions: [
+                { code: 'CMOR1', quantity: 2.1705 },
+                { code: 'UPL1', quantity: 2.1705 }
+              ]
             }
           ]
         })
