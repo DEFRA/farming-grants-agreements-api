@@ -53,12 +53,42 @@ describe('UI sending a GET request to get an agreement', () => {
     })
 
     const { payment } = agreements[1].answers
-    fetchWithTimeout.mockResolvedValue({
-      ok: true,
-      headers: {
-        get: () => 'application/json'
-      },
-      json: vi.fn().mockResolvedValue({ payment })
+    const calculateResponse = {
+      message: 'success',
+      payment: {
+        ...payment,
+        agreementStartDate: '2025-12-01',
+        agreementEndDate: '2028-12-01',
+        agreementTotalPence: 242298,
+        annualTotalPence: 80766,
+        payments: [
+          {
+            paymentDate: '2026-03-05',
+            totalPaymentPence: 20197,
+            lineItems: [{ agreementLevelItemId: 1, paymentPence: 20197 }]
+          }
+        ]
+      }
+    }
+
+    fetchWithTimeout.mockImplementation((url) => {
+      const urlStr = String(url)
+      if (urlStr.includes('/api/v2/payments/calculate')) {
+        return Promise.resolve({
+          ok: true,
+          headers: {
+            get: () => 'application/json'
+          },
+          json: vi.fn().mockResolvedValue(calculateResponse)
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: {
+          get: () => 'application/json'
+        },
+        json: vi.fn().mockResolvedValue({ payment })
+      })
     })
 
     // Create and start the server
