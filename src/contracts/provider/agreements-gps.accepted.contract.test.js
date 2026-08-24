@@ -115,6 +115,7 @@ describe('sending a create grant payment event via SNS', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(mockPublishEvent).mockResolvedValue(undefined)
 
     vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
       valid: true,
@@ -151,13 +152,14 @@ describe('sending a create grant payment event via SNS', () => {
         )
 
         if (!acceptedPublishCall) {
+          const allEvents = mockPublishEvent.mock.calls.map(([event]) => ({
+            type: event?.type,
+            topicArn: event?.topicArn,
+            data: event?.data
+          }))
           throw new Error(
-            `Accepted event was not published. Calls were: ${JSON.stringify(
-              mockPublishEvent.mock.calls.map(([event]) => ({
-                type: event?.type,
-                topicArn: event?.topicArn,
-                status: event?.data?.status
-              })),
+            `Accepted event was not published. Expected type: cloud.defra.dev.farming-grants-agreements-api.payment.create. Calls were: ${JSON.stringify(
+              allEvents,
               null,
               2
             )}`
