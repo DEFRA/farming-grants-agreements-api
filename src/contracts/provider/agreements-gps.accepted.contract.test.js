@@ -81,7 +81,7 @@ describe('sending a create grant payment event via SNS', () => {
   let server
   let originalFetch
 
-  const agreement = agreements[1]
+  const agreement = agreements[0]
   const mockSbi = agreement.identifiers.sbi
 
   beforeAll(async () => {

@@ -43,7 +43,7 @@ describe('UI sending a GET request to get an agreement', () => {
     config.set('featureFlags.seedDb', false)
     config.set('featureFlags.wmpMigrationDiagnosis', false)
 
-    const sbi = 'mock-sbi'
+    const sbi = '107593059'
 
     // Mock JWT auth functions to return valid authorization by default
     vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
@@ -97,9 +97,7 @@ describe('UI sending a GET request to get an agreement', () => {
       ...mongoOverrides
     })
     await server.start()
-    await seedDatabase(console, [
-      { ...agreements[1], identifiers: { ...agreements[1].identifiers, sbi } }
-    ])
+    await seedDatabase(console, [agreements[1]])
   })
 
   afterAll(async () => {
@@ -140,13 +138,45 @@ describe('UI sending a GET request to get an agreement', () => {
           vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
             valid: true,
             source: 'defra',
-            sbi: 'mock-sbi'
+            sbi: '107593059'
           })
           await acceptOffer(
             agreements[1].agreementNumber,
             agreements[1].answers,
             console
           )
+        },
+        'A customer has a WMP agreement offer': () => {
+          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
+            valid: true,
+            source: 'defra',
+            sbi: '107593059'
+          })
+          return Promise.resolve()
+        },
+        'A customer has an agreement offer': () => {
+          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
+            valid: true,
+            source: 'defra',
+            sbi: '107593059'
+          })
+          return Promise.resolve()
+        },
+        'A customer has confirmed checkbox and is ready to accept': () => {
+          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
+            valid: true,
+            source: 'defra',
+            sbi: '107593059'
+          })
+          return Promise.resolve()
+        },
+        'A customer has an offer that has been withdrawn': () => {
+          vi.mocked(jwtAuth.validateJwtAuthentication).mockReturnValue({
+            valid: true,
+            source: 'defra',
+            sbi: '107593059'
+          })
+          return Promise.resolve()
         }
       }
     }
