@@ -201,6 +201,75 @@ function getHappyPathGrant(grantId) {
   }
 }
 
+function getVersion1Payment() {
+  return {
+    agreementStartDate: '2026-08-01',
+    agreementEndDate: '2029-07-31',
+    frequency: 'OneOff',
+    agreementTotalPence: 150000,
+    annualTotalPence: 150000,
+    agreementLevelItems: {
+      1: {
+        code: 'PA3',
+        description: 'Woodland management plan',
+        version: '1',
+        annualPaymentPence: 150000
+      }
+    }
+  }
+}
+
+function getVersion1Applicant() {
+  return {
+    business: {
+      name: 'Example Woodland Business Ltd',
+      address: {
+        line1: '6 Example Lane',
+        city: 'Exampleton',
+        postalCode: 'ZZ99 1ZZ'
+      }
+    },
+    customer: {
+      name: { title: 'Mrs', first: 'Robin', last: "Example" }
+    }
+  }
+}
+
+function getVersion1Application() {
+  return {
+    parcel: [
+      {
+        parcelId: SAMPLE_PARCEL_ID,
+        area: { unit: 'ha', quantity: Decimal128.fromString('35.6517') },
+        actions: [
+          {
+            code: 'PA3',
+            version: '1',
+            appliedFor: {
+              unit: 'ha',
+              quantity: Decimal128.fromString('25')
+            }
+          }
+        ]
+      },
+      {
+        parcelId: 'AA0302-0302',
+        area: { unit: 'ha', quantity: Decimal128.fromString('0.0827') },
+        actions: [
+          {
+            code: 'PA3',
+            version: '1',
+            appliedFor: {
+              unit: 'ha',
+              quantity: Decimal128.fromString('25')
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
 function getVersion1(grantId) {
   return {
     _id: new ObjectId('f000000000000000000003eb'),
@@ -213,66 +282,9 @@ function getVersion1(grantId) {
     status: 'accepted',
     grant: grantId,
     scheme: 'WMP',
-    payment: {
-      agreementStartDate: '2026-08-01',
-      agreementEndDate: '2029-07-31',
-      frequency: 'OneOff',
-      agreementTotalPence: 150000,
-      annualTotalPence: 150000,
-      agreementLevelItems: {
-        1: {
-          code: 'PA3',
-          description: 'Woodland management plan',
-          version: '1',
-          annualPaymentPence: 150000
-        }
-      }
-    },
-    applicant: {
-      business: {
-        name: 'Example Woodland Business Ltd',
-        address: {
-          line1: '6 Example Lane',
-          city: 'Exampleton',
-          postalCode: 'ZZ99 1ZZ'
-        }
-      },
-      customer: {
-        name: { title: 'Mrs', first: 'Robin', last: "Example" }
-      }
-    },
-    application: {
-      parcel: [
-        {
-          parcelId: SAMPLE_PARCEL_ID,
-          area: { unit: 'ha', quantity: Decimal128.fromString('35.6517') },
-          actions: [
-            {
-              code: 'PA3',
-              version: '1',
-              appliedFor: {
-                unit: 'ha',
-                quantity: Decimal128.fromString('25')
-              }
-            }
-          ]
-        },
-        {
-          parcelId: 'AA0302-0302',
-          area: { unit: 'ha', quantity: Decimal128.fromString('0.0827') },
-          actions: [
-            {
-              code: 'PA3',
-              version: '1',
-              appliedFor: {
-                unit: 'ha',
-                quantity: Decimal128.fromString('25')
-              }
-            }
-          ]
-        }
-      ]
-    },
+    payment: getVersion1Payment(),
+    applicant: getVersion1Applicant(),
+    application: getVersion1Application(),
     createdAt: new Date('2026-07-16T07:45:12.618Z'),
     updatedAt: new Date('2026-07-16T07:45:45.964Z')
   }
