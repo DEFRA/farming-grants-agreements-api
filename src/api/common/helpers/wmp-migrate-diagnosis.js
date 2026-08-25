@@ -134,10 +134,17 @@ function createCandidate(legacyVersion) {
           quantity: Number.parseFloat(
             a.appliedFor?.quantity?.toString() || '0'
           ),
-          unit: a.appliedFor?.unit || 'ha'
+          unit: a.appliedFor?.unit || 'ha',
+          totalAmountPence: a.totalAmountPence || 0
         }))
       ),
-      items: [],
+      items: (legacyVersion.application?.items || []).map((i, index) => ({
+        id: `item:${index + 1}`,
+        code: i.code,
+        quantity: Number.parseFloat(i.appliedFor?.quantity?.toString() || '0'),
+        unit: i.appliedFor?.unit || 'ea',
+        totalAmountPence: i.totalAmountPence || 0
+      })),
       totalAmountPence: legacyVersion.payment?.agreementTotalPence || 0
     },
     state: legacyVersion.status === 'accepted' ? 'accepted' : 'offered',
