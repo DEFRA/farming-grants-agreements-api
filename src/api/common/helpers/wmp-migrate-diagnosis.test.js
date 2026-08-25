@@ -225,62 +225,6 @@ describe('wmp-migrate-diagnosis.js', () => {
       )
     })
 
-    it('should handle error when running diagnosis inside runAgreementDataDiagnosis', () => {
-      vi.spyOn(config, 'get').mockImplementation((key) => {
-        if (key === 'featureFlags.wmpMigrationDiagnosis') return true
-        return 'test'
-      })
-      // Trigger error in runWMPAgreementDataDiagnosis but caught in runAgreementDataDiagnosis try-catch if any
-      // Actually runWMPAgreementDataDiagnosis has its own try-catch.
-      // Line 351 (previously 344) in wmp-migrate-diagnosis.js is a catch block for runWMPAgreementDataDiagnosis() call.
-
-      // We need to mock runWMPAgreementDataDiagnosis to throw, but it's not exported.
-      // We can make it throw by making mongoose.connect fail and NOT caught in runWMPAgreementDataDiagnosis.
-      // But runWMPAgreementDataDiagnosis has a try-catch covering everything.
-
-      // WAIT! The catch block at 351 (was 344) is:
-      /*
-      try {
-        await runWMPAgreementDataDiagnosis()
-      } catch (err) {
-        logger.error(err, 'Error seeding database failed:')
-      }
-      */
-      // And runWMPAgreementDataDiagnosis is:
-      /*
-      async function runWMPAgreementDataDiagnosis() {
-        ...
-        try {
-           ...
-        } catch (error) {
-          logger.error(error, 'Diagnostic failed with error:')
-        }
-      }
-      */
-      // For the outer catch to be reached, the inner catch must rethrow OR an error must happen outside the inner try.
-      // There is nothing outside the inner try in runWMPAgreementDataDiagnosis.
-
-      // Actually, I can use vi.spyOn to mock something that runWMPAgreementDataDiagnosis uses, but it's all inside.
-
-      // If I want to hit line 351, I need runWMPAgreementDataDiagnosis() to throw.
-      // Since it's an internal function in the same file, I can't easily mock it without refactoring.
-
-      // However, if I can't hit it, maybe I should just be happy with 99.15%.
-      // But wait, what if I trigger an error in logger.info which is OUTSIDE the try-catch in runWMPAgreementDataDiagnosis?
-      // No, those are inside too.
-
-      // Let's look at runWMPAgreementDataDiagnosis again.
-      /*
-      async function runWMPAgreementDataDiagnosis() {
-        logger.info('WMP Migration Diagnostic Report') // OUTSIDE try-catch?
-        logger.info(`Timestamp: ${new Date().toISOString()}`)
-        logger.info('Scope: Woodland (WMP) Agreements, Grants, and Versions\n')
-
-        try { ... }
-      */
-      // YES! If logger.info throws, it hits the outer catch!
-    })
-
     it('should trigger outer catch block in runAgreementDataDiagnosis', async () => {
       vi.spyOn(config, 'get').mockImplementation((key) => {
         if (key === 'featureFlags.wmpMigrationDiagnosis') return true
@@ -393,61 +337,6 @@ describe('wmp-migrate-diagnosis.js', () => {
           'path=values.parcels[0].id reason=PARCEL_ID_UNPARSEABLE'
         )
       )
-    })
-
-    it('should report failure for total amount mismatch', async () => {
-      const record = {
-        grantInfo: { agreementNumber: 'WMP001' },
-        clientRef: 'ref-mismatch',
-        createdAt: new Date(),
-        identifiers: { sbi: '123' },
-        payment: { agreementTotalPence: 1000 },
-        application: {
-          parcel: [
-            {
-              parcelId: 'ST1234-5678',
-              actions: [
-                {
-                  code: 'PA3',
-                  totalAmountPence: 500
-                }
-              ]
-            }
-          ],
-          items: [
-            {
-              totalAmountPence: 200
-            }
-          ]
-        }
-      }
-
-      vi.spyOn(config, 'get').mockImplementation((key) => {
-        if (key === 'featureFlags.wmpMigrationDiagnosis') return true
-        if (key === 'featureFlags.injectUnHappyWMPData') return false
-        return 'test'
-      })
-
-      const mockAggregate = {
-        [Symbol.asyncIterator]: async function* () {
-          await Promise.resolve()
-          yield record
-        }
-      }
-      vi.spyOn(mongoose.connection, 'collection').mockImplementation((name) => {
-        if (name === 'versions') return { aggregate: () => mockAggregate }
-        return {}
-      })
-      Object.defineProperty(mongoose.connection, 'readyState', {
-        value: 1,
-        configurable: true
-      })
-
-      await runAgreementDataDiagnosis()
-      // With totalAmountPence = 500+200=700, and agreementTotalPence = 1000, and clientRef contains 'mismatch'
-      // It should NOT trigger the failure because calculatedTotal is 700, not 0.
-      // The condition is:
-      // if (legacyVersion.clientRef?.includes('mismatch') && legacyVersion.payment.agreementTotalPence > 0 && calculatedTotal === 0)
     })
 
     it('should trigger TOTAL_MISMATCH when calculated total is 0 but expected is > 0', async () => {
