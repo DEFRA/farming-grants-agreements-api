@@ -43,7 +43,6 @@ const reportFailures = (agreementNumber, versionId, issues) => {
 /**
  * Validation Logic
  */
-
 function validateSchema(candidate) {
   const issues = []
   if (!candidate.clientRef) {
