@@ -455,13 +455,13 @@ const config = convict({
     injectSampleWMPData: {
       doc: 'Inject sample WMP agreement data',
       format: STRICT_BOOLEAN_FORMAT,
-      default: true,
+      default: false,
       env: 'INJECT_SAMPLE_WMP_DATA'
     },
     injectUnHappyWMPData: {
       doc: 'Inject unhappy path WMP data',
       format: STRICT_BOOLEAN_FORMAT,
-      default: true,
+      default: false,
       env: 'INJECT_UNHAPPY_WMP_DATA'
     }
   }
