@@ -446,23 +446,11 @@ const config = convict({
       default: true,
       env: 'JWT_ENABLED'
     },
-    wmpMigrationDiagnosis: {
-      doc: 'Enable  to run WMP migration diagnosis',
+    wmpMigrationAnalysis: {
+      doc: 'Enable to run WMP migration analysis',
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
-      env: 'WMP_MIGRATION_DIAGNOSIS'
-    },
-    injectSampleWMPData: {
-      doc: 'Inject sample WMP agreement data',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: false,
-      env: 'INJECT_SAMPLE_WMP_DATA'
-    },
-    injectUnHappyWMPData: {
-      doc: 'Inject unhappy path WMP data',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: false,
-      env: 'INJECT_UNHAPPY_WMP_DATA'
+      env: 'WMP_MIGRATION_ANALYSIS'
     }
   }
 })

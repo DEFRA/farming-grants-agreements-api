@@ -46,8 +46,9 @@ export const mongooseDb = {
         }
       }
 
-      // await runAgreementDataDiagnosis()
-      await runWMPAgreementDataAnalysis()
+      if (config.get('featureFlags.wmpMigrationAnalysis') === true) {
+        await runWMPAgreementDataAnalysis()
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       server.events.on('stop', async () => {
