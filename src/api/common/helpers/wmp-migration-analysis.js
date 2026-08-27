@@ -53,82 +53,97 @@ const reportFailures = (agreementNumber, agreementId, issues) => {
 
 const checkPropertyExists = (property, targetObj) => {
   // Logic to map requested property to actual record fields
-  const getVal = (target) => {
-    switch (property) {
-      case 'agreementNumber':
-        return target.agreementNumber
-      case 'version':
-        return target.version
-      case 'code':
-        return target.code
-      case 'clientRef':
-        return target.clientRef
-      case 'correlationId':
-        return target.correlationId
-      case 'identifiers':
-        return target.identifiers
-      case 'schemeCode':
-        return target.scheme || target.schemeCode
-      case 'name':
-        return target.agreementName || target.name
-      case 'applicant':
-        return target.applicant
-      case 'application':
-        return target.application
-      case 'startDate':
-        // if its status is accepted then payment/dates should be present
-        if ((target.status || '').toLowerCase() === 'accepted') {
-          return target.payment?.agreementStartDate || target.startDate
-        }
-        return target.startDate
-      case 'endDate':
-        if ((target.status || '').toLowerCase() === 'accepted') {
-          return target.payment?.agreementEndDate || target.endDate
-        }
-        return target.endDate
-      case 'parcels':
-        return target.application?.parcel || target.parcels
-      case 'actions':
-        return target.actionApplications || target.actions
-      case 'items':
-        return target.application?.agreement || target.items
-      case 'annualAmountPence':
-        return target.payment?.annualTotalPence || target.annualAmountPence
-      case 'totalAmountPence':
-        return target.payment?.agreementTotalPence || target.totalAmountPence
-      case 'paymentSchedule':
-        if ((target.status || '').toLowerCase() === 'accepted') {
-          return target.payment?.payments
-        }
-        return target.payment?.payments || target.paymentSchedule
-      case 'state': {
-        const s = (target.status || target.state || '').toLowerCase()
-        return [
-          'accepted',
-          'cancelled',
-          'withdrawn',
-          'offered',
-          'rejected',
-          'terminated'
-        ].includes(s)
-          ? s
-          : undefined
+  const propertyHandlers = {
+    agreementNumber: (target) => target.agreementNumber,
+    version: (target) => target.version,
+    code: (target) => target.code,
+    clientRef: (target) => target.clientRef,
+    correlationId: (target) => target.correlationId,
+    identifiers: (target) => target.identifiers,
+    schemeCode: (target) => target.scheme || target.schemeCode,
+    name: (target) => target.agreementName || target.name,
+    applicant: (target) => target.applicant,
+    application: (target) => target.application,
+    startDate: (target) => {
+      if ((target.status || '').toLowerCase() === 'accepted') {
+        return target.payment?.agreementStartDate || target.startDate
       }
-      case 'createdAt':
-        return target.createdAt
-      case 'updatedAt':
-        return target.updatedAt
-      case 'acceptedAt':
-        return (target.status || '').toLowerCase() === 'accepted'
-          ? target.signatureDate
-          : ''
-      default:
-        return undefined
-    }
+      return ''
+    },
+    endDate: (target) => {
+      if ((target.status || '').toLowerCase() === 'accepted') {
+        return target.payment?.agreementEndDate || target.endDate
+      }
+      return ''
+    },
+    parcels: (target) => target.application?.parcel || target.parcels,
+    actions: (target) => target.actionApplications || target.actions,
+    items: (target) => target.application?.agreement || target.items,
+    annualAmountPence: (target) =>
+      target.payment?.annualTotalPence || target.annualAmountPence,
+    totalAmountPence: (target) =>
+      target.payment?.agreementTotalPence || target.totalAmountPence,
+    paymentSchedule: (target) => {
+      if ((target.status || '').toLowerCase() === 'accepted') {
+        return target.payment?.payments
+      }
+      return target.payment?.payments || target.paymentSchedule
+    },
+    state: (target) => {
+      const s = (target.status || target.state || '').toLowerCase()
+      return [
+        'accepted',
+        'cancelled',
+        'withdrawn',
+        'offered',
+        'rejected',
+        'terminated'
+      ].includes(s)
+        ? s
+        : undefined
+    },
+    createdAt: (target) => target.createdAt,
+    updatedAt: (target) => target.updatedAt,
+    acceptedAt: (target) =>
+      (target.status || '').toLowerCase() === 'accepted'
+        ? target.signatureDate
+        : ''
   }
 
-  const val = getVal(targetObj)
+  const handler = propertyHandlers[property]
+  const val = handler ? handler(targetObj) : undefined
   return val !== undefined && val !== null
+}
+
+const checkMissingProperties = (agreement, version, versionIndex) => {
+  const issues = []
+  requiredPropertiesOfAgreement.forEach((propertyKey) => {
+    if (
+      !checkPropertyExists(propertyKey, agreement) &&
+      !checkPropertyExists(propertyKey, version)
+    ) {
+      issues.push({
+        path: propertyKey,
+        reason: 'MISSING_PROPERTY',
+        message: `Property '${propertyKey}' is missing in agreement and version[${versionIndex}] ${version._id.toString()}`
+      })
+    }
+  })
+  return issues
+}
+
+const analyzeAgreementVersions = async (agreement) => {
+  const issues = []
+  const grantIds = (agreement.grantDetails || []).map((g) => g._id)
+  const versions = await mongoose.connection
+    .collection('versions')
+    .find({ grant: { $in: grantIds } })
+    .toArray()
+
+  versions.forEach((version, index) => {
+    issues.push(...checkMissingProperties(agreement, version, index))
+  })
+  return issues
 }
 
 export async function runWMPAgreementDataAnalysis() {
@@ -165,32 +180,8 @@ export async function runWMPAgreementDataAnalysis() {
       stats.inspected++
       const agreementNumber = agreement.agreementNumber
       const agreementId = agreement._id.toString()
-      const issues = []
 
-      // Fetch all versions related to this agreement via its grants
-      const grantIds = (agreement.grantDetails || []).map((g) => g._id)
-      const versions = await mongoose.connection
-        .collection('versions')
-        .find({ grant: { $in: grantIds } })
-        .toArray()
-
-      let versionIndex = 0
-      for (const version of versions) {
-        requiredPropertiesOfAgreement.forEach((propertyKey) => {
-          if (
-            !checkPropertyExists(propertyKey, agreement) &&
-            !checkPropertyExists(propertyKey, version)
-          ) {
-            issues.push({
-              path: propertyKey,
-              reason: 'MISSING_PROPERTY',
-              message: `Property '${propertyKey}' is missing in agreement and version[${versionIndex}] ${version._id.toString()}`
-            })
-          }
-        })
-
-        ++versionIndex
-      }
+      const issues = await analyzeAgreementVersions(agreement)
 
       if (issues.length === 0) {
         reportPass(agreementNumber, agreementId, agreement.status || 'N/A')
