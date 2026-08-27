@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
-import { runAgreementDataDiagnosis } from './wmp-migrate-diagnosis.js'
+import { runWMPAgreementDataAnalysis } from '#~/api/common/helpers/wmp-migration-analysis.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -46,7 +46,8 @@ export const mongooseDb = {
         }
       }
 
-      await runAgreementDataDiagnosis()
+      // await runAgreementDataDiagnosis()
+      await runWMPAgreementDataAnalysis()
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       server.events.on('stop', async () => {
