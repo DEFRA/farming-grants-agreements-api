@@ -61,7 +61,6 @@ describe('wmp-migration-analysis helper', () => {
         {
           _id: { toString: () => 'version1' },
           grant: 'grant1',
-          // Minimum properties to pass checkPropertyExists
           agreementNumber: 'WMP001',
           code: 'C1',
           clientRef: 'CR1',
@@ -70,19 +69,22 @@ describe('wmp-migration-analysis helper', () => {
           schemeCode: 'S1',
           name: 'N1',
           applicant: {},
-          application: {},
-          startDate: '2023-01-01',
-          endDate: '2023-12-31',
-          parcels: [],
-          actions: [],
-          items: [],
-          annualAmountPence: 0,
-          totalAmountPence: 0,
-          paymentSchedule: '',
-          state: 'accepted',
+          application: {
+            parcel: [],
+            agreement: []
+          },
+          status: 'accepted',
+          payment: {
+            agreementStartDate: '2023-01-01',
+            agreementEndDate: '2023-12-31',
+            annualTotalPence: 0,
+            agreementTotalPence: 0,
+            payments: [{ totalPaymentPence: 0 }]
+          },
+          actionApplications: [],
           createdAt: new Date(),
           updatedAt: new Date(),
-          acceptedAt: ''
+          signatureDate: '2023-01-01'
         }
       ]
 
@@ -169,6 +171,188 @@ describe('wmp-migration-analysis helper', () => {
         expect.any(Error),
         'Analysis failed with error:'
       )
+    })
+
+    it('should report failure when payment values are inconsistent (annual vs agreement)', async () => {
+      const mockAgreements = [
+        {
+          _id: { toString: () => 'agreement1' },
+          agreementNumber: 'WMP001',
+          status: 'accepted',
+          grantDetails: [{ _id: 'grant1' }]
+        }
+      ]
+
+      const mockVersions = [
+        {
+          _id: { toString: () => 'version1' },
+          grant: 'grant1',
+          agreementNumber: 'WMP001',
+          code: 'C1',
+          clientRef: 'CR1',
+          correlationId: 'CORR1',
+          identifiers: {},
+          schemeCode: 'S1',
+          name: 'N1',
+          applicant: {},
+          application: {
+            parcel: [],
+            agreement: []
+          },
+          status: 'accepted',
+          payment: {
+            agreementStartDate: '2023-01-01',
+            agreementEndDate: '2023-12-31',
+            annualTotalPence: 1000,
+            agreementTotalPence: 2000,
+            payments: [{ totalPaymentPence: 1000 }]
+          },
+          actionApplications: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          signatureDate: '2023-01-01'
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            await Promise.resolve()
+            for (const item of mockAgreements) {
+              yield item
+            }
+          }
+        })),
+        find: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockVersions)
+        }))
+      }
+
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+
+      await runWMPAgreementDataAnalysis()
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Total Failed: 1')
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('reason=INVALID_PAYMENT_VALUES')
+      )
+    })
+
+    it('should report failure when payment values are inconsistent (annual vs first payment)', async () => {
+      const mockAgreements = [
+        {
+          _id: { toString: () => 'a1' },
+          agreementNumber: 'WMP001',
+          grantDetails: [{ _id: 'g1' }]
+        }
+      ]
+      const mockVersions = [
+        {
+          _id: { toString: () => 'v1' },
+          grant: 'g1',
+          agreementNumber: 'WMP001',
+          code: 'C1',
+          clientRef: 'CR1',
+          correlationId: 'CORR1',
+          identifiers: {},
+          schemeCode: 'S1',
+          name: 'N1',
+          applicant: {},
+          application: { parcel: [], agreement: [] },
+          status: 'accepted',
+          payment: {
+            agreementStartDate: '2023-01-01',
+            agreementEndDate: '2023-12-31',
+            annualTotalPence: 1000,
+            agreementTotalPence: 1000,
+            payments: [{ totalPaymentPence: 3000 }]
+          },
+          actionApplications: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          signatureDate: '2023-01-01'
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            await Promise.resolve()
+            yield mockAgreements[0]
+          }
+        })),
+        find: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockVersions)
+        }))
+      }
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+
+      await runWMPAgreementDataAnalysis()
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('reason=INVALID_PAYMENT_VALUES')
+      )
+    })
+
+    it('should not report INVALID_PAYMENT_VALUES if some values are missing', async () => {
+      const mockAgreements = [
+        {
+          _id: { toString: () => 'a1' },
+          agreementNumber: 'WMP001',
+          grantDetails: [{ _id: 'g1' }]
+        }
+      ]
+      const mockVersions = [
+        {
+          _id: { toString: () => 'v1' },
+          grant: 'g1',
+          agreementNumber: 'WMP001',
+          code: 'C1',
+          clientRef: 'CR1',
+          correlationId: 'CORR1',
+          identifiers: {},
+          schemeCode: 'S1',
+          name: 'N1',
+          applicant: {},
+          application: { parcel: [], agreement: [] },
+          status: 'accepted',
+          payment: {
+            agreementStartDate: '2023-01-01',
+            agreementEndDate: '2023-12-31',
+            annualTotalPence: 1000,
+            agreementTotalPence: 1000
+            // firstPaymentTotalPence is missing
+          },
+          actionApplications: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          signatureDate: '2023-01-01'
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            await Promise.resolve()
+            yield mockAgreements[0]
+          }
+        })),
+        find: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockVersions)
+        }))
+      }
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+
+      await runWMPAgreementDataAnalysis()
+
+      // Should not find INVALID_PAYMENT_VALUES
+      const calls = mockLogger.info.mock.calls.map((c) => c[0])
+      const hasInvalidPaymentValues = calls.some((c) =>
+        c.includes('reason=INVALID_PAYMENT_VALUES')
+      )
+      expect(hasInvalidPaymentValues).toBe(false)
     })
   })
 })

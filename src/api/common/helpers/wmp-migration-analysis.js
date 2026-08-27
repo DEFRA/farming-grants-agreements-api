@@ -66,31 +66,24 @@ const checkPropertyExists = (property, targetObj) => {
     application: (target) => target.application,
     startDate: (target) => {
       if ((target.status || '').toLowerCase() === 'accepted') {
-        return target.payment?.agreementStartDate || target.startDate
+        return target.payment?.agreementStartDate
       }
-      return ''
+      return 'ignore_to_log'
     },
     endDate: (target) => {
       if ((target.status || '').toLowerCase() === 'accepted') {
         return target.payment?.agreementEndDate || target.endDate
       }
-      return ''
+      return 'ignore_to_log'
     },
-    parcels: (target) => target.application?.parcel || target.parcels,
-    actions: (target) => target.actionApplications || target.actions,
-    items: (target) => target.application?.agreement || target.items,
-    annualAmountPence: (target) =>
-      target.payment?.annualTotalPence || target.annualAmountPence,
-    totalAmountPence: (target) =>
-      target.payment?.agreementTotalPence || target.totalAmountPence,
-    paymentSchedule: (target) => {
-      if ((target.status || '').toLowerCase() === 'accepted') {
-        return target.payment?.payments
-      }
-      return target.payment?.payments || target.paymentSchedule
-    },
+    parcels: (target) => target.application?.parcel,
+    actions: (target) => target.actionApplications,
+    items: (target) => target.application?.agreement,
+    annualAmountPence: (target) => target.payment?.annualTotalPence,
+    totalAmountPence: (target) => target.payment?.agreementTotalPence,
+    paymentSchedule: (target) => target.payment?.payments,
     state: (target) => {
-      const s = (target.status || target.state || '').toLowerCase()
+      const s = (target.status || '').toLowerCase()
       return [
         'accepted',
         'cancelled',
@@ -107,12 +100,12 @@ const checkPropertyExists = (property, targetObj) => {
     acceptedAt: (target) =>
       (target.status || '').toLowerCase() === 'accepted'
         ? target.signatureDate
-        : ''
+        : 'ignore_to_log'
   }
 
   const handler = propertyHandlers[property]
   const val = handler ? handler(targetObj) : undefined
-  return val !== undefined && val !== null
+  return val !== undefined && val !== null && val !== ''
 }
 
 const checkMissingProperties = (agreement, version, versionIndex) => {
@@ -132,6 +125,32 @@ const checkMissingProperties = (agreement, version, versionIndex) => {
   return issues
 }
 
+const checkPaymentValues = (version, versionIndex) => {
+  const issues = []
+  const annualTotalPence = version.payment?.annualTotalPence
+  const agreementTotalPence = version.payment?.agreementTotalPence
+  const firstPaymentTotalPence =
+    version.payment?.payments?.[0]?.totalPaymentPence
+
+  if (
+    annualTotalPence !== undefined &&
+    agreementTotalPence !== undefined &&
+    firstPaymentTotalPence !== undefined
+  ) {
+    if (
+      annualTotalPence !== agreementTotalPence ||
+      annualTotalPence !== firstPaymentTotalPence
+    ) {
+      issues.push({
+        path: 'payment',
+        reason: 'INVALID_PAYMENT_VALUES',
+        message: `Property 'payment' payment values are different in version[${versionIndex}] ${version._id.toString()}`
+      })
+    }
+  }
+  return issues
+}
+
 const analyzeAgreementVersions = async (agreement) => {
   const issues = []
   const grantIds = (agreement.grantDetails || []).map((g) => g._id)
@@ -142,6 +161,7 @@ const analyzeAgreementVersions = async (agreement) => {
 
   versions.forEach((version, index) => {
     issues.push(...checkMissingProperties(agreement, version, index))
+    issues.push(...checkPaymentValues(version, index))
   })
   return issues
 }
