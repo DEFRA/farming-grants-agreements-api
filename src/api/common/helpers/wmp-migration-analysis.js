@@ -135,18 +135,15 @@ const checkPaymentValues = (version, versionIndex) => {
   if (
     annualTotalPence !== undefined &&
     agreementTotalPence !== undefined &&
-    firstPaymentTotalPence !== undefined
+    firstPaymentTotalPence !== undefined &&
+    (annualTotalPence !== agreementTotalPence ||
+      annualTotalPence !== firstPaymentTotalPence)
   ) {
-    if (
-      annualTotalPence !== agreementTotalPence ||
-      annualTotalPence !== firstPaymentTotalPence
-    ) {
-      issues.push({
-        path: 'payment',
-        reason: 'INVALID_PAYMENT_VALUES',
-        message: `Property 'payment' payment values are different in version[${versionIndex}] ${version._id.toString()}`
-      })
-    }
+    issues.push({
+      path: 'payment',
+      reason: 'INVALID_PAYMENT_VALUES',
+      message: `Property 'payment' payment values are different in version[${versionIndex}] ${version._id.toString()}`
+    })
   }
   return issues
 }
@@ -160,8 +157,10 @@ const analyzeAgreementVersions = async (agreement) => {
     .toArray()
 
   versions.forEach((version, index) => {
-    issues.push(...checkMissingProperties(agreement, version, index))
-    issues.push(...checkPaymentValues(version, index))
+    issues.push(
+      ...checkMissingProperties(agreement, version, index),
+      ...checkPaymentValues(version, index)
+    )
   })
   return issues
 }
