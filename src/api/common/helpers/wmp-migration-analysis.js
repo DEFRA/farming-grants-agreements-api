@@ -51,7 +51,7 @@ const reportFailures = (agreementNumber, agreementId, issues) => {
   })
 }
 
-export const checkPropertyExists = (property, targetObj) => {
+const checkPropertyExists = (property, targetObj) => {
   // Logic to map requested property to actual record fields
   const getVal = (target) => {
     switch (property) {
