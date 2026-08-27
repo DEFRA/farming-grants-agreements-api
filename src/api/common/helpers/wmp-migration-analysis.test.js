@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  runWMPAgreementDataAnalysis,
-  checkPropertyExists
-} from '#~/api/common/helpers/wmp-migration-analysis.js'
+import { runWMPAgreementDataAnalysis } from '#~/api/common/helpers/wmp-migration-analysis.js'
 
 vi.mock('#~/api/common/helpers/logging/logger.js', () => {
   const logger = {
@@ -172,36 +169,6 @@ describe('wmp-migration-analysis helper', () => {
         expect.any(Error),
         'Analysis failed with error:'
       )
-    })
-  })
-
-  describe('checkPropertyExists', () => {
-    it('should return true if simple property exists', () => {
-      const target = { agreementNumber: 'WMP001' }
-      expect(checkPropertyExists('agreementNumber', target)).toBe(true)
-    })
-
-    it('should return false if property is missing', () => {
-      const target = {}
-      expect(checkPropertyExists('agreementNumber', target)).toBe(false)
-    })
-
-    it('should return true for accepted state', () => {
-      const target = { status: 'ACCEPTED' }
-      expect(checkPropertyExists('state', target)).toBe(true)
-    })
-
-    it('should return false for unknown state', () => {
-      const target = { status: 'unknown' }
-      expect(checkPropertyExists('state', target)).toBe(false)
-    })
-
-    it('should return true for payment fields if accepted', () => {
-      const target = {
-        status: 'accepted',
-        payment: { agreementStartDate: '2023-01-01' }
-      }
-      expect(checkPropertyExists('startDate', target)).toBe(true)
     })
   })
 })
