@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
 import { mongooseDb } from './mongoose.js'
+import { runWMPAgreementDataAnalysis } from '#~/api/common/helpers/wmp-migration-analysis.js'
 
 /** @import { Server } from '@hapi/hapi' */
 
@@ -55,14 +56,15 @@ vi.mock('./seed-database.js', () => ({
   seedDatabase: vi.fn().mockResolvedValue(undefined)
 }))
 
-vi.mock('./wmp-migrate-diagnosis.js', () => ({
-  runAgreementDataDiagnosis: vi.fn().mockResolvedValue(undefined)
+vi.mock('#~/api/common/helpers/wmp-migration-analysis.js', () => ({
+  runWMPAgreementDataAnalysis: vi.fn().mockResolvedValue(undefined)
 }))
 
 // Get the mocked functions with proper typing
 const mockMongoose = vi.mocked(mongoose)
 const mockConfig = vi.mocked(config)
 const mockSeedDatabase = vi.mocked(seedDatabase)
+const mockRunWMPAgreementDataAnalysis = vi.mocked(runWMPAgreementDataAnalysis)
 
 describe('mongooseDb', () => {
   let mockServer
@@ -95,6 +97,7 @@ describe('mongooseDb', () => {
       mongoUri: mockOptions.mongoUrl,
       mongoDatabase: mockOptions.databaseName,
       'featureFlags.seedDb': false,
+      'featureFlags.wmpMigrationAnalysis': false,
       log: {
         enabled: true,
         level: 'info',
@@ -229,6 +232,34 @@ describe('mongooseDb', () => {
       ).rejects.toThrow('Connection failed')
 
       expect(mockMongoose.connect).toHaveBeenCalled()
+    })
+
+    test('should run WMP migration analysis when feature flag is enabled', async () => {
+      // Arrange
+      mockMongoose.connect.mockResolvedValue(undefined)
+      configValues['featureFlags.wmpMigrationAnalysis'] = true
+
+      // Act
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server, mockOptions)
+
+      // Assert
+      expect(mockRunWMPAgreementDataAnalysis).toHaveBeenCalled()
+    })
+
+    test('should not run WMP migration analysis when feature flag is disabled', async () => {
+      // Arrange
+      mockMongoose.connect.mockResolvedValue(undefined)
+      configValues['featureFlags.wmpMigrationAnalysis'] = false
+
+      // Act
+      /** @type {Server} */
+      const server = mockServer
+      await mongooseDb.plugin.register(server, mockOptions)
+
+      // Assert
+      expect(mockRunWMPAgreementDataAnalysis).not.toHaveBeenCalled()
     })
   })
 })

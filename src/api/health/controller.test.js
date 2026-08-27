@@ -20,7 +20,7 @@ describe('#healthController', () => {
       seedDb: false,
       testEndpoints: false,
       isJwtEnabled: true,
-      wmpMigrationDiagnosis: false
+      wmpMigrationAnalysis: false
     })
 
     // import createServer after mongoose is mocked so controller picks up the mock
@@ -56,7 +56,7 @@ describe('#healthController', () => {
           seedDb: false,
           testEndpoints: false,
           isJwtEnabled: true,
-          wmpMigrationDiagnosis: false
+          wmpMigrationAnalysis: false
         }
       })
       expect(statusCode).toBe(statusCodes.ok)
