@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { Types } from 'mongoose'
-import { Decimal128 } from 'mongodb'
+import { Decimal128, Long } from 'mongodb'
 
 import { createServer } from '#~/api/index.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
@@ -71,7 +71,10 @@ describe('Woodland migration source routes', () => {
         notificationMessageId: `message-${index}`,
         marker: index,
         ...(index === 4900
-          ? { displayedQuantity: Decimal128.fromString('4.757500000000000001') }
+          ? {
+              displayedQuantity: Decimal128.fromString('4.757500000000000001'),
+              sourceLong: Long.fromString('9007199254740993')
+            }
           : {})
       }))
     )
@@ -111,11 +114,16 @@ describe('Woodland migration source routes', () => {
     expect(response.result.agreement).not.toHaveProperty('grants')
     expect(response.result.grant).not.toHaveProperty('versions')
     expect(response.result.versions).toHaveLength(versionPageSize)
-    expect(response.result.versions.map(({ marker }) => marker)).toEqual(
+    expect(
+      response.result.versions.map(({ marker }) => Number(marker.$numberInt))
+    ).toEqual(
       Array.from({ length: versionPageSize }, (_, index) => 4900 + index)
     )
     expect(response.result.versions[0].displayedQuantity).toEqual({
       $numberDecimal: '4.757500000000000001'
+    })
+    expect(response.result.versions[0].sourceLong).toEqual({
+      $numberLong: '9007199254740993'
     })
     expect(response.result.nextOffset).toBeNull()
   })

@@ -72,10 +72,11 @@ export const findWoodlandAgreementVersionPage = async (
   delete grant.totalVersions
   delete grant.versions
 
-  return BSON.EJSON.serialize({
-    agreement,
-    grant,
-    versions: orderedVersions,
+  return {
+    ...BSON.EJSON.serialize(
+      { agreement, grant, versions: orderedVersions },
+      { relaxed: false }
+    ),
     nextOffset: nextOffset < totalVersions ? nextOffset : null
-  })
+  }
 }
