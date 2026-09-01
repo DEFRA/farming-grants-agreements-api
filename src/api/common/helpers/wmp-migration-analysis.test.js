@@ -689,5 +689,172 @@ describe('wmp-migration-analysis helper', () => {
         expect.stringContaining('reason=STATUS_UNMAPPABLE')
       )
     })
+
+    it('should prefer payment.agreementLevelItems and report the shape found', async () => {
+      const mockAgreements = [
+        {
+          _id: { toString: () => 'agreement_ali' },
+          agreementNumber: 'WMP-ALI',
+          status: 'accepted',
+          grantDetails: [{ _id: 'grant1' }]
+        }
+      ]
+
+      const mockVersions = [
+        {
+          _id: { toString: () => 'version1' },
+          grant: 'grant1',
+          agreementNumber: 'WMP-ALI',
+          code: 'C1',
+          clientRef: 'CR1',
+          correlationId: 'CORR1',
+          identifiers: { sbi: 'sbi', frn: 'frn', crn: 'crn' },
+          schemeCode: 'S1',
+          name: 'N1',
+          applicant: {
+            business: { name: 'B1', address: { line1: 'L1' } },
+            customer: { name: { first: 'F', last: 'L' } }
+          },
+          application: {
+            parcel: [
+              {
+                parcelId: 'P1',
+                area: { unit: 'ha', quantity: 1 },
+                actions: []
+              }
+            ]
+          },
+          status: 'accepted',
+          payment: {
+            agreementStartDate: '2023-01-01',
+            agreementEndDate: '2023-12-31',
+            annualTotalPence: 100,
+            agreementTotalPence: 100,
+            agreementLevelItems: new Map([
+              [
+                '1',
+                {
+                  code: 'ITEM1',
+                  description: 'Desc1',
+                  version: '1',
+                  annualPaymentPence: 100
+                }
+              ]
+            ]),
+            payments: [
+              { totalPaymentPence: 100, correlationId: 'C1', lineItems: [] }
+            ]
+          },
+          actionApplications: [
+            {
+              code: 'A1',
+              sheetId: 'S1',
+              parcelId: 'P1',
+              appliedFor: { unit: 'ha', quantity: 1 }
+            }
+          ],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          signatureDate: '2023-01-01'
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            await Promise.resolve()
+            yield mockAgreements[0]
+          }
+        })),
+        find: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockVersions)
+        }))
+      }
+
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+
+      await runWMPAgreementDataAnalysis()
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Found payment.agreementLevelItems legacy shape for agreement WMP-ALI'
+        )
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Total Passed: 1')
+      )
+    })
+
+    it('should report failure when both shapes exist but shared fields mismatch', async () => {
+      const mockAgreements = [
+        {
+          _id: { toString: () => 'agreement_mismatch' },
+          agreementNumber: 'WMP-MISMATCH',
+          status: 'accepted',
+          grantDetails: [{ _id: 'grant1' }]
+        }
+      ]
+
+      const mockVersions = [
+        {
+          _id: { toString: () => 'version1' },
+          grant: 'grant1',
+          agreementNumber: 'WMP-MISMATCH',
+          status: 'accepted',
+          payment: {
+            agreementLevelItems: new Map([
+              [
+                '1',
+                {
+                  code: 'ITEM1',
+                  description: 'Desc1',
+                  annualPaymentPence: 100
+                }
+              ]
+            ])
+          },
+          application: {
+            agreement: [
+              {
+                code: 'ITEM1',
+                description: 'DIFFERENT',
+                annualPaymentPence: 100
+              }
+            ]
+          },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          signatureDate: '2023-01-01'
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          [Symbol.asyncIterator]: async function* () {
+            await Promise.resolve()
+            yield mockAgreements[0]
+          }
+        })),
+        find: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockVersions)
+        }))
+      }
+
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+
+      await runWMPAgreementDataAnalysis()
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Shared fields mismatch for agreement WMP-MISMATCH'
+        )
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('reason=MISSING_PROPERTY')
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('path=items')
+      )
+    })
   })
 })

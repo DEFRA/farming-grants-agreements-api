@@ -88,6 +88,78 @@ const getAgreementDate = (target, type) => {
   return 'ignore_to_log'
 }
 
+const validateParcelsProperty = (target) => {
+  const parcels = target.application?.parcel
+  return Array.isArray(parcels) && parcels.length > 0 ? parcels : undefined
+}
+
+const validateActionsProperty = (target) => {
+  const actions = target.actionApplications
+  return Array.isArray(actions) && actions.length > 0 ? actions : undefined
+}
+
+const validateItemsProperty = (target) => {
+  const agreementLevelItems = target.payment?.agreementLevelItems
+  const applicationAgreement = target.application?.agreement
+
+  const hasAgreementLevelItems =
+    agreementLevelItems instanceof Map
+      ? agreementLevelItems.size > 0
+      : agreementLevelItems && Object.keys(agreementLevelItems).length > 0
+  const hasApplicationAgreement =
+    Array.isArray(applicationAgreement) && applicationAgreement.length > 0
+
+  if (hasAgreementLevelItems && hasApplicationAgreement) {
+    logger.info(
+      `Found both payment.agreementLevelItems and application.agreement for agreement ${target.agreementNumber}`
+    )
+    // Verify shared fields agree
+    const aliArray =
+      agreementLevelItems instanceof Map
+        ? Array.from(agreementLevelItems.values())
+        : Object.values(agreementLevelItems)
+
+    const mismatches = []
+    aliArray.forEach((ali) => {
+      const matchingAppAg = applicationAgreement.find(
+        (aa) => aa.code === ali.code
+      )
+      if (!matchingAppAg) {
+        mismatches.push(`Missing code ${ali.code} in application.agreement`)
+      } else if (
+        matchingAppAg.description !== ali.description ||
+        matchingAppAg.annualPaymentPence !== ali.annualPaymentPence
+      ) {
+        mismatches.push(`Data mismatch for code ${ali.code}`)
+      }
+    })
+
+    if (mismatches.length > 0) {
+      logger.info(
+        `Shared fields mismatch for agreement ${target.agreementNumber}: ${mismatches.join(', ')}`
+      )
+      return undefined
+    }
+    return agreementLevelItems
+  }
+
+  if (hasAgreementLevelItems) {
+    logger.info(
+      `Found payment.agreementLevelItems legacy shape for agreement ${target.agreementNumber}`
+    )
+    return agreementLevelItems
+  }
+
+  if (hasApplicationAgreement) {
+    logger.info(
+      `Found application.agreement legacy shape for agreement ${target.agreementNumber}`
+    )
+    return applicationAgreement
+  }
+
+  return undefined
+}
+
 const checkPropertyExists = (property, targetObj) => {
   // Logic to map requested property to actual record fields
   const propertyHandlers = {
@@ -103,18 +175,9 @@ const checkPropertyExists = (property, targetObj) => {
     application: (target) => target.application,
     startDate: (target) => getAgreementDate(target, 'start'),
     endDate: (target) => getAgreementDate(target, 'end'),
-    parcels: (target) => {
-      const parcels = target.application?.parcel
-      return Array.isArray(parcels) && parcels.length > 0 ? parcels : undefined
-    },
-    actions: (target) => {
-      const actions = target.actionApplications
-      return Array.isArray(actions) && actions.length > 0 ? actions : undefined
-    },
-    items: (target) => {
-      const items = target.application?.agreement
-      return Array.isArray(items) && items.length > 0 ? items : undefined
-    },
+    parcels: validateParcelsProperty,
+    actions: validateActionsProperty,
+    items: validateItemsProperty,
     annualAmountPence: (target) => target.payment?.annualTotalPence,
     totalAmountPence: (target) => target.payment?.agreementTotalPence,
     paymentSchedule: (target) => {
