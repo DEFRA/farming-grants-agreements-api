@@ -59,10 +59,27 @@ const checkPropertyExists = (property, targetObj) => {
     code: (target) => target.code,
     clientRef: (target) => target.clientRef,
     correlationId: (target) => target.correlationId,
-    identifiers: (target) => target.identifiers,
+    identifiers: (target) => {
+      const ids = target.identifiers
+      if (!ids) return undefined
+      if (!ids.sbi || !ids.frn || !ids.crn) return undefined
+      return ids
+    },
     schemeCode: (target) => target.scheme || target.schemeCode,
     name: (target) => target.agreementName || target.name,
-    applicant: (target) => target.applicant,
+    applicant: (target) => {
+      const applicant = target.applicant
+      if (!applicant) return undefined
+      if (
+        !applicant.business?.name ||
+        !applicant.business?.address ||
+        !applicant.customer?.name?.first ||
+        !applicant.customer?.name?.last
+      ) {
+        return undefined
+      }
+      return applicant
+    },
     application: (target) => target.application,
     startDate: (target) => {
       if ((target.status || '').toLowerCase() === 'accepted') {
@@ -76,24 +93,29 @@ const checkPropertyExists = (property, targetObj) => {
       }
       return 'ignore_to_log'
     },
-    parcels: (target) => target.application?.parcel,
-    actions: (target) => target.actionApplications,
-    items: (target) => target.application?.agreement,
+    parcels: (target) => {
+      const parcels = target.application?.parcel
+      return Array.isArray(parcels) && parcels.length > 0 ? parcels : undefined
+    },
+    actions: (target) => {
+      const actions = target.actionApplications
+      return Array.isArray(actions) && actions.length > 0 ? actions : undefined
+    },
+    items: (target) => {
+      const items = target.application?.agreement
+      return Array.isArray(items) && items.length > 0 ? items : undefined
+    },
     annualAmountPence: (target) => target.payment?.annualTotalPence,
     totalAmountPence: (target) => target.payment?.agreementTotalPence,
-    paymentSchedule: (target) => target.payment?.payments,
+    paymentSchedule: (target) => {
+      const payments = target.payment?.payments
+      return Array.isArray(payments) && payments.length > 0
+        ? payments
+        : undefined
+    },
     state: (target) => {
       const s = (target.status || '').toLowerCase()
-      return [
-        'accepted',
-        'cancelled',
-        'withdrawn',
-        'offered',
-        'rejected',
-        'terminated'
-      ].includes(s)
-        ? s
-        : undefined
+      return ['accepted', 'offered'].includes(s) ? s : undefined
     },
     createdAt: (target) => target.createdAt,
     updatedAt: (target) => target.updatedAt,
@@ -125,6 +147,26 @@ const checkMissingProperties = (agreement, version, versionIndex) => {
   return issues
 }
 
+const checkUnmappableStatus = (agreement, version, versionIndex) => {
+  const issues = []
+  const status = (version.status || agreement.status || '').toLowerCase()
+  const unmappableStatuses = [
+    'cancelled',
+    'withdrawn',
+    'rejected',
+    'terminated'
+  ]
+
+  if (unmappableStatuses.includes(status)) {
+    issues.push({
+      path: 'status',
+      reason: 'STATUS_UNMAPPABLE',
+      message: `Status '${status}' is unmappable in agreement or version[${versionIndex}] ${version._id.toString()}`
+    })
+  }
+  return issues
+}
+
 const checkPaymentValues = (version, versionIndex) => {
   const issues = []
   const annualTotalPence = version.payment?.annualTotalPence
@@ -150,15 +192,35 @@ const checkPaymentValues = (version, versionIndex) => {
 
 const analyzeAgreementVersions = async (agreement) => {
   const issues = []
-  const grantIds = (agreement.grantDetails || []).map((g) => g._id)
+
+  if (!agreement.grantDetails || agreement.grantDetails.length === 0) {
+    issues.push({
+      path: 'grantDetails',
+      reason: 'MISSING_GRANTS',
+      message: 'Agreement has no associated grants'
+    })
+    return issues
+  }
+
+  const grantIds = agreement.grantDetails.map((g) => g._id)
   const versions = await mongoose.connection
     .collection('versions')
     .find({ grant: { $in: grantIds } })
     .toArray()
 
+  if (!versions || versions.length === 0) {
+    issues.push({
+      path: 'versions',
+      reason: 'MISSING_VERSIONS',
+      message: `No versions found for grants: ${grantIds.join(', ')}`
+    })
+    return issues
+  }
+
   versions.forEach((version, index) => {
     issues.push(
       ...checkMissingProperties(agreement, version, index),
+      ...checkUnmappableStatus(agreement, version, index),
       ...checkPaymentValues(version, index)
     )
   })
