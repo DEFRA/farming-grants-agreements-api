@@ -132,6 +132,42 @@ describe('Woodland migration source routes', () => {
     expect(response.result.nextOffset).toBe(versionPageSize)
   })
 
+  it.each([
+    ['a non-Woodland agreement', 'FPTT0001'],
+    ['an unknown Woodland agreement', 'WMP9999'],
+    ['a Woodland agreement without a grant', 'WMP0001']
+  ])('rejects %s', async (_scenario, agreementNumber) => {
+    const response = await server.inject({
+      method: 'GET',
+      url: `/internal/migrations/woodland/agreements/${agreementNumber}/versions`,
+      headers: { authorization }
+    })
+
+    expect(response.statusCode).toBe(404)
+  })
+
+  it('rejects incomplete version history', async () => {
+    const missingVersionId = versionIds[0]
+    await versionsModel.collection.deleteOne({ _id: missingVersionId })
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await versionsModel.collection.insertOne({
+        _id: missingVersionId,
+        grant: grantId,
+        notificationMessageId: 'message-0',
+        marker: 0
+      })
+    }
+  })
+
   it('requires the migration token', async () => {
     const response = await server.inject({
       method: 'GET',

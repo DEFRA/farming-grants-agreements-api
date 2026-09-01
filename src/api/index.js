@@ -57,10 +57,12 @@ function getServerConfig() {
 }
 
 function setupAuthentication(server) {
+  const migrationTokenAuth = 'migration-token'
+
   server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
   server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
-  server.auth.scheme('migration-token', migrationTokenScheme)
-  server.auth.strategy('migration-token', 'migration-token')
+  server.auth.scheme(migrationTokenAuth, migrationTokenScheme)
+  server.auth.strategy(migrationTokenAuth, migrationTokenAuth)
 }
 
 function getPlugins(serverOptions) {

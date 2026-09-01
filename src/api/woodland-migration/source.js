@@ -14,7 +14,7 @@ export const findWoodlandAgreementNumbers = async () => {
     agreementNumber: woodlandAgreementNumber
   })
 
-  return agreementNumbers.sort()
+  return agreementNumbers.sort((left, right) => left.localeCompare(right))
 }
 
 export const findWoodlandAgreementVersionPage = async (
