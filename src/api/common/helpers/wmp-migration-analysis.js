@@ -131,6 +131,8 @@ const validateItemsProperty = (target) => {
         matchingAppAg.annualPaymentPence !== ali.annualPaymentPence
       ) {
         mismatches.push(`Data mismatch for code ${ali.code}`)
+      } else {
+        // Shared fields match, no action needed
       }
     })
 
