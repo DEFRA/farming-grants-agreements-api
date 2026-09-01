@@ -51,6 +51,43 @@ const reportFailures = (agreementNumber, agreementId, issues) => {
   })
 }
 
+const validateIdentifiers = (target) => {
+  const ids = target.identifiers
+  if (!ids) {
+    return undefined
+  }
+  if (!ids.sbi || !ids.frn || !ids.crn) {
+    return undefined
+  }
+  return ids
+}
+
+const validateApplicant = (target) => {
+  const applicant = target.applicant
+  if (!applicant) {
+    return undefined
+  }
+  if (
+    !applicant.business?.name ||
+    !applicant.business?.address ||
+    !applicant.customer?.name?.first ||
+    !applicant.customer?.name?.last
+  ) {
+    return undefined
+  }
+  return applicant
+}
+
+const getAgreementDate = (target, type) => {
+  if ((target.status || '').toLowerCase() === 'accepted') {
+    if (type === 'start') {
+      return target.payment?.agreementStartDate
+    }
+    return target.payment?.agreementEndDate || target.endDate
+  }
+  return 'ignore_to_log'
+}
+
 const checkPropertyExists = (property, targetObj) => {
   // Logic to map requested property to actual record fields
   const propertyHandlers = {
@@ -59,40 +96,13 @@ const checkPropertyExists = (property, targetObj) => {
     code: (target) => target.code,
     clientRef: (target) => target.clientRef,
     correlationId: (target) => target.correlationId,
-    identifiers: (target) => {
-      const ids = target.identifiers
-      if (!ids) return undefined
-      if (!ids.sbi || !ids.frn || !ids.crn) return undefined
-      return ids
-    },
+    identifiers: validateIdentifiers,
     schemeCode: (target) => target.scheme || target.schemeCode,
     name: (target) => target.agreementName || target.name,
-    applicant: (target) => {
-      const applicant = target.applicant
-      if (!applicant) return undefined
-      if (
-        !applicant.business?.name ||
-        !applicant.business?.address ||
-        !applicant.customer?.name?.first ||
-        !applicant.customer?.name?.last
-      ) {
-        return undefined
-      }
-      return applicant
-    },
+    applicant: validateApplicant,
     application: (target) => target.application,
-    startDate: (target) => {
-      if ((target.status || '').toLowerCase() === 'accepted') {
-        return target.payment?.agreementStartDate
-      }
-      return 'ignore_to_log'
-    },
-    endDate: (target) => {
-      if ((target.status || '').toLowerCase() === 'accepted') {
-        return target.payment?.agreementEndDate || target.endDate
-      }
-      return 'ignore_to_log'
-    },
+    startDate: (target) => getAgreementDate(target, 'start'),
+    endDate: (target) => getAgreementDate(target, 'end'),
     parcels: (target) => {
       const parcels = target.application?.parcel
       return Array.isArray(parcels) && parcels.length > 0 ? parcels : undefined
