@@ -35,6 +35,25 @@ const requiredPropertiesOfAgreement = [
 /**
  * Diagnostic reporting helpers
  */
+const isWmpVersion = (version) =>
+  version.code === 'woodland' || version.scheme === 'WMP'
+
+const summariseVersionTypes = (versions) => {
+  if (versions.length === 0) {
+    return 'none'
+  }
+
+  const counts = versions.reduce((summary, version) => {
+    const type = `${version.code || 'unknown'}/${version.scheme || version.schemeCode || 'unknown'}`
+    summary[type] = (summary[type] || 0) + 1
+    return summary
+  }, {})
+
+  return Object.entries(counts)
+    .map(([type, count]) => `${type}:${count}`)
+    .join(',')
+}
+
 const summariseVersionStatuses = (versions) => {
   if (versions.length === 0) {
     return 'none'
@@ -72,10 +91,10 @@ const summariseIssues = (issues) => {
   ).join('|')
 }
 
-const reportAgreement = (agreement, versions, issues) => {
+const reportAgreement = (agreement, versions, wmpVersions, issues) => {
   const migration = issues.length === 0 ? 'GOOD' : 'BAD'
   logger.info(
-    `WMP_MIGRATION migration=${migration} agreement=${agreement.agreementNumber} agreementId=${agreement._id.toString()} agreementStatus=${agreement.status || 'unknown'} versions=${versions.length} versionStatuses=${summariseVersionStatuses(versions)} issues=${summariseIssues(issues)}`
+    `WMP_MIGRATION migration=${migration} agreement=${agreement.agreementNumber} agreementId=${agreement._id.toString()} agreementStatus=${agreement.status || 'unknown'} versions=${versions.length} wmpVersions=${wmpVersions.length} versionTypes=${summariseVersionTypes(versions)} versionStatuses=${summariseVersionStatuses(versions)} issues=${summariseIssues(issues)}`
   )
 }
 
@@ -290,16 +309,13 @@ const analyzeAgreementVersions = async (agreement) => {
       reason: 'MISSING_GRANTS',
       message: 'Agreement has no associated grants'
     })
-    return { issues, versions: [] }
+    return { issues, versions: [], wmpVersions: [] }
   }
 
   const grantIds = agreement.grantDetails.map((g) => g._id)
   const versions = await mongoose.connection
     .collection('versions')
-    .find({
-      grant: { $in: grantIds },
-      $or: [{ code: 'woodland' }, { scheme: 'WMP' }]
-    })
+    .find({ grant: { $in: grantIds } })
     .toArray()
 
   if (!versions || versions.length === 0) {
@@ -308,17 +324,34 @@ const analyzeAgreementVersions = async (agreement) => {
       reason: 'MISSING_VERSIONS',
       message: `No versions found for grants: ${grantIds.join(', ')}`
     })
-    return { issues, versions: [] }
+    return { issues, versions: [], wmpVersions: [] }
   }
 
-  versions.forEach((version) => {
+  const wmpVersions = versions.filter(isWmpVersion)
+  const nonWmpVersions = versions.filter((version) => !isWmpVersion(version))
+  nonWmpVersions.forEach((version) => {
+    issues.push({
+      path: 'versions',
+      reason: 'NON_WMP_VERSION_LINKED',
+      versionId: version._id.toString()
+    })
+  })
+
+  if (wmpVersions.length === 0) {
+    issues.push({
+      path: 'versions',
+      reason: 'MISSING_WMP_VERSIONS'
+    })
+  }
+
+  wmpVersions.forEach((version) => {
     issues.push(
       ...checkMissingProperties(agreement, version),
       ...checkUnmappableStatus(agreement, version),
       ...checkPaymentValues(version)
     )
   })
-  return { issues, versions }
+  return { issues, versions, wmpVersions }
 }
 
 export async function runWMPAgreementDataAnalysis() {
@@ -352,9 +385,10 @@ export async function runWMPAgreementDataAnalysis() {
 
     for await (const agreement of wmpAgreements) {
       stats.inspected++
-      const { issues, versions } = await analyzeAgreementVersions(agreement)
+      const { issues, versions, wmpVersions } =
+        await analyzeAgreementVersions(agreement)
 
-      reportAgreement(agreement, versions, issues)
+      reportAgreement(agreement, versions, wmpVersions, issues)
       if (issues.length === 0) {
         stats.passed++
       } else {

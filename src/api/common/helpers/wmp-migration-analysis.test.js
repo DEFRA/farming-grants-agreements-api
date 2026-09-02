@@ -139,11 +139,10 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockCollection.find).toHaveBeenCalledWith({
-        grant: { $in: ['grant1'] },
-        $or: [{ code: 'woodland' }, { scheme: 'WMP' }]
+        grant: { $in: ['grant1'] }
       })
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'WMP_MIGRATION migration=GOOD agreement=WMP001 agreementId=agreement1 agreementStatus=accepted versions=1 versionStatuses=accepted:1 issues=none'
+        'WMP_MIGRATION migration=GOOD agreement=WMP001 agreementId=agreement1 agreementStatus=accepted versions=1 wmpVersions=1 versionTypes=woodland/WMP:1 versionStatuses=accepted:1 issues=none'
       )
       expect(mockLogger.info).toHaveBeenCalledWith(
         'WMP_MIGRATION_SUMMARY agreements=1 good=1 bad=0 decision=GOOD'
@@ -153,6 +152,58 @@ describe('wmp-migration-analysis helper', () => {
           message.startsWith('WMP_MIGRATION migration=')
         )
       ).toHaveLength(1)
+    })
+
+    it('should flag non-WMP versions linked to a WMP agreement', async () => {
+      const mockAgreements = [
+        {
+          _id: { toString: () => 'agreement1' },
+          agreementNumber: 'WMP001',
+          status: 'accepted',
+          grantDetails: [{ _id: 'grant1' }]
+        }
+      ]
+      const mockVersions = [
+        {
+          _id: { toString: () => 'wmp-version' },
+          grant: 'grant1',
+          code: 'woodland',
+          scheme: 'WMP',
+          status: 'accepted'
+        },
+        {
+          _id: { toString: () => 'sfi-version' },
+          grant: 'grant1',
+          code: 'frps-private-beta',
+          scheme: 'SFI',
+          status: 'accepted'
+        }
+      ]
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          [Symbol.asyncIterator]: function* () {
+            yield mockAgreements[0]
+          }
+        })),
+        find: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockVersions)
+        }))
+      }
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+
+      await runWMPAgreementDataAnalysis()
+
+      const agreementLog = mockLogger.info.mock.calls
+        .map(([message]) => message)
+        .find((message) => message.startsWith('WMP_MIGRATION migration='))
+      expect(agreementLog).toContain('migration=BAD')
+      expect(agreementLog).toContain(
+        'versions=2 wmpVersions=1 versionTypes=woodland/WMP:1,frps-private-beta/SFI:1'
+      )
+      expect(agreementLog).toContain(
+        'NON_WMP_VERSION_LINKED:versions@sfi-version'
+      )
+      expect(agreementLog.match(/sfi-version/g)).toHaveLength(1)
     })
 
     it('should report failures when properties are missing', async () => {
@@ -228,7 +279,7 @@ describe('wmp-migration-analysis helper', () => {
           _id: { toString: () => 'version1' },
           grant: 'grant1',
           agreementNumber: 'WMP001',
-          code: 'C1',
+          code: 'woodland',
           clientRef: 'CR1',
           correlationId: 'CORR1',
           identifiers: {},
@@ -303,6 +354,7 @@ describe('wmp-migration-analysis helper', () => {
           applicant: {},
           application: { parcel: [], agreement: [] },
           status: 'accepted',
+          scheme: 'WMP',
           payment: {
             agreementStartDate: '2023-01-01',
             agreementEndDate: '2023-12-31',
@@ -364,7 +416,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'WMP_MIGRATION migration=BAD agreement=WMP-NO-GRANTS agreementId=agreement_no_grants agreementStatus=accepted versions=0 versionStatuses=none issues=MISSING_GRANTS:grantDetails@agreement'
+        'WMP_MIGRATION migration=BAD agreement=WMP-NO-GRANTS agreementId=agreement_no_grants agreementStatus=accepted versions=0 wmpVersions=0 versionTypes=none versionStatuses=none issues=MISSING_GRANTS:grantDetails@agreement'
       )
     })
 
@@ -395,7 +447,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'WMP_MIGRATION migration=BAD agreement=WMP-NO-VERSIONS agreementId=agreement_no_versions agreementStatus=accepted versions=0 versionStatuses=none issues=MISSING_VERSIONS:versions@agreement'
+        'WMP_MIGRATION migration=BAD agreement=WMP-NO-VERSIONS agreementId=agreement_no_versions agreementStatus=accepted versions=0 wmpVersions=0 versionTypes=none versionStatuses=none issues=MISSING_VERSIONS:versions@agreement'
       )
     })
 
@@ -421,6 +473,7 @@ describe('wmp-migration-analysis helper', () => {
           applicant: {},
           application: { parcel: [], agreement: [] },
           status: 'accepted',
+          scheme: 'WMP',
           payment: {
             agreementStartDate: '2023-01-01',
             agreementEndDate: '2023-12-31',
@@ -471,7 +524,7 @@ describe('wmp-migration-analysis helper', () => {
           _id: { toString: () => 'v1' },
           grant: 'g1',
           agreementNumber: 'WMP-EMPTY-IDS',
-          code: 'C1',
+          code: 'woodland',
           clientRef: 'CR1',
           correlationId: 'CORR1',
           identifiers: {}, // EMPTY
@@ -561,7 +614,7 @@ describe('wmp-migration-analysis helper', () => {
           _id: { toString: () => 'v1' },
           grant: 'g1',
           agreementNumber: 'WMP-EMPTY-PARCELS',
-          code: 'C1',
+          code: 'woodland',
           clientRef: 'CR1',
           correlationId: 'CORR1',
           identifiers: { sbi: 'sbi', frn: 'frn', crn: 'crn' },
@@ -640,7 +693,7 @@ describe('wmp-migration-analysis helper', () => {
           _id: { toString: () => 'version1' },
           grant: 'grant1',
           agreementNumber: 'WMP-UNMAPPABLE',
-          code: 'C1',
+          code: 'woodland',
           clientRef: 'CR1',
           correlationId: 'CORR1',
           identifiers: {},
@@ -703,7 +756,7 @@ describe('wmp-migration-analysis helper', () => {
         {
           _id: { toString: () => 'version1' },
           grant: 'grant1',
-          code: 'C1',
+          code: 'woodland',
           clientRef: 'CR1',
           correlationId: 'CORR1',
           identifiers: { sbi: 'sbi', frn: 'frn', crn: 'crn' },
@@ -774,7 +827,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'WMP_MIGRATION migration=GOOD agreement=WMP-ALI agreementId=agreement_ali agreementStatus=accepted versions=1 versionStatuses=accepted:1 issues=none'
+        'WMP_MIGRATION migration=GOOD agreement=WMP-ALI agreementId=agreement_ali agreementStatus=accepted versions=1 wmpVersions=1 versionTypes=woodland/S1:1 versionStatuses=accepted:1 issues=none'
       )
       expect(mockLogger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Found payment.agreementLevelItems')
@@ -796,6 +849,7 @@ describe('wmp-migration-analysis helper', () => {
           _id: { toString: () => 'version1' },
           grant: 'grant1',
           agreementNumber: 'WMP-MISMATCH',
+          code: 'woodland',
           status: 'accepted',
           payment: {
             agreementLevelItems: new Map([
