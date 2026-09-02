@@ -98,7 +98,7 @@ const validateActionsProperty = (target) => {
   return Array.isArray(actions) && actions.length > 0 ? actions : undefined
 }
 
-const validateItemsProperty = (target) => {
+const validateItemsProperty = (target, agreementNumber) => {
   const agreementLevelItems = target.payment?.agreementLevelItems
   const applicationAgreement = target.application?.agreement
 
@@ -111,7 +111,7 @@ const validateItemsProperty = (target) => {
 
   if (hasAgreementLevelItems && hasApplicationAgreement) {
     logger.info(
-      `Found both payment.agreementLevelItems and application.agreement for agreement ${target.agreementNumber}`
+      `Found both payment.agreementLevelItems and application.agreement for agreement ${agreementNumber}`
     )
     // Verify shared fields agree
     const aliArray =
@@ -138,7 +138,7 @@ const validateItemsProperty = (target) => {
 
     if (mismatches.length > 0) {
       logger.info(
-        `Shared fields mismatch for agreement ${target.agreementNumber}: ${mismatches.join(', ')}`
+        `Shared fields mismatch for agreement ${agreementNumber}: ${mismatches.join(', ')}`
       )
       return undefined
     }
@@ -147,14 +147,14 @@ const validateItemsProperty = (target) => {
 
   if (hasAgreementLevelItems) {
     logger.info(
-      `Found payment.agreementLevelItems legacy shape for agreement ${target.agreementNumber}`
+      `Found payment.agreementLevelItems legacy shape for agreement ${agreementNumber}`
     )
     return agreementLevelItems
   }
 
   if (hasApplicationAgreement) {
     logger.info(
-      `Found application.agreement legacy shape for agreement ${target.agreementNumber}`
+      `Found application.agreement legacy shape for agreement ${agreementNumber}`
     )
     return applicationAgreement
   }
@@ -162,7 +162,7 @@ const validateItemsProperty = (target) => {
   return undefined
 }
 
-const checkPropertyExists = (property, targetObj) => {
+const checkPropertyExists = (property, targetObj, agreementNumber) => {
   // Logic to map requested property to actual record fields
   const propertyHandlers = {
     agreementNumber: (target) => target.agreementNumber,
@@ -179,7 +179,7 @@ const checkPropertyExists = (property, targetObj) => {
     endDate: (target) => getAgreementDate(target, 'end'),
     parcels: validateParcelsProperty,
     actions: validateActionsProperty,
-    items: validateItemsProperty,
+    items: (target) => validateItemsProperty(target, agreementNumber),
     annualAmountPence: (target) => target.payment?.annualTotalPence,
     totalAmountPence: (target) => target.payment?.agreementTotalPence,
     paymentSchedule: (target) => {
@@ -209,8 +209,8 @@ const checkMissingProperties = (agreement, version, versionIndex) => {
   const issues = []
   requiredPropertiesOfAgreement.forEach((propertyKey) => {
     if (
-      !checkPropertyExists(propertyKey, agreement) &&
-      !checkPropertyExists(propertyKey, version)
+      !checkPropertyExists(propertyKey, agreement, agreement.agreementNumber) &&
+      !checkPropertyExists(propertyKey, version, agreement.agreementNumber)
     ) {
       issues.push({
         path: propertyKey,

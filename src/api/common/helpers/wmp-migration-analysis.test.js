@@ -704,7 +704,6 @@ describe('wmp-migration-analysis helper', () => {
         {
           _id: { toString: () => 'version1' },
           grant: 'grant1',
-          agreementNumber: 'WMP-ALI',
           code: 'C1',
           clientRef: 'CR1',
           correlationId: 'CORR1',
