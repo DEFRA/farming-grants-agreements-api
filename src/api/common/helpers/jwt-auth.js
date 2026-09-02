@@ -2,6 +2,106 @@ import { config } from '#~/config/index.js'
 import Jwt from '@hapi/jwt'
 import Boom from '@hapi/boom'
 
+// FGP-1307: producers permitted to mint the caller token (fixed code constant,
+// matching the other consumers). Used for a warn-only issuer check during the
+// staged rollout.
+const ALLOWED_ISSUERS = new Set([
+  'grants-ui',
+  'fg-cw-frontend',
+  'agreements-pdf'
+])
+
+// FGP-1307: the audience this service expects to find in the token. Checked
+// warn-only for now so existing callers are not rejected before enforcement.
+const EXPECTED_AUDIENCE = 'agreements-api'
+
+/**
+ * FGP-1307: parse the optional kid-keyed keyring of extra verification secrets.
+ * @param {string} raw - JSON object string of { kid: secret }
+ * @returns {Record<string, string>} keyring (empty when unset/invalid)
+ */
+const parseKeyring = (raw) => {
+  if (!raw) {
+    return {}
+  }
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed
+    }
+  } catch {
+    // fall through to empty keyring
+  }
+
+  return {}
+}
+
+/**
+ * FGP-1307: select the verification secret for a token's kid.
+ * Absent kid, or a kid equal to the default kid, uses the default shared secret
+ * (so grants-ui, which emits no kid, keeps verifying). Any other kid must be
+ * present in the keyring; an unknown kid returns null so the caller rejects the
+ * token rather than falling back to the default secret.
+ * @param {string|undefined} kid - kid from the token header
+ * @param {object} logger - logger for the warn-only no-kid signal
+ * @returns {string|null} the secret to verify with, or null for an unknown kid
+ */
+const resolveSecret = (kid, logger) => {
+  const defaultSecret = config.get('jwtSecret')
+  const defaultKid = config.get('jwtDefaultKid')
+  const keyring = parseKeyring(config.get('jwtKeyring'))
+
+  if (!kid) {
+    logger.warn(
+      'JWT caller token carried no kid; using the default signing secret'
+    )
+    return defaultSecret
+  }
+
+  if (kid === defaultKid) {
+    return defaultSecret
+  }
+
+  if (Object.hasOwn(keyring, kid)) {
+    return keyring[kid]
+  }
+
+  logger.error({ kid }, 'JWT caller token carried an unknown kid')
+  return null
+}
+
+/**
+ * FGP-1307: warn-only claim checks (issuer, audience). Signature and expiry are
+ * already hard-enforced by Jwt.token.verify; these claims are logged but do not
+ * reject the request yet so we can roll out enforcement in a later stage.
+ * @param {object} payload - the verified JWT payload
+ * @param {object} logger - logger for the warnings
+ */
+const warnOnClaimMismatches = (payload, logger) => {
+  if (!ALLOWED_ISSUERS.has(payload?.iss)) {
+    logger.warn(
+      { hasIss: payload?.iss != null },
+      'JWT caller token issuer is not in the allow-list; accepted for now'
+    )
+  }
+
+  const toAudienceList = (aud) => {
+    if (Array.isArray(aud)) {
+      return aud
+    }
+    return aud == null ? [] : [aud]
+  }
+  const audiences = toAudienceList(payload?.aud)
+
+  if (!audiences.includes(EXPECTED_AUDIENCE)) {
+    logger.warn(
+      { hasAud: audiences.length > 0 },
+      'JWT caller token audience does not include this service; accepted for now'
+    )
+  }
+}
+
 /**
  * Validates and verifies a JWT token against a secret to extract the payload
  * which will have the 'sbi' and 'source' data
@@ -27,9 +127,17 @@ const extractJwtPayload = (authToken, logger) => {
     const decoded = Jwt.token.decode(authToken)
     logger.info('JWT token decoded successfully, attempting verification')
 
-    // Verify the token against the secret
+    // FGP-1307: select the verification secret by the token's kid header so we
+    // can rotate keys; an unknown kid cannot be verified and is rejected.
+    const kid = decoded?.decoded?.header?.kid
+    const secret = resolveSecret(kid, logger)
+    if (secret == null) {
+      return null
+    }
+
+    // Verify the token against the resolved secret (also enforces expiry)
     Jwt.token.verify(decoded, {
-      key: config.get('jwtSecret'),
+      key: secret,
       algorithms: ['HS256']
     })
 
@@ -37,14 +145,15 @@ const extractJwtPayload = (authToken, logger) => {
     const payload = decoded?.decoded?.payload || null
 
     if (payload) {
+      // FGP-1307: do not log sbi/source (PII); log only presence booleans.
       logger.info(
         {
           hasSbi: !!payload.sbi,
-          hasSource: !!payload.source,
-          source: payload.source
+          hasSource: !!payload.source
         },
         'JWT payload extracted'
       )
+      warnOnClaimMismatches(payload, logger)
     }
 
     return payload
@@ -112,7 +221,7 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
       isJwtEnabled,
       hasAuthToken: !!authToken,
       authTokenLength: authToken ? authToken.length : 0,
-      agreementSbi: agreementData?.identifiers?.sbi,
+      hasAgreementSbi: agreementData?.identifiers?.sbi != null,
       agreementNumber: agreementData?.agreementNumber
     },
     'JWT Authentication Validation Start'
@@ -133,10 +242,9 @@ const validateJwtAuthentication = (authToken, agreementData, logger) => {
 
   logger.info(
     {
-      payloadSbi: jwtPayload.sbi,
-      payloadSource: jwtPayload.source,
-      agreementSbi: agreementData?.identifiers?.sbi,
-      jwtSbi: jwtPayload.sbi
+      hasPayloadSbi: jwtPayload.sbi != null,
+      hasPayloadSource: jwtPayload.source != null,
+      hasAgreementSbi: agreementData?.identifiers?.sbi != null
     },
     'JWT payload extracted successfully'
   )
