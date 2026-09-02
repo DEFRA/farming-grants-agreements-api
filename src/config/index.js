@@ -445,6 +445,12 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
+    },
+    wmpMigrationAnalysis: {
+      doc: 'Enable to run WMP migration analysis',
+      format: STRICT_BOOLEAN_FORMAT,
+      default: true,
+      env: 'WMP_MIGRATION_ANALYSIS'
     }
   }
 })

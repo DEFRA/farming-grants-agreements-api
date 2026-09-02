@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
+import { runWMPAgreementDataAnalysis } from '#~/api/common/helpers/wmp-migration-analysis.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -43,6 +44,10 @@ export const mongooseDb = {
         } catch (err) {
           server.logger.error(err, 'Error seeding database failed:')
         }
+      }
+
+      if (config.get('featureFlags.wmpMigrationAnalysis') === true) {
+        await runWMPAgreementDataAnalysis()
       }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises

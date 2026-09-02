@@ -177,7 +177,7 @@ describe('sending updated (accepted) events via SNS', () => {
 
           message = acceptedPublishCall[0]
           message.specversion = message.specversion ?? '1.0'
-          message.data.agreementCreateDate = '2025-10-06T16:40:21.951Z'
+          message.data.agreementAcceptedDate = '2025-10-06T16:40:21.951Z'
           message.time = '2025-10-06T16:41:59.497Z'
           // The published consumer pact (farming-grants-agreements-pdf) asserts
           // `data.code` as a literal string `"mockCode"` rather than using a
