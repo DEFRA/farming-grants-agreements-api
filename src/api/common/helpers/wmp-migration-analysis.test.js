@@ -143,11 +143,16 @@ describe('wmp-migration-analysis helper', () => {
         $or: [{ code: 'woodland' }, { scheme: 'WMP' }]
       })
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Total Passed: 1')
+        'WMP_MIGRATION migration=GOOD agreement=WMP001 agreementId=agreement1 agreementStatus=accepted versions=1 versionStatuses=accepted:1 issues=none'
       )
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Go Decision: YES')
+        'WMP_MIGRATION_SUMMARY agreements=1 good=1 bad=0 decision=GOOD'
       )
+      expect(
+        mockLogger.info.mock.calls.filter(([message]) =>
+          message.startsWith('WMP_MIGRATION migration=')
+        )
+      ).toHaveLength(1)
     })
 
     it('should report failures when properties are missing', async () => {
@@ -185,13 +190,13 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Total Failed: 1')
+        expect.stringContaining('WMP_MIGRATION migration=BAD agreement=WMP001')
       )
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Go Decision: NO')
+        expect.stringContaining('issues=MISSING_GRANTS:grantDetails@agreement')
       )
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[FAIL] agreement=WMP001')
+        'WMP_MIGRATION_SUMMARY agreements=1 good=0 bad=1 decision=BAD'
       )
     })
 
@@ -269,10 +274,10 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Total Failed: 1')
+        expect.stringContaining('INVALID_PAYMENT_VALUES:payment@version1')
       )
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('reason=INVALID_PAYMENT_VALUES')
+        'WMP_MIGRATION_SUMMARY agreements=1 good=0 bad=1 decision=BAD'
       )
     })
 
@@ -330,7 +335,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('reason=INVALID_PAYMENT_VALUES')
+        expect.stringContaining('INVALID_PAYMENT_VALUES:payment@v1')
       )
     })
 
@@ -359,13 +364,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[FAIL] agreement=WMP-NO-GRANTS')
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('reason=MISSING_GRANTS')
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Total Failed: 1')
+        'WMP_MIGRATION migration=BAD agreement=WMP-NO-GRANTS agreementId=agreement_no_grants agreementStatus=accepted versions=0 versionStatuses=none issues=MISSING_GRANTS:grantDetails@agreement'
       )
     })
 
@@ -396,13 +395,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[FAIL] agreement=WMP-NO-VERSIONS')
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('reason=MISSING_VERSIONS')
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Total Failed: 1')
+        'WMP_MIGRATION migration=BAD agreement=WMP-NO-VERSIONS agreementId=agreement_no_versions agreementStatus=accepted versions=0 versionStatuses=none issues=MISSING_VERSIONS:versions@agreement'
       )
     })
 
@@ -460,7 +453,7 @@ describe('wmp-migration-analysis helper', () => {
       // Should not find INVALID_PAYMENT_VALUES
       const calls = mockLogger.info.mock.calls.map((c) => c[0])
       const hasInvalidPaymentValues = calls.some((c) =>
-        c.includes('reason=INVALID_PAYMENT_VALUES')
+        c.includes('INVALID_PAYMENT_VALUES')
       )
       expect(hasInvalidPaymentValues).toBe(false)
     })
@@ -551,7 +544,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('path=identifiers reason=MISSING_PROPERTY')
+        expect.stringContaining('MISSING_PROPERTY:identifiers@v1')
       )
     })
 
@@ -628,7 +621,7 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('path=parcels reason=MISSING_PROPERTY')
+        expect.stringContaining('MISSING_PROPERTY:parcels@v1')
       )
     })
 
@@ -687,14 +680,16 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('[FAIL] agreement=WMP-UNMAPPABLE')
+        expect.stringContaining(
+          'WMP_MIGRATION migration=BAD agreement=WMP-UNMAPPABLE'
+        )
       )
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('reason=STATUS_UNMAPPABLE')
+        expect.stringContaining('STATUS_UNMAPPABLE:status@version1')
       )
     })
 
-    it('should prefer payment.agreementLevelItems and report the shape found', async () => {
+    it('should use payment.agreementLevelItems without logging the normal shape', async () => {
       const mockAgreements = [
         {
           _id: { toString: () => 'agreement_ali' },
@@ -779,12 +774,10 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Found payment.agreementLevelItems legacy shape for agreement WMP-ALI'
-        )
+        'WMP_MIGRATION migration=GOOD agreement=WMP-ALI agreementId=agreement_ali agreementStatus=accepted versions=1 versionStatuses=accepted:1 issues=none'
       )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Total Passed: 1')
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Found payment.agreementLevelItems')
       )
     })
 
@@ -848,15 +841,10 @@ describe('wmp-migration-analysis helper', () => {
       await runWMPAgreementDataAnalysis()
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Shared fields mismatch for agreement WMP-MISMATCH'
-        )
+        expect.stringContaining('MISSING_PROPERTY:items@version1')
       )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('reason=MISSING_PROPERTY')
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('path=items')
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Shared fields mismatch')
       )
     })
   })
