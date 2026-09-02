@@ -35,20 +35,67 @@ const requiredPropertiesOfAgreement = [
 /**
  * Diagnostic reporting helpers
  */
-const reportPass = (agreementNumber, agreementId, status) => {
-  logger.info(
-    `[PASS] agreement=${agreementNumber} agreementId=${agreementId} status=${status} (READY)`
-  )
+const isWmpVersion = (version) =>
+  version.code === 'woodland' || version.scheme === 'WMP'
+
+const summariseVersionTypes = (versions) => {
+  if (versions.length === 0) {
+    return 'none'
+  }
+
+  const counts = versions.reduce((summary, version) => {
+    const type = `${version.code || 'unknown'}/${version.scheme || version.schemeCode || 'unknown'}`
+    summary[type] = (summary[type] || 0) + 1
+    return summary
+  }, {})
+
+  return Object.entries(counts)
+    .map(([type, count]) => `${type}:${count}`)
+    .join(',')
 }
 
-const reportFailures = (agreementNumber, agreementId, issues) => {
+const summariseVersionStatuses = (versions) => {
+  if (versions.length === 0) {
+    return 'none'
+  }
+
+  const counts = versions.reduce((summary, version) => {
+    const status = (version.status || 'unknown').toLowerCase()
+    summary[status] = (summary[status] || 0) + 1
+    return summary
+  }, {})
+
+  return Object.entries(counts)
+    .map(([status, count]) => `${status}:${count}`)
+    .join(',')
+}
+
+const summariseIssues = (issues) => {
+  if (issues.length === 0) {
+    return 'none'
+  }
+
+  const groupedIssues = issues.reduce((summary, issue) => {
+    const key = `${issue.reason}:${issue.path}`
+    const affectedRecord = issue.versionId || 'agreement'
+    const affectedRecords = summary.get(key) || new Set()
+    affectedRecords.add(affectedRecord)
+    summary.set(key, affectedRecords)
+    return summary
+  }, new Map())
+
+  return Array.from(
+    groupedIssues,
+    ([issue, affectedRecords]) =>
+      `${issue}@${Array.from(affectedRecords).join(',')}`
+  ).join('|')
+}
+
+const reportAgreement = (agreement, versions, wmpVersions, issues) => {
+  const migration = issues.length === 0 ? 'GOOD' : 'BAD'
   logger.info(
-    `[FAIL] agreement=${agreementNumber} agreementId=${agreementId} status=BLOCKED`
+    `WMP_MIGRATION migration=${migration} agreement=${agreement.agreementNumber} agreementId=${agreement._id.toString()} agreementStatus=${agreement.status || 'unknown'} versions=${versions.length} wmpVersions=${wmpVersions.length} versionTypes=${summariseVersionTypes(versions)} versionStatuses=${summariseVersionStatuses(versions)} issues=${summariseIssues(issues)}`
   )
-  issues.forEach((issue) => {
-    const messagePart = issue.message ? ` (${issue.message})` : ''
-    logger.info(`  - path=${issue.path} reason=${issue.reason}${messagePart}`)
-  })
 }
 
 const validateIdentifiers = (target) => {
@@ -110,9 +157,6 @@ const validateItemsProperty = (target) => {
     Array.isArray(applicationAgreement) && applicationAgreement.length > 0
 
   if (hasAgreementLevelItems && hasApplicationAgreement) {
-    logger.info(
-      `Found both payment.agreementLevelItems and application.agreement for agreement ${target.agreementNumber}`
-    )
     // Verify shared fields agree
     const aliArray =
       agreementLevelItems instanceof Map
@@ -137,25 +181,16 @@ const validateItemsProperty = (target) => {
     })
 
     if (mismatches.length > 0) {
-      logger.info(
-        `Shared fields mismatch for agreement ${target.agreementNumber}: ${mismatches.join(', ')}`
-      )
       return undefined
     }
     return agreementLevelItems
   }
 
   if (hasAgreementLevelItems) {
-    logger.info(
-      `Found payment.agreementLevelItems legacy shape for agreement ${target.agreementNumber}`
-    )
     return agreementLevelItems
   }
 
   if (hasApplicationAgreement) {
-    logger.info(
-      `Found application.agreement legacy shape for agreement ${target.agreementNumber}`
-    )
     return applicationAgreement
   }
 
@@ -205,7 +240,7 @@ const checkPropertyExists = (property, targetObj) => {
   return val !== undefined && val !== null && val !== ''
 }
 
-const checkMissingProperties = (agreement, version, versionIndex) => {
+const checkMissingProperties = (agreement, version) => {
   const issues = []
   requiredPropertiesOfAgreement.forEach((propertyKey) => {
     if (
@@ -215,14 +250,14 @@ const checkMissingProperties = (agreement, version, versionIndex) => {
       issues.push({
         path: propertyKey,
         reason: 'MISSING_PROPERTY',
-        message: `Property '${propertyKey}' is missing in agreement and version[${versionIndex}] ${version._id.toString()}`
+        versionId: version._id.toString()
       })
     }
   })
   return issues
 }
 
-const checkUnmappableStatus = (agreement, version, versionIndex) => {
+const checkUnmappableStatus = (agreement, version) => {
   const issues = []
   const status = (version.status || agreement.status || '').toLowerCase()
   const unmappableStatuses = [
@@ -236,13 +271,13 @@ const checkUnmappableStatus = (agreement, version, versionIndex) => {
     issues.push({
       path: 'status',
       reason: 'STATUS_UNMAPPABLE',
-      message: `Status '${status}' is unmappable in agreement or version[${versionIndex}] ${version._id.toString()}`
+      versionId: version._id.toString()
     })
   }
   return issues
 }
 
-const checkPaymentValues = (version, versionIndex) => {
+const checkPaymentValues = (version) => {
   const issues = []
   const annualTotalPence = version.payment?.annualTotalPence
   const agreementTotalPence = version.payment?.agreementTotalPence
@@ -259,7 +294,7 @@ const checkPaymentValues = (version, versionIndex) => {
     issues.push({
       path: 'payment',
       reason: 'INVALID_PAYMENT_VALUES',
-      message: `Property 'payment' payment values are different in version[${versionIndex}] ${version._id.toString()}`
+      versionId: version._id.toString()
     })
   }
   return issues
@@ -274,7 +309,7 @@ const analyzeAgreementVersions = async (agreement) => {
       reason: 'MISSING_GRANTS',
       message: 'Agreement has no associated grants'
     })
-    return issues
+    return { issues, versions: [], wmpVersions: [] }
   }
 
   const grantIds = agreement.grantDetails.map((g) => g._id)
@@ -289,22 +324,38 @@ const analyzeAgreementVersions = async (agreement) => {
       reason: 'MISSING_VERSIONS',
       message: `No versions found for grants: ${grantIds.join(', ')}`
     })
-    return issues
+    return { issues, versions: [], wmpVersions: [] }
   }
 
-  versions.forEach((version, index) => {
+  const wmpVersions = versions.filter(isWmpVersion)
+  const nonWmpVersions = versions.filter((version) => !isWmpVersion(version))
+  nonWmpVersions.forEach((version) => {
+    issues.push({
+      path: 'versions',
+      reason: 'NON_WMP_VERSION_LINKED',
+      versionId: version._id.toString()
+    })
+  })
+
+  if (wmpVersions.length === 0) {
+    issues.push({
+      path: 'versions',
+      reason: 'MISSING_WMP_VERSIONS'
+    })
+  }
+
+  wmpVersions.forEach((version) => {
     issues.push(
-      ...checkMissingProperties(agreement, version, index),
-      ...checkUnmappableStatus(agreement, version, index),
-      ...checkPaymentValues(version, index)
+      ...checkMissingProperties(agreement, version),
+      ...checkUnmappableStatus(agreement, version),
+      ...checkPaymentValues(version)
     )
   })
-  return issues
+  return { issues, versions, wmpVersions }
 }
 
 export async function runWMPAgreementDataAnalysis() {
-  logger.info('WMP Migration Analysis Report')
-  logger.info(`Timestamp: ${new Date().toISOString()}`)
+  logger.info(`WMP_MIGRATION_ANALYSIS timestamp=${new Date().toISOString()}`)
 
   try {
     if (
@@ -334,26 +385,19 @@ export async function runWMPAgreementDataAnalysis() {
 
     for await (const agreement of wmpAgreements) {
       stats.inspected++
-      const agreementNumber = agreement.agreementNumber
-      const agreementId = agreement._id.toString()
+      const { issues, versions, wmpVersions } =
+        await analyzeAgreementVersions(agreement)
 
-      const issues = await analyzeAgreementVersions(agreement)
-
+      reportAgreement(agreement, versions, wmpVersions, issues)
       if (issues.length === 0) {
-        reportPass(agreementNumber, agreementId, agreement.status || 'N/A')
         stats.passed++
       } else {
-        reportFailures(agreementNumber, agreementId, issues)
         stats.failed++
       }
     }
 
-    logger.info('\n--- Analysis Summary ---')
-    logger.info(`Total Versions Inspected: ${stats.inspected}`)
-    logger.info(`Total Passed: ${stats.passed}`)
-    logger.info(`Total Failed: ${stats.failed}`)
     logger.info(
-      `Go Decision: ${stats.failed === 0 ? 'YES' : 'NO (Fix blocking issues)'}`
+      `WMP_MIGRATION_SUMMARY agreements=${stats.inspected} good=${stats.passed} bad=${stats.failed} decision=${stats.failed === 0 ? 'GOOD' : 'BAD'}`
     )
   } catch (error) {
     logger.error(error, 'Analysis failed with error:')
