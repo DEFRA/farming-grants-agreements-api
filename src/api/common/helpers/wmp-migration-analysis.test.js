@@ -62,11 +62,11 @@ describe('wmp-migration-analysis helper', () => {
           _id: { toString: () => 'version1' },
           grant: 'grant1',
           agreementNumber: 'WMP001',
-          code: 'C1',
+          code: 'woodland',
           clientRef: 'CR1',
           correlationId: 'CORR1',
           identifiers: { sbi: 'sbi', frn: 'frn', crn: 'crn' },
-          schemeCode: 'S1',
+          scheme: 'WMP',
           name: 'N1',
           applicant: {
             business: { name: 'B1', address: { line1: 'L1' } },
@@ -138,6 +138,10 @@ describe('wmp-migration-analysis helper', () => {
 
       await runWMPAgreementDataAnalysis()
 
+      expect(mockCollection.find).toHaveBeenCalledWith({
+        grant: { $in: ['grant1'] },
+        $or: [{ code: 'woodland' }, { scheme: 'WMP' }]
+      })
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Total Passed: 1')
       )

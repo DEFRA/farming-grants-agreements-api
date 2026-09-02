@@ -280,7 +280,10 @@ const analyzeAgreementVersions = async (agreement) => {
   const grantIds = agreement.grantDetails.map((g) => g._id)
   const versions = await mongoose.connection
     .collection('versions')
-    .find({ grant: { $in: grantIds } })
+    .find({
+      grant: { $in: grantIds },
+      $or: [{ code: 'woodland' }, { scheme: 'WMP' }]
+    })
     .toArray()
 
   if (!versions || versions.length === 0) {
