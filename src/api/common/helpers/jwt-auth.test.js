@@ -17,12 +17,21 @@ describe('jwt-auth', () => {
     agreementNumber: 'FPTT123456789'
   }
 
-  const setupMockConfig = (isJwtEnabled = true) => {
+  const setupMockConfig = (isJwtEnabled = true, overrides = {}) => {
     config.get = vi.fn((key) => {
       if (key === 'featureFlags.isJwtEnabled') return isJwtEnabled
       if (key === 'jwtSecret') return 'mock-jwt-secret'
+      if (key === 'jwtDefaultKid')
+        return overrides.jwtDefaultKid ?? 'agreements-hs256-1'
+      if (key === 'jwtKeyring') return overrides.jwtKeyring ?? ''
       return null
     })
+  }
+
+  const setupMockJwtWithHeader = (payload, header) => {
+    const mockDecoded = { decoded: { header, payload } }
+    Jwt.token.decode = vi.fn().mockReturnValue(mockDecoded)
+    Jwt.token.verify = vi.fn().mockImplementation(() => Promise.resolve())
   }
 
   const setupMockJwt = (payload = null, throwError = null) => {
@@ -258,6 +267,178 @@ describe('jwt-auth', () => {
         )
 
         expect(result.valid).toBe(true)
+      })
+    })
+
+    describe('kid key selection (FGP-1307)', () => {
+      const validPayload = {
+        iss: 'grants-ui',
+        aud: ['agreements-api'],
+        sub: '123456',
+        sbi: '123456',
+        source: 'defra'
+      }
+
+      test('uses the default secret when the token carries no kid', () => {
+        setupMockJwtWithHeader(validPayload, {})
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(Jwt.token.verify).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ key: 'mock-jwt-secret' })
+        )
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'JWT caller token carried no kid; using the default signing secret'
+        )
+      })
+
+      test('uses the default secret when the kid matches the default kid', () => {
+        setupMockJwtWithHeader(validPayload, { kid: 'agreements-hs256-1' })
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(Jwt.token.verify).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ key: 'mock-jwt-secret' })
+        )
+      })
+
+      test('verifies a rotated kid using the keyring secret', () => {
+        setupMockConfig(true, {
+          jwtKeyring: JSON.stringify({ 'agreements-hs256-2': 'rotated-secret' })
+        })
+        setupMockJwtWithHeader(validPayload, { kid: 'agreements-hs256-2' })
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(Jwt.token.verify).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ key: 'rotated-secret' })
+        )
+      })
+
+      test('rejects a token whose kid is not in the keyring', () => {
+        setupMockJwtWithHeader(validPayload, { kid: 'unknown-kid' })
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result).toEqual({ valid: false, source: null, sbi: null })
+        expect(Jwt.token.verify).not.toHaveBeenCalled()
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          { kid: 'unknown-kid' },
+          'JWT caller token carried an unknown kid'
+        )
+      })
+
+      test('treats a malformed keyring as empty and rejects an unknown kid', () => {
+        setupMockConfig(true, { jwtKeyring: 'not-valid-json' })
+        setupMockJwtWithHeader(validPayload, { kid: 'agreements-hs256-2' })
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result).toEqual({ valid: false, source: null, sbi: null })
+        expect(Jwt.token.verify).not.toHaveBeenCalled()
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          { kid: 'agreements-hs256-2' },
+          'JWT caller token carried an unknown kid'
+        )
+      })
+    })
+
+    describe('warn-only claim checks (FGP-1307)', () => {
+      test('warns but accepts when the issuer is not allow-listed', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'someone-else',
+            aud: ['agreements-api'],
+            sbi: '123456',
+            source: 'defra'
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasIss: true },
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+      })
+
+      test('warns but accepts when the audience does not include this service', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'grants-ui',
+            aud: ['agreements-ui', 'gas'],
+            sbi: '123456',
+            source: 'defra'
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasAud: true },
+          'JWT caller token audience does not include this service; accepted for now'
+        )
+      })
+
+      test('does not warn when issuer and audience are valid', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'grants-ui',
+            aud: ['agreements-api'],
+            sbi: '123456',
+            source: 'defra'
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        validateJwtAuthentication('token', mockAgreementData, mockLogger)
+
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.anything(),
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.anything(),
+          'JWT caller token audience does not include this service; accepted for now'
+        )
       })
     })
   })

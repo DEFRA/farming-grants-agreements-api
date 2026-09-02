@@ -275,6 +275,18 @@ const config = convict({
     default: 'default-agreements-jwt-secret',
     env: 'AGREEMENTS_JWT_SECRET'
   },
+  jwtDefaultKid: {
+    doc: 'FGP-1307: logical key id the default jwtSecret is stored under, and the kid assumed when an incoming caller token carries no kid header (e.g. grants-ui).',
+    format: String,
+    default: 'agreements-hs256-1',
+    env: 'AGREEMENTS_JWT_DEFAULT_KID'
+  },
+  jwtKeyring: {
+    doc: 'FGP-1307: optional JSON object of additional verification secrets keyed by kid, used to verify tokens signed with a rotated key during a rotation overlap. Example: {"agreements-hs256-2":"secret"}.',
+    format: String,
+    default: '',
+    env: 'AGREEMENTS_JWT_KEYRING'
+  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,
