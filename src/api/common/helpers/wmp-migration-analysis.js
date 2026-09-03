@@ -1,4 +1,6 @@
 import mongoose from 'mongoose'
+import { checkFileExists } from '#~/api/common/helpers/s3-client.js'
+import { getRetentionPrefix } from '#~/api/common/helpers/retention-period.js'
 
 import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { config } from '#~/config/index.js'
@@ -354,15 +356,57 @@ const analyzeAgreementVersions = async (agreement) => {
   return { issues, versions, wmpVersions }
 }
 
+async function ensureMongoConnection() {
+  if (mongoose.connection.readyState !== mongoose.ConnectionStates.connected) {
+    await mongoose.connect(MONGO_URI, { dbName: DB_NAME })
+  }
+}
+
+async function checkSingleAgreementPdf(agreement, bucket, stats) {
+  const version = agreement.latestAcceptedVersion
+  logger.info(
+    `WMP_PDF_CHECKING of agreement=${agreement.agreementNumber} in status=${version.status}`
+  )
+  stats.inspected++
+  const agreementId = agreement.agreementNumber
+  const versionCount = agreement.totalVersionsCount || 1
+
+  const prefix = getRetentionPrefix(
+    version.payment?.agreementStartDate,
+    version.payment?.agreementEndDate
+  )
+  const filename = `${agreementId}-${versionCount}.pdf`
+  const key = [prefix, agreementId, versionCount, filename]
+    .filter(Boolean)
+    .join('/')
+
+  try {
+    const exists = await checkFileExists({ bucket, key })
+    if (exists) {
+      stats.passed++
+      logger.info(
+        `WMP_PDF_CHECK_PASS agreement=${agreementId} version=${versionCount} key=${key}`
+      )
+    } else {
+      stats.failed++
+      logger.error(
+        `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionCount} key=${key} reason=NOT_FOUND`
+      )
+    }
+  } catch (err) {
+    stats.failed++
+    logger.error(
+      err,
+      `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionCount} key=${key} reason=ERROR`
+    )
+  }
+}
+
 export async function runWMPAgreementDataAnalysis() {
   logger.info(`WMP_MIGRATION_ANALYSIS timestamp=${new Date().toISOString()}`)
 
   try {
-    if (
-      mongoose.connection.readyState !== mongoose.ConnectionStates.connected
-    ) {
-      await mongoose.connect(MONGO_URI, { dbName: DB_NAME })
-    }
+    await ensureMongoConnection()
     const wmpAgreements = mongoose.connection
       .collection('agreements')
       .aggregate([
@@ -401,5 +445,105 @@ export async function runWMPAgreementDataAnalysis() {
     )
   } catch (error) {
     logger.error(error, 'Analysis failed with error:')
+  }
+}
+
+function fetchWmpAgreementsWithLatestAcceptedVersion() {
+  return mongoose.connection.collection('agreements').aggregate([
+    {
+      $match: {
+        agreementNumber: { $regex: /^WMP/ }
+      }
+    },
+    {
+      $lookup: {
+        from: 'grants',
+        localField: 'grants',
+        foreignField: '_id',
+        as: 'grantDetails'
+      }
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        let: { grantIds: '$grantDetails._id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ['$grant', '$$grantIds']
+              }
+            }
+          }
+        ],
+        as: 'allVersions'
+      }
+    },
+    {
+      $addFields: {
+        totalVersionsCount: { $size: '$allVersions' },
+        latestAcceptedVersion: {
+          $filter: {
+            input: '$allVersions',
+            as: 'v',
+            cond: { $eq: ['$$v.status', 'accepted'] }
+          }
+        }
+      }
+    },
+    {
+      $addFields: {
+        latestAcceptedVersion: {
+          $slice: [
+            {
+              $sortArray: {
+                input: '$latestAcceptedVersion',
+                sortBy: { createdAt: -1, _id: -1 }
+              }
+            },
+            1
+          ]
+        }
+      }
+    },
+    {
+      $unwind: '$latestAcceptedVersion'
+    },
+    {
+      $project: {
+        allVersions: 0
+      }
+    }
+  ])
+}
+
+export async function runWMPAgreementPDFAnalysis() {
+  logger.info(`WMP_PDF_CHECK_START timestamp=${new Date().toISOString()}`)
+
+  try {
+    await ensureMongoConnection()
+
+    const bucket = config.get('files.s3.bucket')
+    if (!bucket) {
+      logger.warn('FILES_S3_BUCKET not set - skipping PDF check')
+      return
+    }
+
+    const wmpAgreementsCursor = fetchWmpAgreementsWithLatestAcceptedVersion()
+    const allAgreements = await wmpAgreementsCursor.toArray()
+
+    logger.info(`Fetched total=${allAgreements.length} WMP accepted agreements`)
+
+    const stats = { inspected: 0, passed: 0, failed: 0 }
+
+    for (const agreement of allAgreements) {
+      await checkSingleAgreementPdf(agreement, bucket, stats)
+    }
+
+    logger.info(
+      `WMP_PDF_CHECK_SUMMARY total_checks=${stats.inspected} passed=${stats.passed} failed=${stats.failed}`
+    )
+  } catch (error) {
+    logger.error(error, 'WMP PDF check failed with error:')
   }
 }

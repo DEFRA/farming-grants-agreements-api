@@ -1,11 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { runWMPAgreementDataAnalysis } from '#~/api/common/helpers/wmp-migration-analysis.js'
+import {
+  runWMPAgreementPDFAnalysis,
+  runWMPAgreementDataAnalysis
+} from '#~/api/common/helpers/wmp-migration-analysis.js'
+
+vi.mock('#~/api/common/helpers/s3-client.js', () => ({
+  checkFileExists: vi.fn()
+}))
+
+vi.mock('#~/api/common/helpers/retention-period.js', () => ({
+  getRetentionPrefix: vi.fn()
+}))
+
+const { checkFileExists } = await import('#~/api/common/helpers/s3-client.js')
+const { getRetentionPrefix } = await import(
+  '#~/api/common/helpers/retention-period.js'
+)
 
 vi.mock('#~/api/common/helpers/logging/logger.js', () => {
   const logger = {
     info: vi.fn(),
     error: vi.fn(),
-    debug: vi.fn()
+    debug: vi.fn(),
+    warn: vi.fn()
   }
   return {
     createLogger: vi.fn(() => logger),
@@ -36,6 +53,7 @@ vi.mock('#~/config/index.js', () => ({
     get: vi.fn((key) => {
       if (key === 'mongoUri') return 'mongodb://localhost:27017'
       if (key === 'mongoDatabase') return 'testdb'
+      if (key === 'files.s3.bucket') return 'test-bucket'
       return null
     })
   }
@@ -899,6 +917,143 @@ describe('wmp-migration-analysis helper', () => {
       )
       expect(mockLogger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Shared fields mismatch')
+      )
+    })
+  })
+
+  describe('runWMPAgreementPDFAnalysis', () => {
+    it('should skip PDF check if bucket is not set', async () => {
+      const { config } = await import('#~/config/index.js')
+      vi.mocked(config.get).mockReturnValueOnce(null)
+
+      await runWMPAgreementPDFAnalysis()
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'FILES_S3_BUCKET not set - skipping PDF check'
+      )
+    })
+
+    it('should process agreements and log PASS when PDF exists', async () => {
+      const mockAgreements = [
+        {
+          agreementNumber: 'WMP001',
+          totalVersionsCount: 1,
+          latestAcceptedVersion: {
+            payment: {
+              agreementStartDate: '2023-01-01',
+              agreementEndDate: '2023-12-31'
+            }
+          }
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockAgreements)
+        }))
+      }
+
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+      vi.mocked(getRetentionPrefix).mockReturnValue('base')
+      vi.mocked(checkFileExists).mockResolvedValue(true)
+
+      await runWMPAgreementPDFAnalysis()
+
+      expect(getRetentionPrefix).toHaveBeenCalledWith(
+        '2023-01-01',
+        '2023-12-31'
+      )
+      expect(checkFileExists).toHaveBeenCalledWith({
+        bucket: 'test-bucket',
+        key: 'base/WMP001/1/WMP001-1.pdf'
+      })
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'WMP_PDF_CHECK_PASS agreement=WMP001 version=1 key=base/WMP001/1/WMP001-1.pdf'
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'WMP_PDF_CHECK_SUMMARY total_checks=1 passed=1 failed=0'
+      )
+    })
+
+    it('should log FAIL when PDF does not exist', async () => {
+      const mockAgreements = [
+        {
+          agreementNumber: 'WMP002',
+          totalVersionsCount: 2,
+          latestAcceptedVersion: {
+            payment: {
+              agreementStartDate: '2023-01-01',
+              agreementEndDate: '2023-12-31'
+            }
+          }
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockAgreements)
+        }))
+      }
+
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+      vi.mocked(getRetentionPrefix).mockReturnValue('base')
+      vi.mocked(checkFileExists).mockResolvedValue(false)
+
+      await runWMPAgreementPDFAnalysis()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WMP_PDF_CHECK_FAIL agreement=WMP002 version=2 key=base/WMP002/2/WMP002-2.pdf reason=NOT_FOUND'
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'WMP_PDF_CHECK_SUMMARY total_checks=1 passed=0 failed=1'
+      )
+    })
+
+    it('should log FAIL when checkFileExists throws an error', async () => {
+      const mockAgreements = [
+        {
+          agreementNumber: 'WMP003',
+          totalVersionsCount: 1,
+          latestAcceptedVersion: {
+            payment: {
+              agreementStartDate: '2023-01-01',
+              agreementEndDate: '2023-12-31'
+            }
+          }
+        }
+      ]
+
+      const mockCollection = {
+        aggregate: vi.fn(() => ({
+          toArray: vi.fn().mockResolvedValue(mockAgreements)
+        }))
+      }
+
+      mockMongoose.connection.collection.mockReturnValue(mockCollection)
+      vi.mocked(getRetentionPrefix).mockReturnValue('base')
+      const s3Error = new Error('S3 connection failed')
+      vi.mocked(checkFileExists).mockRejectedValue(s3Error)
+
+      await runWMPAgreementPDFAnalysis()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        s3Error,
+        'WMP_PDF_CHECK_FAIL agreement=WMP003 version=1 key=base/WMP003/1/WMP003-1.pdf reason=ERROR'
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'WMP_PDF_CHECK_SUMMARY total_checks=1 passed=0 failed=1'
+      )
+    })
+
+    it('should handle MongoDB connection failure', async () => {
+      mockMongoose.connect.mockRejectedValueOnce(new Error('Mongo error'))
+      mockMongoose.connection.readyState = 0
+
+      await runWMPAgreementPDFAnalysis()
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.any(Error),
+        'WMP PDF check failed with error:'
       )
     })
   })
