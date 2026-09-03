@@ -1,4 +1,6 @@
 import mongoose from 'mongoose'
+import { checkFileExists } from '#~/api/common/helpers/s3-client.js'
+import { getRetentionPrefix } from '#~/api/common/helpers/retention-period.js'
 
 import { createLogger } from '#~/api/common/helpers/logging/logger.js'
 import { config } from '#~/config/index.js'
@@ -401,5 +403,113 @@ export async function runWMPAgreementDataAnalysis() {
     )
   } catch (error) {
     logger.error(error, 'Analysis failed with error:')
+  }
+}
+
+export async function checkWmpAgreementsPdf() {
+  logger.info(`WMP_PDF_CHECK_START timestamp=${new Date().toISOString()}`)
+
+  try {
+    if (
+      mongoose.connection.readyState !== mongoose.ConnectionStates.connected
+    ) {
+      await mongoose.connect(MONGO_URI, { dbName: DB_NAME })
+    }
+
+    const bucket = config.get('files.s3.bucket')
+    if (!bucket) {
+      logger.warn('FILES_S3_BUCKET not set - skipping PDF check')
+      return
+    }
+
+    const wmpAgreements = mongoose.connection
+      .collection('agreements')
+      .aggregate([
+        {
+          $match: {
+            agreementNumber: { $regex: /^WMP/ }
+          }
+        },
+        {
+          $lookup: {
+            from: 'grants',
+            localField: 'grants',
+            foreignField: '_id',
+            as: 'grantDetails'
+          }
+        },
+        {
+          $lookup: {
+            from: 'versions',
+            let: { grantIds: '$grantDetails._id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $in: ['$grant', '$$grantIds'] },
+                      { $eq: ['$status', 'accepted'] }
+                    ]
+                  }
+                }
+              },
+              { $sort: { createdAt: -1, _id: -1 } },
+              { $limit: 1 }
+            ],
+            as: 'latestAcceptedVersion'
+          }
+        },
+        {
+          $unwind: '$latestAcceptedVersion'
+        }
+      ])
+
+    logger.info(`Fetched total=${wmpAgreements.size} WMP accepted agreements`)
+
+    const stats = { inspected: 0, passed: 0, failed: 0 }
+
+    for await (const agreement of wmpAgreements) {
+      logger.info(`WMP_PDF_CHECKING of agreement=${agreement.agreementNumber}`)
+      const version = agreement.latestAcceptedVersion
+      stats.inspected++
+      const agreementId = agreement.agreementNumber
+      const versionNumber = version.version
+
+      const prefix = getRetentionPrefix(
+        version.payment?.agreementStartDate,
+        version.payment?.agreementEndDate
+      )
+      const filename = `${agreementId}-${versionNumber}.pdf`
+      const key = [prefix, agreementId, versionNumber, filename]
+        .filter(Boolean)
+        .join('/')
+
+      try {
+        const exists = await checkFileExists({ bucket, key })
+        if (exists) {
+          stats.passed++
+          logger.info(
+            `WMP_PDF_CHECK_PASS agreement=${agreementId} version=${versionNumber} key=${key}`
+          )
+        } else {
+          stats.failed++
+          logger.error(
+            `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=NOT_FOUND`
+          )
+        }
+      } catch (err) {
+        stats.failed++
+        logger.error(
+          err,
+          `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=ERROR`
+        )
+      }
+    }
+
+    logger.info(
+      `WMP_PDF_CHECK_SUMMARY total_checks=${stats.inspected} passed=${stats.passed} failed=${stats.failed}`
+    )
+  } catch (error) {
+    logger.error(error, 'WMP PDF check failed with error:')
   }
 }

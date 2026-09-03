@@ -1,4 +1,8 @@
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  S3Client
+} from '@aws-sdk/client-s3'
 import { config } from '#~/config/index.js'
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
 
@@ -29,6 +33,22 @@ export const getPdfStream = async ({ bucket, key }) => {
       err?.$metadata?.httpStatusCode === statusCodes.notFound
     ) {
       return null
+    }
+    throw err
+  }
+}
+
+export const checkFileExists = async ({ bucket, key }) => {
+  try {
+    await s3Client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
+    return true
+  } catch (err) {
+    if (
+      err?.name === 'NoSuchKey' ||
+      err?.name === 'NotFound' ||
+      err?.$metadata?.httpStatusCode === statusCodes.notFound
+    ) {
+      return false
     }
     throw err
   }
