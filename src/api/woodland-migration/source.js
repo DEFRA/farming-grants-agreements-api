@@ -27,30 +27,78 @@ export const findWoodlandAgreementVersionPage = async (
 
   const agreement = await agreementsModel
     .findOne({ agreementNumber })
-    .select('-grants -__v')
+    .select('-__v')
     .lean()
 
   if (!agreement) {
     throw Boom.notFound('Woodland agreement not found')
   }
 
-  const [grant] = await grantModel.aggregate([
-    { $match: { agreementNumber } },
+  const linkedGrantIds = agreement.grants ?? []
+  const grants = await grantModel.aggregate([
+    {
+      $match: {
+        $or: [{ _id: { $in: linkedGrantIds } }, { agreementNumber }]
+      }
+    },
     { $sort: { createdAt: -1, _id: -1 } },
-    { $limit: 1 },
+    { $limit: 2 },
+    {
+      $lookup: {
+        from: 'versions',
+        let: { grantId: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$grant', '$$grantId'] } } },
+          { $group: { _id: null, ids: { $addToSet: '$_id' } } }
+        ],
+        as: 'storedVersionHistory'
+      }
+    },
     {
       $set: {
         totalVersions: { $size: { $ifNull: ['$versions', []] } },
+        uniqueVersionCount: {
+          $size: { $setUnion: [{ $ifNull: ['$versions', []] }, []] }
+        },
+        historyIsComplete: {
+          $setEquals: [
+            { $ifNull: ['$versions', []] },
+            {
+              $ifNull: [{ $arrayElemAt: ['$storedVersionHistory.ids', 0] }, []]
+            }
+          ]
+        },
         versions: {
           $slice: [{ $ifNull: ['$versions', []] }, offset, VERSION_PAGE_SIZE]
         }
       }
     },
-    { $unset: '__v' }
+    { $unset: ['__v', 'storedVersionHistory'] }
   ])
 
-  if (!grant) {
+  if (grants.length === 0) {
     throw Boom.notFound('Grant not found for Woodland agreement')
+  }
+
+  if (grants.length > 1) {
+    throw Boom.conflict('Woodland agreement has multiple related grants')
+  }
+
+  const [grant] = grants
+  if (
+    grant.agreementNumber !== agreementNumber ||
+    !linkedGrantIds.some((grantId) => String(grantId) === String(grant._id))
+  ) {
+    throw Boom.conflict('Woodland agreement grant linkage is inconsistent')
+  }
+
+  delete agreement.grants
+
+  if (
+    grant.uniqueVersionCount !== grant.totalVersions ||
+    !grant.historyIsComplete
+  ) {
+    throw Boom.conflict('Woodland agreement version history is inconsistent')
   }
 
   const versionIds = grant.versions
@@ -70,6 +118,8 @@ export const findWoodlandAgreementVersionPage = async (
   const nextOffset = offset + versionIds.length
   const totalVersions = grant.totalVersions
   delete grant.totalVersions
+  delete grant.uniqueVersionCount
+  delete grant.historyIsComplete
   delete grant.versions
 
   return {

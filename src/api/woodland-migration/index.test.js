@@ -176,6 +176,148 @@ describe('Woodland migration source routes', () => {
     }
   })
 
+  it('rejects a version omitted from Grant.versions', async () => {
+    const unindexedVersionId = new Types.ObjectId()
+    await versionsModel.collection.insertOne({
+      _id: unindexedVersionId,
+      grant: grantId,
+      notificationMessageId: 'unindexed-message'
+    })
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await versionsModel.collection.deleteOne({ _id: unindexedVersionId })
+    }
+  })
+
+  it('rejects duplicate entries in Grant.versions', async () => {
+    await grantModel.collection.updateOne(
+      { _id: grantId },
+      { $set: { versions: [...versionIds, versionIds[0]] } }
+    )
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await grantModel.collection.updateOne(
+        { _id: grantId },
+        { $set: { versions: versionIds } }
+      )
+    }
+  })
+
+  it('rejects an unlinked grant with the same agreement number', async () => {
+    const agreementId = new Types.ObjectId()
+    const unlinkedGrantId = new Types.ObjectId()
+    await agreementsModel.collection.insertOne({
+      _id: agreementId,
+      agreementNumber: 'WMP0003',
+      clientRef: 'client-3',
+      sbi: '100000003',
+      grants: []
+    })
+    await grantModel.collection.insertOne({
+      _id: unlinkedGrantId,
+      agreementNumber: 'WMP0003',
+      versions: []
+    })
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0003/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await Promise.all([
+        agreementsModel.collection.deleteOne({ _id: agreementId }),
+        grantModel.collection.deleteOne({ _id: unlinkedGrantId })
+      ])
+    }
+  })
+
+  it('rejects multiple grants with the same agreement number', async () => {
+    const agreementId = new Types.ObjectId()
+    const matchingGrantIds = [new Types.ObjectId(), new Types.ObjectId()]
+    await agreementsModel.collection.insertOne({
+      _id: agreementId,
+      agreementNumber: 'WMP0004',
+      clientRef: 'client-4',
+      sbi: '100000004',
+      grants: matchingGrantIds
+    })
+    await grantModel.collection.insertMany(
+      matchingGrantIds.map((_id, index) => ({
+        _id,
+        agreementNumber: 'WMP0004',
+        code: `woodland-${index}`,
+        versions: []
+      }))
+    )
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0004/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await Promise.all([
+        agreementsModel.collection.deleteOne({ _id: agreementId }),
+        grantModel.collection.deleteMany({ _id: { $in: matchingGrantIds } })
+      ])
+    }
+  })
+
+  it('rejects a linked grant with a different agreement number', async () => {
+    const agreementId = new Types.ObjectId()
+    const linkedGrantId = new Types.ObjectId()
+    await agreementsModel.collection.insertOne({
+      _id: agreementId,
+      agreementNumber: 'WMP0005',
+      clientRef: 'client-5',
+      sbi: '100000005',
+      grants: [linkedGrantId]
+    })
+    await grantModel.collection.insertOne({
+      _id: linkedGrantId,
+      agreementNumber: 'WMP9998',
+      versions: []
+    })
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0005/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await Promise.all([
+        agreementsModel.collection.deleteOne({ _id: agreementId }),
+        grantModel.collection.deleteOne({ _id: linkedGrantId })
+      ])
+    }
+  })
+
   it('requires the migration token', async () => {
     const response = await server.inject({
       method: 'GET',
