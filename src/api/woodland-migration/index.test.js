@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { Types } from 'mongoose'
-import { Decimal128, Long } from 'mongodb'
+import { Decimal128, Double, Int32, Long } from 'mongodb'
 
 import { createServer } from '#~/api/index.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
@@ -12,6 +12,8 @@ const token = 'woodland-migration-secret'
 const authorization = `Bearer ${token}`
 const versionPageSize = 100
 const versionCount = 5000
+const sourceDate = new Date('2024-01-02T03:04:05.678Z')
+const sourceObjectId = new Types.ObjectId()
 
 describe('Woodland migration source routes', () => {
   let server
@@ -40,7 +42,8 @@ describe('Woodland migration source routes', () => {
         agreementNumber: 'WMP0002',
         clientRef: 'client-2',
         sbi: '100000002',
-        grants: [grantId]
+        grants: [grantId],
+        sourceAgreementDouble: new Double(42)
       },
       {
         agreementNumber: 'WMP0001',
@@ -62,7 +65,8 @@ describe('Woodland migration source routes', () => {
       agreementNumber: 'WMP0002',
       clientRef: 'client-2',
       sbi: '100000002',
-      versions: versionIds
+      versions: versionIds,
+      sourceGrantLong: Long.fromNumber(42)
     })
     await versionsModel.collection.insertMany(
       versionIds.map((_id, index) => ({
@@ -73,7 +77,12 @@ describe('Woodland migration source routes', () => {
         ...(index === 4900
           ? {
               displayedQuantity: Decimal128.fromString('4.757500000000000001'),
-              sourceLong: Long.fromString('9007199254740993')
+              sourceInt32: new Int32(42),
+              sourceDouble: new Double(42),
+              sourceLong: Long.fromNumber(42),
+              sourceLargeLong: Long.fromString('9007199254740993'),
+              sourceDate,
+              sourceObjectId
             }
           : {})
       }))
@@ -112,7 +121,13 @@ describe('Woodland migration source routes', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.result.agreement).not.toHaveProperty('grants')
+    expect(response.result.agreement.sourceAgreementDouble).toEqual({
+      $numberDouble: '42.0'
+    })
     expect(response.result.grant).not.toHaveProperty('versions')
+    expect(response.result.grant.sourceGrantLong).toEqual({
+      $numberLong: '42'
+    })
     expect(response.result.versions).toHaveLength(versionPageSize)
     expect(
       response.result.versions.map(({ marker }) => Number(marker.$numberInt))
@@ -122,8 +137,23 @@ describe('Woodland migration source routes', () => {
     expect(response.result.versions[0].displayedQuantity).toEqual({
       $numberDecimal: '4.757500000000000001'
     })
+    expect(response.result.versions[0].sourceInt32).toEqual({
+      $numberInt: '42'
+    })
+    expect(response.result.versions[0].sourceDouble).toEqual({
+      $numberDouble: '42.0'
+    })
     expect(response.result.versions[0].sourceLong).toEqual({
+      $numberLong: '42'
+    })
+    expect(response.result.versions[0].sourceLargeLong).toEqual({
       $numberLong: '9007199254740993'
+    })
+    expect(response.result.versions[0].sourceDate).toEqual({
+      $date: { $numberLong: String(sourceDate.getTime()) }
+    })
+    expect(response.result.versions[0].sourceObjectId).toEqual({
+      $oid: sourceObjectId.toHexString()
     })
     expect(response.result.nextOffset).toBeNull()
   })
@@ -283,6 +313,50 @@ describe('Woodland migration source routes', () => {
         agreementsModel.collection.deleteOne({ _id: agreementId }),
         grantModel.collection.deleteMany({ _id: { $in: matchingGrantIds } })
       ])
+    }
+  })
+
+  it('rejects duplicate entries in Agreement.grants', async () => {
+    await agreementsModel.collection.updateOne(
+      { agreementNumber: 'WMP0002' },
+      { $set: { grants: [grantId, grantId] } }
+    )
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await agreementsModel.collection.updateOne(
+        { agreementNumber: 'WMP0002' },
+        { $set: { grants: [grantId] } }
+      )
+    }
+  })
+
+  it('rejects a dangling grant referenced by Agreement.grants', async () => {
+    await agreementsModel.collection.updateOne(
+      { agreementNumber: 'WMP0002' },
+      { $set: { grants: [grantId, new Types.ObjectId()] } }
+    )
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await agreementsModel.collection.updateOne(
+        { agreementNumber: 'WMP0002' },
+        { $set: { grants: [grantId] } }
+      )
     }
   })
 
