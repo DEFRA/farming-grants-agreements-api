@@ -937,8 +937,8 @@ describe('wmp-migration-analysis helper', () => {
       const mockAgreements = [
         {
           agreementNumber: 'WMP001',
+          totalVersionsCount: 1,
           latestAcceptedVersion: {
-            version: 1,
             payment: {
               agreementStartDate: '2023-01-01',
               agreementEndDate: '2023-12-31'
@@ -979,8 +979,8 @@ describe('wmp-migration-analysis helper', () => {
       const mockAgreements = [
         {
           agreementNumber: 'WMP002',
+          totalVersionsCount: 2,
           latestAcceptedVersion: {
-            version: 2,
             payment: {
               agreementStartDate: '2023-01-01',
               agreementEndDate: '2023-12-31'
@@ -1013,8 +1013,8 @@ describe('wmp-migration-analysis helper', () => {
       const mockAgreements = [
         {
           agreementNumber: 'WMP003',
+          totalVersionsCount: 1,
           latestAcceptedVersion: {
-            version: 1,
             payment: {
               agreementStartDate: '2023-01-01',
               agreementEndDate: '2023-12-31'

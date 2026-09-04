@@ -367,14 +367,14 @@ async function checkSingleAgreementPdf(agreement, bucket, stats) {
   const version = agreement.latestAcceptedVersion
   stats.inspected++
   const agreementId = agreement.agreementNumber
-  const versionNumber = version.version
+  const versionCount = agreement.totalVersionsCount || 1
 
   const prefix = getRetentionPrefix(
     version.payment?.agreementStartDate,
     version.payment?.agreementEndDate
   )
-  const filename = `${agreementId}-${versionNumber}.pdf`
-  const key = [prefix, agreementId, versionNumber, filename]
+  const filename = `${agreementId}-${versionCount}.pdf`
+  const key = [prefix, agreementId, versionCount, filename]
     .filter(Boolean)
     .join('/')
 
@@ -383,19 +383,19 @@ async function checkSingleAgreementPdf(agreement, bucket, stats) {
     if (exists) {
       stats.passed++
       logger.info(
-        `WMP_PDF_CHECK_PASS agreement=${agreementId} version=${versionNumber} key=${key}`
+        `WMP_PDF_CHECK_PASS agreement=${agreementId} version=${versionCount} key=${key}`
       )
     } else {
       stats.failed++
       logger.error(
-        `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=NOT_FOUND`
+        `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionCount} key=${key} reason=NOT_FOUND`
       )
     }
   } catch (err) {
     stats.failed++
     logger.error(
       err,
-      `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=ERROR`
+      `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionCount} key=${key} reason=ERROR`
     )
   }
 }
@@ -469,21 +469,48 @@ function fetchWmpAgreementsWithLatestAcceptedVersion() {
           {
             $match: {
               $expr: {
-                $and: [
-                  { $in: ['$grant', '$$grantIds'] },
-                  { $eq: ['$status', 'accepted'] }
-                ]
+                $in: ['$grant', '$$grantIds']
               }
             }
-          },
-          { $sort: { createdAt: -1, _id: -1 } },
-          { $limit: 1 }
+          }
         ],
-        as: 'latestAcceptedVersion'
+        as: 'allVersions'
+      }
+    },
+    {
+      $addFields: {
+        totalVersionsCount: { $size: '$allVersions' },
+        latestAcceptedVersion: {
+          $filter: {
+            input: '$allVersions',
+            as: 'v',
+            cond: { $eq: ['$$v.status', 'accepted'] }
+          }
+        }
+      }
+    },
+    {
+      $addFields: {
+        latestAcceptedVersion: {
+          $slice: [
+            {
+              $sortArray: {
+                input: '$latestAcceptedVersion',
+                sortBy: { createdAt: -1, _id: -1 }
+              }
+            },
+            1
+          ]
+        }
       }
     },
     {
       $unwind: '$latestAcceptedVersion'
+    },
+    {
+      $project: {
+        allVersions: 0
+      }
     }
   ])
 }
