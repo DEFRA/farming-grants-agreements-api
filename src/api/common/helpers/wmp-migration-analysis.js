@@ -356,15 +356,55 @@ const analyzeAgreementVersions = async (agreement) => {
   return { issues, versions, wmpVersions }
 }
 
+async function ensureMongoConnection() {
+  if (mongoose.connection.readyState !== mongoose.ConnectionStates.connected) {
+    await mongoose.connect(MONGO_URI, { dbName: DB_NAME })
+  }
+}
+
+async function checkSingleAgreementPdf(agreement, bucket, stats) {
+  logger.info(`WMP_PDF_CHECKING of agreement=${agreement.agreementNumber}`)
+  const version = agreement.latestAcceptedVersion
+  stats.inspected++
+  const agreementId = agreement.agreementNumber
+  const versionNumber = version.version
+
+  const prefix = getRetentionPrefix(
+    version.payment?.agreementStartDate,
+    version.payment?.agreementEndDate
+  )
+  const filename = `${agreementId}-${versionNumber}.pdf`
+  const key = [prefix, agreementId, versionNumber, filename]
+    .filter(Boolean)
+    .join('/')
+
+  try {
+    const exists = await checkFileExists({ bucket, key })
+    if (exists) {
+      stats.passed++
+      logger.info(
+        `WMP_PDF_CHECK_PASS agreement=${agreementId} version=${versionNumber} key=${key}`
+      )
+    } else {
+      stats.failed++
+      logger.error(
+        `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=NOT_FOUND`
+      )
+    }
+  } catch (err) {
+    stats.failed++
+    logger.error(
+      err,
+      `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=ERROR`
+    )
+  }
+}
+
 export async function runWMPAgreementDataAnalysis() {
   logger.info(`WMP_MIGRATION_ANALYSIS timestamp=${new Date().toISOString()}`)
 
   try {
-    if (
-      mongoose.connection.readyState !== mongoose.ConnectionStates.connected
-    ) {
-      await mongoose.connect(MONGO_URI, { dbName: DB_NAME })
-    }
+    await ensureMongoConnection()
     const wmpAgreements = mongoose.connection
       .collection('agreements')
       .aggregate([
@@ -406,15 +446,53 @@ export async function runWMPAgreementDataAnalysis() {
   }
 }
 
+function fetchWmpAgreementsWithLatestAcceptedVersion() {
+  return mongoose.connection.collection('agreements').aggregate([
+    {
+      $match: {
+        agreementNumber: { $regex: /^WMP/ }
+      }
+    },
+    {
+      $lookup: {
+        from: 'grants',
+        localField: 'grants',
+        foreignField: '_id',
+        as: 'grantDetails'
+      }
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        let: { grantIds: '$grantDetails._id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $in: ['$grant', '$$grantIds'] },
+                  { $eq: ['$status', 'accepted'] }
+                ]
+              }
+            }
+          },
+          { $sort: { createdAt: -1, _id: -1 } },
+          { $limit: 1 }
+        ],
+        as: 'latestAcceptedVersion'
+      }
+    },
+    {
+      $unwind: '$latestAcceptedVersion'
+    }
+  ])
+}
+
 export async function checkWmpAgreementsPdf() {
   logger.info(`WMP_PDF_CHECK_START timestamp=${new Date().toISOString()}`)
 
   try {
-    if (
-      mongoose.connection.readyState !== mongoose.ConnectionStates.connected
-    ) {
-      await mongoose.connect(MONGO_URI, { dbName: DB_NAME })
-    }
+    await ensureMongoConnection()
 
     const bucket = config.get('files.s3.bucket')
     if (!bucket) {
@@ -422,88 +500,16 @@ export async function checkWmpAgreementsPdf() {
       return
     }
 
-    const wmpAgreements = mongoose.connection
-      .collection('agreements')
-      .aggregate([
-        {
-          $match: {
-            agreementNumber: { $regex: /^WMP/ }
-          }
-        },
-        {
-          $lookup: {
-            from: 'grants',
-            localField: 'grants',
-            foreignField: '_id',
-            as: 'grantDetails'
-          }
-        },
-        {
-          $lookup: {
-            from: 'versions',
-            let: { grantIds: '$grantDetails._id' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $in: ['$grant', '$$grantIds'] },
-                      { $eq: ['$status', 'accepted'] }
-                    ]
-                  }
-                }
-              },
-              { $sort: { createdAt: -1, _id: -1 } },
-              { $limit: 1 }
-            ],
-            as: 'latestAcceptedVersion'
-          }
-        },
-        {
-          $unwind: '$latestAcceptedVersion'
-        }
-      ])
+    const wmpAgreements = fetchWmpAgreementsWithLatestAcceptedVersion()
 
-    logger.info(`Fetched total=${wmpAgreements.size} WMP accepted agreements`)
+    logger.info(
+      `Fetched total=${wmpAgreements.size || 'unknown'} WMP accepted agreements`
+    )
 
     const stats = { inspected: 0, passed: 0, failed: 0 }
 
     for await (const agreement of wmpAgreements) {
-      logger.info(`WMP_PDF_CHECKING of agreement=${agreement.agreementNumber}`)
-      const version = agreement.latestAcceptedVersion
-      stats.inspected++
-      const agreementId = agreement.agreementNumber
-      const versionNumber = version.version
-
-      const prefix = getRetentionPrefix(
-        version.payment?.agreementStartDate,
-        version.payment?.agreementEndDate
-      )
-      const filename = `${agreementId}-${versionNumber}.pdf`
-      const key = [prefix, agreementId, versionNumber, filename]
-        .filter(Boolean)
-        .join('/')
-
-      try {
-        const exists = await checkFileExists({ bucket, key })
-        if (exists) {
-          stats.passed++
-          logger.info(
-            `WMP_PDF_CHECK_PASS agreement=${agreementId} version=${versionNumber} key=${key}`
-          )
-        } else {
-          stats.failed++
-          logger.error(
-            `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=NOT_FOUND`
-          )
-        }
-      } catch (err) {
-        stats.failed++
-        logger.error(
-          err,
-          `WMP_PDF_CHECK_FAIL agreement=${agreementId} version=${versionNumber} key=${key} reason=ERROR`
-        )
-      }
+      await checkSingleAgreementPdf(agreement, bucket, stats)
     }
 
     logger.info(
