@@ -363,8 +363,10 @@ async function ensureMongoConnection() {
 }
 
 async function checkSingleAgreementPdf(agreement, bucket, stats) {
-  logger.info(`WMP_PDF_CHECKING of agreement=${agreement.agreementNumber}`)
   const version = agreement.latestAcceptedVersion
+  logger.info(
+    `WMP_PDF_CHECKING of agreement=${agreement.agreementNumber} in status=${version.status}`
+  )
   stats.inspected++
   const agreementId = agreement.agreementNumber
   const versionCount = agreement.totalVersionsCount || 1
