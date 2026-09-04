@@ -7,16 +7,6 @@ import versionsModel from '#~/api/common/models/versions.js'
 
 const VERSION_PAGE_SIZE = 100
 
-const woodlandAgreementNumber = /^WMP/
-
-export const findWoodlandAgreementNumbers = async () => {
-  const agreementNumbers = await agreementsModel.distinct('agreementNumber', {
-    agreementNumber: woodlandAgreementNumber
-  })
-
-  return agreementNumbers.sort((left, right) => left.localeCompare(right))
-}
-
 const bsonReadOptions = { promoteValues: false }
 const sourceDocumentOptions = {
   ...bsonReadOptions,
@@ -30,7 +20,7 @@ const findAgreement = async (agreementNumber) => {
   )
 
   if (!agreement) {
-    throw Boom.notFound('Woodland agreement not found')
+    throw Boom.notFound('Agreement not found')
   }
 
   return agreement
@@ -92,11 +82,11 @@ const findRelatedGrants = (agreementNumber, linkedGrantIds, offset) =>
 
 const requireLinkedGrant = (grants, linkedGrantIds, agreementNumber) => {
   if (grants.length === 0) {
-    throw Boom.notFound('Grant not found for Woodland agreement')
+    throw Boom.notFound('Grant not found for agreement')
   }
 
   if (grants.length > 1) {
-    throw Boom.conflict('Woodland agreement has multiple related grants')
+    throw Boom.conflict('Agreement has multiple related grants')
   }
 
   const [grant] = grants
@@ -105,10 +95,84 @@ const requireLinkedGrant = (grants, linkedGrantIds, agreementNumber) => {
     grant.agreementNumber !== agreementNumber ||
     String(linkedGrantIds[0]) !== String(grant._id)
   ) {
-    throw Boom.conflict('Woodland agreement grant linkage is inconsistent')
+    throw Boom.conflict('Agreement grant linkage is inconsistent')
   }
 
   return grant
+}
+
+const requireLinkedAgreement = (grant, agreements) => {
+  if (agreements.length !== 1) {
+    throw Boom.conflict('Grant agreement linkage is inconsistent')
+  }
+
+  const [agreement] = agreements
+  if (
+    agreement.linkedGrantIds.length !== 1 ||
+    agreement.agreementNumber !== grant.agreementNumber ||
+    String(agreement.linkedGrantIds[0]) !== String(grant._id)
+  ) {
+    throw Boom.conflict('Agreement grant linkage is inconsistent')
+  }
+
+  return agreement.agreementNumber
+}
+
+export const findAgreementNumbersByGrantCode = async (code) => {
+  const grants = await grantModel.collection
+    .aggregate(
+      [
+        { $match: { code } },
+        { $project: { agreementNumber: 1 } },
+        {
+          $lookup: {
+            from: 'agreements',
+            let: {
+              grantId: '$_id',
+              grantAgreementNumber: '$agreementNumber'
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $or: [
+                      {
+                        $eq: ['$agreementNumber', '$$grantAgreementNumber']
+                      },
+                      {
+                        $in: ['$$grantId', { $ifNull: ['$grants', []] }]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: {
+                  agreementNumber: 1,
+                  linkedGrantIds: { $ifNull: ['$grants', []] }
+                }
+              },
+              { $limit: 2 }
+            ],
+            as: 'relatedAgreements'
+          }
+        },
+        {
+          $project: {
+            agreementNumber: 1,
+            relatedAgreements: 1
+          }
+        }
+      ],
+      bsonReadOptions
+    )
+    .toArray()
+
+  const agreementNumbers = grants.map((grant) =>
+    requireLinkedAgreement(grant, grant.relatedAgreements)
+  )
+
+  return agreementNumbers.sort((left, right) => left.localeCompare(right))
 }
 
 const requireConsistentVersionHistory = (grant) => {
@@ -117,7 +181,7 @@ const requireConsistentVersionHistory = (grant) => {
     Number(grant.uniqueVersionCount) !== totalVersions ||
     !grant.historyIsComplete
   ) {
-    throw Boom.conflict('Woodland agreement version history is inconsistent')
+    throw Boom.conflict('Agreement version history is inconsistent')
   }
 
   return totalVersions
@@ -133,7 +197,7 @@ const findOrderedVersions = async (versionIds, grantId) => {
   const orderedVersions = versionIds.map((id) => byId.get(String(id)))
 
   if (orderedVersions.some((version) => !version)) {
-    throw Boom.conflict('Woodland agreement version history is incomplete')
+    throw Boom.conflict('Agreement version history is incomplete')
   }
 
   return orderedVersions
@@ -159,14 +223,7 @@ const serializeVersionPage = ({
   }
 }
 
-export const findWoodlandAgreementVersionPage = async (
-  agreementNumber,
-  offset
-) => {
-  if (!agreementNumber.startsWith('WMP')) {
-    throw Boom.notFound('Woodland agreement not found')
-  }
-
+export const findAgreementVersionPage = async (agreementNumber, offset) => {
   const agreement = await findAgreement(agreementNumber)
   const linkedGrantIds = agreement.grants ?? []
   const grants = await findRelatedGrants(

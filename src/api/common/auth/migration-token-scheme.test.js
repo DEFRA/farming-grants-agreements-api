@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { config } from '#~/config/index.js'
 import { migrationTokenScheme } from './migration-token-scheme.js'
 
-const token = 'woodland-migration-secret'
+const token = 'migration-source-secret'
 const tokenHash = createHash('sha256').update(token).digest('hex')
 
 const h = {
@@ -13,7 +13,7 @@ const h = {
 describe('migrationTokenScheme', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    config.set('woodlandMigrationTokenHash', tokenHash)
+    config.set('migrationSourceTokenHash', tokenHash)
   })
 
   it('accepts the configured migration token', () => {

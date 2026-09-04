@@ -297,11 +297,11 @@ const config = convict({
     default: '',
     env: 'AGREEMENTS_JWT_KEYRING'
   },
-  woodlandMigrationTokenHash: {
-    doc: 'SHA-256 hash of the temporary Woodland migration token',
+  migrationSourceTokenHash: {
+    doc: 'SHA-256 hash of the temporary migration source token',
     format: SHA256_OR_EMPTY_FORMAT,
     default: '',
-    env: 'WOODLAND_MIGRATION_TOKEN_HASH',
+    env: 'MIGRATION_SOURCE_TOKEN_HASH',
     sensitive: true
   },
   mongoUri: {

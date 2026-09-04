@@ -8,23 +8,25 @@ import grantModel from '#~/api/common/models/grant.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import { config } from '#~/config/index.js'
 
-const token = 'woodland-migration-secret'
+const token = 'migration-source-secret'
 const authorization = `Bearer ${token}`
 const versionPageSize = 100
 const versionCount = 5000
 const sourceDate = new Date('2024-01-02T03:04:05.678Z')
 const sourceObjectId = new Types.ObjectId()
 
-describe('Woodland migration source routes', () => {
+describe('Migration source routes', () => {
   let server
   let previousTokenHash
   let grantId
+  let fpttGrantId
+  let fpttVersionId
   let versionIds
 
   beforeAll(async () => {
-    previousTokenHash = config.get('woodlandMigrationTokenHash')
+    previousTokenHash = config.get('migrationSourceTokenHash')
     config.set(
-      'woodlandMigrationTokenHash',
+      'migrationSourceTokenHash',
       createHash('sha256').update(token).digest('hex')
     )
 
@@ -32,6 +34,8 @@ describe('Woodland migration source routes', () => {
     await server.initialize()
 
     grantId = new Types.ObjectId()
+    fpttGrantId = new Types.ObjectId()
+    fpttVersionId = new Types.ObjectId()
     versionIds = Array.from(
       { length: versionCount },
       () => new Types.ObjectId()
@@ -55,21 +59,32 @@ describe('Woodland migration source routes', () => {
         agreementNumber: 'FPTT0001',
         clientRef: 'client-3',
         sbi: '100000003',
-        grants: []
+        grants: [fpttGrantId]
       }
     ])
-    await grantModel.collection.insertOne({
-      _id: grantId,
-      code: 'woodland',
-      name: 'WMP',
-      agreementNumber: 'WMP0002',
-      clientRef: 'client-2',
-      sbi: '100000002',
-      versions: versionIds,
-      sourceGrantLong: Long.fromNumber(42)
-    })
-    await versionsModel.collection.insertMany(
-      versionIds.map((_id, index) => ({
+    await grantModel.collection.insertMany([
+      {
+        _id: grantId,
+        code: 'woodland',
+        name: 'WMP',
+        agreementNumber: 'WMP0002',
+        clientRef: 'client-2',
+        sbi: '100000002',
+        versions: versionIds,
+        sourceGrantLong: Long.fromNumber(42)
+      },
+      {
+        _id: fpttGrantId,
+        code: 'frps-private-beta',
+        name: 'FPTT',
+        agreementNumber: 'FPTT0001',
+        clientRef: 'client-3',
+        sbi: '100000003',
+        versions: [fpttVersionId]
+      }
+    ])
+    await versionsModel.collection.insertMany([
+      ...versionIds.map((_id, index) => ({
         _id,
         grant: grantId,
         notificationMessageId: `message-${index}`,
@@ -85,8 +100,14 @@ describe('Woodland migration source routes', () => {
               sourceObjectId
             }
           : {})
-      }))
-    )
+      })),
+      {
+        _id: fpttVersionId,
+        grant: fpttGrantId,
+        notificationMessageId: 'fptt-message',
+        marker: 0
+      }
+    ])
   })
 
   afterAll(async () => {
@@ -95,27 +116,89 @@ describe('Woodland migration source routes', () => {
       grantModel.deleteMany({}),
       versionsModel.deleteMany({})
     ])
-    config.set('woodlandMigrationTokenHash', previousTokenHash)
+    config.set('migrationSourceTokenHash', previousTokenHash)
     await server.stop({ timeout: 0 })
   })
 
-  it('lists every Woodland agreement number in stable order', async () => {
+  it.each([
+    ['woodland', ['WMP0002']],
+    ['frps-private-beta', ['FPTT0001']],
+    ['unknown', []]
+  ])(
+    'lists agreement numbers for grant code %s in stable order',
+    async (code, agreementNumbers) => {
+      const response = await server.inject({
+        method: 'GET',
+        url: `/internal/migrations/agreements?code=${code}`,
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.result).toEqual({ agreementNumbers })
+    }
+  )
+
+  it('rejects multi-grant agreements when listing by code', async () => {
+    await agreementsModel.collection.updateOne(
+      { agreementNumber: 'WMP0002' },
+      { $set: { grants: [grantId, fpttGrantId] } }
+    )
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/agreements?code=woodland',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await agreementsModel.collection.updateOne(
+        { agreementNumber: 'WMP0002' },
+        { $set: { grants: [grantId] } }
+      )
+    }
+  })
+
+  it('rejects an unlinked grant when listing by code', async () => {
+    const unlinkedGrantId = new Types.ObjectId()
+    await grantModel.collection.insertOne({
+      _id: unlinkedGrantId,
+      code: 'woodland',
+      name: 'WMP',
+      agreementNumber: 'WMP0001',
+      clientRef: 'client-1',
+      sbi: '100000001',
+      versions: []
+    })
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/agreements?code=woodland',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await grantModel.collection.deleteOne({ _id: unlinkedGrantId })
+    }
+  })
+
+  it('requires a grant code when listing agreements', async () => {
     const response = await server.inject({
       method: 'GET',
-      url: '/internal/migrations/woodland/agreements',
+      url: '/internal/migrations/agreements',
       headers: { authorization }
     })
 
-    expect(response.statusCode).toBe(200)
-    expect(response.result).toEqual({
-      agreementNumbers: ['WMP0001', 'WMP0002']
-    })
+    expect(response.statusCode).toBe(400)
   })
 
   it('returns a bounded page in the order declared by Grant.versions', async () => {
     const response = await server.inject({
       method: 'GET',
-      url: '/internal/migrations/woodland/agreements/WMP0002/versions?offset=4900',
+      url: '/internal/migrations/agreements/WMP0002/versions?offset=4900',
       headers: { authorization }
     })
 
@@ -161,7 +244,7 @@ describe('Woodland migration source routes', () => {
   it('returns the next offset when more versions exist', async () => {
     const response = await server.inject({
       method: 'GET',
-      url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+      url: '/internal/migrations/agreements/WMP0002/versions',
       headers: { authorization }
     })
 
@@ -170,14 +253,26 @@ describe('Woodland migration source routes', () => {
     expect(response.result.nextOffset).toBe(versionPageSize)
   })
 
+  it('returns versions for an agreement regardless of its prefix', async () => {
+    const response = await server.inject({
+      method: 'GET',
+      url: '/internal/migrations/agreements/FPTT0001/versions',
+      headers: { authorization }
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.result.grant.code).toBe('frps-private-beta')
+    expect(response.result.versions).toHaveLength(1)
+    expect(response.result.nextOffset).toBeNull()
+  })
+
   it.each([
-    ['a non-Woodland agreement', 'FPTT0001'],
-    ['an unknown Woodland agreement', 'WMP9999'],
-    ['a Woodland agreement without a grant', 'WMP0001']
+    ['an unknown agreement', 'WMP9999'],
+    ['an agreement without a grant', 'WMP0001']
   ])('rejects %s', async (_scenario, agreementNumber) => {
     const response = await server.inject({
       method: 'GET',
-      url: `/internal/migrations/woodland/agreements/${agreementNumber}/versions`,
+      url: `/internal/migrations/agreements/${agreementNumber}/versions`,
       headers: { authorization }
     })
 
@@ -191,7 +286,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        url: '/internal/migrations/agreements/WMP0002/versions',
         headers: { authorization }
       })
 
@@ -217,7 +312,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        url: '/internal/migrations/agreements/WMP0002/versions',
         headers: { authorization }
       })
 
@@ -236,7 +331,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        url: '/internal/migrations/agreements/WMP0002/versions',
         headers: { authorization }
       })
 
@@ -268,7 +363,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0003/versions',
+        url: '/internal/migrations/agreements/WMP0003/versions',
         headers: { authorization }
       })
 
@@ -303,7 +398,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0004/versions',
+        url: '/internal/migrations/agreements/WMP0004/versions',
         headers: { authorization }
       })
 
@@ -325,7 +420,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        url: '/internal/migrations/agreements/WMP0002/versions',
         headers: { authorization }
       })
 
@@ -347,7 +442,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0002/versions',
+        url: '/internal/migrations/agreements/WMP0002/versions',
         headers: { authorization }
       })
 
@@ -379,7 +474,7 @@ describe('Woodland migration source routes', () => {
     try {
       const response = await server.inject({
         method: 'GET',
-        url: '/internal/migrations/woodland/agreements/WMP0005/versions',
+        url: '/internal/migrations/agreements/WMP0005/versions',
         headers: { authorization }
       })
 
@@ -395,7 +490,7 @@ describe('Woodland migration source routes', () => {
   it('requires the migration token', async () => {
     const response = await server.inject({
       method: 'GET',
-      url: '/internal/migrations/woodland/agreements'
+      url: '/internal/migrations/agreements?code=woodland'
     })
 
     expect(response.statusCode).toBe(401)

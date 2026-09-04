@@ -2,7 +2,7 @@ import { health } from '#~/api/health/index.js'
 import { agreement } from '#~/api/agreement/index.js'
 import { config } from '#~/config/index.js'
 import { testEndpoints } from '#~/api/test-endpoints/index.js'
-import { woodlandMigration } from '#~/api/woodland-migration/index.js'
+import { migrationSource } from '#~/api/migration-source/index.js'
 
 /**
  * @satisfies { import('@hapi/hapi').ServerRegisterPluginObject<*> }
@@ -17,8 +17,8 @@ const router = {
       // Application specific routes, add your own routes here.
       await server.register([agreement])
 
-      if (config.get('woodlandMigrationTokenHash')) {
-        await server.register([woodlandMigration])
+      if (config.get('migrationSourceTokenHash')) {
+        await server.register([migrationSource])
       }
 
       if (config.get('featureFlags.testEndpoints') === true) {

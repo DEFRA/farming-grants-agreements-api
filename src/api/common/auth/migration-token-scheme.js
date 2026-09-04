@@ -22,10 +22,7 @@ const getBearerToken = (header) => {
 export const migrationTokenScheme = () => ({
   authenticate(request, h) {
     const actual = sha256(getBearerToken(request.headers.authorization))
-    const expected = Buffer.from(
-      config.get('woodlandMigrationTokenHash'),
-      'hex'
-    )
+    const expected = Buffer.from(config.get('migrationSourceTokenHash'), 'hex')
 
     if (
       actual.length !== expected.length ||
