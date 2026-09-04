@@ -488,7 +488,7 @@ function fetchWmpAgreementsWithLatestAcceptedVersion() {
   ])
 }
 
-export async function checkWmpAgreementsPdf() {
+export async function runWMPAgreementPDFAnalysis() {
   logger.info(`WMP_PDF_CHECK_START timestamp=${new Date().toISOString()}`)
 
   try {
@@ -500,15 +500,14 @@ export async function checkWmpAgreementsPdf() {
       return
     }
 
-    const wmpAgreements = fetchWmpAgreementsWithLatestAcceptedVersion()
+    const wmpAgreementsCursor = fetchWmpAgreementsWithLatestAcceptedVersion()
+    const allAgreements = await wmpAgreementsCursor.toArray()
 
-    logger.info(
-      `Fetched total=${wmpAgreements.size || 'unknown'} WMP accepted agreements`
-    )
+    logger.info(`Fetched total=${allAgreements.length} WMP accepted agreements`)
 
     const stats = { inspected: 0, passed: 0, failed: 0 }
 
-    for await (const agreement of wmpAgreements) {
+    for (const agreement of allAgreements) {
       await checkSingleAgreementPdf(agreement, bucket, stats)
     }
 
