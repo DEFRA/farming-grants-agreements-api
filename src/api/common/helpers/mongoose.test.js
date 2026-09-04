@@ -4,7 +4,7 @@ import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
 import { mongooseDb } from './mongoose.js'
 import {
-  checkWmpAgreementsPdf,
+  runWMPAgreementPDFAnalysis,
   runWMPAgreementDataAnalysis
 } from '#~/api/common/helpers/wmp-migration-analysis.js'
 
@@ -61,7 +61,7 @@ vi.mock('./seed-database.js', () => ({
 
 vi.mock('#~/api/common/helpers/wmp-migration-analysis.js', () => ({
   runWMPAgreementDataAnalysis: vi.fn().mockResolvedValue(undefined),
-  checkWmpAgreementsPdf: vi.fn().mockResolvedValue(undefined)
+  runWMPAgreementPDFAnalysis: vi.fn().mockResolvedValue(undefined)
 }))
 
 // Get the mocked functions with proper typing
@@ -69,7 +69,7 @@ const mockMongoose = vi.mocked(mongoose)
 const mockConfig = vi.mocked(config)
 const mockSeedDatabase = vi.mocked(seedDatabase)
 const mockRunWMPAgreementDataAnalysis = vi.mocked(runWMPAgreementDataAnalysis)
-const mockCheckWmpAgreementsPdf = vi.mocked(checkWmpAgreementsPdf)
+const mockRunWMPAgreementPDFAnalysis = vi.mocked(runWMPAgreementPDFAnalysis)
 
 describe('mongooseDb', () => {
   let mockServer
@@ -251,7 +251,7 @@ describe('mongooseDb', () => {
 
       // Assert
       expect(mockRunWMPAgreementDataAnalysis).toHaveBeenCalled()
-      expect(mockCheckWmpAgreementsPdf).toHaveBeenCalled()
+      expect(mockRunWMPAgreementPDFAnalysis).toHaveBeenCalled()
     })
 
     test('should not run WMP migration analysis when feature flag is disabled', async () => {
@@ -266,7 +266,7 @@ describe('mongooseDb', () => {
 
       // Assert
       expect(mockRunWMPAgreementDataAnalysis).not.toHaveBeenCalled()
-      expect(mockCheckWmpAgreementsPdf).not.toHaveBeenCalled()
+      expect(mockRunWMPAgreementPDFAnalysis).not.toHaveBeenCalled()
     })
   })
 })

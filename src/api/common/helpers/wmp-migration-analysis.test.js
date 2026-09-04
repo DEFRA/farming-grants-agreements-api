@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
-  checkWmpAgreementsPdf,
+  runWMPAgreementPDFAnalysis,
   runWMPAgreementDataAnalysis
 } from '#~/api/common/helpers/wmp-migration-analysis.js'
 
@@ -921,12 +921,12 @@ describe('wmp-migration-analysis helper', () => {
     })
   })
 
-  describe('checkWmpAgreementsPdf', () => {
+  describe('runWMPAgreementPDFAnalysis', () => {
     it('should skip PDF check if bucket is not set', async () => {
       const { config } = await import('#~/config/index.js')
       vi.mocked(config.get).mockReturnValueOnce(null)
 
-      await checkWmpAgreementsPdf()
+      await runWMPAgreementPDFAnalysis()
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'FILES_S3_BUCKET not set - skipping PDF check'
@@ -949,11 +949,7 @@ describe('wmp-migration-analysis helper', () => {
 
       const mockCollection = {
         aggregate: vi.fn(() => ({
-          size: 1,
-          [Symbol.asyncIterator]: async function* () {
-            await Promise.resolve()
-            yield mockAgreements[0]
-          }
+          toArray: vi.fn().mockResolvedValue(mockAgreements)
         }))
       }
 
@@ -961,7 +957,7 @@ describe('wmp-migration-analysis helper', () => {
       vi.mocked(getRetentionPrefix).mockReturnValue('base')
       vi.mocked(checkFileExists).mockResolvedValue(true)
 
-      await checkWmpAgreementsPdf()
+      await runWMPAgreementPDFAnalysis()
 
       expect(getRetentionPrefix).toHaveBeenCalledWith(
         '2023-01-01',
@@ -995,11 +991,7 @@ describe('wmp-migration-analysis helper', () => {
 
       const mockCollection = {
         aggregate: vi.fn(() => ({
-          size: 1,
-          [Symbol.asyncIterator]: async function* () {
-            await Promise.resolve()
-            yield mockAgreements[0]
-          }
+          toArray: vi.fn().mockResolvedValue(mockAgreements)
         }))
       }
 
@@ -1007,7 +999,7 @@ describe('wmp-migration-analysis helper', () => {
       vi.mocked(getRetentionPrefix).mockReturnValue('base')
       vi.mocked(checkFileExists).mockResolvedValue(false)
 
-      await checkWmpAgreementsPdf()
+      await runWMPAgreementPDFAnalysis()
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'WMP_PDF_CHECK_FAIL agreement=WMP002 version=2 key=base/WMP002/2/WMP002-2.pdf reason=NOT_FOUND'
@@ -1033,11 +1025,7 @@ describe('wmp-migration-analysis helper', () => {
 
       const mockCollection = {
         aggregate: vi.fn(() => ({
-          size: 1,
-          [Symbol.asyncIterator]: async function* () {
-            await Promise.resolve()
-            yield mockAgreements[0]
-          }
+          toArray: vi.fn().mockResolvedValue(mockAgreements)
         }))
       }
 
@@ -1046,7 +1034,7 @@ describe('wmp-migration-analysis helper', () => {
       const s3Error = new Error('S3 connection failed')
       vi.mocked(checkFileExists).mockRejectedValue(s3Error)
 
-      await checkWmpAgreementsPdf()
+      await runWMPAgreementPDFAnalysis()
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         s3Error,
@@ -1061,7 +1049,7 @@ describe('wmp-migration-analysis helper', () => {
       mockMongoose.connect.mockRejectedValueOnce(new Error('Mongo error'))
       mockMongoose.connection.readyState = 0
 
-      await checkWmpAgreementsPdf()
+      await runWMPAgreementPDFAnalysis()
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.any(Error),

@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 import { config } from '#~/config/index.js'
 import { seedDatabase } from './seed-database.js'
 import {
-  checkWmpAgreementsPdf,
+  runWMPAgreementPDFAnalysis,
   runWMPAgreementDataAnalysis
 } from '#~/api/common/helpers/wmp-migration-analysis.js'
 
@@ -51,7 +51,7 @@ export const mongooseDb = {
 
       if (config.get('featureFlags.wmpMigrationAnalysis') === true) {
         await runWMPAgreementDataAnalysis()
-        await checkWmpAgreementsPdf()
+        await runWMPAgreementPDFAnalysis()
       }
 
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
