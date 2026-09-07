@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto'
 import { Types } from 'mongoose'
+import { vi } from 'vitest'
 import { Decimal128, Double, Int32, Long } from 'mongodb'
 
 import { createServer } from '#~/api/index.js'
 import agreementsModel from '#~/api/common/models/agreements.js'
+import countersModel from '#~/api/common/models/counters.js'
 import grantModel from '#~/api/common/models/grant.js'
 import versionsModel from '#~/api/common/models/versions.js'
 import { config } from '#~/config/index.js'
@@ -113,11 +115,100 @@ describe('Migration source routes', () => {
   afterAll(async () => {
     await Promise.all([
       agreementsModel.deleteMany({}),
+      countersModel.collection.deleteOne({ _id: 'claimIds' }),
       grantModel.deleteMany({}),
       versionsModel.deleteMany({})
     ])
     config.set('migrationSourceTokenHash', previousTokenHash)
     await server.stop({ timeout: 0 })
+  })
+
+  it('returns the current claim ID sequence without incrementing it', async () => {
+    await countersModel.collection.insertOne({ _id: 'claimIds', seq: 41 })
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/claim-id-counter',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.result).toEqual({ counter: 'claimIds', seq: 41 })
+
+      const counter = await countersModel.collection.findOne({
+        _id: 'claimIds'
+      })
+      expect(counter.seq).toBe(41)
+    } finally {
+      await countersModel.collection.deleteOne({ _id: 'claimIds' })
+    }
+  })
+
+  it('requires the migration token for the claim ID counter', async () => {
+    await countersModel.collection.insertOne({ _id: 'claimIds', seq: 41 })
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/claim-id-counter'
+      })
+
+      expect(response.statusCode).toBe(401)
+    } finally {
+      await countersModel.collection.deleteOne({ _id: 'claimIds' })
+    }
+  })
+
+  it('fails closed when the claim ID counter is missing', async () => {
+    await countersModel.collection.deleteOne({ _id: 'claimIds' })
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/internal/migrations/claim-id-counter',
+      headers: { authorization }
+    })
+
+    expect(response.statusCode).toBe(404)
+  })
+
+  it.each([
+    { _id: 'claimIds' },
+    { _id: 'claimIds', seq: -1 },
+    { _id: 'claimIds', seq: 1.5 },
+    { _id: 'claimIds', seq: Long.fromString('9007199254740993') }
+  ])('fails closed for a malformed claim ID counter', async (counter) => {
+    await countersModel.collection.insertOne(counter)
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/claim-id-counter',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(409)
+    } finally {
+      await countersModel.collection.deleteOne({ _id: 'claimIds' })
+    }
+  })
+
+  it('surfaces claim ID counter repository failures as 5xx', async () => {
+    const findOne = vi
+      .spyOn(countersModel.collection, 'findOne')
+      .mockRejectedValueOnce(new Error('mongo down'))
+
+    try {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/internal/migrations/claim-id-counter',
+        headers: { authorization }
+      })
+
+      expect(response.statusCode).toBe(500)
+    } finally {
+      findOne.mockRestore()
+    }
   })
 
   it.each([
