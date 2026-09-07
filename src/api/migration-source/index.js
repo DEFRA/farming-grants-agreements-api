@@ -2,7 +2,8 @@ import Joi from 'joi'
 
 import {
   findAgreementNumbersByGrantCode,
-  findAgreementVersionPage
+  findAgreementVersionPage,
+  readClaimIdCounter
 } from './source.js'
 
 const auth = 'migration-token'
@@ -48,6 +49,12 @@ export const migrationSource = {
               request.params.agreementNumber,
               request.query.offset
             )
+        },
+        {
+          method: 'GET',
+          path: '/internal/migrations/claim-id-counter',
+          options: { auth },
+          handler: () => readClaimIdCounter()
         }
       ])
     }
