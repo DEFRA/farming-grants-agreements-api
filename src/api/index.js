@@ -15,6 +15,7 @@ import { setupProxy } from '#~/api/common/helpers/proxy/setup-proxy.js'
 import { mongooseDb } from '#~/api/common/helpers/mongoose.js'
 import { errorHandlerPlugin } from '#~/api/common/helpers/error-handler.js'
 import { customGrantsUiJwtScheme } from '#~/api/common/auth/custom-grants-ui-jwt-scheme.js'
+import { migrationTokenScheme } from '#~/api/common/auth/migration-token-scheme.js'
 import { createSqsClientPlugin } from '#~/api/common/helpers/sqs-client.js'
 import { handleCreateAgreementEvent } from './common/helpers/sqs-message-processor/create-agreement.js'
 import { handleUpdateAgreementEvent } from './common/helpers/sqs-message-processor/update-agreement.js'
@@ -56,8 +57,12 @@ function getServerConfig() {
 }
 
 function setupAuthentication(server) {
+  const migrationTokenAuth = 'migration-token'
+
   server.auth.scheme('custom-grants-ui-jwt', customGrantsUiJwtScheme)
   server.auth.strategy('grants-ui-jwt', 'custom-grants-ui-jwt')
+  server.auth.scheme(migrationTokenAuth, migrationTokenScheme)
+  server.auth.strategy(migrationTokenAuth, migrationTokenAuth)
 }
 
 function getPlugins(serverOptions) {

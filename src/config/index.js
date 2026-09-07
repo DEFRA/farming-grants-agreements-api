@@ -17,7 +17,17 @@ const isProduction = process.env.NODE_ENV === 'production'
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 const STRICT_BOOLEAN_FORMAT = 'strict-boolean'
+const SHA256_OR_EMPTY_FORMAT = 'sha256-or-empty'
 const FLOCI_ENDPOINT = 'http://localhost:4566'
+
+convict.addFormat({
+  name: SHA256_OR_EMPTY_FORMAT,
+  validate: (value) => {
+    if (value !== '' && !/^[a-f0-9]{64}$/.test(value)) {
+      throw new Error('must be empty or a lowercase SHA-256 hash')
+    }
+  }
+})
 
 convict.addFormat({
   name: STRICT_BOOLEAN_FORMAT,
@@ -275,6 +285,25 @@ const config = convict({
     default: 'default-agreements-jwt-secret',
     env: 'AGREEMENTS_JWT_SECRET'
   },
+  jwtDefaultKid: {
+    doc: 'FGP-1307: logical key id the default jwtSecret is stored under, and the kid assumed when an incoming caller token carries no kid header (e.g. grants-ui).',
+    format: String,
+    default: 'agreements-hs256-1',
+    env: 'AGREEMENTS_JWT_DEFAULT_KID'
+  },
+  jwtKeyring: {
+    doc: 'FGP-1307: optional JSON object of additional verification secrets keyed by kid, used to verify tokens signed with a rotated key during a rotation overlap. Example: {"agreements-hs256-2":"secret"}.',
+    format: String,
+    default: '',
+    env: 'AGREEMENTS_JWT_KEYRING'
+  },
+  migrationSourceTokenHash: {
+    doc: 'SHA-256 hash of the temporary migration source token',
+    format: SHA256_OR_EMPTY_FORMAT,
+    default: '',
+    env: 'MIGRATION_SOURCE_TOKEN_HASH',
+    sensitive: true
+  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,
@@ -445,6 +474,12 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
+    },
+    wmpMigrationAnalysis: {
+      doc: 'Enable to run WMP migration analysis',
+      format: STRICT_BOOLEAN_FORMAT,
+      default: true,
+      env: 'WMP_MIGRATION_ANALYSIS'
     }
   }
 })
