@@ -2,15 +2,34 @@ import Boom from '@hapi/boom'
 import { BSON } from 'mongodb'
 
 import agreementsModel from '#~/api/common/models/agreements.js'
+import countersModel from '#~/api/common/models/counters.js'
 import grantModel from '#~/api/common/models/grant.js'
 import versionsModel from '#~/api/common/models/versions.js'
 
+const CLAIM_ID_COUNTER = 'claimIds'
 const VERSION_PAGE_SIZE = 100
 
 const bsonReadOptions = { promoteValues: false }
 const sourceDocumentOptions = {
   ...bsonReadOptions,
   projection: { __v: 0 }
+}
+
+export const readClaimIdCounter = async () => {
+  const counter = await countersModel.collection.findOne({
+    _id: CLAIM_ID_COUNTER
+  })
+
+  if (!counter) {
+    throw Boom.notFound('Claim ID counter not found')
+  }
+
+  const { seq } = counter
+  if (typeof seq !== 'number' || !Number.isSafeInteger(seq) || seq < 0) {
+    throw Boom.conflict('Claim ID counter is malformed')
+  }
+
+  return { counter: CLAIM_ID_COUNTER, seq }
 }
 
 const findAgreement = async (agreementNumber) => {
