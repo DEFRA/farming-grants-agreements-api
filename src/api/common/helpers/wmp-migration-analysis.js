@@ -9,6 +9,7 @@ const logger = createLogger()
 
 const MONGO_URI = config.get('mongoUri')
 const DB_NAME = config.get('mongoDatabase')
+const CLAIM_ID_COUNTER = 'claimIds'
 
 const requiredPropertiesOfAgreement = [
   'agreementNumber',
@@ -403,10 +404,16 @@ async function checkSingleAgreementPdf(agreement, bucket, stats) {
 }
 
 export async function runWMPAgreementDataAnalysis() {
-  logger.info(`WMP_MIGRATION_ANALYSIS timestamp=${new Date().toISOString()}`)
-
   try {
     await ensureMongoConnection()
+
+    const claimIdCounter = await mongoose.connection.db
+      .collection('counters')
+      .findOne({ _id: CLAIM_ID_COUNTER })
+    logger.info(
+      `WMP_MIGRATION_ANALYSIS timestamp=${new Date().toISOString()} claimIdCounter=${claimIdCounter?.seq ?? 'missing'}`
+    )
+
     const wmpAgreements = mongoose.connection
       .collection('agreements')
       .aggregate([
