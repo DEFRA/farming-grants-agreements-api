@@ -89,9 +89,7 @@ export const fpttCreateOffer = async (
     logger
   )
 
-  logger.info(
-    `Successfully created the agreement ${agreement.agreementNumber} sbi: ${identifiers.sbi}`
-  )
+  logger.info(`Successfully created the agreement ${agreement.agreementNumber}`)
 
   return agreement
 }

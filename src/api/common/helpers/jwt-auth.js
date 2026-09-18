@@ -2,18 +2,18 @@ import { config } from '#~/config/index.js'
 import Jwt from '@hapi/jwt'
 import Boom from '@hapi/boom'
 
-// FGP-1307: producers permitted to mint the caller token (fixed code constant,
-// matching the other consumers). Used for a warn-only issuer check during the
-// staged rollout.
-const ALLOWED_ISSUERS = new Set([
-  'grants-ui',
-  'fg-cw-frontend',
-  'agreements-pdf'
-])
-
-// FGP-1307: the audience this service expects to find in the token. Checked
-// warn-only for now so existing callers are not rejected before enforcement.
-const EXPECTED_AUDIENCE = 'agreements-api'
+/**
+ * Parse the configured comma-separated issuer allow-list into a Set.
+ * @param {string} raw - comma-separated "iss" values from config
+ * @returns {Set<string>} allow-listed issuers (empty when unset)
+ */
+const parseAllowedIssuers = (raw) =>
+  new Set(
+    (raw || '')
+      .split(',')
+      .map((issuer) => issuer.trim())
+      .filter(Boolean)
+  )
 
 /**
  * FGP-1307: parse the optional kid-keyed keyring of extra verification secrets.
@@ -72,14 +72,17 @@ const resolveSecret = (kid, logger) => {
 }
 
 /**
- * FGP-1307: warn-only claim checks (issuer, audience). Signature and expiry are
- * already hard-enforced by Jwt.token.verify; these claims are logged but do not
- * reject the request yet so we can roll out enforcement in a later stage.
+ * Warn-only claim checks (issuer, audience, expiry). Signature, and expiry
+ * when present, are already hard-enforced by Jwt.token.verify; these claims
+ * are logged but never reject the request so enforcement can be rolled out
+ * in a later stage.
  * @param {object} payload - the verified JWT payload
  * @param {object} logger - logger for the warnings
  */
 const warnOnClaimMismatches = (payload, logger) => {
-  if (!ALLOWED_ISSUERS.has(payload?.iss)) {
+  const allowedIssuers = parseAllowedIssuers(config.get('jwtAllowedIssuers'))
+
+  if (!allowedIssuers.has(payload?.iss)) {
     logger.warn(
       { hasIss: payload?.iss != null },
       'JWT caller token issuer is not in the allow-list; accepted for now'
@@ -93,11 +96,20 @@ const warnOnClaimMismatches = (payload, logger) => {
     return aud == null ? [] : [aud]
   }
   const audiences = toAudienceList(payload?.aud)
+  const expectedAudience = config.get('jwtExpectedAudience')
 
-  if (!audiences.includes(EXPECTED_AUDIENCE)) {
+  if (!audiences.includes(expectedAudience)) {
     logger.warn(
       { hasAud: audiences.length > 0 },
       'JWT caller token audience does not include this service; accepted for now'
+    )
+  }
+
+  // @hapi/jwt only checks expiry when "exp" is present on the payload, so a
+  // token minted without one never expires. Warn-only: still accepted.
+  if (payload?.exp == null) {
+    logger.warn(
+      'JWT caller token carried no expiry (exp) claim; accepted for now'
     )
   }
 }

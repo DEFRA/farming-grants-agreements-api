@@ -75,9 +75,7 @@ export const wmpCreateOffer = async (
     logger
   )
 
-  logger.info(
-    `Successfully created WMP agreement ${agreement.agreementNumber} (clientRef=${version.clientRef})`
-  )
+  logger.info(`Successfully created WMP agreement ${agreement.agreementNumber}`)
 
   return agreement
 }

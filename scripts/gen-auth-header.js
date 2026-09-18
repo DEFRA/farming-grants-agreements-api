@@ -51,13 +51,16 @@ if (!source || !validSources.has(source) || !jwtSecret) {
   throw new Error("source must be 'defra' or 'entra' and jwtSecret is required")
 }
 
+const token = Jwt.token.generate(
+  { source, ...(sbi ? { sbi } : {}) },
+  jwtSecret,
+  {
+    algorithm: 'HS256'
+  }
+)
+
 // eslint-disable-next-line no-console
 console.log('UI/API header', {
-  'x-encrypted-auth': Jwt.token.generate(
-    { source, ...(sbi ? { sbi } : {}) },
-    jwtSecret,
-    {
-      algorithm: 'HS256'
-    }
-  )
+  'x-user-context': token,
+  'x-encrypted-auth': token
 })

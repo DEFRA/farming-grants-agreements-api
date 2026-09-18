@@ -165,7 +165,18 @@ git config --global core.autocrlf false
 | `GET: /{agreementId}` | Get an agreement in json format based on agreementId          |
 | `GET: /`              | Get an agreement in json format based on the sbi in the token |
 
-Pass the JWT token in the header as `x-encrypted-auth`.
+Pass the JWT token in the header as `x-user-context`. The header was previously named `x-encrypted-auth` (it carries a signed, not encrypted, value); the service still accepts the old name as a fallback when `x-user-context` is absent, so producers can migrate independently. Removal of the old header name is tracked separately.
+
+### Caller-token claim checks (warn-only)
+
+On top of signature and expiry verification, the service checks a caller token's `iss` (issuer) against an allow-list and its `aud` (audience) against the value this service expects. Both checks, plus a check for a missing `exp` (expiry) claim, are **warn-only**: a mismatch is logged but never rejects the request. This is being rolled out in stages before any enforcement is turned on.
+
+| Env var                            | Default                                   | Purpose                                                                |
+| :--------------------------------- | :---------------------------------------- | :--------------------------------------------------------------------- |
+| `AGREEMENTS_JWT_ALLOWED_ISSUERS`   | `grants-ui,fg-cw-frontend,agreements-pdf` | Comma-separated allow-list of `iss` values accepted from caller tokens |
+| `AGREEMENTS_JWT_EXPECTED_AUDIENCE` | `agreements-api`                          | The `aud` value this service expects a caller token to include         |
+
+Neither value is a secret — they're producer/service names, not credentials. Owned by the agreements-api team; update the allow-list when a new producer is onboarded.
 
 ### Generating a JWT for API calls (scripts/gen-auth-header.js)
 
@@ -196,14 +207,17 @@ Run examples:
 Expected output (example):
 
 ```
-UI/API header { 'x-encrypted-auth': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....' }
+UI/API header {
+  'x-user-context': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....',
+  'x-encrypted-auth': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....'
+}
 ```
 
 Copy the token value and use it in your requests. For example:
 
 ```bash
 curl -sS http://localhost:3555/ \
-  -H "x-encrypted-auth: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."
+  -H "x-user-context: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."
 ```
 
 Notes:
