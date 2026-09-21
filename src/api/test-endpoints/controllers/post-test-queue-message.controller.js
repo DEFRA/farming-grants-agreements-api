@@ -54,7 +54,10 @@ const postTestQueueMessageController = {
 
       const baseQueueUrl = config.get('sqs.queueUrl').split('/')
       const defaultQueueName = baseQueueUrl.pop()
-      const { queueName = defaultQueueName } = request.params
+      const queueName =
+        typeof request.params?.queueName === 'string'
+          ? request.params.queueName
+          : defaultQueueName
       const queueUrl = `${baseQueueUrl.join('/')}/${queueName}`
 
       request.logger.info(
