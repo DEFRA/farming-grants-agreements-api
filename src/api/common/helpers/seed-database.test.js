@@ -106,6 +106,7 @@ describe('seedDatabase', () => {
     let mockLogger
     let mockDropCollection
     let mockPublishEvent
+    let mockReadyState
     let prevEnv
 
     beforeEach(() => {
@@ -114,6 +115,7 @@ describe('seedDatabase', () => {
 
       prevEnv = process.env.NODE_ENV
       process.env.NODE_ENV = 'production'
+      mockReadyState = 1
 
       mockLogger = {
         info: vi.fn(),
@@ -141,7 +143,11 @@ describe('seedDatabase', () => {
           ObjectId: vi.fn()
         }
         const mock = {
-          connection: { readyState: 1 },
+          connection: {
+            get readyState() {
+              return mockReadyState
+            }
+          },
           STATES: { connected: 1 },
           Schema: mockSchema,
           model: vi.fn().mockImplementation(() => ({
@@ -190,20 +196,7 @@ describe('seedDatabase', () => {
 
     test('waits for mongoose to connect when readyState is not connected (mocks time)', async () => {
       vi.useFakeTimers()
-      // Dynamically mock readyState to simulate connection
-      let readyState = 0
-      // override the default mongoose mock to use a dynamic readyState getter
-      vi.doMock('mongoose', () => ({
-        __esModule: true,
-        default: {
-          connection: {
-            get readyState() {
-              return readyState
-            }
-          },
-          STATES: { connected: 1 }
-        }
-      }))
+      mockReadyState = 0
       // Re-import after mocking
       const { seedDatabase } = await import('./seed-database.js')
       const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() }
@@ -218,7 +211,7 @@ describe('seedDatabase', () => {
         'Waiting for mongoose to connect...'
       )
       // Now set readyState to connected
-      readyState = 1
+      mockReadyState = 1
       // Fast-forward again to let the loop exit and finish
       vi.advanceTimersByTime(1000)
       await promise
