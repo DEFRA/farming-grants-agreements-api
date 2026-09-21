@@ -37,7 +37,12 @@ vi.mock('mongoose', () => ({
   default: {
     connection: {
       readyState: 1,
-      collection: vi.fn()
+      collection: vi.fn(),
+      db: {
+        collection: vi.fn(() => ({
+          findOne: vi.fn().mockResolvedValue({ _id: 'claimIds', seq: 41 })
+        }))
+      }
     },
     connect: vi.fn(),
     ConnectionStates: {
@@ -156,6 +161,14 @@ describe('wmp-migration-analysis helper', () => {
 
       await runWMPAgreementDataAnalysis()
 
+      expect(mockMongoose.connection.db.collection).toHaveBeenCalledWith(
+        'counters'
+      )
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^WMP_MIGRATION_ANALYSIS timestamp=.* claimIdCounter=41$/
+        )
+      )
       expect(mockCollection.find).toHaveBeenCalledWith({
         grant: { $in: ['grant1'] }
       })
