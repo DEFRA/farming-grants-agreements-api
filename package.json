@@ -84,11 +84,7 @@
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
-<<<<<<< HEAD
     "@vitest/coverage-v8": "4.1.11",
-=======
-    "@vitest/coverage-v8": "^4.1.11",
->>>>>>> origin/main
     "autoprefixer": "^10.4.21",
     "aws-sdk-client-mock": "^4.1.0",
     "babel-plugin-transform-import-meta": "^2.2.1",
