@@ -122,9 +122,7 @@ describe('SQS Client', () => {
       )
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Received request to create new agreement for reference'
-        )
+        expect.stringContaining('Received request to create new agreement')
       )
       expect(createOffer).toHaveBeenCalledWith(
         'aws-message-id',
@@ -147,7 +145,7 @@ describe('SQS Client', () => {
 
       expect(createOffer).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(
-        { payload: mockPayload },
+        { eventType: 'some-other-event' },
         'No action required for GAS create offer event'
       )
     })

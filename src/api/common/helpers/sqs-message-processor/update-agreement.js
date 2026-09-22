@@ -16,7 +16,7 @@ import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
  */
 async function applyStatusUpdate(status, clientRef, agreementNumber, logger) {
   logger.info(
-    { status, clientRef, agreementNumber },
+    { status, agreementNumber },
     'Processing agreement update message'
   )
   if (status === AGREEMENT_STATUS.WITHDRAWN) {
@@ -55,7 +55,7 @@ export const handleUpdateAgreementEvent = async (
   if (!clientRef || !agreementNumber || !knownStatuses.includes(status)) {
     const statusStr = status ? ` (${status})` : ''
     logger.info(
-      { payload },
+      { eventType: payload?.type, hasClientRef: !!clientRef },
       `No action required for GAS application status update event${statusStr}`
     )
     return
@@ -67,7 +67,7 @@ export const handleUpdateAgreementEvent = async (
   const correlationId = data.correlationId || randomUUID()
 
   logger.info(
-    { payload },
+    { agreementNumber, status },
     `Received application status update (${status}) from event: ${notificationMessageId}`
   )
 

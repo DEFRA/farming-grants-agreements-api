@@ -148,6 +148,55 @@ describe('custom-grants-ui-jwt-scheme', () => {
     expect(mockGetAgreementDataBySbi).not.toHaveBeenCalled()
   })
 
+  it('prefers the x-user-context header over x-encrypted-auth when both are present', async () => {
+    const newHeaderToken = 'new-header-token'
+
+    mockValidateJwtAuthentication.mockReturnValueOnce({
+      valid: true,
+      source: 'defra'
+    })
+
+    const request = {
+      params: {},
+      headers: {
+        'x-user-context': newHeaderToken,
+        'x-encrypted-auth': 'legacy-header-token'
+      },
+      logger
+    }
+
+    await scheme.authenticate(request, h)
+
+    expect(mockValidateJwtAuthentication).toHaveBeenCalledWith(
+      newHeaderToken,
+      null,
+      logger
+    )
+  })
+
+  it('falls back to x-encrypted-auth when x-user-context is absent', async () => {
+    const legacyHeaderToken = 'legacy-header-token'
+
+    mockValidateJwtAuthentication.mockReturnValueOnce({
+      valid: true,
+      source: 'defra'
+    })
+
+    const request = {
+      params: {},
+      headers: { 'x-encrypted-auth': legacyHeaderToken },
+      logger
+    }
+
+    await scheme.authenticate(request, h)
+
+    expect(mockValidateJwtAuthentication).toHaveBeenCalledWith(
+      legacyHeaderToken,
+      null,
+      logger
+    )
+  })
+
   it('does not fetch by SBI when source is not defra or sbi missing; authenticates with null agreementData', async () => {
     mockValidateJwtAuthentication.mockReturnValueOnce({
       valid: true,

@@ -15,8 +15,14 @@ const customGrantsUiJwtScheme = () => ({
       agreementData = await getAgreementDataById(agreementId)
     }
 
+    let authHeader = request.headers['x-user-context']
+
+    if (!authHeader) {
+      authHeader = request.headers['x-encrypted-auth']
+    }
+
     const authResult = validateJwtAuthentication(
-      request.headers['x-encrypted-auth'],
+      authHeader,
       agreementData,
       request.logger
     )

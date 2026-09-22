@@ -56,7 +56,10 @@ export const getAgreementData = async (searchTerms) => {
       throw Boom.internal(err)
     })
 
-  logger.info({ grantData }, 'getAgreementData: grant search result')
+  logger.info(
+    { hasGrantData: !!grantData, grantId: grantData?._id },
+    'getAgreementData: grant search result'
+  )
 
   if (!grantData) {
     logger.error(
@@ -79,7 +82,7 @@ export const getAgreementData = async (searchTerms) => {
     })
 
   logger.info(
-    { agreementVersion, grantId: grantData._id },
+    { hasAgreementVersion: !!agreementVersion, grantId: grantData._id },
     'getAgreementData: version search result'
   )
 

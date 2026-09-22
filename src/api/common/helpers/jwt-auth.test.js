@@ -24,6 +24,15 @@ describe('jwt-auth', () => {
       if (key === 'jwtDefaultKid')
         return overrides.jwtDefaultKid ?? 'agreements-hs256-1'
       if (key === 'jwtKeyring') return overrides.jwtKeyring ?? ''
+      if (key === 'jwtAllowedIssuers') {
+        return (
+          overrides.jwtAllowedIssuers ??
+          'grants-ui,fg-cw-frontend,agreements-pdf'
+        )
+      }
+      if (key === 'jwtExpectedAudience') {
+        return overrides.jwtExpectedAudience ?? 'agreements-api'
+      }
       return null
     })
   }
@@ -438,6 +447,269 @@ describe('jwt-auth', () => {
         expect(mockLogger.warn).not.toHaveBeenCalledWith(
           expect.anything(),
           'JWT caller token audience does not include this service; accepted for now'
+        )
+      })
+    })
+
+    describe('warn-only expiry check', () => {
+      test('warns but accepts when the token carries no exp claim', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'grants-ui',
+            aud: ['agreements-api'],
+            sbi: '123456',
+            source: 'defra'
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'JWT caller token carried no expiry (exp) claim; accepted for now'
+        )
+      })
+
+      test('does not warn when the token carries a valid exp claim', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'grants-ui',
+            aud: ['agreements-api'],
+            sbi: '123456',
+            source: 'defra',
+            exp: Math.floor(Date.now() / 1000) + 3600
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        validateJwtAuthentication('token', mockAgreementData, mockLogger)
+
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          'JWT caller token carried no expiry (exp) claim; accepted for now'
+        )
+      })
+
+      test('an actually-expired token is still hard-rejected by Jwt.token.verify, not warn-only', () => {
+        const expiredError = new Error('Token expired')
+        setupMockJwt(null, expiredError)
+
+        const result = validateJwtAuthentication(
+          'expired-token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result).toEqual({ valid: false, source: null, sbi: null })
+      })
+    })
+
+    describe('caller-type claim scenarios', () => {
+      const nowSec = Math.floor(Date.now() / 1000)
+
+      test('applicant (grants-ui) token: clean claims pass with no warnings', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'grants-ui',
+            aud: ['agreements-api'],
+            sub: 'applicant-123',
+            sbi: '123456',
+            source: 'defra',
+            exp: nowSec + 3600
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.anything(),
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.anything(),
+          'JWT caller token audience does not include this service; accepted for now'
+        )
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          'JWT caller token carried no expiry (exp) claim; accepted for now'
+        )
+      })
+
+      test('applicant (grants-ui) token: warn-triggering variant (unlisted aud, no exp) still authenticates', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'grants-ui',
+            aud: ['someone-else'],
+            sub: 'applicant-123',
+            sbi: '123456',
+            source: 'defra'
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasAud: true },
+          'JWT caller token audience does not include this service; accepted for now'
+        )
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'JWT caller token carried no expiry (exp) claim; accepted for now'
+        )
+      })
+
+      test('caseworker (fg-cw-frontend) token: clean claims pass with no warnings', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'fg-cw-frontend',
+            aud: ['agreements-api'],
+            sub: 'caseworker-123',
+            source: 'entra',
+            exp: nowSec + 3600
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.anything(),
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+      })
+
+      test('caseworker (fg-cw-frontend) token: warn-triggering variant (unlisted issuer) still authenticates', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'some-other-frontend',
+            aud: ['agreements-api'],
+            sub: 'caseworker-123',
+            source: 'entra',
+            exp: nowSec + 3600
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasIss: true },
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+      })
+
+      test('PDF caller (agreements-pdf) token: clean claims pass with no warnings', () => {
+        setupMockJwtWithHeader(
+          {
+            iss: 'agreements-pdf',
+            aud: ['agreements-api'],
+            sub: 'agreements-pdf',
+            source: 'defra',
+            sbi: '123456',
+            exp: nowSec + 3600
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          expect.anything(),
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(
+          'JWT caller token carried no expiry (exp) claim; accepted for now'
+        )
+      })
+
+      test('PDF caller (agreements-pdf) token: warn-triggering variant (missing iss/aud/exp) still authenticates', () => {
+        setupMockJwtWithHeader(
+          {
+            source: 'defra',
+            sbi: '123456'
+          },
+          { kid: 'agreements-hs256-1' }
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result.valid).toBe(true)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasIss: false },
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasAud: false },
+          'JWT caller token audience does not include this service; accepted for now'
+        )
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'JWT caller token carried no expiry (exp) claim; accepted for now'
+        )
+      })
+
+      test('legacy no-claims token (no iss/aud/exp/sub) still authenticates despite warnings', () => {
+        setupMockJwtWithHeader(
+          {
+            sbi: '123456',
+            source: 'defra'
+          },
+          {}
+        )
+
+        const result = validateJwtAuthentication(
+          'token',
+          mockAgreementData,
+          mockLogger
+        )
+
+        expect(result).toEqual({
+          valid: true,
+          source: 'defra',
+          sbi: '123456'
+        })
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasIss: false },
+          'JWT caller token issuer is not in the allow-list; accepted for now'
+        )
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          { hasAud: false },
+          'JWT caller token audience does not include this service; accepted for now'
+        )
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'JWT caller token carried no expiry (exp) claim; accepted for now'
         )
       })
     })

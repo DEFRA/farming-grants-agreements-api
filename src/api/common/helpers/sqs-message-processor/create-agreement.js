@@ -15,7 +15,7 @@ export const handleCreateAgreementEvent = async (
   if (payload?.type?.includes('gas-backend.agreement.create')) {
     if (logger?.info) {
       logger.info(
-        `Received request to create new agreement for reference: '${payload?.data?.clientRef}' (event: ${notificationMessageId})`
+        `Received request to create new agreement (event: ${notificationMessageId})`
       )
     }
     const agreement = await createOffer(
@@ -28,7 +28,10 @@ export const handleCreateAgreementEvent = async (
     }
   } else {
     if (logger?.info) {
-      logger.info({ payload }, 'No action required for GAS create offer event')
+      logger.info(
+        { eventType: payload?.type },
+        'No action required for GAS create offer event'
+      )
     }
   }
 }

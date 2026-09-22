@@ -297,6 +297,18 @@ const config = convict({
     default: '',
     env: 'AGREEMENTS_JWT_KEYRING'
   },
+  jwtAllowedIssuers: {
+    doc: 'Comma-separated allow-list of "iss" values accepted from caller tokens (the producers permitted to mint a token for this service: grants-ui, fg-cw-frontend, agreements-pdf). Warn-only for now — an issuer outside this list is logged, not rejected. No secrets here, just producer names. Owned by the agreements-api team; update when a new producer is onboarded.',
+    format: String,
+    default: 'grants-ui,fg-cw-frontend,agreements-pdf',
+    env: 'AGREEMENTS_JWT_ALLOWED_ISSUERS'
+  },
+  jwtExpectedAudience: {
+    doc: 'The "aud" value this service expects a caller token to include. Warn-only — aud enforcement is explicitly out of scope until producers send it, so a missing/mismatched aud is logged, not rejected. Owned by the agreements-api team.',
+    format: String,
+    default: 'agreements-api',
+    env: 'AGREEMENTS_JWT_EXPECTED_AUDIENCE'
+  },
   migrationSourceTokenHash: {
     doc: 'SHA-256 hash of the temporary migration source token',
     format: SHA256_OR_EMPTY_FORMAT,
