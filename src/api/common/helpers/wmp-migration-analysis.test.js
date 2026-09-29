@@ -13,9 +13,8 @@ vi.mock('#~/api/common/helpers/retention-period.js', () => ({
 }))
 
 const { checkFileExists } = await import('#~/api/common/helpers/s3-client.js')
-const { getRetentionPrefix } = await import(
-  '#~/api/common/helpers/retention-period.js'
-)
+const { getRetentionPrefix } =
+  await import('#~/api/common/helpers/retention-period.js')
 
 vi.mock('#~/api/common/helpers/logging/logger.js', () => {
   const logger = {
