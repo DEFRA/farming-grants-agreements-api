@@ -73,6 +73,8 @@ export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
               `Failed to process SQS (${tag}) message: ${error.message}`
             )
           }
+
+          return message
         },
         sqs: sqsClient,
         batchSize: config.get('sqs.maxMessages'),

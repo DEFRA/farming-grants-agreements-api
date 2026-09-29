@@ -367,8 +367,9 @@ describe('SQS Client', () => {
       // Get the message handler
       const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
 
-      await messageHandler(sqsMessage)
+      const result = await messageHandler(sqsMessage)
 
+      expect(result).toEqual(sqsMessage)
       expect(mockCallback).toHaveBeenCalledWith(
         'sqs-message-id',
         cloudEvent,
