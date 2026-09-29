@@ -190,7 +190,7 @@ const verifyJwtPayload = (jwtPayload, agreementData) => {
 
   return Boolean(
     jwtPayload.source === 'defra' &&
-      (jwtSbi === agreementSbi || (jwtSbi && !agreementSbi))
+    (jwtSbi === agreementSbi || (jwtSbi && !agreementSbi))
   )
 }
 
