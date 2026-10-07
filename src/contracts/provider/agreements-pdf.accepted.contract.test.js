@@ -182,8 +182,8 @@ describe('sending updated (accepted) events via SNS', () => {
           // The published consumer pact (farming-grants-agreements-pdf) asserts
           // `data.code` as a literal string `"mockCode"` rather than using a
           // `like()` matcher. The provider now routes by real agreement codes
-          // (e.g. `frps-private-beta`, `woodland`) via the dispatch map, so we
-          // normalise the field here to satisfy the existing contract.
+          // via the dispatch map, so we normalise the field here to satisfy the
+          // existing contract.
           // TODO: Update the consumer pact to use `Matchers.like('mockCode')`
           // (or a real code) and remove this normalisation.
           message.data.code = 'mockCode'

@@ -3,6 +3,7 @@ import { createServer } from './index.js'
 import { validateJwtAuthentication } from './common/helpers/jwt-auth.js'
 import { getAgreementDataById } from './agreement/helpers/get-agreement-data.js'
 import { Decimal128 } from 'mongodb'
+import { statusCodes } from './common/constants/status-codes.js'
 
 // Mock the dependencies
 vi.mock('./common/helpers/jwt-auth.js', () => ({
@@ -216,6 +217,18 @@ describe('Custom Grants UI JWT Authentication Scheme', () => {
       // Test that the authentication strategy works by making a request
       // If the strategy is registered, the authentication should be processed
       expect(server.auth.api).toBeDefined()
+    })
+  })
+
+  describe('retired migration source routes', () => {
+    it.each([
+      '/internal/migrations/agreements?code=woodland',
+      '/internal/migrations/agreements/WMP123456789/versions',
+      '/internal/migrations/claim-id-counter'
+    ])('returns 404 for %s', async (url) => {
+      const response = await server.inject({ method: 'GET', url })
+
+      expect(response.statusCode).toBe(statusCodes.notFound)
     })
   })
 
