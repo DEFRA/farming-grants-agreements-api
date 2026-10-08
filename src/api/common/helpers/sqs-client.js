@@ -62,17 +62,11 @@ export const createSqsClientPlugin = (tag, queueUrl, callback) => ({
       const sqsConsumer = Consumer.create({
         queueUrl: options.queueUrl,
         handleMessage: async (message) => {
-          try {
-            await processMessage(callback, message, server.logger)
-            server.logger.info(
-              `Successfully processed SQS (${tag}) message: ${message.MessageId}`
-            )
-          } catch (error) {
-            server.logger.error(
-              error,
-              `Failed to process SQS (${tag}) message: ${error.message}`
-            )
-          }
+          await processMessage(callback, message, server.logger)
+          server.logger.info(
+            `Successfully processed SQS (${tag}) message: ${message.MessageId}`
+          )
+          return message
         },
         sqs: sqsClient,
         batchSize: config.get('sqs.maxMessages'),
