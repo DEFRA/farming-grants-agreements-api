@@ -19,14 +19,14 @@ describe('generateAgreementNumber', () => {
     expect(agreementNumber).toMatch(/^FPTT\d{9}$/)
   })
 
-  it('supports WMP-prefixed agreement numbers', async () => {
-    const agreementNumber = await generateAgreementNumber('WMP')
-    expect(agreementNumber).toMatch(/^WMP\d{9}$/)
+  it('supports supplied agreement number prefixes', async () => {
+    const agreementNumber = await generateAgreementNumber('TEST')
+    expect(agreementNumber).toMatch(/^TEST\d{9}$/)
   })
 
   it('normalises the supplied prefix', async () => {
-    const agreementNumber = await generateAgreementNumber(' wmp ')
-    expect(agreementNumber).toMatch(/^WMP\d{9}$/)
+    const agreementNumber = await generateAgreementNumber(' test ')
+    expect(agreementNumber).toMatch(/^TEST\d{9}$/)
   })
 
   it('generates unique agreement numbers', async () => {

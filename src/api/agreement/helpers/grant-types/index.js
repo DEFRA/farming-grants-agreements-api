@@ -1,10 +1,8 @@
 import Boom from '@hapi/boom'
 
 import { fptt } from './fptt/fptt-grant.js'
-import { wmp } from './wmp/wmp-grant.js'
 
 const grantTypesByCode = {
-  woodland: wmp,
   'frps-private-beta': fptt
 }
 

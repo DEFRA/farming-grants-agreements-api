@@ -17,17 +17,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 const isDev = process.env.NODE_ENV === 'development'
 const isTest = process.env.NODE_ENV === 'test'
 const STRICT_BOOLEAN_FORMAT = 'strict-boolean'
-const SHA256_OR_EMPTY_FORMAT = 'sha256-or-empty'
 const FLOCI_ENDPOINT = 'http://localhost:4566'
-
-convict.addFormat({
-  name: SHA256_OR_EMPTY_FORMAT,
-  validate: (value) => {
-    if (value !== '' && !/^[a-f0-9]{64}$/.test(value)) {
-      throw new Error('must be empty or a lowercase SHA-256 hash')
-    }
-  }
-})
 
 convict.addFormat({
   name: STRICT_BOOLEAN_FORMAT,
@@ -297,13 +287,6 @@ const config = convict({
     default: '',
     env: 'AGREEMENTS_JWT_KEYRING'
   },
-  migrationSourceTokenHash: {
-    doc: 'SHA-256 hash of the temporary migration source token',
-    format: SHA256_OR_EMPTY_FORMAT,
-    default: '',
-    env: 'MIGRATION_SOURCE_TOKEN_HASH',
-    sensitive: true
-  },
   mongoUri: {
     doc: 'URI for mongodb',
     format: String,
@@ -370,12 +353,6 @@ const config = convict({
         format: String,
         default: '/api/v2/payments/calculate',
         env: 'LAND_GRANTS_CALCULATION_URI_FPTT'
-      },
-      wmp: {
-        doc: 'URI path for the WMP payment calculation endpoint',
-        format: String,
-        default: '/api/v1/wmp/payments/calculate',
-        env: 'LAND_GRANTS_CALCULATION_URI_WMP'
       }
     }
   },
@@ -474,12 +451,6 @@ const config = convict({
       format: STRICT_BOOLEAN_FORMAT,
       default: true,
       env: 'JWT_ENABLED'
-    },
-    wmpMigrationAnalysis: {
-      doc: 'Enable to run WMP migration analysis',
-      format: STRICT_BOOLEAN_FORMAT,
-      default: true,
-      env: 'WMP_MIGRATION_ANALYSIS'
     }
   }
 })
