@@ -429,6 +429,29 @@ describe('SQS message processor', () => {
       })
     })
 
+    it('should ignore Woodland agreement updates', async () => {
+      const mockPayload = {
+        type: 'cloud.defra.test.fg-gas-backend.agreement.update',
+        data: {
+          status: 'cancelled',
+          clientRef: 'client-ref-001',
+          agreementNumber: 'WMP123456789'
+        }
+      }
+
+      await handleUpdateAgreementEvent(
+        'aws-message-id',
+        mockPayload,
+        mockLogger
+      )
+
+      expect(withdrawOffer).not.toHaveBeenCalled()
+      expect(cancelOffer).not.toHaveBeenCalled()
+      expect(terminateAgreement).not.toHaveBeenCalled()
+      expect(mockAuditEvent).not.toHaveBeenCalled()
+      expect(mockPublishEvent).not.toHaveBeenCalled()
+    })
+
     it('should take no action for a known status with no handler', async () => {
       const mockPayload = {
         type: 'cloud.defra.test.fg-gas-backend.agreement.update',
