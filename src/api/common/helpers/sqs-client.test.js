@@ -250,7 +250,9 @@ describe('SQS Client', () => {
         MessageId: 'msg-1'
       }
 
-      await messageHandler(invalidMessage)
+      await expect(messageHandler(invalidMessage)).rejects.toThrow(
+        'Invalid message format'
+      )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.any(Error),
@@ -367,7 +369,7 @@ describe('SQS Client', () => {
       // Get the message handler
       const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
 
-      await messageHandler(sqsMessage)
+      await expect(messageHandler(sqsMessage)).resolves.toBe(sqsMessage)
 
       expect(mockCallback).toHaveBeenCalledWith(
         'sqs-message-id',
@@ -430,7 +432,9 @@ describe('SQS Client', () => {
       // Get the message handler
       const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
 
-      await messageHandler(sqsMessage)
+      await expect(messageHandler(sqsMessage)).rejects.toThrow(
+        'Invalid message format'
+      )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.any(Error),

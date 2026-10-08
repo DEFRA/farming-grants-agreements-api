@@ -240,7 +240,9 @@ describe('SQS message processor', () => {
         Body: 'invalid json'
       }
 
-      await handleMessage(message)
+      await expect(handleMessage(message)).rejects.toThrow(
+        'Invalid message format'
+      )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.any(Error),
