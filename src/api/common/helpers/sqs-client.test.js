@@ -250,12 +250,11 @@ describe('SQS Client', () => {
         MessageId: 'msg-1'
       }
 
-      await messageHandler(invalidMessage)
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.any(Error),
-        'Failed to process SQS (test) message: Invalid message format: {"Body":"invalid json","MessageId":"msg-1"}'
+      await expect(messageHandler(invalidMessage)).rejects.toThrow(
+        'Invalid message format'
       )
+
+      expect(mockLogger.error).not.toHaveBeenCalled()
     })
 
     it('should handle consumer errors', () => {
@@ -281,11 +280,12 @@ describe('SQS Client', () => {
       )
     })
 
-    it('should handle processing errors', () => {
+    it('should log failed message processing once through the consumer listener', async () => {
+      const error = new Error('Processing error')
       const sqsClientPlugin = createSqsClientPlugin(
         'test',
         options.queueUrl,
-        vi.fn()
+        vi.fn().mockRejectedValue(error)
       )
       sqsClientPlugin.plugin.register(server, options)
 
@@ -294,12 +294,17 @@ describe('SQS Client', () => {
         (call) => call[0] === 'processing_error'
       )[1]
 
-      // Call error handler
-      const error = new Error('Processing error')
-      errorHandler(error)
+      const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
+      const message = { Body: '{}', MessageId: 'msg-1' }
+      const processingError = await messageHandler(message).catch((err) => err)
 
+      expect(processingError).toBeInstanceOf(Error)
+      expect(processingError.message).toBe(error.message)
+      errorHandler(processingError)
+
+      expect(mockLogger.error).toHaveBeenCalledTimes(1)
       expect(mockLogger.error).toHaveBeenCalledWith(
-        error,
+        processingError,
         'SQS Message (test) processing error: Processing error'
       )
     })
@@ -367,7 +372,7 @@ describe('SQS Client', () => {
       // Get the message handler
       const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
 
-      await messageHandler(sqsMessage)
+      await expect(messageHandler(sqsMessage)).resolves.toBe(sqsMessage)
 
       expect(mockCallback).toHaveBeenCalledWith(
         'sqs-message-id',
@@ -430,12 +435,11 @@ describe('SQS Client', () => {
       // Get the message handler
       const messageHandler = Consumer.create.mock.calls[0][0].handleMessage
 
-      await messageHandler(sqsMessage)
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.any(Error),
-        'Failed to process SQS (test) message: Invalid message format: {"Body":"{\\"Type\\":\\"Notification\\",\\"MessageId\\":\\"sns-message-id\\",\\"TopicArn\\":\\"arn:aws:sns:us-east-1:123456789012:test-topic\\",\\"Message\\":\\"invalid-json\\",\\"Timestamp\\":\\"2023-01-01T00:00:00.000Z\\"}","MessageId":"sqs-message-id"}'
+      await expect(messageHandler(sqsMessage)).rejects.toThrow(
+        'Invalid message format'
       )
+
+      expect(mockLogger.error).not.toHaveBeenCalled()
     })
 
     it('should handle SNS message without Message field', async () => {
