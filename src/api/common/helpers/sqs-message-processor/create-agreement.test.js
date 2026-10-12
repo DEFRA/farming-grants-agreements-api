@@ -68,14 +68,11 @@ describe('SQS message processor', () => {
         Body: 'invalid json'
       }
 
-      await handleMessage(message)
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.stringContaining(
-          'Failed to process SQS (test-tag) message: Invalid message format'
-        )
+      await expect(handleMessage(message)).rejects.toThrow(
+        'Invalid message format'
       )
+
+      expect(mockLogger.error).not.toHaveBeenCalled()
     })
 
     it('should info log non-SyntaxError', async () => {
