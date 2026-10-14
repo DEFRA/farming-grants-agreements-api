@@ -4,12 +4,8 @@ import { randomUUID } from 'node:crypto'
 import Boom from '@hapi/boom'
 import { acceptOffer } from './accept-offer.js'
 import { config } from '#~/config/index.js'
-import {
-  calculatePaymentsBasedOnParcelsWithActions,
-  calculateWmpPaymentDates
-} from '#~/api/adapter/land-grants-adapter.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from '#~/api/adapter/land-grants-adapter.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
-import { sendGrantPaymentEvent } from '#~/api/common/helpers/send-grant-payment-event.js'
 
 vi.mock('node:crypto', () => ({
   randomUUID: vi.fn()
@@ -69,8 +65,7 @@ vi.mock('#~/config/index.js', () => ({
   }
 }))
 vi.mock('#~/api/adapter/land-grants-adapter.js', () => ({
-  calculatePaymentsBasedOnParcelsWithActions: vi.fn(),
-  calculateWmpPaymentDates: vi.fn()
+  calculatePaymentsBasedOnParcelsWithActions: vi.fn()
 }))
 vi.mock(
   '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js',
@@ -151,10 +146,6 @@ describe('acceptOffer', () => {
       ]
     }
     calculatePaymentsBasedOnParcelsWithActions.mockResolvedValue(mockPayments)
-    calculateWmpPaymentDates.mockResolvedValue({
-      agreementStartDate: '2025-09-01',
-      agreementEndDate: '2035-08-31'
-    })
 
     // Mock config values
     config.get = vi.fn((key) => {
@@ -163,7 +154,6 @@ describe('acceptOffer', () => {
         'files.s3.region': 'eu-west-2',
         'landGrants.calculationUri': '/api/v2/payments/calculate',
         'landGrants.calculationUris.fptt': '/api/v2/payments/calculate',
-        'landGrants.calculationUris.wmp': '/api/v1/wmp/payments/calculate',
         'aws.sns.topic.agreementStatusUpdate.arn':
           'arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo',
         'aws.sns.topic.agreementStatusUpdate.type':
@@ -343,123 +333,6 @@ describe('acceptOffer', () => {
         })
       })
     )
-  })
-
-  test('should successfully accept a woodland agreement with Land Grants agreement dates', async () => {
-    const agreementData = {
-      agreementNumber: 'WMP123456789',
-      code: 'woodland',
-      correlationId: 'test-correlation-id',
-      clientRef: 'test-client-ref',
-      application: { parcel: [] },
-      schemeData: {
-        oldWoodlandAreaHa: 0.4,
-        newWoodlandAreaHa: 0
-      },
-      payment: {
-        ...mockPayments,
-        agreementStartDate: null,
-        agreementEndDate: null
-      }
-    }
-
-    const mockAgreement = {
-      agreementNumber: 'WMP123456789',
-      code: 'woodland',
-      status: 'accepted'
-    }
-
-    updateAgreementWithVersionViaGrant.mockResolvedValue(mockAgreement)
-
-    const result = await acceptOffer('WMP123456789', agreementData, mockLogger)
-
-    expect(calculatePaymentsBasedOnParcelsWithActions).not.toHaveBeenCalled()
-    expect(calculateWmpPaymentDates).toHaveBeenCalledWith(
-      {
-        parcelIds: [],
-        oldWoodlandAreaHa: 0.4,
-        newWoodlandAreaHa: 0
-      },
-      mockLogger,
-      {
-        calculationUri: '/api/v1/wmp/payments/calculate',
-        correlationId: 'test-correlation-id'
-      }
-    )
-    expect(updateAgreementWithVersionViaGrant).toHaveBeenCalledWith(
-      { agreementNumber: 'WMP123456789' },
-      expect.objectContaining({
-        $set: expect.objectContaining({
-          status: 'accepted',
-          payment: {
-            ...mockPayments,
-            agreementStartDate: '2025-09-01',
-            agreementEndDate: '2035-08-31'
-          }
-        })
-      })
-    )
-    expect(sendGrantPaymentEvent).not.toHaveBeenCalled()
-    expect(result).toEqual(
-      expect.objectContaining({
-        agreementNumber: 'WMP123456789',
-        code: 'woodland',
-        status: 'accepted',
-        claimId: undefined
-      })
-    )
-  })
-
-  test('should not send grant payment event for woodland (WMP) agreements', async () => {
-    const agreementData = {
-      agreementNumber: 'WMP123456789',
-      code: 'woodland',
-      correlationId: 'test-correlation-id',
-      application: { parcel: [] },
-      schemeData: { oldWoodlandAreaHa: 0.4, newWoodlandAreaHa: 0 },
-      payment: { ...mockPayments }
-    }
-
-    updateAgreementWithVersionViaGrant.mockResolvedValue({
-      agreementNumber: 'WMP123456789',
-      code: 'woodland',
-      status: 'accepted'
-    })
-
-    const result = await acceptOffer('WMP123456789', agreementData, mockLogger)
-
-    expect(sendGrantPaymentEvent).not.toHaveBeenCalled()
-    expect(result.claimId).toBeUndefined()
-  })
-
-  test('should not accept a woodland agreement when Land Grants agreement date calculation fails', async () => {
-    calculateWmpPaymentDates.mockRejectedValue(
-      new Error('Land Grants unavailable')
-    )
-
-    await expect(
-      acceptOffer(
-        'WMP123456789',
-        {
-          agreementNumber: 'WMP123456789',
-          code: 'woodland',
-          correlationId: 'test-correlation-id',
-          clientRef: 'test-client-ref',
-          schemeData: {
-            oldWoodlandAreaHa: 0.4,
-            newWoodlandAreaHa: 0
-          },
-          payment: {
-            ...mockPayments,
-            agreementStartDate: null,
-            agreementEndDate: null
-          }
-        },
-        mockLogger
-      )
-    ).rejects.toThrow('Land Grants unavailable')
-
-    expect(updateAgreementWithVersionViaGrant).not.toHaveBeenCalled()
   })
 
   test('should successfully accept an agreement', async () => {

@@ -52,7 +52,12 @@ export const handleUpdateAgreementEvent = async (
   const { clientRef, agreementNumber, status } = data
   const knownStatuses = Object.values(AGREEMENT_STATUS)
 
-  if (!clientRef || !agreementNumber || !knownStatuses.includes(status)) {
+  if (
+    !clientRef ||
+    typeof agreementNumber !== 'string' ||
+    !agreementNumber.startsWith('FPTT') ||
+    !knownStatuses.includes(status)
+  ) {
     const statusStr = status ? ` (${status})` : ''
     logger.info(
       { payload },
