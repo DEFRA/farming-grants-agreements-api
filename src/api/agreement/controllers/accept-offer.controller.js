@@ -1,5 +1,6 @@
 import { statusCodes } from '#~/api/common/constants/status-codes.js'
 import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
+import { getGrantTypeByCode } from '#~/api/agreement/helpers/grant-types/index.js'
 
 /**
  * Controller to accept agreement offer
@@ -9,6 +10,7 @@ import { acceptOffer } from '#~/api/agreement/helpers/accept-offer.js'
 const acceptOfferController = async (request, h) => {
   // Get the agreement data before accepting
   let { agreementData } = request.auth.credentials
+  getGrantTypeByCode(agreementData.code)
   const { agreementNumber } = agreementData
 
   if (agreementData.status === 'offered') {
