@@ -39,6 +39,41 @@ async function applyStatusUpdate(status, clientRef, agreementNumber, logger) {
 }
 
 /**
+ * @param {object|undefined} updatedVersion
+ * @param {string} correlationId
+ * @param {import('@hapi/hapi').Server} logger
+ * @returns {Promise<void>}
+ */
+async function publishStatusUpdate(updatedVersion, correlationId, logger) {
+  if (!updatedVersion) {
+    return
+  }
+
+  auditEvent(AuditEvent.AGREEMENT_UPDATED, {
+    ...updatedVersion,
+    agreementNumber: updatedVersion.agreementNumber,
+    correlationId: updatedVersion.correlationId || correlationId
+  })
+
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+      time: new Date().toISOString(),
+      data: {
+        agreementNumber: updatedVersion.agreementNumber,
+        correlationId: updatedVersion.correlationId,
+        clientRef: updatedVersion.clientRef,
+        status: updatedVersion.status,
+        date: updatedVersion.updatedAt,
+        code: updatedVersion.code
+      }
+    },
+    logger
+  )
+}
+
+/**
  * Handle an event from the SQS queue
  * @param {string} notificationMessageId - The AWS notification message ID
  * @param {Message} payload - The message payload
@@ -115,30 +150,7 @@ export const handleUpdateAgreementEvent = async (
     throw error
   }
 
-  if (updatedVersion) {
-    auditEvent(AuditEvent.AGREEMENT_UPDATED, {
-      ...updatedVersion,
-      agreementNumber: updatedVersion.agreementNumber,
-      correlationId: updatedVersion.correlationId || correlationId
-    })
-
-    await publishEvent(
-      {
-        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
-        type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
-        time: new Date().toISOString(),
-        data: {
-          agreementNumber: updatedVersion.agreementNumber,
-          correlationId: updatedVersion.correlationId,
-          clientRef: updatedVersion.clientRef,
-          status: updatedVersion.status,
-          date: updatedVersion.updatedAt,
-          code: updatedVersion.code
-        }
-      },
-      logger
-    )
-  }
+  await publishStatusUpdate(updatedVersion, correlationId, logger)
 }
 
 /**
