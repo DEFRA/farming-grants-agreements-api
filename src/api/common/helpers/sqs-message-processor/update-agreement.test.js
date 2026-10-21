@@ -1,4 +1,5 @@
 import { handleUpdateAgreementEvent } from './update-agreement.js'
+import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
 import { AGREEMENT_STATUS } from '#~/api/common/constants/agreement-status.js'
 import { createSqsClientPlugin } from '../sqs-client.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
@@ -9,6 +10,7 @@ import { auditEvent as mockAuditEvent } from '#~/api/common/helpers/audit-event.
 import { config } from '#~/config/index.js'
 import { Consumer } from 'sqs-consumer'
 
+vi.mock('#~/api/agreement/helpers/get-agreement-data.js')
 vi.mock('#~/api/agreement/helpers/withdraw-offer.js')
 vi.mock('#~/api/agreement/helpers/cancel-offer.js')
 vi.mock('#~/api/agreement/helpers/terminate-agreement.js')
@@ -47,6 +49,7 @@ describe('SQS message processor', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    getAgreementDataById.mockResolvedValue({ code: 'frps-private-beta' })
     mockLogger = { info: vi.fn(), error: vi.fn() }
     mockAuditEvent.mockReturnValue(undefined)
     withdrawOffer.mockResolvedValue({
@@ -427,6 +430,7 @@ describe('SQS message processor', () => {
     })
 
     it('should ignore Woodland agreement updates', async () => {
+      getAgreementDataById.mockResolvedValue({ code: 'woodland' })
       const mockPayload = {
         type: 'cloud.defra.test.fg-gas-backend.agreement.update',
         data: {

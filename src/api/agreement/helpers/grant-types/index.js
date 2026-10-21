@@ -6,6 +6,8 @@ const grantTypesByCode = {
   'frps-private-beta': fptt
 }
 
+const getSupportedGrantCodes = () => Object.keys(grantTypesByCode)
+
 const getGrantTypeByCode = (code) => {
   const normalisedCode = normaliseCode(code)
 
@@ -24,4 +26,4 @@ const getGrantTypeByCode = (code) => {
 const normaliseCode = (code) =>
   typeof code === 'string' ? code.trim().toLowerCase() : ''
 
-export { getGrantTypeByCode }
+export { getGrantTypeByCode, getSupportedGrantCodes }

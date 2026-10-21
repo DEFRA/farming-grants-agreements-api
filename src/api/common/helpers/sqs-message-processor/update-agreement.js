@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto'
+import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { getSupportedGrantCodes } from '#~/api/agreement/helpers/grant-types/index.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
 import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
@@ -50,13 +52,17 @@ export const handleUpdateAgreementEvent = async (
 ) => {
   const { data = {} } = payload || {}
   const { clientRef, agreementNumber, status } = data
-  const knownStatuses = Object.values(AGREEMENT_STATUS)
+  const handledStatuses = [
+    AGREEMENT_STATUS.WITHDRAWN,
+    AGREEMENT_STATUS.CANCELLED,
+    AGREEMENT_STATUS.TERMINATED
+  ]
 
   if (
     !clientRef ||
     typeof agreementNumber !== 'string' ||
-    !agreementNumber.startsWith('FPTT') ||
-    !knownStatuses.includes(status)
+    !agreementNumber ||
+    !handledStatuses.includes(status)
   ) {
     const statusStr = status ? ` (${status})` : ''
     logger.info(
@@ -79,6 +85,15 @@ export const handleUpdateAgreementEvent = async (
   let updatedVersion
 
   try {
+    const agreementData = await getAgreementDataById(agreementNumber)
+    if (!getSupportedGrantCodes().includes(agreementData.code)) {
+      logger.info(
+        { agreementNumber, code: agreementData.code },
+        'Ignoring status update for an unsupported agreement code'
+      )
+      return
+    }
+
     updatedVersion = await applyStatusUpdate(
       status,
       clientRef,
