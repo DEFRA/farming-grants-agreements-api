@@ -54,6 +54,7 @@ describe('GET /{agreementId}/{version}/download', () => {
 
     vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
+      code: 'frps-private-beta',
       sbi: '123456789',
       status: 'offered',
       payment: {
@@ -80,6 +81,31 @@ describe('GET /{agreementId}/{version}/download', () => {
     expect(res.rawPayload?.length ?? res.payload?.length ?? 0).toBeGreaterThan(
       0
     )
+  })
+
+  test('400 without reading S3 for a Woodland agreement', async () => {
+    vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
+      agreementNumber: 'WMP123456789',
+      code: 'woodland',
+      sbi: '123456789',
+      status: 'offered',
+      payment: {
+        agreementStartDate: new Date().toISOString(),
+        agreementEndDate: addYears(new Date(), 3).toISOString()
+      }
+    })
+
+    const res = await server.inject({
+      method: 'GET',
+      url: '/WMP123456789/1/download',
+      headers: {
+        'x-encrypted-auth': 'mock-jwt-token'
+      }
+    })
+
+    expect(res.statusCode).toBe(statusCodes.badRequest)
+    expect(res.result.errorMessage).toBe('Unknown agreement code: woodland')
+    expect(s3Mock.commandCalls(GetObjectCommand)).toHaveLength(0)
   })
 
   test('404 when S3 object missing', async () => {
@@ -148,6 +174,7 @@ describe('GET /{agreementId}/{version}/download', () => {
     s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
     vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-999',
+      code: 'frps-private-beta',
       sbi: '123456789',
       status: 'offered',
       payment: {
@@ -172,6 +199,7 @@ describe('GET /{agreementId}/{version}/download', () => {
     s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
     vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
+      code: 'frps-private-beta',
       sbi: '123456789',
       status: 'offered',
       payment: {
@@ -198,6 +226,7 @@ describe('GET /{agreementId}/{version}/download', () => {
     s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
     vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
+      code: 'frps-private-beta',
       sbi: '123456789',
       status: 'offered',
       payment: {
@@ -223,6 +252,7 @@ describe('GET /{agreementId}/{version}/download', () => {
     s3Mock.on(GetObjectCommand).resolves({ Body: Buffer.from('%PDF-1.4\n') })
     vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
+      code: 'frps-private-beta',
       sbi: '123456789',
       status: 'offered',
       payment: {
@@ -249,6 +279,7 @@ describe('GET /{agreementId}/{version}/download', () => {
     config.set('files.s3.baseTermPrefix', 'custom-base')
     vi.spyOn(agreementDataHelper, 'getAgreementDataById').mockResolvedValue({
       agreementNumber: 'AGR-123',
+      code: 'frps-private-beta',
       sbi: '123456789',
       status: 'offered',
       payment: {

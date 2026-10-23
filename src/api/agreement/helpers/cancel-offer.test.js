@@ -42,6 +42,7 @@ describe('cancelOffer', () => {
       {
         status: 'offered',
         clientRef,
+        code: { $in: ['frps-private-beta'] },
         agreementNumber
       },
       {
@@ -93,6 +94,7 @@ describe('cancelOffer', () => {
       {
         status: 'offered',
         clientRef,
+        code: { $in: ['frps-private-beta'] },
         agreementNumber
       },
       {

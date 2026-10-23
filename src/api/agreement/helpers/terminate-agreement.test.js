@@ -37,6 +37,7 @@ describe('terminateAgreement', () => {
       {
         status: 'accepted',
         clientRef,
+        code: { $in: ['frps-private-beta'] },
         agreementNumber
       },
       {
@@ -85,6 +86,7 @@ describe('terminateAgreement', () => {
       {
         status: 'accepted',
         clientRef,
+        code: { $in: ['frps-private-beta'] },
         agreementNumber
       },
       {

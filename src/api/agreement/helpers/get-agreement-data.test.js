@@ -467,7 +467,7 @@ describe('doesAgreementExist', () => {
   })
 
   test('also supports other version-collection fields (e.g. clientRef)', async () => {
-    const searchTerms = { clientRef: 'WMP-MANUAL-001' }
+    const searchTerms = { clientRef: 'TEST-MANUAL-001' }
     versionsModel.exists.mockResolvedValue({ _id: 'v2' })
 
     const result = await doesAgreementExist(searchTerms)

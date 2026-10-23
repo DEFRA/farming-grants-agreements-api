@@ -49,6 +49,7 @@ describe('POST / - acceptOfferController', () => {
   describe('when agreement status is offered', () => {
     const mockAgreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       status: 'offered',
       sbi: '900000005',
       application: { parcel: [] }
@@ -68,6 +69,7 @@ describe('POST / - acceptOfferController', () => {
     test('should call acceptOffer and return updated agreement data', async () => {
       const mockAcceptedData = {
         agreementNumber: 'FPTT123456789',
+        code: 'frps-private-beta',
         status: 'accepted',
         sbi: '900000005',
         schemeData: { internal: true },
@@ -90,6 +92,7 @@ describe('POST / - acceptOfferController', () => {
       )
       expect(result.agreementData).toEqual({
         agreementNumber: 'FPTT123456789',
+        code: 'frps-private-beta',
         status: 'accepted',
         sbi: '900000005',
         schemeData: { internal: true },
@@ -113,6 +116,7 @@ describe('POST / - acceptOfferController', () => {
   describe('when agreement status is already accepted', () => {
     const mockAgreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       status: 'accepted',
       sbi: '900000005',
       claimId: 'existing-claim-id',
@@ -143,6 +147,7 @@ describe('POST / - acceptOfferController', () => {
   describe('when agreement status is withdrawn', () => {
     const mockAgreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       status: 'withdrawn',
       sbi: '900000005'
     }
@@ -170,6 +175,7 @@ describe('POST / - acceptOfferController', () => {
   describe('when agreement status is cancelled', () => {
     const mockAgreementData = {
       agreementNumber: 'FPTT123456789',
+      code: 'frps-private-beta',
       status: 'cancelled',
       sbi: '900000005'
     }
@@ -192,6 +198,39 @@ describe('POST / - acceptOfferController', () => {
       expect(acceptOfferHelper.acceptOffer).not.toHaveBeenCalled()
       expect(result.agreementData.status).toBe('cancelled')
     })
+  })
+
+  describe('unsupported grant agreements', () => {
+    test.each(['offered', 'accepted', 'withdrawn', 'cancelled', 'terminated'])(
+      'should reject a Woodland agreement with status %s',
+      async (status) => {
+        const agreementData = {
+          agreementNumber: 'WMP123456789',
+          code: 'woodland',
+          status,
+          sbi: '900000005'
+        }
+        vi.spyOn(jwtAuth, 'validateJwtAuthentication').mockReturnValue({
+          valid: true,
+          source: 'defra',
+          sbi: '900000005'
+        })
+        vi.spyOn(
+          agreementDataHelper,
+          'getAgreementDataBySbi'
+        ).mockResolvedValue(agreementData)
+        vi.spyOn(acceptOfferHelper, 'acceptOffer').mockResolvedValue(
+          agreementData
+        )
+
+        const { statusCode, result } = await doPost()
+
+        expect(statusCode).toBe(statusCodes.badRequest)
+        expect(result.errorMessage).toBe('Unknown agreement code: woodland')
+        expect(result).not.toHaveProperty('agreementData')
+        expect(acceptOfferHelper.acceptOffer).not.toHaveBeenCalled()
+      }
+    )
   })
 
   describe('authentication errors', () => {

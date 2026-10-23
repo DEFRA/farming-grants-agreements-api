@@ -1,8 +1,5 @@
 import { vi } from 'vitest'
-import {
-  calculatePaymentsBasedOnParcelsWithActions,
-  calculateWmpPaymentDates
-} from './land-grants-adapter.js'
+import { calculatePaymentsBasedOnParcelsWithActions } from './land-grants-adapter.js'
 import { config } from '#~/config/index.js'
 
 vi.mock('#~/config/index.js', () => ({
@@ -114,9 +111,6 @@ beforeEach(() => {
     if (key === 'landGrants.calculationUris.fptt') {
       return '/api/v2/payments/calculate'
     }
-    if (key === 'landGrants.calculationUris.wmp') {
-      return '/api/v1/wmp/payments/calculate'
-    }
     if (key === 'fetchTimeout') {
       return 30000
     }
@@ -124,128 +118,6 @@ beforeEach(() => {
       return 'x-cdp-request-id'
     }
     throw new Error(`Unexpected config key ${key}`)
-  })
-})
-
-describe('calculateWmpPaymentDates', () => {
-  test('sends WMP woodland area and parcel ids without startDate and returns agreement dates', async () => {
-    const responseBody = {
-      message: 'success',
-      payment: {
-        agreementStartDate: '2025-09-01',
-        agreementEndDate: '2035-08-31',
-        frequency: 'Single'
-      }
-    }
-    const fetchResponse = buildFetchResponse({
-      json: vi.fn().mockResolvedValue(responseBody),
-      text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
-    })
-    global.fetch.mockResolvedValue(fetchResponse)
-
-    const result = await calculateWmpPaymentDates(
-      {
-        parcelIds: ['SD6346-3387'],
-        oldWoodlandAreaHa: 0.4,
-        newWoodlandAreaHa: 0
-      },
-      mockLogger,
-      { calculationUri: '/api/v1/wmp/payments/calculate' }
-    )
-
-    expect(global.fetch).toHaveBeenCalledTimes(1)
-    const [url, request] = global.fetch.mock.calls[0]
-    expect(url.toString()).toBe(
-      'https://land-grants.example/api/v1/wmp/payments/calculate'
-    )
-    expect(request.headers.Authorization).toBe('Bearer config-token')
-    expect(JSON.parse(request.body)).toEqual({
-      parcelIds: ['SD6346-3387'],
-      oldWoodlandAreaHa: 0.4,
-      newWoodlandAreaHa: 0
-    })
-    expect(JSON.parse(request.body)).not.toHaveProperty('startDate')
-    expect(result).toEqual({
-      agreementStartDate: '2025-09-01',
-      agreementEndDate: '2035-08-31'
-    })
-  })
-
-  test('includes the correlation id header when a correlationId is provided', async () => {
-    const responseBody = {
-      payment: {
-        agreementStartDate: '2025-09-01',
-        agreementEndDate: '2035-08-31'
-      }
-    }
-    global.fetch.mockResolvedValue(
-      buildFetchResponse({
-        json: vi.fn().mockResolvedValue(responseBody),
-        text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
-      })
-    )
-
-    await calculateWmpPaymentDates(
-      {
-        parcelIds: ['SD6346-3387'],
-        oldWoodlandAreaHa: 0.4,
-        newWoodlandAreaHa: 0
-      },
-      mockLogger,
-      { correlationId: 'wmp-correlation-id' }
-    )
-
-    const [, request] = global.fetch.mock.calls[0]
-    expect(request.headers['x-cdp-request-id']).toBe('wmp-correlation-id')
-  })
-
-  test('throws when WMP Land Grants response does not include payment', async () => {
-    const responseBody = {}
-    global.fetch.mockResolvedValue(
-      buildFetchResponse({
-        json: vi.fn().mockResolvedValue(responseBody),
-        text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
-      })
-    )
-
-    await expect(
-      calculateWmpPaymentDates(
-        {
-          parcelIds: ['SD6346-3387'],
-          oldWoodlandAreaHa: 0.4,
-          newWoodlandAreaHa: 0
-        },
-        mockLogger
-      )
-    ).rejects.toThrow('Land Grants response missing "payment" field')
-  })
-
-  test('throws when WMP Land Grants response does not include agreement dates', async () => {
-    const responseBody = {
-      payment: {
-        agreementStartDate: null,
-        agreementEndDate: null
-      }
-    }
-    global.fetch.mockResolvedValue(
-      buildFetchResponse({
-        json: vi.fn().mockResolvedValue(responseBody),
-        text: vi.fn().mockResolvedValue(JSON.stringify(responseBody))
-      })
-    )
-
-    await expect(
-      calculateWmpPaymentDates(
-        {
-          parcelIds: ['SD6346-3387'],
-          oldWoodlandAreaHa: 0.4,
-          newWoodlandAreaHa: 0
-        },
-        mockLogger
-      )
-    ).rejects.toThrow(
-      'Land Grants response missing agreementStartDate or agreementEndDate'
-    )
   })
 })
 
