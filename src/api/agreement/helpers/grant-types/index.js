@@ -1,12 +1,12 @@
 import Boom from '@hapi/boom'
 
 import { fptt } from './fptt/fptt-grant.js'
-import { wmp } from './wmp/wmp-grant.js'
 
 const grantTypesByCode = {
-  woodland: wmp,
   'frps-private-beta': fptt
 }
+
+const getSupportedGrantCodes = () => Object.keys(grantTypesByCode)
 
 const getGrantTypeByCode = (code) => {
   const normalisedCode = normaliseCode(code)
@@ -26,4 +26,4 @@ const getGrantTypeByCode = (code) => {
 const normaliseCode = (code) =>
   typeof code === 'string' ? code.trim().toLowerCase() : ''
 
-export { getGrantTypeByCode }
+export { getGrantTypeByCode, getSupportedGrantCodes }

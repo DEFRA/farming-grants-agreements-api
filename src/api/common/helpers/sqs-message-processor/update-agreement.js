@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto'
+import { getAgreementDataById } from '#~/api/agreement/helpers/get-agreement-data.js'
+import { getSupportedGrantCodes } from '#~/api/agreement/helpers/grant-types/index.js'
 import { withdrawOffer } from '#~/api/agreement/helpers/withdraw-offer.js'
 import { cancelOffer } from '#~/api/agreement/helpers/cancel-offer.js'
 import { terminateAgreement } from '#~/api/agreement/helpers/terminate-agreement.js'
@@ -37,6 +39,41 @@ async function applyStatusUpdate(status, clientRef, agreementNumber, logger) {
 }
 
 /**
+ * @param {object|undefined} updatedVersion
+ * @param {string} correlationId
+ * @param {import('@hapi/hapi').Server} logger
+ * @returns {Promise<void>}
+ */
+async function publishStatusUpdate(updatedVersion, correlationId, logger) {
+  if (!updatedVersion) {
+    return
+  }
+
+  auditEvent(AuditEvent.AGREEMENT_UPDATED, {
+    ...updatedVersion,
+    agreementNumber: updatedVersion.agreementNumber,
+    correlationId: updatedVersion.correlationId || correlationId
+  })
+
+  await publishEvent(
+    {
+      topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
+      type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
+      time: new Date().toISOString(),
+      data: {
+        agreementNumber: updatedVersion.agreementNumber,
+        correlationId: updatedVersion.correlationId,
+        clientRef: updatedVersion.clientRef,
+        status: updatedVersion.status,
+        date: updatedVersion.updatedAt,
+        code: updatedVersion.code
+      }
+    },
+    logger
+  )
+}
+
+/**
  * Handle an event from the SQS queue
  * @param {string} notificationMessageId - The AWS notification message ID
  * @param {Message} payload - The message payload
@@ -50,9 +87,18 @@ export const handleUpdateAgreementEvent = async (
 ) => {
   const { data = {} } = payload || {}
   const { clientRef, agreementNumber, status } = data
-  const knownStatuses = Object.values(AGREEMENT_STATUS)
+  const handledStatuses = [
+    AGREEMENT_STATUS.WITHDRAWN,
+    AGREEMENT_STATUS.CANCELLED,
+    AGREEMENT_STATUS.TERMINATED
+  ]
 
-  if (!clientRef || !agreementNumber || !knownStatuses.includes(status)) {
+  if (
+    !clientRef ||
+    typeof agreementNumber !== 'string' ||
+    !agreementNumber ||
+    !handledStatuses.includes(status)
+  ) {
     const statusStr = status ? ` (${status})` : ''
     logger.info(
       { payload },
@@ -74,6 +120,15 @@ export const handleUpdateAgreementEvent = async (
   let updatedVersion
 
   try {
+    const agreementData = await getAgreementDataById(agreementNumber)
+    if (!getSupportedGrantCodes().includes(agreementData.code)) {
+      logger.info(
+        { agreementNumber, code: agreementData.code },
+        'Ignoring status update for an unsupported agreement code'
+      )
+      return
+    }
+
     updatedVersion = await applyStatusUpdate(
       status,
       clientRef,
@@ -95,30 +150,7 @@ export const handleUpdateAgreementEvent = async (
     throw error
   }
 
-  if (updatedVersion) {
-    auditEvent(AuditEvent.AGREEMENT_UPDATED, {
-      ...updatedVersion,
-      agreementNumber: updatedVersion.agreementNumber,
-      correlationId: updatedVersion.correlationId || correlationId
-    })
-
-    await publishEvent(
-      {
-        topicArn: config.get('aws.sns.topic.agreementStatusUpdate.arn'),
-        type: config.get('aws.sns.topic.agreementStatusUpdate.type'),
-        time: new Date().toISOString(),
-        data: {
-          agreementNumber: updatedVersion.agreementNumber,
-          correlationId: updatedVersion.correlationId,
-          clientRef: updatedVersion.clientRef,
-          status: updatedVersion.status,
-          date: updatedVersion.updatedAt,
-          code: updatedVersion.code
-        }
-      },
-      logger
-    )
-  }
+  await publishStatusUpdate(updatedVersion, correlationId, logger)
 }
 
 /**

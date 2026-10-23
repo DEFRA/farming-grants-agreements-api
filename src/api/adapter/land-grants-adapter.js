@@ -166,40 +166,4 @@ const calculatePaymentsBasedOnParcelsWithActions = async (
   }
 }
 
-const calculateWmpPaymentDates = async (requestData, logger, options = {}) => {
-  const payload = {
-    parcelIds: requestData?.parcelIds ?? [],
-    oldWoodlandAreaHa: requestData?.oldWoodlandAreaHa,
-    newWoodlandAreaHa: requestData?.newWoodlandAreaHa
-  }
-
-  if (logger) {
-    logger.info('Sending Land Grants WMP payment calculation request')
-  }
-
-  const response = await postPaymentCalculation(payload, {
-    calculationUri: options.calculationUri,
-    correlationId: options.correlationId,
-    headers: buildAuthHeader()
-  })
-
-  if (logger) {
-    logger.info('Successfully called Land Grants WMP payment calculation')
-  }
-
-  const payment = response?.payment
-  if (!payment) {
-    throw new Error('Land Grants response missing "payment" field')
-  }
-
-  const { agreementStartDate, agreementEndDate } = payment
-  if (!agreementStartDate || !agreementEndDate) {
-    throw new Error(
-      'Land Grants response missing agreementStartDate or agreementEndDate'
-    )
-  }
-
-  return { agreementStartDate, agreementEndDate }
-}
-
-export { calculatePaymentsBasedOnParcelsWithActions, calculateWmpPaymentDates }
+export { calculatePaymentsBasedOnParcelsWithActions }

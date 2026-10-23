@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom'
+import { getSupportedGrantCodes } from '#~/api/agreement/helpers/grant-types/index.js'
 import { updateAgreementWithVersionViaGrant } from '#~/api/agreement/helpers/update-agreement-with-version-via-grant.js'
 
 /**
@@ -12,6 +13,7 @@ const withdrawOffer = (clientRef, agreementNumber) => {
     {
       status: 'offered',
       clientRef,
+      code: { $in: getSupportedGrantCodes() },
       agreementNumber
     },
     {

@@ -122,21 +122,14 @@ async function insertAndAssociateVersions({ versions, grantId }) {
  * @param {object} params - The parameters for creation
  * @param {object} params.agreement - The agreement base data
  * @param {Array<object>} params.versions - The version payloads
- * @param {boolean} [params.ignorePayments] - When true (default) the
- *   `payment` subdoc on each version is nulled out so it can be looked up
- *   later from Land Grants. WMP create-agreement passes `false` so the
- *   payment subdoc derived from the WMP payload is persisted as-is.
  * @returns {Promise<object>} The populated agreement
  */
 export async function createAgreementWithGrantAndVersions({
   agreement,
-  versions,
-  ignorePayments: shouldIgnorePayments = true
+  versions
 }) {
   assertValidCreateArgs(agreement, versions)
-  if (shouldIgnorePayments) {
-    ignorePayments(versions)
-  }
+  ignorePayments(versions)
 
   try {
     const agreementData = await findOrCreateAgreement(agreement)
