@@ -94,7 +94,7 @@ describe('UI sending a POST request to accept an agreement', () => {
             quantity: like(4.53411078),
             rateInPence: like(1060),
             annualPaymentPence: like(4806),
-            parcelId: like('8083'),
+            parcelId: like('0006'),
             sheetId: like('AA0006'),
             version: like('1.0.0')
           }

@@ -2,6 +2,10 @@
 
 Core delivery platform Node.js Backend Template.
 
+Test fixtures, sample payloads and API examples use invented customer and land data.
+Identifiers are synthetic; addresses use Example locations and `ZZ99` postcodes,
+email addresses use `example.test`, and phone numbers use reserved drama ranges.
+
 - [Requirements](#requirements)
   - [Node.js](#nodejs)
 - [Local development](#local-development)

@@ -407,7 +407,7 @@ describe('createOffer', () => {
         applicant: {
           business: {
             reference: '9000000501',
-            name: 'HireContracting',
+            name: 'Example Contracting Ltd',
             line1: '5 Example Lane',
             line2: 'Example Village',
             city: 'Exampleton',
@@ -433,7 +433,7 @@ describe('createOffer', () => {
     expect(lastCallArgs.versions[0].applicant).toEqual(
       expect.objectContaining({
         business: expect.objectContaining({
-          name: 'HireContracting',
+          name: 'Example Contracting Ltd',
           address: expect.objectContaining({
             line1: '5 Example Lane',
             line2: 'Example Village',

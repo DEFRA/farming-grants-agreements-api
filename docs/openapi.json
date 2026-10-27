@@ -342,7 +342,7 @@
         "parcelId": {
           "type": "string",
           "description": "parcelId field",
-          "example": "8083"
+          "example": "0006"
         }
       }
     },
@@ -578,7 +578,7 @@
         "city": {
           "type": "string",
           "description": "city field",
-          "example": "Clitheroe"
+          "example": "Exampleton"
         },
         "postalCode": {
           "type": "string",
@@ -613,17 +613,17 @@
         "first": {
           "type": "string",
           "description": "first field",
-          "example": "Edward"
+          "example": "Jamie"
         },
         "middle": {
           "type": "string",
           "description": "middle field",
-          "example": "Paul"
+          "example": "Test"
         },
         "last": {
           "type": "string",
           "description": "last field",
-          "example": "Jones"
+          "example": "Sample"
         }
       }
     },
@@ -736,7 +736,7 @@
         "parcelId": {
           "type": "string",
           "description": "parcelId field",
-          "example": "8083"
+          "example": "0006"
         },
         "area": {
           "$ref": "#/definitions/area"
@@ -1061,7 +1061,7 @@
         "parcelId": {
           "type": "string",
           "description": "parcelId field",
-          "example": "8083"
+          "example": "0006"
         },
         "area": {
           "$ref": "#/definitions/area"
@@ -1412,7 +1412,7 @@
         "parcelId": {
           "type": "string",
           "description": "parcelId field",
-          "example": "8083"
+          "example": "0006"
         },
         "area": {
           "$ref": "#/definitions/area"
@@ -1824,7 +1824,7 @@
         "parcelId": {
           "type": "string",
           "description": "parcelId field",
-          "example": "8083"
+          "example": "0006"
         },
         "area": {
           "$ref": "#/definitions/area"
