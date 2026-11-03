@@ -78,7 +78,7 @@
     "@babel/cli": "^8.0.6",
     "@babel/core": "^8.0.7",
     "@babel/preset-env": "^8.0.7",
-    "@commitlint/cli": "21.2.3",
+    "@commitlint/cli": "21.2.4",
     "@pact-foundation/pact": "^16.0.0",
     "@types/convict": "^6.1.6",
     "@types/lodash": "^4.17.25",
