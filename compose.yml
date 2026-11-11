@@ -1,6 +1,6 @@
 services:
   floci:
-    image: hectorvent/floci:1.1.0
+    image: hectorvent/floci:1.5.5
     ports:
       - '4566:4566' # Floci Gateway
       - '4510-4559:4510-4559' # external services port range
@@ -34,7 +34,7 @@ services:
       - cdp-tenant
 
   mongodb:
-    image: mongo:6.0.13
+    image: mongo:6.0.28
     command: ['mongod', '--replSet', 'rs0', '--bind_ip_all']
     networks:
       - cdp-tenant
@@ -51,7 +51,7 @@ services:
       retries: 10
 
   mongodb-init:
-    image: mongo:6.0.13
+    image: mongo:6.0.28
     depends_on:
       mongodb:
         condition: service_healthy
@@ -80,7 +80,7 @@ services:
         condition: service_completed_successfully
 
   mock-server:
-    image: pactfoundation/pact-stub-server:0.7.0
+    image: pactfoundation/pact-stub-server:0.7.1
     profiles:
       - mock
       - full
